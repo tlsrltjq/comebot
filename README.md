@@ -224,6 +224,54 @@ GET /api/trading-flow/history
 
 JPA 저장소를 사용 중이면 PostgreSQL에 저장된 기존 이력이 조회된다. `history.storage-type=IN_MEMORY` 상태에서는 재시작 후 이력이 사라지는 것이 정상이다.
 
+## 로컬 JPA History 검증 체크리스트
+
+1. PostgreSQL 컨테이너 실행
+
+```bat
+docker compose up -d postgres
+```
+
+2. DB 연결 상태 확인
+
+```http
+GET /api/database/status
+```
+
+문제가 생기면 먼저 이 응답의 `connected` 값을 확인한다.
+
+3. schema.sql 적용
+
+```bat
+scripts\apply-schema.bat
+```
+
+스크립트는 `comebot-postgres` 컨테이너에 `src/main/resources/schema.sql`을 적용한다. `.env`의 `POSTGRES_DB`, `POSTGRES_USER`를 사용하며, 값이 없으면 둘 다 `comebot`을 기본값으로 사용한다. DB 비밀번호는 출력하지 않는다.
+
+4. JPA history 저장소로 앱 실행
+
+```bat
+set HISTORY_STORAGE_TYPE=JPA
+gradlew.bat bootRun
+```
+
+5. 트레이딩 플로우 실행
+
+```http
+GET /api/trading-flow/run?market=KRW-BTC
+```
+
+6. 이력 조회
+
+```http
+GET /api/trading-flow/history
+GET /api/trading-flow/history?market=KRW-BTC
+```
+
+7. 앱 재시작 후 이력 유지 확인
+
+앱을 종료했다가 다시 실행한 뒤 같은 history API를 호출한다. JPA 저장소를 사용 중이면 이전 실행 이력이 유지된다.
+
 ## 주요 API
 
 ### 트레이딩 플로우

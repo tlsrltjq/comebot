@@ -2,8 +2,6 @@
 setlocal
 
 set "CONTAINER_NAME=comebot-postgres"
-set "POSTGRES_DB=comebot"
-set "POSTGRES_USER=comebot"
 set "SCHEMA_FILE=src\main\resources\schema.sql"
 
 if exist ".env" (
@@ -12,6 +10,9 @@ if exist ".env" (
         if /i "%%A"=="POSTGRES_USER" set "POSTGRES_USER=%%B"
     )
 )
+
+if not defined POSTGRES_DB set "POSTGRES_DB=comebot"
+if not defined POSTGRES_USER set "POSTGRES_USER=comebot"
 
 if not exist "%SCHEMA_FILE%" (
     echo schema.sql not found: %SCHEMA_FILE%
