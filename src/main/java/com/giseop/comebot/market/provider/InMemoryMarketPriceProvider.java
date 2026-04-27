@@ -5,9 +5,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "market.price-provider", havingValue = "IN_MEMORY", matchIfMissing = true)
 public class InMemoryMarketPriceProvider implements MarketPriceProvider {
 
     private final Map<String, BigDecimal> prices = new ConcurrentHashMap<>();

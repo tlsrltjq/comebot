@@ -27,6 +27,15 @@
 - 가격 변경 후 `GET /api/trading-flow/run?market=...`으로 BUY, SELL, HOLD 흐름을 수동 검증할 수 있다.
 - MarketPriceController는 요청 검증, provider 호출, 응답 DTO 변환만 담당한다.
 
+## 시세 Provider 선택
+
+- `market.price-provider=IN_MEMORY`가 기본값이다.
+- `IN_MEMORY`는 테스트용 메모리 가격을 사용한다.
+- `UPBIT`은 Upbit 공개 Ticker API에서 현재가를 조회한다.
+- Upbit provider는 인증키를 사용하지 않는다.
+- Upbit provider는 실제 주문 API를 호출하지 않는다.
+- 어떤 provider를 사용해도 주문 실행은 기존 `PAPER_TRADING` 흐름만 사용한다.
+
 ## 목표
 
 `comebot`은 코인 시세를 수집하고, 테스트용 전략 조건을 평가한 뒤, `PAPER_TRADING` 기준으로 주문 결과와 텔레그램 알림을 생성한다.
@@ -42,7 +51,7 @@
 
 ## 기본 모듈 경계
 
-- Market Provider: 실제 거래소 API 없이 테스트용 시세를 제공한다.
+- Market Provider: InMemory 테스트 시세 또는 Upbit 공개 시세를 제공한다.
 - Strategy: 테스트용 기준으로 BUY, SELL, HOLD 신호를 만든다.
 - Risk: 주문 요청이 정책을 통과하는지 검증한다.
 - Execution: 주문 실행을 추상화하고 페이퍼 트레이딩 결과를 생성한다.
@@ -54,7 +63,7 @@
 ## 계층 구성
 
 - `market.domain`: 시세 스냅샷을 정의한다.
-- `market.provider`: 테스트용 시세 공급자 인터페이스와 메모리 구현체를 둔다.
+- `market.provider`: 시세 공급자 인터페이스와 InMemory/Upbit 구현체를 둔다.
 - `strategy.domain`: 전략 신호와 신호 타입을 정의한다.
 - `strategy.service`: 테스트용 전략 평가와 주문 요청 변환을 담당한다.
 - `trading.service`: market provider → strategy → order request → risk → execution 흐름을 조합한다.
@@ -80,7 +89,7 @@
 
 - 시세 조회, 전략 판단, 주문 실행, 텔레그램 처리를 하나의 클래스에 합치지 않는다.
 - 실제 주문 API 호출 코드를 초기 버전에 넣지 않는다.
-- 실제 시세 조회 API 호출 코드를 초기 버전에 넣지 않는다.
+- 인증이 필요한 실제 시세 API 또는 주문 API 호출 코드를 초기 버전에 넣지 않는다.
 - API Key, Secret Key, Access Token 관련 코드를 만들지 않는다.
 - 설정값 없이 `REAL_TRADING`으로 전환되는 경로를 만들지 않는다.
 

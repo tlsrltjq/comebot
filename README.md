@@ -56,10 +56,12 @@ PostgreSQL 실행 후 응답 예시:
 - 기본 거래 모드: `PAPER_TRADING`
 - Java 버전: 21
 - 저장소: 기본값은 InMemory, 설정으로 PostgreSQL/JPA 선택 가능
+- 시세 Provider: 기본값은 InMemory, 설정으로 Upbit 공개 시세 조회 선택 가능
 
 ## 현재 지원 기능
 
 - 테스트용 InMemory 시세 조회 및 가격 변경
+- Upbit 공개 Ticker API 기반 현재가 조회 옵션
 - 테스트용 단순 threshold 전략
 - BUY, SELL, HOLD 신호 생성
 - 주문 요청 생성
@@ -98,6 +100,29 @@ gradlew.bat bootRun
 ```
 
 기본 설정에서는 스케줄러와 알림, Telegram 발송이 모두 비활성이다.
+
+## 시세 Provider 설정
+
+기본값은 InMemory다. 테스트 가격 변경 API와 수동 검증 흐름은 기본적으로 이 provider를 사용한다.
+
+```properties
+market.price-provider=IN_MEMORY
+```
+
+Upbit 공개 Ticker API로 현재가를 조회하려면 아래처럼 설정한다.
+
+```properties
+market.price-provider=UPBIT
+```
+
+환경 변수로 실행할 수도 있다.
+
+```bat
+set MARKET_PRICE_PROVIDER=UPBIT
+gradlew.bat bootRun
+```
+
+Upbit provider는 공개 시세 API만 호출한다. Access Key, Secret Key, 주문 API는 사용하지 않는다. 시세를 Upbit에서 조회하더라도 주문 실행은 기존 `PAPER_TRADING` 흐름만 사용한다.
 
 ## 테스트 실행 방법
 
@@ -284,6 +309,7 @@ notification.send-rejected=true
 
 - 기본 거래 모드는 항상 `PAPER_TRADING`이다.
 - 실제 거래소 주문 API는 아직 없다.
+- Upbit provider는 공개 시세 조회만 수행하며 주문 API를 호출하지 않는다.
 - `REAL_TRADING`은 구현하지 않는다.
 - 기본 InMemory history는 애플리케이션 재시작 시 사라진다.
 - JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.

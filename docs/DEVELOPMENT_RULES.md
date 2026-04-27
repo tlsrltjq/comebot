@@ -34,6 +34,14 @@
 - 가격 변경 REST API를 운영용 실제 가격 변경 API처럼 구현하거나 설명하지 않는다.
 - Controller에는 가격 변경 검증, provider 호출, 응답 변환 외의 비즈니스 로직을 넣지 않는다.
 
+## 시세 Provider 규칙
+
+- 기본 시세 provider는 `IN_MEMORY`다.
+- Upbit provider는 공개 Ticker API만 사용한다.
+- Upbit Access Key, Secret Key는 추가하지 않는다.
+- 실제 거래소 주문 API는 추가하지 않는다.
+- 실제 시세를 사용하더라도 주문 실행은 `PAPER_TRADING` 흐름만 사용한다.
+
 ## 작업 원칙
 
 - 기능 추가 전에 관련 정책 문서를 확인한다.

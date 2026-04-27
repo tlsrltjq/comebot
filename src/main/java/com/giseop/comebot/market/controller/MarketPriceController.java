@@ -5,6 +5,7 @@ import com.giseop.comebot.market.dto.MarketPriceResponse;
 import com.giseop.comebot.market.dto.MarketPriceUpdateRequest;
 import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
 import java.math.BigDecimal;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,13 +18,13 @@ public class MarketPriceController {
 
     private final InMemoryMarketPriceProvider marketPriceProvider;
 
-    public MarketPriceController(InMemoryMarketPriceProvider marketPriceProvider) {
-        this.marketPriceProvider = marketPriceProvider;
+    public MarketPriceController(ObjectProvider<InMemoryMarketPriceProvider> marketPriceProvider) {
+        this.marketPriceProvider = marketPriceProvider.getIfAvailable();
     }
 
     @GetMapping("/api/market-prices/{market}")
     public ResponseEntity<MarketPriceResponse> getPrice(@PathVariable String market) {
-        if (isBlank(market)) {
+        if (isBlank(market) || marketPriceProvider == null) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -35,7 +36,7 @@ public class MarketPriceController {
             @PathVariable String market,
             @RequestBody(required = false) MarketPriceUpdateRequest request
     ) {
-        if (isBlank(market) || request == null || isInvalidPrice(request.price())) {
+        if (isBlank(market) || marketPriceProvider == null || request == null || isInvalidPrice(request.price())) {
             return ResponseEntity.badRequest().build();
         }
 
