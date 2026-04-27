@@ -242,6 +242,8 @@ gradlew.bat bootRun
 - `/run KRW-BTC`: 해당 market의 PAPER_TRADING 플로우 수동 실행
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약
 
+명령어와 버튼 callback은 설정된 `telegram.chat-id`와 일치하는 채팅에서 온 요청만 처리한다. 다른 chatId의 요청은 실행하지 않으며 거래 결과, history, status 정보를 응답하지 않는다.
+
 지원 버튼:
 
 - 상태 보기

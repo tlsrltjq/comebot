@@ -21,6 +21,7 @@
 - `/run KRW-BTC`: 해당 market의 `PAPER_TRADING` 트레이딩 플로우 실행 후 결과 응답
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약 응답
 - 알 수 없는 명령어: `/help` 안내 응답
+- 명령어는 configured `telegram.chat-id`와 일치하는 채팅에서 온 경우만 처리한다.
 
 ## 버튼 흐름
 
@@ -32,6 +33,8 @@
 - `ETH 이력 보기`: `KRW-ETH` 최근 이력 요약을 응답한다.
 - `도움말`: `/help`와 같은 안내를 응답한다.
 - 알 수 없는 callback data는 `/help` 안내를 응답한다.
+- 미허용 chatId의 callback은 기능을 실행하지 않는다.
+- callback query는 버튼 로딩이 남지 않도록 가능한 경우 `answerCallbackQuery`로 응답한다.
 
 ## 금지 사항
 
@@ -39,6 +42,7 @@
 - 민감 정보를 텔레그램 메시지에 노출하지 않는다.
 - 실패한 주문을 성공 메시지로 안내하지 않는다.
 - `telegram.enabled=true`, `telegram.inbound.enabled=true`, configured 상태가 아니면 polling을 실행하지 않는다.
+- configured `telegram.chat-id`와 일치하지 않는 요청에는 거래 결과, history, status 정보를 응답하지 않는다.
 - 버튼 callback으로도 실제 거래소 주문을 실행하지 않는다.
 
 ## 변경 규칙

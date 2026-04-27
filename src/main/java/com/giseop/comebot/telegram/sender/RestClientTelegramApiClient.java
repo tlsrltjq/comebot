@@ -35,11 +35,26 @@ public class RestClientTelegramApiClient implements TelegramApiClient {
                 .toBodilessEntity();
     }
 
+    @Override
+    public void answerCallbackQuery(String botToken, String callbackQueryId) {
+        restClient.post()
+                .uri("/bot{botToken}/answerCallbackQuery", botToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new AnswerCallbackQueryRequest(callbackQueryId))
+                .retrieve()
+                .toBodilessEntity();
+    }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private record SendMessageRequest(
             String chat_id,
             String text,
             Object reply_markup
+    ) {
+    }
+
+    private record AnswerCallbackQueryRequest(
+            String callback_query_id
     ) {
     }
 }

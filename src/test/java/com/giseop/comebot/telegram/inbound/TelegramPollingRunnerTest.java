@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.telegram.TelegramProperties;
+import com.giseop.comebot.telegram.sender.TelegramApiClient;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -38,19 +39,30 @@ class TelegramPollingRunnerTest {
     void enabledAndConfiguredCallsGetUpdatesAndHandlesCommand() {
         TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
         TelegramCommandService commandService = mock(TelegramCommandService.class);
-        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/help")));
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/status", "chat-id")));
 
         runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService).poll();
 
         verify(updateClient).getUpdates("token", 0);
-        verify(commandService).handle("/help");
+        verify(commandService).handle("/status");
+    }
+
+    @Test
+    void unauthorizedMessageDoesNotHandleCommand() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/status", "other-chat")));
+
+        runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService).poll();
+
+        verify(commandService, never()).handle("/status");
     }
 
     @Test
     void commandHandlingFailureDoesNotPropagate() {
         TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
         TelegramCommandService commandService = mock(TelegramCommandService.class);
-        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/run KRW-BTC")));
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/run KRW-BTC", "chat-id")));
         org.mockito.Mockito.doThrow(new IllegalStateException("failed"))
                 .when(commandService)
                 .handle("/run KRW-BTC");
@@ -63,7 +75,7 @@ class TelegramPollingRunnerTest {
     void callbackHandlingFailureDoesNotPropagate() {
         TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
         TelegramCommandService commandService = mock(TelegramCommandService.class);
-        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.callback(10, "RUN:KRW-BTC")));
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.callback(10, "RUN:KRW-BTC", "chat-id", "callback-1")));
         org.mockito.Mockito.doThrow(new IllegalStateException("failed"))
                 .when(commandService)
                 .handleCallback("RUN:KRW-BTC");
@@ -72,13 +84,68 @@ class TelegramPollingRunnerTest {
                 .doesNotThrowAnyException();
     }
 
+    @Test
+    void allowedRunCallbackHandlesCommandAndAnswersCallbackQuery() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        TelegramApiClient apiClient = mock(TelegramApiClient.class);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.callback(10, "RUN:KRW-BTC", "chat-id", "callback-1")));
+
+        runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService, apiClient).poll();
+
+        verify(commandService).handleCallback("RUN:KRW-BTC");
+        verify(apiClient).answerCallbackQuery("token", "callback-1");
+    }
+
+    @Test
+    void unauthorizedRunCallbackDoesNotHandleCommandButAnswersCallbackQuery() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        TelegramApiClient apiClient = mock(TelegramApiClient.class);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.callback(10, "RUN:KRW-BTC", "other-chat", "callback-1")));
+
+        runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService, apiClient).poll();
+
+        verify(commandService, never()).handleCallback("RUN:KRW-BTC");
+        verify(apiClient).answerCallbackQuery("token", "callback-1");
+    }
+
+    @Test
+    void unknownCallbackAnswersCallbackQuery() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        TelegramApiClient apiClient = mock(TelegramApiClient.class);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.callback(10, "UNKNOWN", "chat-id", "callback-1")));
+
+        runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService, apiClient).poll();
+
+        verify(commandService).handleCallback("UNKNOWN");
+        verify(apiClient).answerCallbackQuery("token", "callback-1");
+    }
+
     private TelegramPollingRunner runner(
             TelegramProperties telegramProperties,
             TelegramInboundProperties inboundProperties,
             TelegramUpdateClient updateClient,
             TelegramCommandService commandService
     ) {
-        return new TelegramPollingRunner(telegramProperties, inboundProperties, updateClient, commandService);
+        return runner(telegramProperties, inboundProperties, updateClient, commandService, mock(TelegramApiClient.class));
+    }
+
+    private TelegramPollingRunner runner(
+            TelegramProperties telegramProperties,
+            TelegramInboundProperties inboundProperties,
+            TelegramUpdateClient updateClient,
+            TelegramCommandService commandService,
+            TelegramApiClient telegramApiClient
+    ) {
+        return new TelegramPollingRunner(
+                telegramProperties,
+                inboundProperties,
+                updateClient,
+                commandService,
+                telegramApiClient
+        );
     }
 
     private TelegramProperties configuredTelegramProperties() {

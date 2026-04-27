@@ -26,4 +26,19 @@ class RestClientTelegramApiClientTest {
 
         server.verify();
     }
+
+    @Test
+    void answerCallbackQueryCallsTelegramApi() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+
+        server.expect(once(), requestTo("https://api.telegram.org/bottoken/answerCallbackQuery"))
+                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(content().json("{\"callback_query_id\":\"callback-1\"}"))
+                .andRespond(withSuccess("{}", APPLICATION_JSON));
+
+        new RestClientTelegramApiClient(builder.build()).answerCallbackQuery("token", "callback-1");
+
+        server.verify();
+    }
 }

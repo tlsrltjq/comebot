@@ -14,6 +14,7 @@
 - Telegram inbound polling은 기본 비활성이다.
 - Webhook은 사용하지 않고 로컬 개발 기준 `getUpdates` polling만 사용한다.
 - `telegram.enabled=true`, `telegram.inbound.enabled=true`, configured 상태일 때만 polling을 실행한다.
+- Inbound 명령과 callback은 configured `telegram.chat-id`와 일치하는 요청만 처리한다.
 - Bot Token, Chat ID 원문을 로그나 응답에 노출하지 않는다.
 - Telegram 명령 처리 실패가 애플리케이션 전체를 중단시키면 안 된다.
 - `/run` 명령은 기존 `PAPER_TRADING` 트레이딩 플로우만 실행한다.

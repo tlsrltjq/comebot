@@ -7,4 +7,7 @@ public interface TelegramApiClient {
     default void sendMessage(String botToken, String chatId, String text, Object replyMarkup) {
         sendMessage(botToken, chatId, text);
     }
+
+    default void answerCallbackQuery(String botToken, String callbackQueryId) {
+    }
 }
