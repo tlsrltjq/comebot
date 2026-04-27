@@ -132,6 +132,16 @@ GET /api/market-provider/status
 
 응답에는 provider, 외부 provider 여부, 설명 메시지만 포함한다. Access Key, Secret Key는 사용하지 않으며 응답에도 포함하지 않는다.
 
+## 시스템 상태 조회
+
+여러 상태 API의 주요 설정은 아래 API로 한 번에 확인한다. 설정 변경 API는 제공하지 않는다.
+
+```http
+GET /api/system/status
+```
+
+응답에는 database, marketProvider, strategy, risk, scheduler, notification, telegram 상태가 포함된다. Telegram은 configured 여부만 노출하고 Bot Token, Chat ID 원문은 포함하지 않는다. DB 연결 실패 시에도 `database.connected=false`로 응답한다.
+
 ## 전략 설정 상태 조회
 
 현재 `SimpleThresholdStrategy` 설정값은 아래 API로 확인한다. 설정 변경 API는 제공하지 않는다.
@@ -223,6 +233,12 @@ GET /api/trading-flow/run?market=KRW-BTC
 GET /api/trading-flow/history
 GET /api/trading-flow/history?market=KRW-BTC&limit=20
 GET /api/trading-flow/history/{id}
+```
+
+### 시스템
+
+```http
+GET /api/system/status
 ```
 
 ### 전략

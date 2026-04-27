@@ -52,6 +52,14 @@
 - Risk 상태 조회 API는 설정 변경 기능을 제공하지 않는다.
 - Risk Controller에는 리스크 검증이나 주문 실행 로직을 넣지 않는다.
 
+## 시스템 상태 조회
+
+- `GET /api/system/status`는 주요 설정 상태를 한 번에 조회한다.
+- 응답은 database, market provider, strategy, risk, scheduler, notification, telegram 섹션으로 구성한다.
+- DB 연결 실패는 전체 API 실패로 처리하지 않고 `database.connected=false`로 응답한다.
+- Telegram은 enabled/configured/inboundEnabled만 노출한다.
+- System Status API는 설정 변경 기능을 제공하지 않는다.
+
 ## 목표
 
 `comebot`은 코인 시세를 수집하고, 테스트용 전략 조건을 평가한 뒤, `PAPER_TRADING` 기준으로 주문 결과와 텔레그램 알림을 생성한다.
