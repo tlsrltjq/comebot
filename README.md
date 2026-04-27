@@ -142,6 +142,16 @@ GET /api/strategy/status
 
 응답에는 `strategyName`, `buyPrice`, `sellPrice`, `orderQuantity`만 포함한다.
 
+## 리스크 정책 상태 조회
+
+현재 리스크 정책 설정값은 아래 API로 확인한다. 설정 변경 API는 제공하지 않는다.
+
+```http
+GET /api/risk/status
+```
+
+응답에는 `maxOrderAmount`, `allowedMarkets`만 포함한다.
+
 ## 테스트 실행 방법
 
 ```bat
@@ -219,6 +229,12 @@ GET /api/trading-flow/history/{id}
 
 ```http
 GET /api/strategy/status
+```
+
+### 리스크
+
+```http
+GET /api/risk/status
 ```
 
 ### 테스트용 시세

@@ -44,6 +44,13 @@
 - `trading.max-order-amount=100000`
 - `trading.allowed-markets=KRW-BTC,KRW-ETH`
 
+## 상태 조회
+
+- `GET /api/risk/status`는 현재 리스크 정책 설정값을 조회한다.
+- 응답에는 `maxOrderAmount`, `allowedMarkets`만 포함한다.
+- 이 API는 설정 변경 기능을 제공하지 않는다.
+- 민감 정보는 응답에 포함하지 않는다.
+
 ## 실패 처리
 
 - 리스크 검증 실패는 명확한 사유를 남긴다.
