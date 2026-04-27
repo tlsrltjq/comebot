@@ -16,6 +16,7 @@
 ## 현재 지원 명령
 
 - `/help`: 사용 가능한 명령어 목록 응답
+- `/menu`: 인라인 버튼 메뉴 응답
 - `/status`: telegram, notification, scheduler 상태 요약 응답
 - `/run KRW-BTC`: 해당 market의 `PAPER_TRADING` 트레이딩 플로우 실행 후 결과 응답
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약 응답
@@ -23,9 +24,14 @@
 
 ## 버튼 흐름
 
-- 주문 후보 알림에는 승인, 취소 버튼을 둘 수 있다.
-- 승인 버튼은 `PAPER_TRADING` 주문만 생성한다.
-- 취소 버튼은 주문 후보를 `CANCELLED`로 변경한다.
+- `/menu` 명령은 인라인 버튼 메뉴를 응답한다.
+- `상태 보기`: `/status`와 같은 상태 요약을 응답한다.
+- `KRW-BTC 실행`: `KRW-BTC` market으로 기존 `PAPER_TRADING` 트레이딩 플로우를 실행한다.
+- `KRW-ETH 실행`: `KRW-ETH` market으로 기존 `PAPER_TRADING` 트레이딩 플로우를 실행한다.
+- `BTC 이력 보기`: `KRW-BTC` 최근 이력 요약을 응답한다.
+- `ETH 이력 보기`: `KRW-ETH` 최근 이력 요약을 응답한다.
+- `도움말`: `/help`와 같은 안내를 응답한다.
+- 알 수 없는 callback data는 `/help` 안내를 응답한다.
 
 ## 금지 사항
 
@@ -33,6 +39,7 @@
 - 민감 정보를 텔레그램 메시지에 노출하지 않는다.
 - 실패한 주문을 성공 메시지로 안내하지 않는다.
 - `telegram.enabled=true`, `telegram.inbound.enabled=true`, configured 상태가 아니면 polling을 실행하지 않는다.
+- 버튼 callback으로도 실제 거래소 주문을 실행하지 않는다.
 
 ## 변경 규칙
 

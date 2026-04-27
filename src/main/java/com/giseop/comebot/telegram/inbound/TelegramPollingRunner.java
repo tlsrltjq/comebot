@@ -58,6 +58,10 @@ public class TelegramPollingRunner {
 
     private void handleUpdate(TelegramUpdate update) {
         try {
+            if (update.callbackData() != null && !update.callbackData().isBlank()) {
+                telegramCommandService.handleCallback(update.callbackData());
+                return;
+            }
             telegramCommandService.handle(update.text());
         } catch (RuntimeException exception) {
             log.warn("Telegram command handling failed: {}", exception.getClass().getSimpleName());

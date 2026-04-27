@@ -16,6 +16,7 @@ public class TelegramCommandParser {
 
         return switch (command) {
             case "/help" -> new TelegramCommand(TelegramCommandType.HELP, null);
+            case "/menu" -> new TelegramCommand(TelegramCommandType.MENU, null);
             case "/status" -> new TelegramCommand(TelegramCommandType.STATUS, null);
             case "/run" -> new TelegramCommand(TelegramCommandType.RUN, market);
             case "/history" -> new TelegramCommand(TelegramCommandType.HISTORY, market);

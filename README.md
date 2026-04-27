@@ -237,9 +237,19 @@ gradlew.bat bootRun
 지원 명령어:
 
 - `/help`: 사용 가능한 명령어 목록
+- `/menu`: 인라인 버튼 메뉴 표시
 - `/status`: telegram, notification, scheduler 상태 요약
 - `/run KRW-BTC`: 해당 market의 PAPER_TRADING 플로우 수동 실행
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약
+
+지원 버튼:
+
+- 상태 보기
+- KRW-BTC 실행
+- KRW-ETH 실행
+- BTC 이력 보기
+- ETH 이력 보기
+- 도움말
 
 `.env.example`을 참고한다.
 
@@ -277,5 +287,6 @@ notification.send-rejected=true
 - JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
 - Bot Token, Chat ID는 코드에 하드코딩하지 않는다.
 - Telegram inbound polling은 기본 비활성이다.
+- Telegram 버튼 callback도 기존 `PAPER_TRADING` 플로우만 사용한다.
 - 이 프로젝트는 실제 수익을 보장하지 않는다.
 - 테스트용 가격 변경 API는 실제 시장 가격을 바꾸는 기능이 아니다.

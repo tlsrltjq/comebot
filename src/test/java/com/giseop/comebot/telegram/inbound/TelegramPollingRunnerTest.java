@@ -38,7 +38,7 @@ class TelegramPollingRunnerTest {
     void enabledAndConfiguredCallsGetUpdatesAndHandlesCommand() {
         TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
         TelegramCommandService commandService = mock(TelegramCommandService.class);
-        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(new TelegramUpdate(10, "/help")));
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/help")));
 
         runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService).poll();
 
@@ -50,10 +50,23 @@ class TelegramPollingRunnerTest {
     void commandHandlingFailureDoesNotPropagate() {
         TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
         TelegramCommandService commandService = mock(TelegramCommandService.class);
-        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(new TelegramUpdate(10, "/run KRW-BTC")));
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/run KRW-BTC")));
         org.mockito.Mockito.doThrow(new IllegalStateException("failed"))
                 .when(commandService)
                 .handle("/run KRW-BTC");
+
+        assertThatCode(() -> runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService).poll())
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void callbackHandlingFailureDoesNotPropagate() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.callback(10, "RUN:KRW-BTC")));
+        org.mockito.Mockito.doThrow(new IllegalStateException("failed"))
+                .when(commandService)
+                .handleCallback("RUN:KRW-BTC");
 
         assertThatCode(() -> runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService).poll())
                 .doesNotThrowAnyException();

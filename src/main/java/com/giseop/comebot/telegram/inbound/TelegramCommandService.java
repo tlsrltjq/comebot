@@ -19,7 +19,9 @@ public class TelegramCommandService {
     private static final int HISTORY_LIMIT = 5;
 
     private final TelegramCommandParser commandParser;
+    private final TelegramCallbackParser callbackParser;
     private final TelegramNotificationSender telegramNotificationSender;
+    private final com.giseop.comebot.telegram.sender.TelegramApiClient telegramApiClient;
     private final TelegramProperties telegramProperties;
     private final NotificationProperties notificationProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
@@ -28,7 +30,9 @@ public class TelegramCommandService {
 
     public TelegramCommandService(
             TelegramCommandParser commandParser,
+            TelegramCallbackParser callbackParser,
             TelegramNotificationSender telegramNotificationSender,
+            com.giseop.comebot.telegram.sender.TelegramApiClient telegramApiClient,
             TelegramProperties telegramProperties,
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
@@ -36,7 +40,9 @@ public class TelegramCommandService {
             TradingFlowHistoryService tradingFlowHistoryService
     ) {
         this.commandParser = commandParser;
+        this.callbackParser = callbackParser;
         this.telegramNotificationSender = telegramNotificationSender;
+        this.telegramApiClient = telegramApiClient;
         this.telegramProperties = telegramProperties;
         this.notificationProperties = notificationProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
@@ -48,10 +54,43 @@ public class TelegramCommandService {
         TelegramCommand command = commandParser.parse(text);
         String response = switch (command.type()) {
             case HELP, UNKNOWN -> helpMessage();
+            case MENU -> {
+                sendMenu();
+                yield null;
+            }
             case STATUS -> statusMessage();
             case RUN -> runMessage(command.market());
             case HISTORY -> historyMessage(command.market());
         };
+        if (response != null) {
+            sendText(response);
+        }
+    }
+
+    public void handleCallback(String data) {
+        TelegramCallback callback = callbackParser.parse(data);
+        String response = switch (callback.type()) {
+            case HELP, UNKNOWN -> helpMessage();
+            case STATUS -> statusMessage();
+            case RUN -> runMessage(callback.market());
+            case HISTORY -> historyMessage(callback.market());
+        };
+        sendText(response);
+    }
+
+    private void sendMenu() {
+        if (!telegramProperties.isEnabled() || !telegramProperties.isConfigured()) {
+            return;
+        }
+        telegramApiClient.sendMessage(
+                telegramProperties.getBotToken(),
+                telegramProperties.getChatId(),
+                "메뉴에서 실행할 기능을 선택하세요.",
+                TelegramInlineKeyboard.mainMenu()
+        );
+    }
+
+    private void sendText(String response) {
         telegramNotificationSender.sendMessage(new NotificationMessage("Telegram command response", response, Instant.now()));
     }
 
@@ -59,6 +98,7 @@ public class TelegramCommandService {
         return """
                 Available commands:
                 /help
+                /menu
                 /status
                 /run KRW-BTC
                 /history KRW-BTC

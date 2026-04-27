@@ -31,9 +31,17 @@ public class RestClientTelegramUpdateClient implements TelegramUpdateClient {
         }
 
         return response.result().stream()
-                .map(result -> new TelegramUpdate(result.update_id(), textOf(result)))
-                .filter(update -> update.text() != null && !update.text().isBlank())
+                .map(result -> updateOf(result))
+                .filter(update -> (update.text() != null && !update.text().isBlank())
+                        || (update.callbackData() != null && !update.callbackData().isBlank()))
                 .toList();
+    }
+
+    private TelegramUpdate updateOf(UpdateResult result) {
+        if (result.callback_query() != null) {
+            return TelegramUpdate.callback(result.update_id(), result.callback_query().data());
+        }
+        return TelegramUpdate.message(result.update_id(), textOf(result));
     }
 
     private String textOf(UpdateResult result) {
@@ -51,12 +59,18 @@ public class RestClientTelegramUpdateClient implements TelegramUpdateClient {
 
     private record UpdateResult(
             long update_id,
-            Message message
+            Message message,
+            CallbackQuery callback_query
     ) {
     }
 
     private record Message(
             String text
+    ) {
+    }
+
+    private record CallbackQuery(
+            String data
     ) {
     }
 }

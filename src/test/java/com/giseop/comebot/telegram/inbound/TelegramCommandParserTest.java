@@ -25,6 +25,14 @@ class TelegramCommandParserTest {
     }
 
     @Test
+    void parseMenuCommand() {
+        TelegramCommand command = parser.parse("/menu");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.MENU);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
     void parseRunCommandWithMarket() {
         TelegramCommand command = parser.parse("/run KRW-BTC");
 

@@ -1,5 +1,6 @@
 package com.giseop.comebot.telegram.sender;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -21,17 +22,24 @@ public class RestClientTelegramApiClient implements TelegramApiClient {
 
     @Override
     public void sendMessage(String botToken, String chatId, String text) {
+        sendMessage(botToken, chatId, text, null);
+    }
+
+    @Override
+    public void sendMessage(String botToken, String chatId, String text, Object replyMarkup) {
         restClient.post()
                 .uri("/bot{botToken}/sendMessage", botToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new SendMessageRequest(chatId, text))
+                .body(new SendMessageRequest(chatId, text, replyMarkup))
                 .retrieve()
                 .toBodilessEntity();
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private record SendMessageRequest(
             String chat_id,
-            String text
+            String text,
+            Object reply_markup
     ) {
     }
 }
