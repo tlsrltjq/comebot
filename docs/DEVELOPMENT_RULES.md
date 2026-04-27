@@ -1,5 +1,12 @@
 # Development Rules
 
+## Notification 규칙
+
+- 실제 Telegram Bot API 연결 전에는 `NotificationSender` 인터페이스로 알림 흐름을 검증한다.
+- Bot Token, Chat ID, API Key는 코드에 추가하지 않는다.
+- Scheduler나 Controller에 알림 메시지 생성 로직을 넣지 않는다.
+- 알림 실패가 주문 상태나 트레이딩 결과를 변경하면 안 된다.
+
 ## InMemory History 규칙
 
 - 현재 history 저장소는 InMemory 구현만 사용한다.

@@ -1,5 +1,12 @@
 # Telegram UX
 
+## 현재 단계
+
+- 현재는 실제 Telegram Bot API 연동 전 단계다.
+- Bot Token, Chat ID, Access Token은 추가하지 않는다.
+- Trading Flow 결과는 `NotificationSender` 인터페이스와 `LoggingNotificationSender`로 먼저 검증한다.
+- 실제 텔레그램 전송 실패가 주문 성공/실패 상태를 바꾸면 안 된다.
+
 ## 목적
 
 텔레그램은 봇 상태 확인, 페이퍼 주문 알림, 사용자 승인 또는 취소 흐름을 제공한다.
