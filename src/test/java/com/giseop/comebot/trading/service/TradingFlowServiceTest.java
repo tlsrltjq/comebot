@@ -11,6 +11,7 @@ import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
+import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
@@ -56,6 +57,7 @@ class TradingFlowServiceTest {
                 ),
                 new TradingFlowHistoryService(historyRepository),
                 notificationProperties,
+                new NotificationPolicyService(notificationProperties),
                 notificationService
         );
     }
@@ -126,6 +128,79 @@ class TradingFlowServiceTest {
     }
 
     @Test
+    void runDoesNotNotifyHoldByDefault() {
+        notificationProperties.setEnabled(true);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("150"));
+
+        tradingFlowService.run("KRW-BTC");
+
+        assertThat(notificationService.results).isEmpty();
+        assertThat(historyRepository.findRecent(1)).hasSize(1);
+    }
+
+    @Test
+    void runNotifiesHoldWhenSendHoldIsTrue() {
+        notificationProperties.setEnabled(true);
+        notificationProperties.setSendHold(true);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("150"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.signalType()).isEqualTo(SignalType.HOLD);
+        assertThat(notificationService.results).containsExactly(result);
+    }
+
+    @Test
+    void runNotifiesFilledWhenSendFilledIsTrue() {
+        notificationProperties.setEnabled(true);
+        notificationProperties.setSendFilled(true);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(notificationService.results).containsExactly(result);
+    }
+
+    @Test
+    void runDoesNotNotifyFilledWhenSendFilledIsFalse() {
+        notificationProperties.setEnabled(true);
+        notificationProperties.setSendFilled(false);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(notificationService.results).isEmpty();
+        assertThat(historyRepository.findRecent(1)).hasSize(1);
+    }
+
+    @Test
+    void runNotifiesRejectedWhenSendRejectedIsTrue() {
+        notificationProperties.setEnabled(true);
+        notificationProperties.setSendRejected(true);
+        marketPriceProvider.updatePrice("KRW-XRP", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-XRP");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(notificationService.results).containsExactly(result);
+    }
+
+    @Test
+    void runDoesNotNotifyRejectedWhenSendRejectedIsFalse() {
+        notificationProperties.setEnabled(true);
+        notificationProperties.setSendRejected(false);
+        marketPriceProvider.updatePrice("KRW-XRP", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-XRP");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(notificationService.results).isEmpty();
+        assertThat(historyRepository.findRecent(1)).hasSize(1);
+    }
+
+    @Test
     void runReturnsResultWhenNotificationFails() {
         notificationProperties.setEnabled(true);
         notificationService.fail = true;
@@ -151,6 +226,7 @@ class TradingFlowServiceTest {
     @Test
     void runCanNotifyHoldRejectedAndFilledResults() {
         notificationProperties.setEnabled(true);
+        notificationProperties.setSendHold(true);
 
         marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("150"));
         TradingFlowResult hold = tradingFlowService.run("KRW-BTC");

@@ -6,6 +6,7 @@ import com.giseop.comebot.execution.service.OrderExecutionService;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.market.provider.MarketPriceProvider;
+import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.strategy.domain.TradingSignal;
@@ -28,6 +29,7 @@ public class TradingFlowService {
     private final OrderExecutionService orderExecutionService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
     private final NotificationProperties notificationProperties;
+    private final NotificationPolicyService notificationPolicyService;
     private final TradingFlowNotificationService tradingFlowNotificationService;
 
     public TradingFlowService(
@@ -37,6 +39,7 @@ public class TradingFlowService {
             OrderExecutionService orderExecutionService,
             TradingFlowHistoryService tradingFlowHistoryService,
             NotificationProperties notificationProperties,
+            NotificationPolicyService notificationPolicyService,
             TradingFlowNotificationService tradingFlowNotificationService
     ) {
         this.marketPriceProvider = marketPriceProvider;
@@ -45,6 +48,7 @@ public class TradingFlowService {
         this.orderExecutionService = orderExecutionService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
         this.notificationProperties = notificationProperties;
+        this.notificationPolicyService = notificationPolicyService;
         this.tradingFlowNotificationService = tradingFlowNotificationService;
     }
 
@@ -86,7 +90,7 @@ public class TradingFlowService {
     }
 
     private void notifyIfEnabled(TradingFlowResult result) {
-        if (!notificationProperties.isEnabled()) {
+        if (!notificationProperties.isEnabled() || !notificationPolicyService.shouldNotify(result)) {
             return;
         }
 

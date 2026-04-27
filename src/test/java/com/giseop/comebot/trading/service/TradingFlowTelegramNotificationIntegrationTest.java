@@ -10,6 +10,7 @@ import com.giseop.comebot.execution.service.OrderExecutionService;
 import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
+import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
@@ -60,6 +61,7 @@ class TradingFlowTelegramNotificationIntegrationTest {
                 ),
                 new TradingFlowHistoryService(historyRepository),
                 notificationProperties,
+                new NotificationPolicyService(notificationProperties),
                 new TradingFlowNotificationService(new TelegramNotificationSender(telegramProperties, telegramApiClient))
         );
     }
