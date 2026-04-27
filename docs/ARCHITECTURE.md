@@ -3,8 +3,8 @@
 ## Notification
 
 - `notification` 계층은 Trading Flow 실행 결과를 알림 메시지로 변환한다.
-- 현재 구현은 `LoggingNotificationSender`만 사용한다.
-- 실제 Telegram Bot API는 아직 연결하지 않는다.
+- `LoggingNotificationSender`는 테스트용 알림 구현체다.
+- `TelegramNotificationSender`는 설정이 활성화되고 Telegram 설정이 완료된 경우 실제 Telegram sendMessage를 호출한다.
 - Trading Flow 결과는 history 저장 이후에만 선택적으로 알림 처리한다.
 - `notification.enabled=false`가 기본값이다.
 - 알림 실패가 주문 상태나 트레이딩 결과를 변경하면 안 된다.
@@ -13,8 +13,10 @@
 ## 실행 이력
 
 - Trading Flow 실행 결과는 `history` 계층에 저장한다.
-- 현재 저장소는 `InMemoryTradingFlowHistoryRepository`이며 실제 DB 저장소가 아니다.
-- 애플리케이션 재시작 시 이력은 사라진다.
+- 기본 저장소는 `InMemoryTradingFlowHistoryRepository`다.
+- `history.storage-type=JPA` 설정 시 PostgreSQL/JPA 저장소를 사용할 수 있다.
+- JPA 저장소 사용 시 `spring.jpa.hibernate.ddl-auto=none`을 유지하고 `schema.sql`을 먼저 적용한다.
+- InMemory 저장소는 애플리케이션 재시작 시 이력이 사라진다.
 - `GET /api/trading-flow/history`는 최근 실행 이력을 조회한다.
 - `GET /api/trading-flow/history/{id}`는 단건 실행 이력을 조회한다.
 - History Controller는 조회 요청 검증, service 호출, 응답 DTO 변환만 담당한다.
@@ -71,7 +73,9 @@
 3. `OrderRequestFactory`가 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
 4. Risk가 `OrderRequest`를 검증한다.
 5. Execution이 승인된 주문 요청만 페이퍼 트레이딩으로 처리한다.
-6. 수동 REST 엔드포인트는 이 흐름을 HTTP 요청으로 실행한다.
+6. Trading Flow 결과를 history 저장소에 저장한다.
+7. 알림 설정과 필터 정책을 통과하면 Notification 계층이 알림을 보낸다.
+8. 수동 REST 엔드포인트와 Telegram 명령은 이 흐름을 호출한다.
 
 ## 기본 모듈 경계
 

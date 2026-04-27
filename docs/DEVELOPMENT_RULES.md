@@ -2,8 +2,10 @@
 
 ## Notification 규칙
 
-- 실제 Telegram Bot API 연결 전에는 `NotificationSender` 인터페이스로 알림 흐름을 검증한다.
-- Bot Token, Chat ID, API Key는 코드에 추가하지 않는다.
+- 알림 발송은 `NotificationSender` 인터페이스를 통해 처리한다.
+- `LoggingNotificationSender`는 테스트용 구현체다.
+- `TelegramNotificationSender`는 설정이 활성화되고 Telegram 설정이 완료된 경우에만 Telegram API를 호출한다.
+- Bot Token, Chat ID, API Key는 코드에 하드코딩하지 않는다.
 - Scheduler나 Controller에 알림 메시지 생성 로직을 넣지 않는다.
 - 알림 실패가 주문 상태나 트레이딩 결과를 변경하면 안 된다.
 - 알림 실패가 history 저장 결과를 변경하면 안 된다.
@@ -20,11 +22,13 @@
 - `/run` 명령은 기존 `PAPER_TRADING` 트레이딩 플로우만 실행한다.
 - 인라인 버튼 callback 처리도 기존 `PAPER_TRADING` 트레이딩 플로우만 사용한다.
 
-## InMemory History 규칙
+## History 저장소 규칙
 
-- 현재 history 저장소는 InMemory 구현만 사용한다.
-- InMemory history는 운영 저장소가 아니며 애플리케이션 재시작 시 사라진다.
-- PostgreSQL/JPA 저장소는 별도 단계에서 명시적으로 추가한다.
+- 기본 history 저장소는 `IN_MEMORY`다.
+- InMemory history는 애플리케이션 재시작 시 사라진다.
+- `history.storage-type=JPA` 설정 시 PostgreSQL/JPA 저장소를 사용할 수 있다.
+- JPA 사용 시 `spring.jpa.hibernate.ddl-auto=none`을 유지한다.
+- JPA 사용 전 `src/main/resources/schema.sql`을 DB에 적용해야 한다.
 - History Controller에는 조회 검증, service 호출, 응답 변환 외의 비즈니스 로직을 넣지 않는다.
 
 ## 테스트용 가격 API 규칙
@@ -38,7 +42,9 @@
 
 - 기본 시세 provider는 `IN_MEMORY`다.
 - Upbit provider는 공개 Ticker API만 사용한다.
+- Upbit 공개 Ticker API 사용은 허용한다.
 - Upbit Access Key, Secret Key는 추가하지 않는다.
+- 인증키 기반 계정 API는 추가하지 않는다.
 - 실제 거래소 주문 API는 추가하지 않는다.
 - 실제 시세를 사용하더라도 주문 실행은 `PAPER_TRADING` 흐름만 사용한다.
 
@@ -68,7 +74,7 @@
 ## 구현 제한
 
 - 초기 버전은 `PAPER_TRADING`만 구현한다.
-- 실제 시세 조회 API는 별도 승인 전까지 구현하지 않는다.
+- 인증이 필요한 실제 시세 API는 별도 승인 전까지 구현하지 않는다.
 - 실제 주문 API는 별도 승인 전까지 구현하지 않는다.
 - `REAL_TRADING` 활성화는 명시적 설정과 별도 검증 없이는 허용하지 않는다.
 
