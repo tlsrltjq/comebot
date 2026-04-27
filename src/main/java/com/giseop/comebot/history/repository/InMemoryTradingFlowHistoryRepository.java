@@ -33,6 +33,16 @@ public class InMemoryTradingFlowHistoryRepository implements TradingFlowHistoryR
     }
 
     @Override
+    public List<TradingFlowHistory> findRecentByMarket(String market, int limit) {
+        return recentIds.stream()
+                .map(histories::get)
+                .filter(Objects::nonNull)
+                .filter(history -> market.equals(history.market()))
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
     public Optional<TradingFlowHistory> findById(String id) {
         return Optional.ofNullable(histories.get(id));
     }

@@ -21,13 +21,14 @@ public class TradingFlowHistoryController {
 
     @GetMapping("/api/trading-flow/history")
     public ResponseEntity<List<TradingFlowHistoryResponse>> findRecent(
+            @RequestParam(required = false) String market,
             @RequestParam(defaultValue = "20") int limit
     ) {
-        if (limit <= 0) {
+        if (limit <= 0 || (market != null && market.isBlank())) {
             return ResponseEntity.badRequest().build();
         }
 
-        List<TradingFlowHistoryResponse> response = tradingFlowHistoryService.findRecent(limit).stream()
+        List<TradingFlowHistoryResponse> response = tradingFlowHistoryService.findRecent(market, limit).stream()
                 .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(response);

@@ -34,4 +34,32 @@ class TradingFlowHistoryServiceTest {
         assertThat(service.findById(history.id())).contains(history);
         assertThat(service.findRecent(20)).containsExactly(history);
     }
+
+    @Test
+    void findRecentByMarketReturnsOnlyMatchingMarketInRecentOrder() {
+        TradingFlowHistoryService service = new TradingFlowHistoryService(
+                new InMemoryTradingFlowHistoryRepository()
+        );
+
+        TradingFlowHistory btcOld = service.save(result("KRW-BTC"));
+        TradingFlowHistory eth = service.save(result("KRW-ETH"));
+        TradingFlowHistory btcNew = service.save(result("KRW-BTC"));
+
+        assertThat(service.findRecent("KRW-BTC", 20)).containsExactly(btcNew, btcOld);
+        assertThat(service.findRecent("KRW-ETH", 20)).containsExactly(eth);
+        assertThat(service.findRecent("KRW-XRP", 20)).isEmpty();
+    }
+
+    private TradingFlowResult result(String market) {
+        return new TradingFlowResult(
+                market,
+                new BigDecimal("100"),
+                SignalType.BUY,
+                "Test threshold buy signal",
+                true,
+                OrderStatus.FILLED,
+                "Paper trading order filled",
+                Instant.now()
+        );
+    }
 }

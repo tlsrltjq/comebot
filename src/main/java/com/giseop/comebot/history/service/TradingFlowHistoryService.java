@@ -37,6 +37,13 @@ public class TradingFlowHistoryService {
         return tradingFlowHistoryRepository.findRecent(limit);
     }
 
+    public List<TradingFlowHistory> findRecent(String market, int limit) {
+        if (market == null) {
+            return findRecent(limit);
+        }
+        return tradingFlowHistoryRepository.findRecentByMarket(market, limit);
+    }
+
     public Optional<TradingFlowHistory> findById(String id) {
         return tradingFlowHistoryRepository.findById(id);
     }

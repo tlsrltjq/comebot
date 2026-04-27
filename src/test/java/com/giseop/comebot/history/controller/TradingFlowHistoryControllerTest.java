@@ -30,7 +30,7 @@ class TradingFlowHistoryControllerTest {
 
     @Test
     void findRecentReturnsHistoryList() throws Exception {
-        when(tradingFlowHistoryService.findRecent(20))
+        when(tradingFlowHistoryService.findRecent(null, 20))
                 .thenReturn(List.of(history("history-1")));
 
         mockMvc.perform(get("/api/trading-flow/history"))
@@ -39,6 +39,42 @@ class TradingFlowHistoryControllerTest {
                 .andExpect(jsonPath("$[0].market").value("KRW-BTC"))
                 .andExpect(jsonPath("$[0].currentPrice").value(100))
                 .andExpect(jsonPath("$[0].orderStatus").value("FILLED"));
+    }
+
+    @Test
+    void findRecentReturnsFilteredKrwBtcHistoryList() throws Exception {
+        when(tradingFlowHistoryService.findRecent("KRW-BTC", 20))
+                .thenReturn(List.of(history("history-1", "KRW-BTC")));
+
+        mockMvc.perform(get("/api/trading-flow/history").param("market", "KRW-BTC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+    }
+
+    @Test
+    void findRecentReturnsFilteredKrwEthHistoryList() throws Exception {
+        when(tradingFlowHistoryService.findRecent("KRW-ETH", 20))
+                .thenReturn(List.of(history("history-2", "KRW-ETH")));
+
+        mockMvc.perform(get("/api/trading-flow/history").param("market", "KRW-ETH"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-ETH"));
+    }
+
+    @Test
+    void findRecentReturnsEmptyListForUnknownMarket() throws Exception {
+        when(tradingFlowHistoryService.findRecent("KRW-XRP", 20))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/trading-flow/history").param("market", "KRW-XRP"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void findRecentReturnsBadRequestWhenMarketIsBlank() throws Exception {
+        mockMvc.perform(get("/api/trading-flow/history").param("market", " "))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -68,9 +104,13 @@ class TradingFlowHistoryControllerTest {
     }
 
     private TradingFlowHistory history(String id) {
+        return history(id, "KRW-BTC");
+    }
+
+    private TradingFlowHistory history(String id, String market) {
         return new TradingFlowHistory(
                 id,
-                "KRW-BTC",
+                market,
                 new BigDecimal("100"),
                 SignalType.BUY,
                 "Test threshold buy signal",

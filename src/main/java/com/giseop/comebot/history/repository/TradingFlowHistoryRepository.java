@@ -10,5 +10,7 @@ public interface TradingFlowHistoryRepository {
 
     List<TradingFlowHistory> findRecent(int limit);
 
+    List<TradingFlowHistory> findRecentByMarket(String market, int limit);
+
     Optional<TradingFlowHistory> findById(String id);
 }
