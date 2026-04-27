@@ -7,8 +7,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.database.DatabaseHealthResult;
+import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
+import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
+import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationMessage;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
@@ -81,7 +87,32 @@ class TelegramCommandServiceTest {
         service(sender, mock(TradingFlowService.class)).handleCallback("STATUS");
 
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("telegram.enabled=true", "scheduler.enabled=false");
+        assertThat(messageCaptor.getValue().body()).contains(
+                "DB connected: true",
+                "Market Provider: IN_MEMORY",
+                "Strategy: SimpleThresholdStrategy",
+                "Buy Price: 90000000",
+                "Sell Price: 110000000",
+                "Order Quantity: 0.001",
+                "Max Order Amount: 100000",
+                "Allowed Markets: [KRW-BTC, KRW-ETH]",
+                "Scheduler Enabled: false",
+                "Notification Enabled: false",
+                "Telegram Enabled: true",
+                "Telegram Inbound Enabled: false"
+        );
+    }
+
+    @Test
+    void statusCommandDoesNotExposeSensitiveValues() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handle("/status");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body())
+                .doesNotContain("token", "chat-id", "password", "secret");
     }
 
     @Test
@@ -167,7 +198,12 @@ class TelegramCommandServiceTest {
                 new TelegramCallbackParser(),
                 sender,
                 telegramApiClient,
+                databaseHealthService(),
+                marketPriceProviderProperties(),
+                strategyProperties(),
+                tradingProperties(),
                 configuredTelegramProperties(),
+                new TelegramInboundProperties(),
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
                 tradingFlowService,
@@ -180,6 +216,33 @@ class TelegramCommandServiceTest {
         properties.setEnabled(true);
         properties.setBotToken("token");
         properties.setChatId("chat-id");
+        return properties;
+    }
+
+    private DatabaseHealthService databaseHealthService() {
+        DatabaseHealthService service = mock(DatabaseHealthService.class);
+        when(service.check()).thenReturn(new DatabaseHealthResult(true, "PostgreSQL"));
+        return service;
+    }
+
+    private MarketPriceProviderProperties marketPriceProviderProperties() {
+        MarketPriceProviderProperties properties = mock(MarketPriceProviderProperties.class);
+        when(properties.getPriceProvider()).thenReturn(MarketPriceProviderType.IN_MEMORY);
+        return properties;
+    }
+
+    private StrategyProperties strategyProperties() {
+        StrategyProperties properties = mock(StrategyProperties.class);
+        when(properties.getBuyPrice()).thenReturn(new BigDecimal("90000000"));
+        when(properties.getSellPrice()).thenReturn(new BigDecimal("110000000"));
+        when(properties.getOrderQuantity()).thenReturn(new BigDecimal("0.001"));
+        return properties;
+    }
+
+    private TradingProperties tradingProperties() {
+        TradingProperties properties = mock(TradingProperties.class);
+        when(properties.getMaxOrderAmount()).thenReturn(new BigDecimal("100000"));
+        when(properties.getAllowedMarkets()).thenReturn(List.of("KRW-BTC", "KRW-ETH"));
         return properties;
     }
 }

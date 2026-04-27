@@ -1,7 +1,11 @@
 package com.giseop.comebot.telegram.inbound;
 
+import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
+import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.notification.NotificationMessage;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
@@ -17,12 +21,18 @@ import org.springframework.stereotype.Service;
 public class TelegramCommandService {
 
     private static final int HISTORY_LIMIT = 5;
+    private static final String STRATEGY_NAME = "SimpleThresholdStrategy";
 
     private final TelegramCommandParser commandParser;
     private final TelegramCallbackParser callbackParser;
     private final TelegramNotificationSender telegramNotificationSender;
     private final com.giseop.comebot.telegram.sender.TelegramApiClient telegramApiClient;
+    private final DatabaseHealthService databaseHealthService;
+    private final MarketPriceProviderProperties marketPriceProviderProperties;
+    private final StrategyProperties strategyProperties;
+    private final TradingProperties tradingProperties;
     private final TelegramProperties telegramProperties;
+    private final TelegramInboundProperties telegramInboundProperties;
     private final NotificationProperties notificationProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final TradingFlowService tradingFlowService;
@@ -33,7 +43,12 @@ public class TelegramCommandService {
             TelegramCallbackParser callbackParser,
             TelegramNotificationSender telegramNotificationSender,
             com.giseop.comebot.telegram.sender.TelegramApiClient telegramApiClient,
+            DatabaseHealthService databaseHealthService,
+            MarketPriceProviderProperties marketPriceProviderProperties,
+            StrategyProperties strategyProperties,
+            TradingProperties tradingProperties,
             TelegramProperties telegramProperties,
+            TelegramInboundProperties telegramInboundProperties,
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
             TradingFlowService tradingFlowService,
@@ -43,7 +58,12 @@ public class TelegramCommandService {
         this.callbackParser = callbackParser;
         this.telegramNotificationSender = telegramNotificationSender;
         this.telegramApiClient = telegramApiClient;
+        this.databaseHealthService = databaseHealthService;
+        this.marketPriceProviderProperties = marketPriceProviderProperties;
+        this.strategyProperties = strategyProperties;
+        this.tradingProperties = tradingProperties;
         this.telegramProperties = telegramProperties;
+        this.telegramInboundProperties = telegramInboundProperties;
         this.notificationProperties = notificationProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.tradingFlowService = tradingFlowService;
@@ -107,18 +127,32 @@ public class TelegramCommandService {
 
     private String statusMessage() {
         return """
-                Status
-                telegram.enabled=%s
-                telegram.configured=%s
-                notification.enabled=%s
-                scheduler.enabled=%s
-                scheduler.markets=%s
+                System status
+                DB connected: %s
+                Market Provider: %s
+                Strategy: %s
+                Buy Price: %s
+                Sell Price: %s
+                Order Quantity: %s
+                Max Order Amount: %s
+                Allowed Markets: %s
+                Scheduler Enabled: %s
+                Notification Enabled: %s
+                Telegram Enabled: %s
+                Telegram Inbound Enabled: %s
                 """.formatted(
-                telegramProperties.isEnabled(),
-                telegramProperties.isConfigured(),
-                notificationProperties.isEnabled(),
+                databaseHealthService.check().connected(),
+                marketPriceProviderProperties.getPriceProvider(),
+                STRATEGY_NAME,
+                strategyProperties.getBuyPrice(),
+                strategyProperties.getSellPrice(),
+                strategyProperties.getOrderQuantity(),
+                tradingProperties.getMaxOrderAmount(),
+                tradingProperties.getAllowedMarkets(),
                 tradingSchedulerProperties.isEnabled(),
-                tradingSchedulerProperties.getMarkets()
+                notificationProperties.isEnabled(),
+                telegramProperties.isEnabled(),
+                telegramInboundProperties.isEnabled()
         ).trim();
     }
 

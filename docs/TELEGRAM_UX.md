@@ -17,7 +17,7 @@
 
 - `/help`: 사용 가능한 명령어 목록 응답
 - `/menu`: 인라인 버튼 메뉴 응답
-- `/status`: telegram, notification, scheduler 상태 요약 응답
+- `/status`: DB, Market Provider, Strategy, Risk, Scheduler, Notification, Telegram 상태 요약 응답
 - `/run KRW-BTC`: 해당 market의 `PAPER_TRADING` 트레이딩 플로우 실행 후 결과 응답
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약 응답
 - 알 수 없는 명령어: `/help` 안내 응답
@@ -35,6 +35,21 @@
 - 알 수 없는 callback data는 `/help` 안내를 응답한다.
 - 미허용 chatId의 callback은 기능을 실행하지 않는다.
 - callback query는 버튼 로딩이 남지 않도록 가능한 경우 `answerCallbackQuery`로 응답한다.
+
+## Status 표시 항목
+
+- DB 연결 여부
+- Market Provider
+- Strategy 이름
+- Buy/Sell 기준가
+- 주문 수량
+- 최대 주문 금액
+- 허용 Market
+- Scheduler enabled
+- Notification enabled
+- Telegram enabled
+- Telegram inbound enabled
+- Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
 
 ## 금지 사항
 

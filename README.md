@@ -320,7 +320,7 @@ gradlew.bat bootRun
 
 - `/help`: 사용 가능한 명령어 목록
 - `/menu`: 인라인 버튼 메뉴 표시
-- `/status`: telegram, notification, scheduler 상태 요약
+- `/status`: DB, Market Provider, Strategy, Risk, Scheduler, Notification, Telegram 상태 요약
 - `/run KRW-BTC`: 해당 market의 PAPER_TRADING 플로우 수동 실행
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약
 
@@ -334,6 +334,8 @@ gradlew.bat bootRun
 - BTC 이력 보기
 - ETH 이력 보기
 - 도움말
+
+`/status`와 `상태 보기` 버튼은 DB 연결 여부, Market Provider, 전략 기준값, 주문 수량, 최대 주문 금액, 허용 Market, Scheduler/Notification/Telegram 활성화 상태를 표시한다. Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
 
 `.env.example`을 참고한다.
 
