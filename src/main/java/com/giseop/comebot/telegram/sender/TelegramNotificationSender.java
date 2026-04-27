@@ -36,13 +36,17 @@ public class TelegramNotificationSender implements NotificationSender {
     }
 
     public boolean sendMessage(NotificationMessage message) {
+        return sendMessageWithResult(message).sent();
+    }
+
+    public TelegramSendResult sendMessageWithResult(NotificationMessage message) {
         if (!telegramProperties.isEnabled()) {
             log.warn("Telegram notification skipped because telegram.enabled=false");
-            return false;
+            return new TelegramSendResult(false, TelegramSendReason.TELEGRAM_DISABLED);
         }
         if (!telegramProperties.isConfigured()) {
             log.warn("Telegram notification skipped because telegram is not configured");
-            return false;
+            return new TelegramSendResult(false, TelegramSendReason.TELEGRAM_NOT_CONFIGURED);
         }
 
         try {
@@ -52,10 +56,10 @@ public class TelegramNotificationSender implements NotificationSender {
                     .body(new SendMessageRequest(telegramProperties.getChatId(), message.body()))
                     .retrieve()
                     .toBodilessEntity();
-            return true;
+            return new TelegramSendResult(true, TelegramSendReason.SENT);
         } catch (RestClientException exception) {
             log.warn("Telegram notification send failed: {}", exception.getClass().getSimpleName());
-            return false;
+            return new TelegramSendResult(false, TelegramSendReason.TELEGRAM_API_FAILED);
         }
     }
 

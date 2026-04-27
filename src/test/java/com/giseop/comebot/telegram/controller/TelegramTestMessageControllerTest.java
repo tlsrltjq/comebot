@@ -7,7 +7,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.giseop.comebot.telegram.sender.TelegramSendReason;
 import com.giseop.comebot.telegram.service.TelegramTestMessageService;
+import com.giseop.comebot.telegram.service.TelegramTestMessageResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -26,14 +28,16 @@ class TelegramTestMessageControllerTest {
 
     @Test
     void sendTestMessageCallsServiceForValidMessage() throws Exception {
-        when(telegramTestMessageService.sendTestMessage("hello")).thenReturn(true);
+        when(telegramTestMessageService.sendTestMessage("hello"))
+                .thenReturn(new TelegramTestMessageResult(true, TelegramSendReason.SENT));
 
         mockMvc.perform(post("/api/telegram/test-message")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"message\":\"hello\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sent").value(true))
-                .andExpect(jsonPath("$.message").value("hello"));
+                .andExpect(jsonPath("$.message").value("hello"))
+                .andExpect(jsonPath("$.reason").value("SENT"));
 
         verify(telegramTestMessageService).sendTestMessage("hello");
     }
@@ -50,19 +54,22 @@ class TelegramTestMessageControllerTest {
 
     @Test
     void sendTestMessageReturnsSentFalseWhenServiceReturnsFalse() throws Exception {
-        when(telegramTestMessageService.sendTestMessage("hello")).thenReturn(false);
+        when(telegramTestMessageService.sendTestMessage("hello"))
+                .thenReturn(new TelegramTestMessageResult(false, TelegramSendReason.TELEGRAM_DISABLED));
 
         mockMvc.perform(post("/api/telegram/test-message")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"message\":\"hello\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sent").value(false))
-                .andExpect(jsonPath("$.message").value("hello"));
+                .andExpect(jsonPath("$.message").value("hello"))
+                .andExpect(jsonPath("$.reason").value("TELEGRAM_DISABLED"));
     }
 
     @Test
     void sendTestMessageDoesNotExposeTokenOrChatId() throws Exception {
-        when(telegramTestMessageService.sendTestMessage("hello")).thenReturn(false);
+        when(telegramTestMessageService.sendTestMessage("hello"))
+                .thenReturn(new TelegramTestMessageResult(false, TelegramSendReason.TELEGRAM_NOT_CONFIGURED));
 
         mockMvc.perform(post("/api/telegram/test-message")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -70,5 +77,18 @@ class TelegramTestMessageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.botToken").doesNotExist())
                 .andExpect(jsonPath("$.chatId").doesNotExist());
+    }
+
+    @Test
+    void sendTestMessageReturnsApiFailedReason() throws Exception {
+        when(telegramTestMessageService.sendTestMessage("hello"))
+                .thenReturn(new TelegramTestMessageResult(false, TelegramSendReason.TELEGRAM_API_FAILED));
+
+        mockMvc.perform(post("/api/telegram/test-message")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"hello\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sent").value(false))
+                .andExpect(jsonPath("$.reason").value("TELEGRAM_API_FAILED"));
     }
 }

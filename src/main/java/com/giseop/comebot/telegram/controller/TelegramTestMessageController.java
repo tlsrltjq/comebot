@@ -2,6 +2,7 @@ package com.giseop.comebot.telegram.controller;
 
 import com.giseop.comebot.telegram.dto.TelegramTestMessageRequest;
 import com.giseop.comebot.telegram.dto.TelegramTestMessageResponse;
+import com.giseop.comebot.telegram.service.TelegramTestMessageResult;
 import com.giseop.comebot.telegram.service.TelegramTestMessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +26,11 @@ public class TelegramTestMessageController {
             return ResponseEntity.badRequest().build();
         }
 
-        boolean sent = telegramTestMessageService.sendTestMessage(request.message());
-        return ResponseEntity.ok(new TelegramTestMessageResponse(sent, request.message()));
+        TelegramTestMessageResult result = telegramTestMessageService.sendTestMessage(request.message());
+        return ResponseEntity.ok(new TelegramTestMessageResponse(
+                result.sent(),
+                request.message(),
+                result.reason()
+        ));
     }
 }

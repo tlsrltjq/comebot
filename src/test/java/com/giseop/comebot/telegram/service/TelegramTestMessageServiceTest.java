@@ -10,6 +10,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.sender.TelegramNotificationSender;
+import com.giseop.comebot.telegram.sender.TelegramSendReason;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -25,9 +26,10 @@ class TelegramTestMessageServiceTest {
 
         server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
 
-        boolean sent = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
 
-        assertThat(sent).isFalse();
+        assertThat(result.sent()).isFalse();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_DISABLED);
         server.verify();
     }
 
@@ -40,9 +42,10 @@ class TelegramTestMessageServiceTest {
 
         server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
 
-        boolean sent = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
 
-        assertThat(sent).isFalse();
+        assertThat(result.sent()).isFalse();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_NOT_CONFIGURED);
         server.verify();
     }
 
@@ -55,9 +58,10 @@ class TelegramTestMessageServiceTest {
         server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
                 .andRespond(withServerError());
 
-        boolean sent = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
 
-        assertThat(sent).isFalse();
+        assertThat(result.sent()).isFalse();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_API_FAILED);
         server.verify();
     }
 
@@ -70,9 +74,10 @@ class TelegramTestMessageServiceTest {
         server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
                 .andRespond(withSuccess("{}", APPLICATION_JSON));
 
-        boolean sent = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
 
-        assertThat(sent).isTrue();
+        assertThat(result.sent()).isTrue();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.SENT);
         server.verify();
     }
 

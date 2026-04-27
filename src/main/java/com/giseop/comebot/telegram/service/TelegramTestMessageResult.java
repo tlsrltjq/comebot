@@ -1,10 +1,9 @@
-package com.giseop.comebot.telegram.dto;
+package com.giseop.comebot.telegram.service;
 
 import com.giseop.comebot.telegram.sender.TelegramSendReason;
 
-public record TelegramTestMessageResponse(
+public record TelegramTestMessageResult(
         boolean sent,
-        String message,
         TelegramSendReason reason
 ) {
 }

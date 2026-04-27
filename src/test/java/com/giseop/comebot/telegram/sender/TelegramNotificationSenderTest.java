@@ -28,9 +28,11 @@ class TelegramNotificationSenderTest {
 
         server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
 
-        boolean sent = new TelegramNotificationSender(properties, builder.build()).sendMessage(message());
+        TelegramSendResult result = new TelegramNotificationSender(properties, builder.build())
+                .sendMessageWithResult(message());
 
-        assertThat(sent).isFalse();
+        assertThat(result.sent()).isFalse();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_DISABLED);
         server.verify();
     }
 
@@ -43,9 +45,11 @@ class TelegramNotificationSenderTest {
 
         server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
 
-        boolean sent = new TelegramNotificationSender(properties, builder.build()).sendMessage(message());
+        TelegramSendResult result = new TelegramNotificationSender(properties, builder.build())
+                .sendMessageWithResult(message());
 
-        assertThat(sent).isFalse();
+        assertThat(result.sent()).isFalse();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_NOT_CONFIGURED);
         server.verify();
     }
 
@@ -60,9 +64,11 @@ class TelegramNotificationSenderTest {
                 .andExpect(content().json("{\"chat_id\":\"chat-id\",\"text\":\"body\"}"))
                 .andRespond(withSuccess("{}", APPLICATION_JSON));
 
-        boolean sent = new TelegramNotificationSender(properties, builder.build()).sendMessage(message());
+        TelegramSendResult result = new TelegramNotificationSender(properties, builder.build())
+                .sendMessageWithResult(message());
 
-        assertThat(sent).isTrue();
+        assertThat(result.sent()).isTrue();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.SENT);
         server.verify();
     }
 
@@ -91,9 +97,10 @@ class TelegramNotificationSenderTest {
                 .andRespond(withServerError());
 
         TelegramNotificationSender sender = new TelegramNotificationSender(properties, builder.build());
-        boolean sent = sender.sendMessage(message());
+        TelegramSendResult result = sender.sendMessageWithResult(message());
 
-        assertThat(sent).isFalse();
+        assertThat(result.sent()).isFalse();
+        assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_API_FAILED);
         server.verify();
     }
 
