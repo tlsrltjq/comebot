@@ -2,7 +2,7 @@
 
 ## 초기 단계
 
-- `PRICE_CAPTURED`: 시세가 수집된 단계
+- `PRICE_CAPTURED`: 테스트용 시세 공급자가 시세를 제공한 단계
 - `SIGNAL_DETECTED`: 전략이 BUY, SELL, HOLD 신호를 만든 단계
 - `REQUESTED`: BUY 또는 SELL 신호가 주문 요청으로 변환된 상태
 - `REJECTED`: 입력값 또는 리스크 검증에서 거절된 상태
@@ -11,16 +11,22 @@
 
 ## 기본 흐름
 
-1. 시세 수집
+1. 테스트용 시세 조회
 2. 테스트용 전략 판단
 3. `SIGNAL_DETECTED` 생성
-4. HOLD 신호면 주문 요청을 만들지 않음
+4. HOLD 신호면 주문 요청을 만들지 않고 흐름 종료
 5. BUY 또는 SELL 신호면 주문 요청 생성
 6. 리스크 검증
 7. 리스크 승인 시 페이퍼 실행 게이트웨이 호출
 8. 리스크 거절 시 게이트웨이를 호출하지 않고 `REJECTED` 결과 생성
 9. `FILLED`, `REJECTED`, `FAILED` 중 하나로 결과 생성
 10. 텔레그램 알림
+
+## HOLD 처리
+
+- HOLD 신호는 주문 요청으로 변환하지 않는다.
+- HOLD 신호는 리스크 검증이나 주문 실행으로 이어지지 않는다.
+- HOLD 결과는 주문 없음 상태로 기록한다.
 
 ## SIGNAL_DETECTED 처리
 

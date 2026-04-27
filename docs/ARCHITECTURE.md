@@ -1,31 +1,46 @@
 # Architecture
 
+## 테스트용 가격 변경 API
+
+- `GET /api/market-prices/{market}`는 `InMemoryMarketPriceProvider`에 저장된 테스트 가격을 반환한다.
+- `PUT /api/market-prices/{market}`는 요청 본문의 `price`로 테스트 가격을 변경한다.
+- 가격 변경 API는 실제 거래소 가격 수정 API가 아니다.
+- 가격 변경 후 `GET /api/trading-flow/run?market=...`으로 BUY, SELL, HOLD 흐름을 수동 검증할 수 있다.
+- MarketPriceController는 요청 검증, provider 호출, 응답 DTO 변환만 담당한다.
+
 ## 목표
 
 `comebot`은 코인 시세를 수집하고, 테스트용 전략 조건을 평가한 뒤, `PAPER_TRADING` 기준으로 주문 결과와 텔레그램 알림을 생성한다.
 
 ## 기본 흐름
 
-1. Market Data가 `MarketPrice`를 만든다.
+1. Market Provider가 `MarketPrice`를 제공한다.
 2. Strategy가 `MarketPrice`를 평가해 `TradingSignal`을 만든다.
 3. `OrderRequestFactory`가 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
 4. Risk가 `OrderRequest`를 검증한다.
 5. Execution이 승인된 주문 요청만 페이퍼 트레이딩으로 처리한다.
+6. 수동 REST 엔드포인트는 이 흐름을 HTTP 요청으로 실행한다.
 
 ## 기본 모듈 경계
 
-- Market Data: 거래소 또는 외부 공급자에서 시세를 조회한다.
+- Market Provider: 실제 거래소 API 없이 테스트용 시세를 제공한다.
 - Strategy: 테스트용 기준으로 BUY, SELL, HOLD 신호를 만든다.
 - Risk: 주문 요청이 정책을 통과하는지 검증한다.
 - Execution: 주문 실행을 추상화하고 페이퍼 트레이딩 결과를 생성한다.
+- Trading Flow: 시세, 전략, 주문 요청 생성, 리스크 검증, 페이퍼 실행을 한 번에 연결한다.
+- REST Controller: 수동 실행 요청을 받고 Trading Flow 결과를 응답 DTO로 변환한다.
 - Telegram: 사용자 명령, 버튼, 알림 메시지를 처리한다.
 - Configuration: 실행 모드, 전략 기준값, 거래 제한 설정을 관리한다.
 
 ## 계층 구성
 
 - `market.domain`: 시세 스냅샷을 정의한다.
+- `market.provider`: 테스트용 시세 공급자 인터페이스와 메모리 구현체를 둔다.
 - `strategy.domain`: 전략 신호와 신호 타입을 정의한다.
 - `strategy.service`: 테스트용 전략 평가와 주문 요청 변환을 담당한다.
+- `trading.service`: market provider → strategy → order request → risk → execution 흐름을 조합한다.
+- `trading.controller`: `GET /api/trading-flow/run?market=KRW-BTC` 요청을 처리한다.
+- `trading.dto`: 수동 실행 API 응답 DTO를 정의한다.
 - `execution.domain`: 실행 모드, 주문 방향, 주문 상태, 주문 요청, 주문 결과를 정의한다.
 - `execution.gateway`: 주문 실행 인터페이스와 페이퍼 트레이딩 구현체를 둔다.
 - `execution.service`: 주문 요청을 리스크 검증 후 실행 게이트웨이에 위임한다.
@@ -35,6 +50,8 @@
 
 ## 주문 실행 흐름
 
+- REST 컨트롤러는 `TradingFlowService`를 호출하고 결과를 DTO로 변환한다.
+- REST 컨트롤러에는 전략 판단, 주문 생성, 리스크 검증, 주문 실행 로직을 넣지 않는다.
 - HOLD 신호는 주문 요청으로 변환하지 않는다.
 - BUY 또는 SELL 신호만 주문 요청으로 변환한다.
 - 전략 신호가 있어도 리스크 검증을 통과해야 실행된다.
