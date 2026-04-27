@@ -1,5 +1,33 @@
 # comebot
 
+## PostgreSQL Docker
+
+로컬 PostgreSQL은 Docker Compose로 실행할 수 있다.
+
+```bat
+docker compose up -d postgres
+```
+
+기본 데이터베이스 설정은 로컬 Docker 기준이다.
+
+```properties
+POSTGRES_DB=comebot
+POSTGRES_USER=comebot
+POSTGRES_PASSWORD=
+POSTGRES_PORT=5432
+```
+
+Spring Boot datasource 설정은 환경 변수 기반이다.
+
+```properties
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:comebot}}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:comebot}}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:}}
+spring.jpa.hibernate.ddl-auto=none
+```
+
+이번 단계는 DB 실행과 연결 준비 단계다. 현재 트레이딩 플로우 이력 저장소는 계속 InMemory이며, PostgreSQL/JPA history 저장소는 아직 구현하지 않는다.
+
 `comebot`은 코인 시세를 기준으로 테스트용 전략을 평가하고, 주문 요청을 리스크 검증한 뒤, `PAPER_TRADING` 결과와 실행 이력을 남기는 MVP 프로젝트다.
 
 현재 프로젝트는 실제 매매 시스템이 아니다. 실제 거래소 주문 API와 `REAL_TRADING`은 구현하지 않는다.
