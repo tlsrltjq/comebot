@@ -5,6 +5,8 @@
 - `notification` 계층은 Trading Flow 실행 결과를 알림 메시지로 변환한다.
 - 현재 구현은 `LoggingNotificationSender`만 사용한다.
 - 실제 Telegram Bot API는 아직 연결하지 않는다.
+- Trading Flow 결과는 history 저장 이후에만 선택적으로 알림 처리한다.
+- `notification.enabled=false`가 기본값이다.
 - 알림 실패가 주문 상태나 트레이딩 결과를 변경하면 안 된다.
 - Scheduler와 Controller에는 알림 메시지 생성 로직을 넣지 않는다.
 

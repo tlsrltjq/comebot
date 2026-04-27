@@ -6,34 +6,46 @@ import com.giseop.comebot.execution.service.OrderExecutionService;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.market.provider.MarketPriceProvider;
+import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.TradingStrategy;
 import java.time.Instant;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TradingFlowService {
+
+    private static final Logger log = LoggerFactory.getLogger(TradingFlowService.class);
 
     private final MarketPriceProvider marketPriceProvider;
     private final TradingStrategy tradingStrategy;
     private final OrderRequestFactory orderRequestFactory;
     private final OrderExecutionService orderExecutionService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
+    private final NotificationProperties notificationProperties;
+    private final TradingFlowNotificationService tradingFlowNotificationService;
 
     public TradingFlowService(
             MarketPriceProvider marketPriceProvider,
             TradingStrategy tradingStrategy,
             OrderRequestFactory orderRequestFactory,
             OrderExecutionService orderExecutionService,
-            TradingFlowHistoryService tradingFlowHistoryService
+            TradingFlowHistoryService tradingFlowHistoryService,
+            NotificationProperties notificationProperties,
+            TradingFlowNotificationService tradingFlowNotificationService
     ) {
         this.marketPriceProvider = marketPriceProvider;
         this.tradingStrategy = tradingStrategy;
         this.orderRequestFactory = orderRequestFactory;
         this.orderExecutionService = orderExecutionService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
+        this.notificationProperties = notificationProperties;
+        this.tradingFlowNotificationService = tradingFlowNotificationService;
     }
 
     public TradingFlowResult run(String market) {
@@ -69,6 +81,19 @@ public class TradingFlowService {
 
     private TradingFlowResult save(TradingFlowResult result) {
         tradingFlowHistoryService.save(result);
+        notifyIfEnabled(result);
         return result;
+    }
+
+    private void notifyIfEnabled(TradingFlowResult result) {
+        if (!notificationProperties.isEnabled()) {
+            return;
+        }
+
+        try {
+            tradingFlowNotificationService.notify(result);
+        } catch (RuntimeException exception) {
+            log.warn("Trading flow notification failed. market={}", result.market(), exception);
+        }
     }
 }

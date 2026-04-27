@@ -3,6 +3,8 @@
 ## 현재 단계
 
 - 현재는 실제 Telegram Bot API 연동 전 단계다.
+- 알림은 기본 비활성이다.
+- 알림 활성화 여부는 `notification.enabled` 설정으로 관리한다.
 - Bot Token, Chat ID, Access Token은 추가하지 않는다.
 - Trading Flow 결과는 `NotificationSender` 인터페이스와 `LoggingNotificationSender`로 먼저 검증한다.
 - 실제 텔레그램 전송 실패가 주문 성공/실패 상태를 바꾸면 안 된다.

@@ -11,11 +11,14 @@ import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
+import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.SimpleThresholdStrategy;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,8 @@ class TradingFlowServiceTest {
 
     private InMemoryMarketPriceProvider marketPriceProvider;
     private InMemoryTradingFlowHistoryRepository historyRepository;
+    private RecordingTradingFlowNotificationService notificationService;
+    private NotificationProperties notificationProperties;
     private TradingFlowService tradingFlowService;
 
     @BeforeEach
@@ -39,6 +44,8 @@ class TradingFlowServiceTest {
 
         marketPriceProvider = new InMemoryMarketPriceProvider();
         historyRepository = new InMemoryTradingFlowHistoryRepository();
+        notificationProperties = new NotificationProperties();
+        notificationService = new RecordingTradingFlowNotificationService();
         tradingFlowService = new TradingFlowService(
                 marketPriceProvider,
                 new SimpleThresholdStrategy(strategyProperties),
@@ -47,7 +54,9 @@ class TradingFlowServiceTest {
                         new PaperTradingExecutionGateway(),
                         new RiskValidationService(tradingProperties)
                 ),
-                new TradingFlowHistoryService(historyRepository)
+                new TradingFlowHistoryService(historyRepository),
+                notificationProperties,
+                notificationService
         );
     }
 
@@ -61,6 +70,7 @@ class TradingFlowServiceTest {
         assertThat(result.orderCreated()).isTrue();
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
         assertThat(historyRepository.findRecent(1)).hasSize(1);
+        assertThat(notificationService.results).isEmpty();
     }
 
     @Test
@@ -103,5 +113,76 @@ class TradingFlowServiceTest {
 
         TradingFlowHistory history = historyRepository.findRecent(1).getFirst();
         assertThat(history.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+    }
+
+    @Test
+    void runNotifiesWhenNotificationIsEnabled() {
+        notificationProperties.setEnabled(true);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(notificationService.results).containsExactly(result);
+    }
+
+    @Test
+    void runReturnsResultWhenNotificationFails() {
+        notificationProperties.setEnabled(true);
+        notificationService.fail = true;
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+    }
+
+    @Test
+    void runStoresHistoryWhenNotificationFails() {
+        notificationProperties.setEnabled(true);
+        notificationService.fail = true;
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+
+        tradingFlowService.run("KRW-BTC");
+
+        assertThat(historyRepository.findRecent(1)).hasSize(1);
+        assertThat(historyRepository.findRecent(1).getFirst().orderStatus()).isEqualTo(OrderStatus.FILLED);
+    }
+
+    @Test
+    void runCanNotifyHoldRejectedAndFilledResults() {
+        notificationProperties.setEnabled(true);
+
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("150"));
+        TradingFlowResult hold = tradingFlowService.run("KRW-BTC");
+
+        marketPriceProvider.updatePrice("KRW-XRP", new BigDecimal("100"));
+        TradingFlowResult rejected = tradingFlowService.run("KRW-XRP");
+
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+        TradingFlowResult filled = tradingFlowService.run("KRW-BTC");
+
+        assertThat(hold.signalType()).isEqualTo(SignalType.HOLD);
+        assertThat(rejected.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(filled.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(notificationService.results).containsExactly(hold, rejected, filled);
+    }
+
+    private static class RecordingTradingFlowNotificationService extends TradingFlowNotificationService {
+
+        private final List<TradingFlowResult> results = new ArrayList<>();
+        private boolean fail;
+
+        private RecordingTradingFlowNotificationService() {
+            super(message -> {
+            });
+        }
+
+        @Override
+        public void notify(TradingFlowResult result) {
+            if (fail) {
+                throw new IllegalStateException("notification failed");
+            }
+            results.add(result);
+        }
     }
 }

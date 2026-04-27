@@ -6,6 +6,8 @@
 - Bot Token, Chat ID, API Key는 코드에 추가하지 않는다.
 - Scheduler나 Controller에 알림 메시지 생성 로직을 넣지 않는다.
 - 알림 실패가 주문 상태나 트레이딩 결과를 변경하면 안 된다.
+- 알림 실패가 history 저장 결과를 변경하면 안 된다.
+- 알림은 history 저장 이후에만 호출한다.
 
 ## InMemory History 규칙
 
