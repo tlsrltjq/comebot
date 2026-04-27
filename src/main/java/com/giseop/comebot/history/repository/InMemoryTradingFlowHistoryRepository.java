@@ -1,0 +1,39 @@
+package com.giseop.comebot.history.repository;
+
+import com.giseop.comebot.history.domain.TradingFlowHistory;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class InMemoryTradingFlowHistoryRepository implements TradingFlowHistoryRepository {
+
+    private final ConcurrentHashMap<String, TradingFlowHistory> histories = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedDeque<String> recentIds = new ConcurrentLinkedDeque<>();
+
+    // Test-only in-memory storage. Data is lost when the application restarts.
+    @Override
+    public TradingFlowHistory save(TradingFlowHistory history) {
+        histories.put(history.id(), history);
+        recentIds.remove(history.id());
+        recentIds.addFirst(history.id());
+        return history;
+    }
+
+    @Override
+    public List<TradingFlowHistory> findRecent(int limit) {
+        return recentIds.stream()
+                .limit(limit)
+                .map(histories::get)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    @Override
+    public Optional<TradingFlowHistory> findById(String id) {
+        return Optional.ofNullable(histories.get(id));
+    }
+}

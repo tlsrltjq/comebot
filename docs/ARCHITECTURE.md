@@ -1,5 +1,14 @@
 # Architecture
 
+## 실행 이력
+
+- Trading Flow 실행 결과는 `history` 계층에 저장한다.
+- 현재 저장소는 `InMemoryTradingFlowHistoryRepository`이며 실제 DB 저장소가 아니다.
+- 애플리케이션 재시작 시 이력은 사라진다.
+- `GET /api/trading-flow/history`는 최근 실행 이력을 조회한다.
+- `GET /api/trading-flow/history/{id}`는 단건 실행 이력을 조회한다.
+- History Controller는 조회 요청 검증, service 호출, 응답 DTO 변환만 담당한다.
+
 ## 테스트용 가격 변경 API
 
 - `GET /api/market-prices/{market}`는 `InMemoryMarketPriceProvider`에 저장된 테스트 가격을 반환한다.

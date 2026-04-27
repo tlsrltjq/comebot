@@ -1,5 +1,12 @@
 # Development Rules
 
+## InMemory History 규칙
+
+- 현재 history 저장소는 InMemory 구현만 사용한다.
+- InMemory history는 운영 저장소가 아니며 애플리케이션 재시작 시 사라진다.
+- PostgreSQL/JPA 저장소는 별도 단계에서 명시적으로 추가한다.
+- History Controller에는 조회 검증, service 호출, 응답 변환 외의 비즈니스 로직을 넣지 않는다.
+
 ## 테스트용 가격 API 규칙
 
 - `InMemoryMarketPriceProvider`는 실제 거래소 API가 아니다.

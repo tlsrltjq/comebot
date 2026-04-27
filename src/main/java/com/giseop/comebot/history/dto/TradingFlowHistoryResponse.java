@@ -1,11 +1,12 @@
-package com.giseop.comebot.trading.service;
+package com.giseop.comebot.history.dto;
 
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.strategy.domain.SignalType;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public record TradingFlowResult(
+public record TradingFlowHistoryResponse(
+        String id,
         String market,
         BigDecimal currentPrice,
         SignalType signalType,
@@ -13,6 +14,6 @@ public record TradingFlowResult(
         boolean orderCreated,
         OrderStatus orderStatus,
         String message,
-        Instant executedAt
+        Instant createdAt
 ) {
 }

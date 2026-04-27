@@ -7,6 +7,9 @@ import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.gateway.PaperTradingExecutionGateway;
 import com.giseop.comebot.execution.service.OrderExecutionService;
+import com.giseop.comebot.history.domain.TradingFlowHistory;
+import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
+import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.domain.SignalType;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.Test;
 class TradingFlowServiceTest {
 
     private InMemoryMarketPriceProvider marketPriceProvider;
+    private InMemoryTradingFlowHistoryRepository historyRepository;
     private TradingFlowService tradingFlowService;
 
     @BeforeEach
@@ -34,6 +38,7 @@ class TradingFlowServiceTest {
         tradingProperties.setAllowedMarkets(List.of("KRW-BTC", "KRW-ETH"));
 
         marketPriceProvider = new InMemoryMarketPriceProvider();
+        historyRepository = new InMemoryTradingFlowHistoryRepository();
         tradingFlowService = new TradingFlowService(
                 marketPriceProvider,
                 new SimpleThresholdStrategy(strategyProperties),
@@ -41,7 +46,8 @@ class TradingFlowServiceTest {
                 new OrderExecutionService(
                         new PaperTradingExecutionGateway(),
                         new RiskValidationService(tradingProperties)
-                )
+                ),
+                new TradingFlowHistoryService(historyRepository)
         );
     }
 
@@ -54,6 +60,7 @@ class TradingFlowServiceTest {
         assertThat(result.signalType()).isEqualTo(SignalType.BUY);
         assertThat(result.orderCreated()).isTrue();
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(historyRepository.findRecent(1)).hasSize(1);
     }
 
     @Test
@@ -77,6 +84,10 @@ class TradingFlowServiceTest {
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.orderStatus()).isNull();
         assertThat(result.message()).isEqualTo("No order created");
+
+        TradingFlowHistory history = historyRepository.findRecent(1).getFirst();
+        assertThat(history.signalType()).isEqualTo(SignalType.HOLD);
+        assertThat(history.orderCreated()).isFalse();
     }
 
     @Test
@@ -89,5 +100,8 @@ class TradingFlowServiceTest {
         assertThat(result.orderCreated()).isTrue();
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
         assertThat(result.message()).isEqualTo("Market is not allowed");
+
+        TradingFlowHistory history = historyRepository.findRecent(1).getFirst();
+        assertThat(history.orderStatus()).isEqualTo(OrderStatus.REJECTED);
     }
 }

@@ -1,5 +1,12 @@
 # Order Lifecycle
 
+## 실행 결과 저장
+
+- Trading Flow 실행 결과는 이력 저장소에 저장한다.
+- HOLD, REJECTED, FILLED 결과를 모두 저장한다.
+- 현재 이력 저장소는 InMemory 기반이며 애플리케이션 재시작 시 사라진다.
+- 저장 이후 최근 이력 또는 단건 이력 조회 API로 확인할 수 있다.
+
 ## 초기 단계
 
 - `PRICE_CAPTURED`: 테스트용 시세 공급자가 시세를 제공한 단계

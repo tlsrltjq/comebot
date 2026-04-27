@@ -11,6 +11,7 @@ import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import com.giseop.comebot.trading.service.TradingFlowService;
+import java.math.BigDecimal;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,7 @@ class TradingFlowControllerTest {
     private TradingFlowResult filledResult() {
         return new TradingFlowResult(
                 "KRW-BTC",
+                new BigDecimal("50000000"),
                 SignalType.BUY,
                 "Test threshold buy signal",
                 true,
