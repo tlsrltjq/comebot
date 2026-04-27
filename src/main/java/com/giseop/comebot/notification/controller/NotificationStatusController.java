@@ -16,6 +16,11 @@ public class NotificationStatusController {
 
     @GetMapping("/api/notifications/status")
     public NotificationStatusResponse getStatus() {
-        return new NotificationStatusResponse(notificationProperties.isEnabled());
+        return new NotificationStatusResponse(
+                notificationProperties.isEnabled(),
+                notificationProperties.isSendHold(),
+                notificationProperties.isSendFilled(),
+                notificationProperties.isSendRejected()
+        );
     }
 }

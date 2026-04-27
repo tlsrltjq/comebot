@@ -23,27 +23,43 @@ class NotificationStatusControllerTest {
 
     @Test
     void getStatusReturnsOk() throws Exception {
-        when(notificationProperties.isEnabled()).thenReturn(false);
+        defaultProperties();
 
         mockMvc.perform(get("/api/notifications/status"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void getStatusReturnsEnabledField() throws Exception {
+    void getStatusReturnsAllFields() throws Exception {
         when(notificationProperties.isEnabled()).thenReturn(true);
+        when(notificationProperties.isSendHold()).thenReturn(true);
+        when(notificationProperties.isSendFilled()).thenReturn(false);
+        when(notificationProperties.isSendRejected()).thenReturn(true);
 
         mockMvc.perform(get("/api/notifications/status"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(true));
+                .andExpect(jsonPath("$.enabled").value(true))
+                .andExpect(jsonPath("$.sendHold").value(true))
+                .andExpect(jsonPath("$.sendFilled").value(false))
+                .andExpect(jsonPath("$.sendRejected").value(true));
     }
 
     @Test
-    void getStatusReturnsDefaultDisabledValue() throws Exception {
-        when(notificationProperties.isEnabled()).thenReturn(false);
+    void getStatusReturnsDefaultValues() throws Exception {
+        defaultProperties();
 
         mockMvc.perform(get("/api/notifications/status"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false));
+                .andExpect(jsonPath("$.enabled").value(false))
+                .andExpect(jsonPath("$.sendHold").value(false))
+                .andExpect(jsonPath("$.sendFilled").value(true))
+                .andExpect(jsonPath("$.sendRejected").value(true));
+    }
+
+    private void defaultProperties() {
+        when(notificationProperties.isEnabled()).thenReturn(false);
+        when(notificationProperties.isSendHold()).thenReturn(false);
+        when(notificationProperties.isSendFilled()).thenReturn(true);
+        when(notificationProperties.isSendRejected()).thenReturn(true);
     }
 }
