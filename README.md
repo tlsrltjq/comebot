@@ -115,19 +115,51 @@ Java 21 환경에서 실행한다.
 history.storage-type=IN_MEMORY
 ```
 
-PostgreSQL에 이력을 저장하려면 PostgreSQL을 실행하고 테이블을 생성한 뒤 JPA 저장소로 변경한다.
+PostgreSQL에 이력을 저장하려면 PostgreSQL을 실행하고 테이블을 생성한 뒤 JPA 저장소로 변경한다. `spring.jpa.hibernate.ddl-auto=none`을 유지하므로 애플리케이션이 테이블을 자동 생성하지 않는다.
 
-```properties
-history.storage-type=JPA
-```
-
-테이블 생성 SQL은 [schema.sql](src/main/resources/schema.sql)에 있다. 운영 기본값은 `spring.jpa.hibernate.ddl-auto=none`이므로 애플리케이션이 테이블을 자동 생성하지 않는다.
+1. PostgreSQL 실행
 
 ```bat
 docker compose up -d postgres
 ```
 
-PostgreSQL 접속 후 `src/main/resources/schema.sql`의 SQL을 실행한다. JPA 저장소를 사용하면 트레이딩 플로우 실행 이력이 PostgreSQL에 저장된다.
+2. schema.sql 적용
+
+```bat
+scripts\apply-schema.bat
+```
+
+스크립트는 실행 중인 `comebot-postgres` 컨테이너에 [schema.sql](src/main/resources/schema.sql)을 적용한다. `POSTGRES_DB`, `POSTGRES_USER`는 `.env` 값이 있으면 사용하고, 없으면 `comebot`을 기본값으로 사용한다. DB 비밀번호는 출력하지 않는다.
+
+3. JPA 저장소 설정
+
+```properties
+history.storage-type=JPA
+```
+
+환경 변수로 실행할 수도 있다.
+
+```bat
+set HISTORY_STORAGE_TYPE=JPA
+gradlew.bat bootRun
+```
+
+4. 앱 실행 후 이력 저장 확인
+
+```http
+GET /api/trading-flow/run?market=KRW-BTC
+GET /api/trading-flow/history
+```
+
+5. 앱 재시작 후 이력 유지 확인
+
+앱을 종료했다가 다시 실행한 뒤 아래 API를 다시 호출한다.
+
+```http
+GET /api/trading-flow/history
+```
+
+JPA 저장소를 사용 중이면 PostgreSQL에 저장된 기존 이력이 조회된다. `history.storage-type=IN_MEMORY` 상태에서는 재시작 후 이력이 사라지는 것이 정상이다.
 
 ## 주요 API
 
