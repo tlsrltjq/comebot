@@ -26,7 +26,24 @@ spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:}}
 spring.jpa.hibernate.ddl-auto=none
 ```
 
-이번 단계는 DB 실행과 연결 준비 단계다. 현재 트레이딩 플로우 이력 저장소는 계속 InMemory이며, PostgreSQL/JPA history 저장소는 아직 구현하지 않는다.
+기본 이력 저장소는 InMemory다. `history.storage-type=JPA`로 변경하면 PostgreSQL에 트레이딩 플로우 이력을 저장할 수 있다.
+
+DB 연결 상태는 아래 API로 확인한다.
+
+```http
+GET /api/database/status
+```
+
+PostgreSQL 실행 후 응답 예시:
+
+```json
+{
+  "connected": true,
+  "database": "PostgreSQL"
+}
+```
+
+연결 실패 시에도 서버 에러로 터뜨리지 않고 `connected=false`를 반환한다. 응답에는 DB 비밀번호, datasource URL, username 원문을 포함하지 않는다.
 
 `comebot`은 코인 시세를 기준으로 테스트용 전략을 평가하고, 주문 요청을 리스크 검증한 뒤, `PAPER_TRADING` 결과와 실행 이력을 남기는 MVP 프로젝트다.
 
@@ -38,7 +55,7 @@ spring.jpa.hibernate.ddl-auto=none
 - 기본 패키지: `com.giseop.comebot`
 - 기본 거래 모드: `PAPER_TRADING`
 - Java 버전: 21
-- 저장소: 현재 실행 이력은 InMemory 저장소 사용
+- 저장소: 기본값은 InMemory, 설정으로 PostgreSQL/JPA 선택 가능
 
 ## 현재 지원 기능
 
@@ -61,7 +78,6 @@ spring.jpa.hibernate.ddl-auto=none
 - 실제 거래소 시세 API 연동
 - 실제 거래소 주문 API 연동
 - `REAL_TRADING`
-- PostgreSQL/JPA 기반 이력 저장
 - 실제 포지션/잔고 동기화
 - 수익 보장 또는 성과 예측
 
@@ -72,7 +88,7 @@ spring.jpa.hibernate.ddl-auto=none
 3. `OrderRequestFactory`가 BUY/SELL 신호를 주문 요청으로 변환한다.
 4. `RiskValidationService`가 주문 요청을 검증한다.
 5. `OrderExecutionService`가 페이퍼 주문을 실행한다.
-6. `TradingFlowHistoryService`가 실행 결과를 InMemory 이력으로 저장한다.
+6. `TradingFlowHistoryService`가 실행 결과를 설정된 history 저장소에 저장한다.
 7. 설정이 켜져 있고 알림 정책을 통과하면 알림을 보낸다.
 
 ## 로컬 실행 방법
@@ -90,6 +106,28 @@ gradlew.bat test
 ```
 
 Java 21 환경에서 실행한다.
+
+## History 저장소 설정
+
+기본값은 InMemory다. 애플리케이션 재시작 시 이력이 사라진다.
+
+```properties
+history.storage-type=IN_MEMORY
+```
+
+PostgreSQL에 이력을 저장하려면 PostgreSQL을 실행하고 테이블을 생성한 뒤 JPA 저장소로 변경한다.
+
+```properties
+history.storage-type=JPA
+```
+
+테이블 생성 SQL은 [schema.sql](src/main/resources/schema.sql)에 있다. 운영 기본값은 `spring.jpa.hibernate.ddl-auto=none`이므로 애플리케이션이 테이블을 자동 생성하지 않는다.
+
+```bat
+docker compose up -d postgres
+```
+
+PostgreSQL 접속 후 `src/main/resources/schema.sql`의 SQL을 실행한다. JPA 저장소를 사용하면 트레이딩 플로우 실행 이력이 PostgreSQL에 저장된다.
 
 ## 주요 API
 
@@ -180,7 +218,8 @@ notification.send-rejected=true
 - 기본 거래 모드는 항상 `PAPER_TRADING`이다.
 - 실제 거래소 주문 API는 아직 없다.
 - `REAL_TRADING`은 구현하지 않는다.
-- InMemory history는 애플리케이션 재시작 시 사라진다.
+- 기본 InMemory history는 애플리케이션 재시작 시 사라진다.
+- JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
 - Bot Token, Chat ID는 코드에 하드코딩하지 않는다.
 - 이 프로젝트는 실제 수익을 보장하지 않는다.
 - 테스트용 가격 변경 API는 실제 시장 가격을 바꾸는 기능이 아니다.

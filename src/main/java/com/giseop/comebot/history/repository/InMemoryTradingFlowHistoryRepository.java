@@ -6,9 +6,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@ConditionalOnProperty(name = "history.storage-type", havingValue = "IN_MEMORY", matchIfMissing = true)
 public class InMemoryTradingFlowHistoryRepository implements TradingFlowHistoryRepository {
 
     private final ConcurrentHashMap<String, TradingFlowHistory> histories = new ConcurrentHashMap<>();
