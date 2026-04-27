@@ -218,6 +218,29 @@ telegram.bot-token=${TELEGRAM_BOT_TOKEN:}
 telegram.chat-id=${TELEGRAM_CHAT_ID:}
 ```
 
+텔레그램 명령어 수신은 로컬 개발 기준 polling 방식이며 기본 비활성이다. Webhook은 사용하지 않는다.
+
+```properties
+telegram.inbound.enabled=false
+telegram.inbound.fixed-delay-ms=3000
+```
+
+명령어 수신을 켜려면 Telegram 발송 설정도 함께 필요하다.
+
+```bat
+set TELEGRAM_BOT_TOKEN=...
+set TELEGRAM_CHAT_ID=...
+set TELEGRAM_INBOUND_ENABLED=true
+gradlew.bat bootRun
+```
+
+지원 명령어:
+
+- `/help`: 사용 가능한 명령어 목록
+- `/status`: telegram, notification, scheduler 상태 요약
+- `/run KRW-BTC`: 해당 market의 PAPER_TRADING 플로우 수동 실행
+- `/history KRW-BTC`: 해당 market의 최근 이력 요약
+
 `.env.example`을 참고한다.
 
 ## 스케줄러 설정 방법
@@ -253,5 +276,6 @@ notification.send-rejected=true
 - 기본 InMemory history는 애플리케이션 재시작 시 사라진다.
 - JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
 - Bot Token, Chat ID는 코드에 하드코딩하지 않는다.
+- Telegram inbound polling은 기본 비활성이다.
 - 이 프로젝트는 실제 수익을 보장하지 않는다.
 - 테스트용 가격 변경 API는 실제 시장 가격을 바꾸는 기능이 아니다.

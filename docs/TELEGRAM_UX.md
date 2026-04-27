@@ -2,23 +2,24 @@
 
 ## 현재 단계
 
-- 현재는 실제 Telegram Bot API 연동 전 단계다.
-- 알림은 기본 비활성이다.
+- Telegram 발송과 inbound polling 구조가 있다.
+- 알림과 inbound polling은 기본 비활성이다.
 - 알림 활성화 여부는 `notification.enabled` 설정으로 관리한다.
-- Bot Token, Chat ID, Access Token은 추가하지 않는다.
-- Trading Flow 결과는 `NotificationSender` 인터페이스와 `LoggingNotificationSender`로 먼저 검증한다.
+- 명령어 수신은 Webhook이 아니라 `getUpdates` polling 방식이다.
+- Bot Token, Chat ID, Access Token은 코드에 하드코딩하지 않는다.
 - 실제 텔레그램 전송 실패가 주문 성공/실패 상태를 바꾸면 안 된다.
 
 ## 목적
 
 텔레그램은 봇 상태 확인, 페이퍼 주문 알림, 사용자 승인 또는 취소 흐름을 제공한다.
 
-## 초기 명령
+## 현재 지원 명령
 
-- `/start`: 봇 사용 안내
-- `/status`: 실행 모드와 감시 상태 확인
-- `/positions`: 페이퍼 포지션 조회
-- `/orders`: 최근 페이퍼 주문 조회
+- `/help`: 사용 가능한 명령어 목록 응답
+- `/status`: telegram, notification, scheduler 상태 요약 응답
+- `/run KRW-BTC`: 해당 market의 `PAPER_TRADING` 트레이딩 플로우 실행 후 결과 응답
+- `/history KRW-BTC`: 해당 market의 최근 이력 요약 응답
+- 알 수 없는 명령어: `/help` 안내 응답
 
 ## 버튼 흐름
 
@@ -31,6 +32,7 @@
 - 버튼 클릭만으로 실제 주문을 실행하지 않는다.
 - 민감 정보를 텔레그램 메시지에 노출하지 않는다.
 - 실패한 주문을 성공 메시지로 안내하지 않는다.
+- `telegram.enabled=true`, `telegram.inbound.enabled=true`, configured 상태가 아니면 polling을 실행하지 않는다.
 
 ## 변경 규칙
 

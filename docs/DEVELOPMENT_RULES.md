@@ -9,6 +9,15 @@
 - 알림 실패가 history 저장 결과를 변경하면 안 된다.
 - 알림은 history 저장 이후에만 호출한다.
 
+## Telegram Inbound 규칙
+
+- Telegram inbound polling은 기본 비활성이다.
+- Webhook은 사용하지 않고 로컬 개발 기준 `getUpdates` polling만 사용한다.
+- `telegram.enabled=true`, `telegram.inbound.enabled=true`, configured 상태일 때만 polling을 실행한다.
+- Bot Token, Chat ID 원문을 로그나 응답에 노출하지 않는다.
+- Telegram 명령 처리 실패가 애플리케이션 전체를 중단시키면 안 된다.
+- `/run` 명령은 기존 `PAPER_TRADING` 트레이딩 플로우만 실행한다.
+
 ## InMemory History 규칙
 
 - 현재 history 저장소는 InMemory 구현만 사용한다.
