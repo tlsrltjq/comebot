@@ -35,6 +35,8 @@
 - Upbit provider는 인증키를 사용하지 않는다.
 - Upbit provider는 실제 주문 API를 호출하지 않는다.
 - 어떤 provider를 사용해도 주문 실행은 기존 `PAPER_TRADING` 흐름만 사용한다.
+- `GET /api/market-provider/status`는 현재 provider 설정을 조회한다.
+- Provider 상태 조회 API는 설정 변경 기능을 제공하지 않는다.
 
 ## 목표
 

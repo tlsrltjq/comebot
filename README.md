@@ -124,6 +124,14 @@ gradlew.bat bootRun
 
 Upbit provider는 공개 시세 API만 호출한다. Access Key, Secret Key, 주문 API는 사용하지 않는다. 시세를 Upbit에서 조회하더라도 주문 실행은 기존 `PAPER_TRADING` 흐름만 사용한다.
 
+현재 적용된 시세 provider는 아래 API로 확인한다.
+
+```http
+GET /api/market-provider/status
+```
+
+응답에는 provider, 외부 provider 여부, 설명 메시지만 포함한다. Access Key, Secret Key는 사용하지 않으며 응답에도 포함하지 않는다.
+
 ## 테스트 실행 방법
 
 ```bat
@@ -200,6 +208,7 @@ GET /api/trading-flow/history/{id}
 ### 테스트용 시세
 
 ```http
+GET /api/market-provider/status
 GET /api/market-prices/KRW-BTC
 PUT /api/market-prices/KRW-BTC
 Content-Type: application/json
