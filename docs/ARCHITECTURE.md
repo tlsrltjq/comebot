@@ -38,6 +38,13 @@
 - `GET /api/market-provider/status`는 현재 provider 설정을 조회한다.
 - Provider 상태 조회 API는 설정 변경 기능을 제공하지 않는다.
 
+## 전략 설정 상태 조회
+
+- `GET /api/strategy/status`는 현재 `SimpleThresholdStrategy` 설정값을 조회한다.
+- 응답에는 전략 이름, 매수 기준가, 매도 기준가, 주문 수량만 포함한다.
+- Strategy 상태 조회 API는 설정 변경 기능을 제공하지 않는다.
+- Strategy Controller에는 전략 판단이나 주문 실행 로직을 넣지 않는다.
+
 ## 목표
 
 `comebot`은 코인 시세를 수집하고, 테스트용 전략 조건을 평가한 뒤, `PAPER_TRADING` 기준으로 주문 결과와 텔레그램 알림을 생성한다.

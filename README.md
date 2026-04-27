@@ -132,6 +132,16 @@ GET /api/market-provider/status
 
 응답에는 provider, 외부 provider 여부, 설명 메시지만 포함한다. Access Key, Secret Key는 사용하지 않으며 응답에도 포함하지 않는다.
 
+## 전략 설정 상태 조회
+
+현재 `SimpleThresholdStrategy` 설정값은 아래 API로 확인한다. 설정 변경 API는 제공하지 않는다.
+
+```http
+GET /api/strategy/status
+```
+
+응답에는 `strategyName`, `buyPrice`, `sellPrice`, `orderQuantity`만 포함한다.
+
 ## 테스트 실행 방법
 
 ```bat
@@ -203,6 +213,12 @@ GET /api/trading-flow/run?market=KRW-BTC
 GET /api/trading-flow/history
 GET /api/trading-flow/history?market=KRW-BTC&limit=20
 GET /api/trading-flow/history/{id}
+```
+
+### 전략
+
+```http
+GET /api/strategy/status
 ```
 
 ### 테스트용 시세
