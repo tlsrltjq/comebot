@@ -1,88 +1,69 @@
 package com.giseop.comebot.telegram.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.client.ExpectedCount.never;
-import static org.springframework.test.web.client.ExpectedCount.once;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.giseop.comebot.telegram.TelegramProperties;
+import com.giseop.comebot.telegram.sender.TelegramApiClient;
 import com.giseop.comebot.telegram.sender.TelegramNotificationSender;
 import com.giseop.comebot.telegram.sender.TelegramSendReason;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 class TelegramTestMessageServiceTest {
 
     @Test
     void sendTestMessageReturnsFalseWhenTelegramIsDisabled() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         TelegramProperties properties = configuredProperties();
         properties.setEnabled(false);
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
 
-        server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
-
-        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, apiClient).sendTestMessage("hello");
 
         assertThat(result.sent()).isFalse();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_DISABLED);
-        server.verify();
+        assertThat(apiClient.callCount).isZero();
     }
 
     @Test
     void sendTestMessageReturnsFalseWhenTelegramIsNotConfigured() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         TelegramProperties properties = new TelegramProperties();
         properties.setEnabled(true);
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
 
-        server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
-
-        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, apiClient).sendTestMessage("hello");
 
         assertThat(result.sent()).isFalse();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_NOT_CONFIGURED);
-        server.verify();
+        assertThat(apiClient.callCount).isZero();
     }
 
     @Test
     void sendTestMessageReturnsFalseWhenTelegramSendFails() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         TelegramProperties properties = configuredProperties();
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
+        apiClient.fail = true;
 
-        server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
-                .andRespond(withServerError());
-
-        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, apiClient).sendTestMessage("hello");
 
         assertThat(result.sent()).isFalse();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_API_FAILED);
-        server.verify();
+        assertThat(apiClient.callCount).isEqualTo(1);
     }
 
     @Test
     void sendTestMessageReturnsTrueWhenTelegramSendSucceeds() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         TelegramProperties properties = configuredProperties();
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
 
-        server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
-                .andRespond(withSuccess("{}", APPLICATION_JSON));
-
-        TelegramTestMessageResult result = service(properties, builder).sendTestMessage("hello");
+        TelegramTestMessageResult result = service(properties, apiClient).sendTestMessage("hello");
 
         assertThat(result.sent()).isTrue();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.SENT);
-        server.verify();
+        assertThat(apiClient.callCount).isEqualTo(1);
     }
 
-    private TelegramTestMessageService service(TelegramProperties properties, RestClient.Builder builder) {
-        return new TelegramTestMessageService(new TelegramNotificationSender(properties, builder.build()));
+    private TelegramTestMessageService service(TelegramProperties properties, TelegramApiClient apiClient) {
+        return new TelegramTestMessageService(new TelegramNotificationSender(properties, apiClient));
     }
 
     private TelegramProperties configuredProperties() {
@@ -91,5 +72,20 @@ class TelegramTestMessageServiceTest {
         properties.setBotToken("token");
         properties.setChatId("chat-id");
         return properties;
+    }
+
+    private static class RecordingTelegramApiClient implements TelegramApiClient {
+
+        private int callCount;
+        private boolean fail;
+
+        @Override
+        public void sendMessage(String botToken, String chatId, String text) {
+            callCount++;
+            if (fail) {
+                throw new RestClientException("failed") {
+                };
+            }
+        }
     }
 }

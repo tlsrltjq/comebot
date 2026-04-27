@@ -1,107 +1,89 @@
 package com.giseop.comebot.telegram.sender;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.client.ExpectedCount.never;
-import static org.springframework.test.web.client.ExpectedCount.once;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.giseop.comebot.notification.NotificationMessage;
 import com.giseop.comebot.telegram.TelegramProperties;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 class TelegramNotificationSenderTest {
 
     @Test
     void sendDoesNotCallApiWhenTelegramIsDisabled() {
-        RestClient.Builder builder = RestClient.builder();
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         TelegramProperties properties = configuredProperties();
         properties.setEnabled(false);
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
 
-        server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
-
-        TelegramSendResult result = new TelegramNotificationSender(properties, builder.build())
+        TelegramSendResult result = new TelegramNotificationSender(properties, apiClient)
                 .sendMessageWithResult(message());
 
         assertThat(result.sent()).isFalse();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_DISABLED);
-        server.verify();
+        assertThat(apiClient.callCount).isZero();
     }
 
     @Test
     void sendDoesNotCallApiWhenTelegramIsNotConfigured() {
-        RestClient.Builder builder = RestClient.builder();
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         TelegramProperties properties = new TelegramProperties();
         properties.setEnabled(true);
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
 
-        server.expect(never(), requestTo("https://api.telegram.org/bottoken/sendMessage"));
-
-        TelegramSendResult result = new TelegramNotificationSender(properties, builder.build())
+        TelegramSendResult result = new TelegramNotificationSender(properties, apiClient)
                 .sendMessageWithResult(message());
 
         assertThat(result.sent()).isFalse();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_NOT_CONFIGURED);
-        server.verify();
+        assertThat(apiClient.callCount).isZero();
     }
 
     @Test
     void sendCallsTelegramSendMessageWhenEnabledAndConfigured() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        TelegramProperties properties = configuredProperties();
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
 
-        server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
-                .andExpect(content().contentType(APPLICATION_JSON))
-                .andExpect(content().json("{\"chat_id\":\"chat-id\",\"text\":\"body\"}"))
-                .andRespond(withSuccess("{}", APPLICATION_JSON));
-
-        TelegramSendResult result = new TelegramNotificationSender(properties, builder.build())
+        TelegramSendResult result = new TelegramNotificationSender(configuredProperties(), apiClient)
                 .sendMessageWithResult(message());
 
         assertThat(result.sent()).isTrue();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.SENT);
-        server.verify();
+        assertThat(apiClient.callCount).isEqualTo(1);
+        assertThat(apiClient.botToken).isEqualTo("token");
+        assertThat(apiClient.chatId).isEqualTo("chat-id");
+        assertThat(apiClient.text).isEqualTo("body");
     }
 
     @Test
     void sendDoesNotExposeBotTokenThroughResponseObject() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        TelegramProperties properties = configuredProperties();
+        TelegramSendResult result = new TelegramNotificationSender(
+                configuredProperties(),
+                new RecordingTelegramApiClient()
+        ).sendMessageWithResult(message());
 
-        server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
-                .andRespond(withSuccess("{}", APPLICATION_JSON));
-
-        assertThatCode(() -> new TelegramNotificationSender(properties, builder.build()).sendMessage(message()))
-                .doesNotThrowAnyException();
-
-        server.verify();
+        assertThat(result.toString()).doesNotContain("token");
+        assertThat(result.toString()).doesNotContain("chat-id");
     }
 
     @Test
     void sendHandlesTelegramApiFailure() {
-        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.telegram.org");
-        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        TelegramProperties properties = configuredProperties();
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
+        apiClient.fail = true;
 
-        server.expect(once(), requestTo("https://api.telegram.org/bottoken/sendMessage"))
-                .andRespond(withServerError());
-
-        TelegramNotificationSender sender = new TelegramNotificationSender(properties, builder.build());
-        TelegramSendResult result = sender.sendMessageWithResult(message());
+        TelegramSendResult result = new TelegramNotificationSender(configuredProperties(), apiClient)
+                .sendMessageWithResult(message());
 
         assertThat(result.sent()).isFalse();
         assertThat(result.reason()).isEqualTo(TelegramSendReason.TELEGRAM_API_FAILED);
-        server.verify();
+    }
+
+    @Test
+    void sendDoesNotThrowWhenTelegramApiFails() {
+        RecordingTelegramApiClient apiClient = new RecordingTelegramApiClient();
+        apiClient.fail = true;
+
+        assertThatCode(() -> new TelegramNotificationSender(configuredProperties(), apiClient).send(message()))
+                .doesNotThrowAnyException();
     }
 
     private TelegramProperties configuredProperties() {
@@ -114,5 +96,26 @@ class TelegramNotificationSenderTest {
 
     private NotificationMessage message() {
         return new NotificationMessage("title", "body", Instant.now());
+    }
+
+    private static class RecordingTelegramApiClient implements TelegramApiClient {
+
+        private int callCount;
+        private boolean fail;
+        private String botToken;
+        private String chatId;
+        private String text;
+
+        @Override
+        public void sendMessage(String botToken, String chatId, String text) {
+            callCount++;
+            this.botToken = botToken;
+            this.chatId = chatId;
+            this.text = text;
+            if (fail) {
+                throw new RestClientException("failed") {
+                };
+            }
+        }
     }
 }
