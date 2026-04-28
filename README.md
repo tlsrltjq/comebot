@@ -355,7 +355,14 @@ telegram.inbound.enabled=false
 telegram.inbound.fixed-delay-ms=3000
 ```
 
-getUpdates offset은 `TelegramUpdateOffsetRepository`로 관리한다. 현재 기본 구현은 InMemory 저장소라 애플리케이션 재시작 시 offset이 초기화될 수 있다. update 처리 성공 후 `updateId + 1`을 저장하며, polling 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
+getUpdates offset은 `TelegramUpdateOffsetRepository`로 관리한다. 기본값은 InMemory 저장소다.
+
+```properties
+telegram.inbound.offset-storage-type=IN_MEMORY
+# telegram.inbound.offset-storage-type=JPA
+```
+
+JPA offset 저장소를 사용하려면 PostgreSQL에 `schema.sql`을 적용해야 한다. JPA 사용 시 앱 재시작 후에도 마지막 처리 offset을 유지해 update 중복 처리 가능성을 줄인다. update 처리 성공 후 `updateId + 1`을 저장하며, polling 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
 
 명령어 수신을 켜려면 Telegram 발송 설정도 함께 필요하다.
 
@@ -422,6 +429,7 @@ notification.send-rejected=true
 - `REAL_TRADING`은 구현하지 않는다.
 - 기본 InMemory history는 애플리케이션 재시작 시 사라진다.
 - JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
+- JPA Telegram offset 저장소를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
 - Bot Token, Chat ID는 코드에 하드코딩하지 않는다.
 - Telegram inbound polling은 기본 비활성이다.
 - Telegram 버튼 callback도 기존 `PAPER_TRADING` 플로우만 사용한다.

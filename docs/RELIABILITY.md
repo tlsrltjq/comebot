@@ -32,7 +32,9 @@
 - callback answer 실패가 명령 처리 결과를 변경하면 안 된다.
 - getUpdates offset은 update 처리 성공 후에만 저장한다.
 - polling 실패 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
-- 현재 offset 저장소는 InMemory이므로 재시작 시 중복 처리 가능성이 남아 있다.
+- 기본 offset 저장소는 InMemory다.
+- JPA offset 저장소 사용 시 앱 재시작 후에도 마지막 처리 offset을 유지해 중복 처리 가능성을 줄인다.
+- JPA offset 저장소 사용 전 `schema.sql` 적용 여부를 확인한다.
 
 ## DB 연결
 

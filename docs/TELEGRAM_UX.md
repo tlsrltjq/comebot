@@ -7,10 +7,12 @@
 - 알림 활성화 여부는 `notification.enabled` 설정으로 관리한다.
 - 명령어 수신은 Webhook이 아니라 `getUpdates` polling 방식이다.
 - getUpdates offset은 `TelegramUpdateOffsetRepository`로 관리한다.
-- 현재 offset 저장소는 InMemory 구현이다.
+- 기본 offset 저장소는 InMemory 구현이다.
+- `telegram.inbound.offset-storage-type=JPA` 설정 시 PostgreSQL에 offset을 저장할 수 있다.
 - 처리 성공 후 `updateId + 1`을 저장한다.
 - polling 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
-- 애플리케이션 재시작 시 InMemory offset이 초기화되어 일부 update가 중복 처리될 수 있다.
+- InMemory 사용 시 애플리케이션 재시작 후 일부 update가 중복 처리될 수 있다.
+- JPA 사용 시 재시작 후에도 마지막 offset을 유지해 중복 처리 가능성을 줄인다.
 - Bot Token, Chat ID, Access Token은 코드에 하드코딩하지 않는다.
 - 실제 텔레그램 전송 실패가 주문 성공/실패 상태를 바꾸면 안 된다.
 

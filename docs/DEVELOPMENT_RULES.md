@@ -22,6 +22,8 @@
 - `/run` 명령은 기존 `PAPER_TRADING` 트레이딩 플로우만 실행한다.
 - 인라인 버튼 callback 처리도 기존 `PAPER_TRADING` 트레이딩 플로우만 사용한다.
 - Telegram update offset 저장 방식을 변경하면 성공/실패 offset 처리 테스트를 함께 수정한다.
+- Telegram offset 저장소를 변경하면 polling 테스트와 저장소 테스트를 함께 수정한다.
+- JPA offset 저장소 사용 시 `ddl-auto=none`을 유지하고 `schema.sql`을 적용한다.
 
 ## History 저장소 규칙
 

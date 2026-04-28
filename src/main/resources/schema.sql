@@ -15,3 +15,9 @@ CREATE INDEX IF NOT EXISTS idx_trading_flow_history_created_at
 
 CREATE INDEX IF NOT EXISTS idx_trading_flow_history_market_created_at
     ON trading_flow_history (market, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS telegram_update_offset (
+    id VARCHAR(50) PRIMARY KEY,
+    last_update_offset BIGINT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
