@@ -21,6 +21,7 @@
 - Telegram 명령 처리 실패가 애플리케이션 전체를 중단시키면 안 된다.
 - `/run` 명령은 기존 `PAPER_TRADING` 트레이딩 플로우만 실행한다.
 - 인라인 버튼 callback 처리도 기존 `PAPER_TRADING` 트레이딩 플로우만 사용한다.
+- Telegram update offset 저장 방식을 변경하면 성공/실패 offset 처리 테스트를 함께 수정한다.
 
 ## History 저장소 규칙
 

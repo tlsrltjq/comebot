@@ -6,8 +6,11 @@
 - 알림과 inbound polling은 기본 비활성이다.
 - 알림 활성화 여부는 `notification.enabled` 설정으로 관리한다.
 - 명령어 수신은 Webhook이 아니라 `getUpdates` polling 방식이다.
-- getUpdates offset은 메모리에서 관리한다.
-- 애플리케이션 재시작 시 offset이 초기화되어 일부 update가 중복 처리될 수 있다.
+- getUpdates offset은 `TelegramUpdateOffsetRepository`로 관리한다.
+- 현재 offset 저장소는 InMemory 구현이다.
+- 처리 성공 후 `updateId + 1`을 저장한다.
+- polling 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
+- 애플리케이션 재시작 시 InMemory offset이 초기화되어 일부 update가 중복 처리될 수 있다.
 - Bot Token, Chat ID, Access Token은 코드에 하드코딩하지 않는다.
 - 실제 텔레그램 전송 실패가 주문 성공/실패 상태를 바꾸면 안 된다.
 

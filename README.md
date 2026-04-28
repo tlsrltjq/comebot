@@ -355,6 +355,8 @@ telegram.inbound.enabled=false
 telegram.inbound.fixed-delay-ms=3000
 ```
 
+getUpdates offset은 `TelegramUpdateOffsetRepository`로 관리한다. 현재 기본 구현은 InMemory 저장소라 애플리케이션 재시작 시 offset이 초기화될 수 있다. update 처리 성공 후 `updateId + 1`을 저장하며, polling 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
+
 명령어 수신을 켜려면 Telegram 발송 설정도 함께 필요하다.
 
 ```bat

@@ -1,6 +1,7 @@
 package com.giseop.comebot.telegram.inbound;
 
 import com.giseop.comebot.telegram.TelegramProperties;
+import com.giseop.comebot.telegram.inbound.offset.TelegramUpdateOffsetRepository;
 import com.giseop.comebot.telegram.sender.TelegramApiClient;
 import java.util.List;
 import org.slf4j.Logger;
@@ -19,20 +20,22 @@ public class TelegramPollingRunner {
     private final TelegramUpdateClient telegramUpdateClient;
     private final TelegramCommandService telegramCommandService;
     private final TelegramApiClient telegramApiClient;
-    private long nextOffset = 0;
+    private final TelegramUpdateOffsetRepository telegramUpdateOffsetRepository;
 
     public TelegramPollingRunner(
             TelegramProperties telegramProperties,
             TelegramInboundProperties telegramInboundProperties,
             TelegramUpdateClient telegramUpdateClient,
             TelegramCommandService telegramCommandService,
-            TelegramApiClient telegramApiClient
+            TelegramApiClient telegramApiClient,
+            TelegramUpdateOffsetRepository telegramUpdateOffsetRepository
     ) {
         this.telegramProperties = telegramProperties;
         this.telegramInboundProperties = telegramInboundProperties;
         this.telegramUpdateClient = telegramUpdateClient;
         this.telegramCommandService = telegramCommandService;
         this.telegramApiClient = telegramApiClient;
+        this.telegramUpdateOffsetRepository = telegramUpdateOffsetRepository;
     }
 
     @Scheduled(fixedDelayString = "${telegram.inbound.fixed-delay-ms:3000}")
@@ -42,10 +45,14 @@ public class TelegramPollingRunner {
         }
 
         try {
+            long nextOffset = telegramUpdateOffsetRepository.getNextOffset();
             List<TelegramUpdate> updates = telegramUpdateClient.getUpdates(telegramProperties.getBotToken(), nextOffset);
             for (TelegramUpdate update : updates) {
+                if (!handleUpdate(update)) {
+                    break;
+                }
                 nextOffset = Math.max(nextOffset, update.updateId() + 1);
-                handleUpdate(update);
+                telegramUpdateOffsetRepository.saveNextOffset(nextOffset);
             }
         } catch (RestClientException exception) {
             log.warn("Telegram inbound polling failed: {}", exception.getClass().getSimpleName());
@@ -60,18 +67,20 @@ public class TelegramPollingRunner {
                 && telegramInboundProperties.isEnabled();
     }
 
-    private void handleUpdate(TelegramUpdate update) {
+    private boolean handleUpdate(TelegramUpdate update) {
         try {
             if (!isAllowedChat(update.chatId())) {
-                return;
+                return true;
             }
             if (update.callbackData() != null && !update.callbackData().isBlank()) {
                 telegramCommandService.handleCallback(update.callbackData());
-                return;
+                return true;
             }
             telegramCommandService.handle(update.text());
+            return true;
         } catch (RuntimeException exception) {
             log.warn("Telegram command handling failed: {}", exception.getClass().getSimpleName());
+            return false;
         } finally {
             answerCallbackQuery(update);
         }

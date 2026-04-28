@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.telegram.TelegramProperties;
+import com.giseop.comebot.telegram.inbound.offset.TelegramUpdateOffsetRepository;
 import com.giseop.comebot.telegram.sender.TelegramApiClient;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,42 @@ class TelegramPollingRunnerTest {
     }
 
     @Test
+    void storedOffsetIsUsedForGetUpdates() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramUpdateOffsetRepository offsetRepository = offsetRepository(42);
+
+        runner(
+                configuredTelegramProperties(),
+                inboundProperties(true),
+                updateClient,
+                mock(TelegramCommandService.class),
+                mock(TelegramApiClient.class),
+                offsetRepository
+        ).poll();
+
+        verify(updateClient).getUpdates("token", 42);
+    }
+
+    @Test
+    void successfulUpdateStoresNextOffset() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        TelegramUpdateOffsetRepository offsetRepository = offsetRepository(0);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/status", "chat-id")));
+
+        runner(
+                configuredTelegramProperties(),
+                inboundProperties(true),
+                updateClient,
+                commandService,
+                mock(TelegramApiClient.class),
+                offsetRepository
+        ).poll();
+
+        verify(offsetRepository).saveNextOffset(11);
+    }
+
+    @Test
     void unauthorizedMessageDoesNotHandleCommand() {
         TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
         TelegramCommandService commandService = mock(TelegramCommandService.class);
@@ -69,6 +106,46 @@ class TelegramPollingRunnerTest {
 
         assertThatCode(() -> runner(configuredTelegramProperties(), inboundProperties(true), updateClient, commandService).poll())
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void commandHandlingFailureDoesNotStoreNextOffset() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramCommandService commandService = mock(TelegramCommandService.class);
+        TelegramUpdateOffsetRepository offsetRepository = offsetRepository(0);
+        when(updateClient.getUpdates("token", 0)).thenReturn(List.of(TelegramUpdate.message(10, "/run KRW-BTC", "chat-id")));
+        org.mockito.Mockito.doThrow(new IllegalStateException("failed"))
+                .when(commandService)
+                .handle("/run KRW-BTC");
+
+        runner(
+                configuredTelegramProperties(),
+                inboundProperties(true),
+                updateClient,
+                commandService,
+                mock(TelegramApiClient.class),
+                offsetRepository
+        ).poll();
+
+        verify(offsetRepository, never()).saveNextOffset(11);
+    }
+
+    @Test
+    void pollingFailureDoesNotStoreNextOffset() {
+        TelegramUpdateClient updateClient = mock(TelegramUpdateClient.class);
+        TelegramUpdateOffsetRepository offsetRepository = offsetRepository(10);
+        when(updateClient.getUpdates("token", 10)).thenThrow(new IllegalStateException("failed"));
+
+        runner(
+                configuredTelegramProperties(),
+                inboundProperties(true),
+                updateClient,
+                mock(TelegramCommandService.class),
+                mock(TelegramApiClient.class),
+                offsetRepository
+        ).poll();
+
+        verify(offsetRepository, never()).saveNextOffset(org.mockito.Mockito.anyLong());
     }
 
     @Test
@@ -129,7 +206,14 @@ class TelegramPollingRunnerTest {
             TelegramUpdateClient updateClient,
             TelegramCommandService commandService
     ) {
-        return runner(telegramProperties, inboundProperties, updateClient, commandService, mock(TelegramApiClient.class));
+        return runner(
+                telegramProperties,
+                inboundProperties,
+                updateClient,
+                commandService,
+                mock(TelegramApiClient.class),
+                offsetRepository(0)
+        );
     }
 
     private TelegramPollingRunner runner(
@@ -139,13 +223,38 @@ class TelegramPollingRunnerTest {
             TelegramCommandService commandService,
             TelegramApiClient telegramApiClient
     ) {
+        return runner(
+                telegramProperties,
+                inboundProperties,
+                updateClient,
+                commandService,
+                telegramApiClient,
+                offsetRepository(0)
+        );
+    }
+
+    private TelegramPollingRunner runner(
+            TelegramProperties telegramProperties,
+            TelegramInboundProperties inboundProperties,
+            TelegramUpdateClient updateClient,
+            TelegramCommandService commandService,
+            TelegramApiClient telegramApiClient,
+            TelegramUpdateOffsetRepository offsetRepository
+    ) {
         return new TelegramPollingRunner(
                 telegramProperties,
                 inboundProperties,
                 updateClient,
                 commandService,
-                telegramApiClient
+                telegramApiClient,
+                offsetRepository
         );
+    }
+
+    private TelegramUpdateOffsetRepository offsetRepository(long offset) {
+        TelegramUpdateOffsetRepository repository = mock(TelegramUpdateOffsetRepository.class);
+        when(repository.getNextOffset()).thenReturn(offset);
+        return repository;
     }
 
     private TelegramProperties configuredTelegramProperties() {

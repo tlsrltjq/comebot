@@ -30,6 +30,9 @@
 - Telegram polling 실패는 다음 polling 주기에 복구 가능해야 한다.
 - callback query는 가능한 경우 `answerCallbackQuery`를 호출해 버튼 로딩을 해제한다.
 - callback answer 실패가 명령 처리 결과를 변경하면 안 된다.
+- getUpdates offset은 update 처리 성공 후에만 저장한다.
+- polling 실패 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
+- 현재 offset 저장소는 InMemory이므로 재시작 시 중복 처리 가능성이 남아 있다.
 
 ## DB 연결
 
