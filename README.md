@@ -67,6 +67,7 @@ PostgreSQL 실행 후 응답 예시:
 - 주문 요청 생성
 - 리스크 검증
 - 페이퍼 주문 실행
+- PAPER_TRADING 포트폴리오 현금, 보유 수량, 실현 손익 관리
 - 트레이딩 플로우 수동 실행 REST API
 - 트레이딩 플로우 실행 이력 저장 및 조회
 - 스케줄러 설정 및 주기 실행 구조
@@ -161,6 +162,24 @@ GET /api/risk/status
 ```
 
 응답에는 `maxOrderAmount`, `allowedMarkets`만 포함한다.
+
+## PAPER_TRADING 포트폴리오
+
+페이퍼 체결 결과를 기반으로 현금, 보유 수량, 평균 매수가, 실현 손익을 관리한다. 실제 거래소 계좌나 실제 자금은 사용하지 않는다.
+
+```properties
+paper.initial-cash=1000000
+paper.portfolio-storage-type=IN_MEMORY
+```
+
+기본 저장소는 InMemory다. JPA 포트폴리오 저장소는 아직 없다.
+
+```http
+GET /api/portfolio/status
+GET /api/portfolio/positions
+```
+
+BUY 체결 시 현금이 차감되고 보유 수량과 평균 매수가가 갱신된다. SELL 체결 시 보유 수량이 줄고 실현 손익이 계산된다. 현금 부족 BUY와 보유 수량 부족 SELL은 `REJECTED` 처리된다.
 
 ## 테스트 실행 방법
 
@@ -301,6 +320,13 @@ GET /api/strategy/status
 GET /api/risk/status
 ```
 
+### 포트폴리오
+
+```http
+GET /api/portfolio/status
+GET /api/portfolio/positions
+```
+
 ### 테스트용 시세
 
 ```http
@@ -428,6 +454,7 @@ notification.send-rejected=true
 - Upbit provider는 공개 시세 조회만 수행하며 주문 API를 호출하지 않는다.
 - `REAL_TRADING`은 구현하지 않는다.
 - 기본 InMemory history는 애플리케이션 재시작 시 사라진다.
+- 기본 InMemory portfolio는 애플리케이션 재시작 시 사라진다.
 - JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
 - JPA Telegram offset 저장소를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
 - Bot Token, Chat ID는 코드에 하드코딩하지 않는다.

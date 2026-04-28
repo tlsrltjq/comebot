@@ -8,6 +8,9 @@ import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderSide;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.gateway.ExecutionGateway;
+import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,7 +32,8 @@ class OrderExecutionServiceTest {
         executionGateway = new CountingExecutionGateway();
         orderExecutionService = new OrderExecutionService(
                 executionGateway,
-                new RiskValidationService(tradingProperties)
+                new RiskValidationService(tradingProperties),
+                paperPortfolioService()
         );
     }
 
@@ -85,6 +89,39 @@ class OrderExecutionServiceTest {
         assertThat(executionGateway.callCount).isZero();
     }
 
+    @Test
+    void executeRejectsBuyWhenPaperCashIsNotEnough() {
+        TradingProperties tradingProperties = new TradingProperties();
+        tradingProperties.setMaxOrderAmount(new BigDecimal("2000000"));
+        tradingProperties.setAllowedMarkets(List.of("KRW-BTC", "KRW-ETH"));
+        orderExecutionService = new OrderExecutionService(
+                executionGateway,
+                new RiskValidationService(tradingProperties),
+                paperPortfolioService()
+        );
+
+        OrderResult result = orderExecutionService.execute(orderRequest("KRW-BTC", "1", "1000001"));
+
+        assertThat(result.status()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(result.message()).isEqualTo("Paper cash is not enough");
+        assertThat(executionGateway.callCount).isZero();
+    }
+
+    @Test
+    void executeRejectsSellWhenPaperPositionQuantityIsNotEnough() {
+        OrderResult result = orderExecutionService.execute(new OrderRequest(
+                "KRW-BTC",
+                OrderSide.SELL,
+                new BigDecimal("1"),
+                new BigDecimal("1000"),
+                Instant.now()
+        ));
+
+        assertThat(result.status()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(result.message()).isEqualTo("Paper position quantity is not enough");
+        assertThat(executionGateway.callCount).isZero();
+    }
+
     private OrderRequest orderRequest(String market, String quantity, String price) {
         return new OrderRequest(
                 market,
@@ -93,6 +130,15 @@ class OrderExecutionServiceTest {
                 new BigDecimal(price),
                 Instant.now()
         );
+    }
+
+    private PaperPortfolioService paperPortfolioService() {
+        PaperPortfolioProperties properties = new PaperPortfolioProperties();
+        properties.setInitialCash(new BigDecimal("1000000"));
+        InMemoryPaperPortfolioRepository repository = new InMemoryPaperPortfolioRepository();
+        PaperPortfolioService service = new PaperPortfolioService(repository, properties);
+        service.initialize();
+        return service;
     }
 
     private static class CountingExecutionGateway implements ExecutionGateway {

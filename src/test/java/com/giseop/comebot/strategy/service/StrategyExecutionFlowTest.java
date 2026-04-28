@@ -10,6 +10,9 @@ import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.gateway.PaperTradingExecutionGateway;
 import com.giseop.comebot.execution.service.OrderExecutionService;
 import com.giseop.comebot.market.domain.MarketPrice;
+import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import java.math.BigDecimal;
@@ -36,12 +39,22 @@ class StrategyExecutionFlowTest {
 
         OrderExecutionService executionService = new OrderExecutionService(
                 new PaperTradingExecutionGateway(),
-                new RiskValidationService(tradingProperties)
+                new RiskValidationService(tradingProperties),
+                paperPortfolioService()
         );
 
         OrderResult result = executionService.execute(request.orElseThrow());
 
         assertThat(result.status()).isEqualTo(OrderStatus.FILLED);
         assertThat(result.market()).isEqualTo("KRW-BTC");
+    }
+
+    private PaperPortfolioService paperPortfolioService() {
+        PaperPortfolioProperties properties = new PaperPortfolioProperties();
+        properties.setInitialCash(new BigDecimal("1000000"));
+        InMemoryPaperPortfolioRepository repository = new InMemoryPaperPortfolioRepository();
+        PaperPortfolioService service = new PaperPortfolioService(repository, properties);
+        service.initialize();
+        return service;
     }
 }

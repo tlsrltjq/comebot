@@ -13,6 +13,9 @@ import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
 import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
+import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.SimpleThresholdStrategy;
@@ -57,7 +60,8 @@ class TradingFlowTelegramNotificationIntegrationTest {
                 new OrderRequestFactory(),
                 new OrderExecutionService(
                         new PaperTradingExecutionGateway(),
-                        new RiskValidationService(tradingProperties)
+                        new RiskValidationService(tradingProperties),
+                        paperPortfolioService()
                 ),
                 new TradingFlowHistoryService(historyRepository),
                 notificationProperties,
@@ -118,6 +122,15 @@ class TradingFlowTelegramNotificationIntegrationTest {
         telegramProperties.setEnabled(enabled);
         telegramProperties.setBotToken(botToken);
         telegramProperties.setChatId(chatId);
+    }
+
+    private PaperPortfolioService paperPortfolioService() {
+        PaperPortfolioProperties properties = new PaperPortfolioProperties();
+        properties.setInitialCash(new BigDecimal("1000000"));
+        InMemoryPaperPortfolioRepository repository = new InMemoryPaperPortfolioRepository();
+        PaperPortfolioService service = new PaperPortfolioService(repository, properties);
+        service.initialize();
+        return service;
     }
 
     private static class RecordingTelegramApiClient implements TelegramApiClient {

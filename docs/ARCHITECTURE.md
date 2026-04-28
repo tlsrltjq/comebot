@@ -54,6 +54,15 @@
 - Risk 상태 조회 API는 설정 변경 기능을 제공하지 않는다.
 - Risk Controller에는 리스크 검증이나 주문 실행 로직을 넣지 않는다.
 
+## PAPER_TRADING 포트폴리오
+
+- `portfolio` 계층은 페이퍼 체결 결과를 기반으로 현금, 보유 수량, 평균 매수가, 실현 손익을 관리한다.
+- 기본 저장소는 `paper.portfolio-storage-type=IN_MEMORY`다.
+- JPA 포트폴리오 저장소는 아직 구현하지 않는다.
+- 포트폴리오 변경은 `PAPER_TRADING` 주문이 `FILLED` 된 이후에만 수행한다.
+- `GET /api/portfolio/status`는 현금과 실현 손익을 조회한다.
+- `GET /api/portfolio/positions`는 현재 보유 포지션 목록을 조회한다.
+
 ## 시스템 상태 조회
 
 - `GET /api/system/status`는 주요 설정 상태를 한 번에 조회한다.
@@ -73,9 +82,10 @@
 3. `OrderRequestFactory`가 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
 4. Risk가 `OrderRequest`를 검증한다.
 5. Execution이 승인된 주문 요청만 페이퍼 트레이딩으로 처리한다.
-6. Trading Flow 결과를 history 저장소에 저장한다.
-7. 알림 설정과 필터 정책을 통과하면 Notification 계층이 알림을 보낸다.
-8. 수동 REST 엔드포인트와 Telegram 명령은 이 흐름을 호출한다.
+6. `FILLED` 결과만 Paper Portfolio에 반영한다.
+7. Trading Flow 결과를 history 저장소에 저장한다.
+8. 알림 설정과 필터 정책을 통과하면 Notification 계층이 알림을 보낸다.
+9. 수동 REST 엔드포인트와 Telegram 명령은 이 흐름을 호출한다.
 
 ## 기본 모듈 경계
 
@@ -83,6 +93,7 @@
 - Strategy: 테스트용 기준으로 BUY, SELL, HOLD 신호를 만든다.
 - Risk: 주문 요청이 정책을 통과하는지 검증한다.
 - Execution: 주문 실행을 추상화하고 페이퍼 트레이딩 결과를 생성한다.
+- Portfolio: 페이퍼 체결 결과로 현금, 보유 수량, 실현 손익을 관리한다.
 - Trading Flow: 시세, 전략, 주문 요청 생성, 리스크 검증, 페이퍼 실행을 한 번에 연결한다.
 - REST Controller: 수동 실행 요청을 받고 Trading Flow 결과를 응답 DTO로 변환한다.
 - Telegram: 사용자 명령, 버튼, 알림 메시지를 처리한다.
@@ -102,6 +113,7 @@
 - `execution.service`: 주문 요청을 리스크 검증 후 실행 게이트웨이에 위임한다.
 - `risk.domain`: 리스크 판단 결과와 승인/거절 상태를 정의한다.
 - `risk.service`: 주문 요청의 입력값, 주문 금액, 허용 마켓을 검증한다.
+- `portfolio`: PAPER_TRADING 포트폴리오 상태와 저장소, 조회 API를 제공한다.
 - `config`: 거래 모드, 최대 주문 금액, 허용 마켓, 전략 기준값을 관리한다.
 
 ## 주문 실행 흐름

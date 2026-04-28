@@ -38,6 +38,8 @@
 - `price`가 null 또는 0 이하이면 `REJECTED`로 처리한다.
 - 주문 금액(`quantity * price`)이 `trading.max-order-amount`를 초과하면 `REJECTED`로 처리한다.
 - `market`이 `trading.allowed-markets`에 없으면 `REJECTED`로 처리한다.
+- BUY 주문 금액이 페이퍼 현금보다 크면 `REJECTED`로 처리한다.
+- SELL 주문 수량이 페이퍼 보유 수량보다 크면 `REJECTED`로 처리한다.
 
 ## 기본 설정
 
@@ -56,6 +58,7 @@
 
 - 리스크 검증 실패는 명확한 사유를 남긴다.
 - 리스크 검증 실패 시 실제 실행 게이트웨이를 호출하지 않는다.
+- 현금 부족 또는 보유 수량 부족으로 거절된 주문은 포트폴리오를 변경하지 않는다.
 - 예외 발생 시 알림 또는 로그로 확인 가능해야 한다.
 
 ## 변경 규칙

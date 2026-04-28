@@ -14,6 +14,9 @@ import com.giseop.comebot.market.provider.InMemoryMarketPriceProvider;
 import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
+import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
@@ -30,6 +33,7 @@ class TradingFlowServiceTest {
     private InMemoryTradingFlowHistoryRepository historyRepository;
     private RecordingTradingFlowNotificationService notificationService;
     private NotificationProperties notificationProperties;
+    private PaperPortfolioService paperPortfolioService;
     private TradingFlowService tradingFlowService;
 
     @BeforeEach
@@ -47,13 +51,15 @@ class TradingFlowServiceTest {
         historyRepository = new InMemoryTradingFlowHistoryRepository();
         notificationProperties = new NotificationProperties();
         notificationService = new RecordingTradingFlowNotificationService();
+        paperPortfolioService = paperPortfolioService();
         tradingFlowService = new TradingFlowService(
                 marketPriceProvider,
                 new SimpleThresholdStrategy(strategyProperties),
                 new OrderRequestFactory(),
                 new OrderExecutionService(
                         new PaperTradingExecutionGateway(),
-                        new RiskValidationService(tradingProperties)
+                        new RiskValidationService(tradingProperties),
+                        paperPortfolioService
                 ),
                 new TradingFlowHistoryService(historyRepository),
                 notificationProperties,
@@ -77,6 +83,15 @@ class TradingFlowServiceTest {
 
     @Test
     void runFillsPaperSellOrderWhenPriceIsAtOrAboveSellThreshold() {
+        paperPortfolioService.apply(new com.giseop.comebot.execution.domain.OrderResult(
+                "KRW-BTC",
+                com.giseop.comebot.execution.domain.OrderSide.BUY,
+                new BigDecimal("1"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "seed",
+                java.time.Instant.now()
+        ));
         marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("200"));
 
         TradingFlowResult result = tradingFlowService.run("KRW-BTC");
@@ -100,6 +115,8 @@ class TradingFlowServiceTest {
         TradingFlowHistory history = historyRepository.findRecent(1).getFirst();
         assertThat(history.signalType()).isEqualTo(SignalType.HOLD);
         assertThat(history.orderCreated()).isFalse();
+        assertThat(paperPortfolioService.getPortfolio().cash()).isEqualByComparingTo("1000000");
+        assertThat(paperPortfolioService.findPositions()).isEmpty();
     }
 
     @Test
@@ -115,6 +132,8 @@ class TradingFlowServiceTest {
 
         TradingFlowHistory history = historyRepository.findRecent(1).getFirst();
         assertThat(history.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(paperPortfolioService.getPortfolio().cash()).isEqualByComparingTo("1000000");
+        assertThat(paperPortfolioService.findPositions()).isEmpty();
     }
 
     @Test
@@ -260,5 +279,14 @@ class TradingFlowServiceTest {
             }
             results.add(result);
         }
+    }
+
+    private PaperPortfolioService paperPortfolioService() {
+        PaperPortfolioProperties properties = new PaperPortfolioProperties();
+        properties.setInitialCash(new BigDecimal("1000000"));
+        InMemoryPaperPortfolioRepository repository = new InMemoryPaperPortfolioRepository();
+        PaperPortfolioService service = new PaperPortfolioService(repository, properties);
+        service.initialize();
+        return service;
     }
 }
