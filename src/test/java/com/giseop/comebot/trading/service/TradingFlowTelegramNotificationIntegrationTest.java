@@ -16,6 +16,8 @@ import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.risk.PositionExitProperties;
+import com.giseop.comebot.risk.service.PositionExitSignalService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.SimpleThresholdStrategy;
@@ -53,6 +55,7 @@ class TradingFlowTelegramNotificationIntegrationTest {
         notificationProperties = new NotificationProperties();
         telegramProperties = new TelegramProperties();
         telegramApiClient = new RecordingTelegramApiClient();
+        PaperPortfolioService paperPortfolioService = paperPortfolioService();
 
         tradingFlowService = new TradingFlowService(
                 marketPriceProvider,
@@ -61,12 +64,13 @@ class TradingFlowTelegramNotificationIntegrationTest {
                 new OrderExecutionService(
                         new PaperTradingExecutionGateway(),
                         new RiskValidationService(tradingProperties),
-                        paperPortfolioService()
+                        paperPortfolioService
                 ),
                 new TradingFlowHistoryService(historyRepository),
                 notificationProperties,
                 new NotificationPolicyService(notificationProperties),
-                new TradingFlowNotificationService(new TelegramNotificationSender(telegramProperties, telegramApiClient))
+                new TradingFlowNotificationService(new TelegramNotificationSender(telegramProperties, telegramApiClient)),
+                new PositionExitSignalService(new PositionExitProperties(), paperPortfolioService)
         );
     }
 

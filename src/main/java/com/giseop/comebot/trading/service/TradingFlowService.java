@@ -9,6 +9,8 @@ import com.giseop.comebot.market.provider.MarketPriceProvider;
 import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
+import com.giseop.comebot.risk.service.PositionExitSignalService;
+import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.TradingStrategy;
@@ -31,6 +33,7 @@ public class TradingFlowService {
     private final NotificationProperties notificationProperties;
     private final NotificationPolicyService notificationPolicyService;
     private final TradingFlowNotificationService tradingFlowNotificationService;
+    private final PositionExitSignalService positionExitSignalService;
 
     public TradingFlowService(
             MarketPriceProvider marketPriceProvider,
@@ -40,7 +43,8 @@ public class TradingFlowService {
             TradingFlowHistoryService tradingFlowHistoryService,
             NotificationProperties notificationProperties,
             NotificationPolicyService notificationPolicyService,
-            TradingFlowNotificationService tradingFlowNotificationService
+            TradingFlowNotificationService tradingFlowNotificationService,
+            PositionExitSignalService positionExitSignalService
     ) {
         this.marketPriceProvider = marketPriceProvider;
         this.tradingStrategy = tradingStrategy;
@@ -50,11 +54,12 @@ public class TradingFlowService {
         this.notificationProperties = notificationProperties;
         this.notificationPolicyService = notificationPolicyService;
         this.tradingFlowNotificationService = tradingFlowNotificationService;
+        this.positionExitSignalService = positionExitSignalService;
     }
 
     public TradingFlowResult run(String market) {
         MarketPrice marketPrice = marketPriceProvider.getCurrentPrice(market);
-        TradingSignal signal = tradingStrategy.evaluate(marketPrice);
+        TradingSignal signal = selectSignal(marketPrice, tradingStrategy.evaluate(marketPrice));
         Optional<OrderRequest> request = orderRequestFactory.create(signal);
 
         if (request.isEmpty()) {
@@ -81,6 +86,19 @@ public class TradingFlowService {
                 orderResult.message(),
                 orderResult.executedAt()
         ));
+    }
+
+    private TradingSignal selectSignal(MarketPrice marketPrice, TradingSignal strategySignal) {
+        if (strategySignal == null || strategySignal.signalType() != SignalType.HOLD) {
+            return strategySignal;
+        }
+
+        try {
+            return positionExitSignalService.evaluate(marketPrice).orElse(strategySignal);
+        } catch (RuntimeException exception) {
+            log.warn("Position exit signal evaluation failed. market={}", marketPrice == null ? null : marketPrice.market(), exception);
+            return strategySignal;
+        }
     }
 
     private TradingFlowResult save(TradingFlowResult result) {

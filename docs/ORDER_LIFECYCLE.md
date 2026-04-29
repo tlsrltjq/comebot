@@ -11,7 +11,7 @@
 ## 초기 단계
 
 - `PRICE_CAPTURED`: 테스트용 시세 공급자가 시세를 제공한 단계
-- `SIGNAL_DETECTED`: 전략이 BUY, SELL, HOLD 신호를 만든 단계
+- `SIGNAL_DETECTED`: 전략 또는 position exit 정책이 BUY, SELL, HOLD 신호를 만든 단계
 - `REQUESTED`: BUY 또는 SELL 신호가 주문 요청으로 변환된 상태
 - `REJECTED`: 입력값 또는 리스크 검증에서 거절된 상태
 - `FILLED`: 페이퍼 트레이딩 주문이 체결 처리된 상태
@@ -21,18 +21,19 @@
 
 1. 테스트용 시세 조회
 2. 테스트용 전략 판단
-3. `SIGNAL_DETECTED` 생성
-4. HOLD 신호면 주문 요청을 만들지 않고 흐름 종료
-5. BUY 또는 SELL 신호면 주문 요청 생성
-6. 리스크 검증
-7. 포트폴리오 사전 검증
-8. 현금 부족 BUY 또는 보유 수량 부족 SELL이면 `REJECTED` 결과 생성
-9. 리스크와 포트폴리오 검증 승인 시 페이퍼 실행 게이트웨이 호출
-10. 리스크 거절 시 게이트웨이를 호출하지 않고 `REJECTED` 결과 생성
-11. `FILLED`, `REJECTED`, `FAILED` 중 하나로 결과 생성
-12. `FILLED` 결과만 포트폴리오에 반영
-13. 실행 결과 history 저장
-14. 알림 설정과 필터 정책을 통과하면 optional notification 실행
+3. 기존 전략이 HOLD이고 position exit 설정이 활성화되어 있으면 보유 포지션 손절/익절 조건 평가
+4. `SIGNAL_DETECTED` 생성
+5. HOLD 신호면 주문 요청을 만들지 않고 흐름 종료
+6. BUY 또는 SELL 신호면 주문 요청 생성
+7. 리스크 검증
+8. 포트폴리오 사전 검증
+9. 현금 부족 BUY 또는 보유 수량 부족 SELL이면 `REJECTED` 결과 생성
+10. 리스크와 포트폴리오 검증 승인 시 페이퍼 실행 게이트웨이 호출
+11. 리스크 거절 시 게이트웨이를 호출하지 않고 `REJECTED` 결과 생성
+12. `FILLED`, `REJECTED`, `FAILED` 중 하나로 결과 생성
+13. `FILLED` 결과만 포트폴리오에 반영
+14. 실행 결과 history 저장
+15. 알림 설정과 필터 정책을 통과하면 optional notification 실행
 
 ## HOLD 처리
 
@@ -47,6 +48,9 @@
 - SELL 신호는 매도 주문 요청으로 변환할 수 있다.
 - HOLD 신호는 주문 요청으로 변환하지 않는다.
 - signalType이 null이면 주문 요청으로 변환하지 않는다.
+- Position exit 정책은 활성화된 경우에만 손절/익절 SELL 신호를 만들 수 있다.
+- Position exit SELL 수량은 보유 수량을 초과하지 않는다.
+- Position exit 정책은 실제 주문 API가 아니라 기존 `PAPER_TRADING` 주문 흐름으로만 이어진다.
 
 ## 리스크 검증 단계
 

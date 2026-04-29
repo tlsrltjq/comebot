@@ -161,7 +161,15 @@ GET /api/strategy/status
 GET /api/risk/status
 ```
 
-응답에는 `maxOrderAmount`, `allowedMarkets`만 포함한다.
+응답에는 `maxOrderAmount`, `allowedMarkets`, 손절/익절 설정이 포함된다.
+
+```properties
+risk.take-profit-rate=5
+risk.stop-loss-rate=-3
+risk.position-exit-enabled=false
+```
+
+`risk.position-exit-enabled=true`일 때만 보유 포지션의 미실현 수익률을 기준으로 PAPER_TRADING SELL 신호를 만들 수 있다. 기존 전략이 HOLD일 때만 exit 정책을 평가하며, 기존 SimpleThresholdStrategy BUY/SELL 신호를 대체하지 않는다.
 
 ## PAPER_TRADING 포트폴리오
 

@@ -5,6 +5,9 @@ import java.util.List;
 
 public record RiskStatusResponse(
         BigDecimal maxOrderAmount,
-        List<String> allowedMarkets
+        List<String> allowedMarkets,
+        BigDecimal takeProfitRate,
+        BigDecimal stopLossRate,
+        boolean positionExitEnabled
 ) {
 }

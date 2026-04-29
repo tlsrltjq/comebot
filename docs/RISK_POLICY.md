@@ -13,6 +13,18 @@
 - 평가 API는 현금, 보유 수량, 평균 매수가, 실현 손익을 변경하면 안 된다.
 - 현재가 조회 실패는 주문 실패나 포트폴리오 변경으로 처리하지 않는다.
 
+## 손절/익절 Position Exit 정책
+
+- 기본값은 `risk.position-exit-enabled=false`다.
+- `risk.position-exit-enabled=true`일 때만 보유 포지션 기준 exit 정책을 평가한다.
+- 기존 전략이 HOLD를 만든 경우에만 position exit 정책이 SELL 신호를 만들 수 있다.
+- 기존 SimpleThresholdStrategy의 BUY/SELL 신호를 position exit 정책이 대체하지 않는다.
+- 미실현 수익률이 `risk.take-profit-rate` 이상이면 익절 SELL 신호를 만든다.
+- 미실현 수익률이 `risk.stop-loss-rate` 이하이면 손절 SELL 신호를 만든다.
+- 보유 포지션이 없으면 SELL 신호를 만들지 않는다.
+- SELL 수량은 보유 수량을 초과하지 않는다.
+- 손절/익절은 실제 주문이 아니라 `PAPER_TRADING` SELL 신호만 만든다.
+
 ## InMemory 테스트 시세 원칙
 
 - 테스트 가격 변경 API로 설정한 가격은 실제 시장 가격이 아니다.
@@ -53,11 +65,14 @@
 - `trading.mode=PAPER_TRADING`
 - `trading.max-order-amount=100000`
 - `trading.allowed-markets=KRW-BTC,KRW-ETH`
+- `risk.take-profit-rate=5`
+- `risk.stop-loss-rate=-3`
+- `risk.position-exit-enabled=false`
 
 ## 상태 조회
 
 - `GET /api/risk/status`는 현재 리스크 정책 설정값을 조회한다.
-- 응답에는 `maxOrderAmount`, `allowedMarkets`만 포함한다.
+- 응답에는 `maxOrderAmount`, `allowedMarkets`, `takeProfitRate`, `stopLossRate`, `positionExitEnabled`를 포함한다.
 - 이 API는 설정 변경 기능을 제공하지 않는다.
 - 민감 정보는 응답에 포함하지 않는다.
 

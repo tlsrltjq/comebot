@@ -17,6 +17,8 @@ import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.risk.PositionExitProperties;
+import com.giseop.comebot.risk.service.PositionExitSignalService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
@@ -34,6 +36,7 @@ class TradingFlowServiceTest {
     private RecordingTradingFlowNotificationService notificationService;
     private NotificationProperties notificationProperties;
     private PaperPortfolioService paperPortfolioService;
+    private PositionExitProperties positionExitProperties;
     private TradingFlowService tradingFlowService;
 
     @BeforeEach
@@ -52,6 +55,7 @@ class TradingFlowServiceTest {
         notificationProperties = new NotificationProperties();
         notificationService = new RecordingTradingFlowNotificationService();
         paperPortfolioService = paperPortfolioService();
+        positionExitProperties = new PositionExitProperties();
         tradingFlowService = new TradingFlowService(
                 marketPriceProvider,
                 new SimpleThresholdStrategy(strategyProperties),
@@ -64,7 +68,8 @@ class TradingFlowServiceTest {
                 new TradingFlowHistoryService(historyRepository),
                 notificationProperties,
                 new NotificationPolicyService(notificationProperties),
-                notificationService
+                notificationService,
+                new PositionExitSignalService(positionExitProperties, paperPortfolioService)
         );
     }
 
@@ -262,6 +267,83 @@ class TradingFlowServiceTest {
         assertThat(notificationService.results).containsExactly(hold, rejected, filled);
     }
 
+    @Test
+    void runKeepsStrategyFlowWhenPositionExitIsDisabled() {
+        paperPortfolioService.apply(new com.giseop.comebot.execution.domain.OrderResult(
+                "KRW-BTC",
+                com.giseop.comebot.execution.domain.OrderSide.BUY,
+                new BigDecimal("1"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "seed",
+                java.time.Instant.now()
+        ));
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("105"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.signalType()).isEqualTo(SignalType.HOLD);
+        assertThat(result.orderCreated()).isFalse();
+    }
+
+    @Test
+    void runCreatesSellSignalWhenTakeProfitRateIsReached() {
+        positionExitProperties.setPositionExitEnabled(true);
+        paperPortfolioService.apply(new com.giseop.comebot.execution.domain.OrderResult(
+                "KRW-BTC",
+                com.giseop.comebot.execution.domain.OrderSide.BUY,
+                new BigDecimal("1"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "seed",
+                java.time.Instant.now()
+        ));
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("105"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.signalType()).isEqualTo(SignalType.SELL);
+        assertThat(result.signalReason()).contains("Take profit rate reached");
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+    }
+
+    @Test
+    void runCreatesSellSignalWhenStopLossRateIsReached() {
+        StrategyProperties strategyProperties = new StrategyProperties();
+        strategyProperties.setBuyPrice(new BigDecimal("1"));
+        strategyProperties.setSellPrice(new BigDecimal("200"));
+        strategyProperties.setOrderQuantity(new BigDecimal("1"));
+        positionExitProperties.setPositionExitEnabled(true);
+        paperPortfolioService.apply(new com.giseop.comebot.execution.domain.OrderResult(
+                "KRW-BTC",
+                com.giseop.comebot.execution.domain.OrderSide.BUY,
+                new BigDecimal("1"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "seed",
+                java.time.Instant.now()
+        ));
+        TradingFlowService service = tradingFlowService(strategyProperties, positionExitProperties, paperPortfolioService);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("97"));
+
+        TradingFlowResult result = service.run("KRW-BTC");
+
+        assertThat(result.signalType()).isEqualTo(SignalType.SELL);
+        assertThat(result.signalReason()).contains("Stop loss rate reached");
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+    }
+
+    @Test
+    void runDoesNotCreateExitSellWhenPositionIsEmpty() {
+        positionExitProperties.setPositionExitEnabled(true);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("105"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.signalType()).isEqualTo(SignalType.HOLD);
+        assertThat(result.orderCreated()).isFalse();
+    }
+
     private static class RecordingTradingFlowNotificationService extends TradingFlowNotificationService {
 
         private final List<TradingFlowResult> results = new ArrayList<>();
@@ -288,5 +370,31 @@ class TradingFlowServiceTest {
         PaperPortfolioService service = new PaperPortfolioService(repository, properties);
         service.initialize();
         return service;
+    }
+
+    private TradingFlowService tradingFlowService(
+            StrategyProperties strategyProperties,
+            PositionExitProperties positionExitProperties,
+            PaperPortfolioService paperPortfolioService
+    ) {
+        TradingProperties tradingProperties = new TradingProperties();
+        tradingProperties.setMaxOrderAmount(new BigDecimal("100000"));
+        tradingProperties.setAllowedMarkets(List.of("KRW-BTC", "KRW-ETH"));
+
+        return new TradingFlowService(
+                marketPriceProvider,
+                new SimpleThresholdStrategy(strategyProperties),
+                new OrderRequestFactory(),
+                new OrderExecutionService(
+                        new PaperTradingExecutionGateway(),
+                        new RiskValidationService(tradingProperties),
+                        paperPortfolioService
+                ),
+                new TradingFlowHistoryService(historyRepository),
+                notificationProperties,
+                new NotificationPolicyService(notificationProperties),
+                notificationService,
+                new PositionExitSignalService(positionExitProperties, paperPortfolioService)
+        );
     }
 }

@@ -63,7 +63,7 @@ class ScheduledTradingFlowRunnerTest {
         private final List<String> executedMarkets = new ArrayList<>();
 
         private RecordingTradingFlowService() {
-            super(null, null, null, null, null, null, null, null);
+            super(null, null, null, null, null, null, null, null, null);
         }
 
         @Override

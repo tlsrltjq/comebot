@@ -52,6 +52,15 @@
 - 실제 거래소 주문 API는 추가하지 않는다.
 - 실제 시세를 사용하더라도 주문 실행은 `PAPER_TRADING` 흐름만 사용한다.
 
+## Position Exit 규칙
+
+- 손절/익절 정책은 `PAPER_TRADING` SELL 신호만 생성한다.
+- 손절/익절 정책은 실제 주문 API 또는 `REAL_TRADING` 경로를 만들면 안 된다.
+- 기본값은 `risk.position-exit-enabled=false`다.
+- 기존 전략이 HOLD인 경우에만 position exit 정책을 평가한다.
+- SELL 수량은 보유 포지션 수량을 초과하면 안 된다.
+- 손절/익절 기준이나 우선순위를 변경하면 테스트와 `docs/RISK_POLICY.md`, `docs/ORDER_LIFECYCLE.md`를 함께 수정한다.
+
 ## Portfolio 규칙
 
 - 포트폴리오 변경은 `PAPER_TRADING` 주문이 `FILLED` 된 이후에만 수행한다.
