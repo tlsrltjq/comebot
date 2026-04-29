@@ -12,6 +12,8 @@ import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
+import com.giseop.comebot.risk.DailyRiskProperties;
+import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -41,6 +43,8 @@ public class TelegramCommandService {
     private final NotificationProperties notificationProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final SafetyProperties safetyProperties;
+    private final PositionExitProperties positionExitProperties;
+    private final DailyRiskProperties dailyRiskProperties;
     private final TradingFlowService tradingFlowService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
     private final PaperPortfolioService paperPortfolioService;
@@ -60,6 +64,8 @@ public class TelegramCommandService {
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
             SafetyProperties safetyProperties,
+            PositionExitProperties positionExitProperties,
+            DailyRiskProperties dailyRiskProperties,
             TradingFlowService tradingFlowService,
             TradingFlowHistoryService tradingFlowHistoryService,
             PaperPortfolioService paperPortfolioService,
@@ -78,6 +84,8 @@ public class TelegramCommandService {
         this.notificationProperties = notificationProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.safetyProperties = safetyProperties;
+        this.positionExitProperties = positionExitProperties;
+        this.dailyRiskProperties = dailyRiskProperties;
         this.tradingFlowService = tradingFlowService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
         this.paperPortfolioService = paperPortfolioService;
@@ -97,6 +105,8 @@ public class TelegramCommandService {
             case HISTORY -> historyMessage(command.market());
             case PORTFOLIO -> portfolioMessage();
             case POSITIONS -> positionsMessage();
+            case RISK -> riskMessage();
+            case SAFETY -> safetyMessage();
         };
         if (response != null) {
             sendText(response);
@@ -112,6 +122,8 @@ public class TelegramCommandService {
             case HISTORY -> historyMessage(callback.market());
             case PORTFOLIO -> portfolioMessage();
             case POSITIONS -> positionsMessage();
+            case RISK -> riskMessage();
+            case SAFETY -> safetyMessage();
         };
         sendText(response);
     }
@@ -142,6 +154,8 @@ public class TelegramCommandService {
                 /history KRW-BTC
                 /portfolio
                 /positions
+                /risk
+                /safety
                 """.trim();
     }
 
@@ -264,5 +278,35 @@ public class TelegramCommandService {
                     .append(position.averageBuyPrice());
         }
         return builder.toString();
+    }
+
+    private String riskMessage() {
+        return """
+                Risk policy
+                maxOrderAmount=%s
+                allowedMarkets=%s
+                takeProfitRate=%s
+                stopLossRate=%s
+                positionExitEnabled=%s
+                dailyRiskEnabled=%s
+                dailyOrderLimit=%s
+                dailyLossLimit=%s
+                """.formatted(
+                tradingProperties.getMaxOrderAmount(),
+                tradingProperties.getAllowedMarkets(),
+                positionExitProperties.getTakeProfitRate(),
+                positionExitProperties.getStopLossRate(),
+                positionExitProperties.isPositionExitEnabled(),
+                dailyRiskProperties.isDailyRiskEnabled(),
+                dailyRiskProperties.getDailyOrderLimit(),
+                dailyRiskProperties.getDailyLossLimit()
+        ).trim();
+    }
+
+    private String safetyMessage() {
+        return """
+                Safety status
+                killSwitchEnabled=%s
+                """.formatted(safetyProperties.isKillSwitchEnabled()).trim();
     }
 }

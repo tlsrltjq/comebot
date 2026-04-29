@@ -65,6 +65,22 @@ class TelegramCommandParserTest {
     }
 
     @Test
+    void parseRiskCommand() {
+        TelegramCommand command = parser.parse("/risk");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.RISK);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
+    void parseSafetyCommand() {
+        TelegramCommand command = parser.parse("/safety");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.SAFETY);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
     void parseUnknownCommand() {
         TelegramCommand command = parser.parse("/unknown");
 

@@ -29,6 +29,8 @@
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약 응답
 - `/portfolio`: PAPER_TRADING 포트폴리오 현금, 평가자산, 손익 요약 응답
 - `/positions`: PAPER_TRADING 보유 포지션 목록 응답
+- `/risk`: 현재 리스크 정책 요약 응답
+- `/safety`: kill switch 상태 요약 응답
 - 알 수 없는 명령어: `/help` 안내 응답
 - 명령어는 configured `telegram.chat-id`와 일치하는 채팅에서 온 경우만 처리한다.
 
@@ -42,6 +44,8 @@
 - `ETH 이력 보기`: `KRW-ETH` 최근 이력 요약을 응답한다.
 - `포트폴리오 보기`: `/portfolio`와 같은 포트폴리오 요약을 응답한다.
 - `보유 포지션 보기`: `/positions`와 같은 보유 포지션 목록을 응답한다.
+- `리스크 보기`: `/risk`와 같은 리스크 정책 요약을 응답한다.
+- `안전장치 보기`: `/safety`와 같은 kill switch 상태를 응답한다.
 - `도움말`: `/help`와 같은 안내를 응답한다.
 - 알 수 없는 callback data는 `/help` 안내를 응답한다.
 - 미허용 chatId의 callback은 기능을 실행하지 않는다.
@@ -73,6 +77,13 @@
 - Telegram enabled
 - Telegram inbound enabled
 - Kill switch enabled
+- Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
+
+## Risk/Safety 표시 항목
+
+- `/risk`: maxOrderAmount, allowedMarkets, takeProfitRate, stopLossRate, positionExitEnabled, dailyRiskEnabled, dailyOrderLimit, dailyLossLimit
+- `/safety`: killSwitchEnabled
+- Risk/Safety 조회는 설정을 변경하지 않는다.
 - Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
 
 ## 금지 사항

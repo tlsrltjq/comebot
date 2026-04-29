@@ -22,6 +22,8 @@ public class TelegramCommandParser {
             case "/history" -> new TelegramCommand(TelegramCommandType.HISTORY, market);
             case "/portfolio" -> new TelegramCommand(TelegramCommandType.PORTFOLIO, null);
             case "/positions" -> new TelegramCommand(TelegramCommandType.POSITIONS, null);
+            case "/risk" -> new TelegramCommand(TelegramCommandType.RISK, null);
+            case "/safety" -> new TelegramCommand(TelegramCommandType.SAFETY, null);
             default -> new TelegramCommand(TelegramCommandType.UNKNOWN, null);
         };
     }

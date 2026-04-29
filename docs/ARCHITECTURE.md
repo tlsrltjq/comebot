@@ -94,6 +94,14 @@
 - Telegram `/positions`와 `POSITIONS` callback은 보유 포지션 목록을 조회한다.
 - Telegram 포트폴리오 조회는 portfolio 상태를 변경하지 않는다.
 
+## Telegram 운영 상태 조회
+
+- Telegram `/risk`와 `RISK` callback은 현재 리스크 정책 설정값을 요약한다.
+- Telegram `/safety`와 `SAFETY` callback은 kill switch 상태를 요약한다.
+- 운영 상태 조회 명령은 REST API 구조를 변경하지 않고 기존 properties를 읽어 메시지를 만든다.
+- 운영 상태 조회 명령은 설정을 변경하지 않는다.
+- Bot Token, Chat ID, DB 비밀번호 원문은 응답하지 않는다.
+
 ## 시스템 상태 조회
 
 - `GET /api/system/status`는 주요 설정 상태를 한 번에 조회한다.
@@ -130,7 +138,7 @@
 - Safety: kill switch 상태를 기준으로 신규 트레이딩 실행을 차단한다.
 - Trading Flow: 시세, 전략, 주문 요청 생성, 리스크 검증, 페이퍼 실행을 한 번에 연결한다.
 - REST Controller: 수동 실행 요청을 받고 Trading Flow 결과를 응답 DTO로 변환한다.
-- Telegram: 사용자 명령, 버튼, 포트폴리오 조회, 알림 메시지를 처리한다.
+- Telegram: 사용자 명령, 버튼, 포트폴리오 조회, 운영 상태 조회, 알림 메시지를 처리한다.
 - Configuration: 실행 모드, 전략 기준값, 거래 제한 설정을 관리한다.
 
 ## 계층 구성

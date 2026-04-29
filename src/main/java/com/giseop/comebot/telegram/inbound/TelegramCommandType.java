@@ -8,5 +8,7 @@ public enum TelegramCommandType {
     HISTORY,
     PORTFOLIO,
     POSITIONS,
+    RISK,
+    SAFETY,
     UNKNOWN
 }

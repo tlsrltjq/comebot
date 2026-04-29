@@ -7,5 +7,7 @@ public enum TelegramCallbackType {
     HISTORY,
     PORTFOLIO,
     POSITIONS,
+    RISK,
+    SAFETY,
     UNKNOWN
 }

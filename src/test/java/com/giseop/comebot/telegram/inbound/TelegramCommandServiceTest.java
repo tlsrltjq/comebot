@@ -21,6 +21,8 @@ import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
+import com.giseop.comebot.risk.DailyRiskProperties;
+import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.domain.SignalType;
@@ -67,6 +69,60 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains("/help", "/status", "/run KRW-BTC", "/history KRW-BTC");
+    }
+
+    @Test
+    void riskCommandSendsRiskPolicyMessage() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handle("/risk");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains(
+                "Risk policy",
+                "maxOrderAmount=100000",
+                "allowedMarkets=[KRW-BTC, KRW-ETH]",
+                "takeProfitRate=5",
+                "stopLossRate=-3",
+                "positionExitEnabled=false",
+                "dailyRiskEnabled=false",
+                "dailyOrderLimit=10",
+                "dailyLossLimit=50000"
+        );
+    }
+
+    @Test
+    void safetyCommandSendsSafetyMessage() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handle("/safety");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Safety status", "killSwitchEnabled=false");
+    }
+
+    @Test
+    void riskCallbackSendsRiskPolicyMessage() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handleCallback("RISK");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Risk policy", "dailyLossLimit=50000");
+    }
+
+    @Test
+    void safetyCallbackSendsSafetyMessage() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handleCallback("SAFETY");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("killSwitchEnabled=false");
     }
 
     @Test
@@ -119,6 +175,20 @@ class TelegramCommandServiceTest {
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body())
                 .doesNotContain("token", "chat-id", "password", "secret");
+    }
+
+    @Test
+    void riskAndSafetyCommandsDoNotExposeSensitiveValues() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handle("/risk");
+        service(sender, mock(TradingFlowService.class)).handle("/safety");
+
+        verify(sender, org.mockito.Mockito.times(2)).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getAllValues())
+                .allSatisfy(message -> assertThat(message.body())
+                        .doesNotContain("token", "chat-id", "password", "secret"));
     }
 
     @Test
@@ -374,6 +444,8 @@ class TelegramCommandServiceTest {
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
                 new SafetyProperties(),
+                positionExitProperties(),
+                dailyRiskProperties(),
                 tradingFlowService,
                 historyService,
                 paperPortfolioService,
@@ -433,6 +505,22 @@ class TelegramCommandServiceTest {
         TradingProperties properties = mock(TradingProperties.class);
         when(properties.getMaxOrderAmount()).thenReturn(new BigDecimal("100000"));
         when(properties.getAllowedMarkets()).thenReturn(List.of("KRW-BTC", "KRW-ETH"));
+        return properties;
+    }
+
+    private PositionExitProperties positionExitProperties() {
+        PositionExitProperties properties = mock(PositionExitProperties.class);
+        when(properties.getTakeProfitRate()).thenReturn(new BigDecimal("5"));
+        when(properties.getStopLossRate()).thenReturn(new BigDecimal("-3"));
+        when(properties.isPositionExitEnabled()).thenReturn(false);
+        return properties;
+    }
+
+    private DailyRiskProperties dailyRiskProperties() {
+        DailyRiskProperties properties = mock(DailyRiskProperties.class);
+        when(properties.isDailyRiskEnabled()).thenReturn(false);
+        when(properties.getDailyOrderLimit()).thenReturn(10);
+        when(properties.getDailyLossLimit()).thenReturn(new BigDecimal("50000"));
         return properties;
     }
 }

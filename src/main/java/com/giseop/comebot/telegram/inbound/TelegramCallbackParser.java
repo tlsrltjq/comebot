@@ -23,6 +23,12 @@ public class TelegramCallbackParser {
         if ("POSITIONS".equals(normalized)) {
             return new TelegramCallback(TelegramCallbackType.POSITIONS, null);
         }
+        if ("RISK".equals(normalized)) {
+            return new TelegramCallback(TelegramCallbackType.RISK, null);
+        }
+        if ("SAFETY".equals(normalized)) {
+            return new TelegramCallback(TelegramCallbackType.SAFETY, null);
+        }
         if (normalized.startsWith("RUN:")) {
             return new TelegramCallback(TelegramCallbackType.RUN, valueAfterPrefix(normalized, "RUN:"));
         }
