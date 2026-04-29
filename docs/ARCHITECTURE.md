@@ -64,6 +64,9 @@
 - `GET /api/portfolio/positions`는 현재 보유 포지션 목록을 조회한다.
 - `GET /api/portfolio/valuation`은 현재 Market Provider 가격으로 평가금액과 미실현 손익을 계산한다.
 - 포트폴리오 평가는 조회 전용이며 portfolio 상태를 변경하지 않는다.
+- Telegram `/portfolio`와 `PORTFOLIO` callback은 포트폴리오 평가 요약을 조회한다.
+- Telegram `/positions`와 `POSITIONS` callback은 보유 포지션 목록을 조회한다.
+- Telegram 포트폴리오 조회는 portfolio 상태를 변경하지 않는다.
 
 ## 시스템 상태 조회
 
@@ -98,7 +101,7 @@
 - Portfolio: 페이퍼 체결 결과로 현금, 보유 수량, 실현 손익을 관리한다.
 - Trading Flow: 시세, 전략, 주문 요청 생성, 리스크 검증, 페이퍼 실행을 한 번에 연결한다.
 - REST Controller: 수동 실행 요청을 받고 Trading Flow 결과를 응답 DTO로 변환한다.
-- Telegram: 사용자 명령, 버튼, 알림 메시지를 처리한다.
+- Telegram: 사용자 명령, 버튼, 포트폴리오 조회, 알림 메시지를 처리한다.
 - Configuration: 실행 모드, 전략 기준값, 거래 제한 설정을 관리한다.
 
 ## 계층 구성

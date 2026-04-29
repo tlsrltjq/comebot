@@ -27,6 +27,8 @@
 - `/status`: DB, Market Provider, Strategy, Risk, Scheduler, Notification, Telegram 상태 요약 응답
 - `/run KRW-BTC`: 해당 market의 `PAPER_TRADING` 트레이딩 플로우 실행 후 결과 응답
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약 응답
+- `/portfolio`: PAPER_TRADING 포트폴리오 현금, 평가자산, 손익 요약 응답
+- `/positions`: PAPER_TRADING 보유 포지션 목록 응답
 - 알 수 없는 명령어: `/help` 안내 응답
 - 명령어는 configured `telegram.chat-id`와 일치하는 채팅에서 온 경우만 처리한다.
 
@@ -38,10 +40,23 @@
 - `KRW-ETH 실행`: `KRW-ETH` market으로 기존 `PAPER_TRADING` 트레이딩 플로우를 실행한다.
 - `BTC 이력 보기`: `KRW-BTC` 최근 이력 요약을 응답한다.
 - `ETH 이력 보기`: `KRW-ETH` 최근 이력 요약을 응답한다.
+- `포트폴리오 보기`: `/portfolio`와 같은 포트폴리오 요약을 응답한다.
+- `보유 포지션 보기`: `/positions`와 같은 보유 포지션 목록을 응답한다.
 - `도움말`: `/help`와 같은 안내를 응답한다.
 - 알 수 없는 callback data는 `/help` 안내를 응답한다.
 - 미허용 chatId의 callback은 기능을 실행하지 않는다.
 - callback query는 버튼 로딩이 남지 않도록 가능한 경우 `answerCallbackQuery`로 응답한다.
+
+## Portfolio 표시 항목
+
+- 현금
+- 총 평가자산
+- 실현손익
+- 미실현손익
+- 총손익
+- 보유 포지션 market, 수량, 평균 매수가
+- 현재가 조회 실패 시 실패 사유를 안내한다.
+- 포트폴리오 조회는 상태 변경 없는 조회 기능이다.
 
 ## Status 표시 항목
 

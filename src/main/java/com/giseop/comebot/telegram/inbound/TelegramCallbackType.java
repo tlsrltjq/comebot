@@ -5,5 +5,7 @@ public enum TelegramCallbackType {
     STATUS,
     RUN,
     HISTORY,
+    PORTFOLIO,
+    POSITIONS,
     UNKNOWN
 }

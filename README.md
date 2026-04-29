@@ -410,6 +410,8 @@ gradlew.bat bootRun
 - `/status`: DB, Market Provider, Strategy, Risk, Scheduler, Notification, Telegram 상태 요약
 - `/run KRW-BTC`: 해당 market의 PAPER_TRADING 플로우 수동 실행
 - `/history KRW-BTC`: 해당 market의 최근 이력 요약
+- `/portfolio`: PAPER_TRADING 포트폴리오 현금, 평가자산, 손익 요약
+- `/positions`: PAPER_TRADING 보유 포지션 목록
 
 명령어와 버튼 callback은 설정된 `telegram.chat-id`와 일치하는 채팅에서 온 요청만 처리한다. 다른 chatId의 요청은 실행하지 않으며 거래 결과, history, status 정보를 응답하지 않는다.
 
@@ -420,9 +422,13 @@ gradlew.bat bootRun
 - KRW-ETH 실행
 - BTC 이력 보기
 - ETH 이력 보기
+- 포트폴리오 보기
+- 보유 포지션 보기
 - 도움말
 
 `/status`와 `상태 보기` 버튼은 DB 연결 여부, Market Provider, 전략 기준값, 주문 수량, 최대 주문 금액, 허용 Market, Scheduler/Notification/Telegram 활성화 상태를 표시한다. Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
+
+`/portfolio`, `/positions`, 포트폴리오 버튼은 조회 전용이다. 포트폴리오 상태를 변경하지 않으며 현재가 조회 실패 시 실패 사유를 텔레그램 메시지로 안내한다.
 
 `.env.example`을 참고한다.
 

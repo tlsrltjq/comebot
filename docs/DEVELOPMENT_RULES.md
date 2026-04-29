@@ -21,6 +21,7 @@
 - Telegram 명령 처리 실패가 애플리케이션 전체를 중단시키면 안 된다.
 - `/run` 명령은 기존 `PAPER_TRADING` 트레이딩 플로우만 실행한다.
 - 인라인 버튼 callback 처리도 기존 `PAPER_TRADING` 트레이딩 플로우만 사용한다.
+- Telegram 포트폴리오 조회 명령과 callback은 조회 전용이며 포트폴리오 상태를 변경하면 안 된다.
 - Telegram update offset 저장 방식을 변경하면 성공/실패 offset 처리 테스트를 함께 수정한다.
 - Telegram offset 저장소를 변경하면 polling 테스트와 저장소 테스트를 함께 수정한다.
 - JPA offset 저장소 사용 시 `ddl-auto=none`을 유지하고 `schema.sql`을 적용한다.
@@ -59,6 +60,7 @@
 - 기본 포트폴리오 저장소는 `IN_MEMORY`다.
 - JPA 포트폴리오 저장소는 별도 단계 전까지 구현하지 않는다.
 - 포트폴리오 valuation은 조회 전용이어야 하며 포트폴리오 상태를 변경하면 안 된다.
+- Telegram 포트폴리오 조회도 조회 전용이어야 하며 포트폴리오 상태를 변경하면 안 된다.
 - valuation은 기존 `MarketPriceProvider`를 통해 현재가를 조회한다.
 
 ## 작업 원칙

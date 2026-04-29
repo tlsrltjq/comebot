@@ -6,5 +6,7 @@ public enum TelegramCommandType {
     STATUS,
     RUN,
     HISTORY,
+    PORTFOLIO,
+    POSITIONS,
     UNKNOWN
 }

@@ -33,6 +33,22 @@ class TelegramCallbackParserTest {
     }
 
     @Test
+    void parsePortfolioCallback() {
+        TelegramCallback callback = parser.parse("PORTFOLIO");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.PORTFOLIO);
+        assertThat(callback.market()).isNull();
+    }
+
+    @Test
+    void parsePositionsCallback() {
+        TelegramCallback callback = parser.parse("POSITIONS");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.POSITIONS);
+        assertThat(callback.market()).isNull();
+    }
+
+    @Test
     void parseHelpCallback() {
         TelegramCallback callback = parser.parse("HELP");
 

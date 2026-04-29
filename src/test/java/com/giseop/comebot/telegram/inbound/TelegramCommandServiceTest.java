@@ -17,6 +17,10 @@ import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationMessage;
 import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.portfolio.domain.PaperPosition;
+import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -170,6 +174,96 @@ class TelegramCommandServiceTest {
     }
 
     @Test
+    void portfolioCommandSendsPortfolioSummary() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class), portfolioService(List.of()), valuationService()).handle("/portfolio");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains(
+                "Paper portfolio",
+                "cash=1000000",
+                "totalEquity=1100000",
+                "realizedProfit=50000",
+                "unrealizedProfit=50000",
+                "totalProfit=100000"
+        );
+    }
+
+    @Test
+    void positionsCommandSendsPositionList() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(
+                sender,
+                mock(TradingFlowService.class),
+                portfolioService(List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.01"), new BigDecimal("90000000")))),
+                valuationService()
+        ).handle("/positions");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains(
+                "Paper positions",
+                "market=KRW-BTC",
+                "quantity=0.01",
+                "averageBuyPrice=90000000"
+        );
+    }
+
+    @Test
+    void positionsCommandSendsEmptyPositionMessage() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class), portfolioService(List.of()), valuationService()).handle("/positions");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("No paper positions");
+    }
+
+    @Test
+    void portfolioCommandSendsFailureMessageWhenValuationFails() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        PaperPortfolioValuationService valuationService = mock(PaperPortfolioValuationService.class);
+        when(valuationService.valuate()).thenThrow(new IllegalStateException("Current price is not available"));
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class), portfolioService(List.of()), valuationService).handle("/portfolio");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Portfolio valuation failed");
+    }
+
+    @Test
+    void portfolioCallbackSendsPortfolioSummary() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class), portfolioService(List.of()), valuationService()).handleCallback("PORTFOLIO");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Paper portfolio", "totalEquity=1100000");
+    }
+
+    @Test
+    void positionsCallbackSendsPositionList() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(
+                sender,
+                mock(TradingFlowService.class),
+                portfolioService(List.of(new PaperPosition("KRW-ETH", new BigDecimal("0.2"), new BigDecimal("3000000")))),
+                valuationService()
+        ).handleCallback("POSITIONS");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Paper positions", "market=KRW-ETH");
+    }
+
+    @Test
     void unknownCallbackSendsHelpMessage() {
         TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
         ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
@@ -189,9 +283,36 @@ class TelegramCommandServiceTest {
 
     private TelegramCommandService service(
             TelegramNotificationSender sender,
+            TradingFlowService tradingFlowService,
+            PaperPortfolioService paperPortfolioService,
+            PaperPortfolioValuationService paperPortfolioValuationService
+    ) {
+        return service(
+                sender,
+                mock(TelegramApiClient.class),
+                tradingFlowService,
+                mock(TradingFlowHistoryService.class),
+                paperPortfolioService,
+                paperPortfolioValuationService
+        );
+    }
+
+    private TelegramCommandService service(
+            TelegramNotificationSender sender,
             TelegramApiClient telegramApiClient,
             TradingFlowService tradingFlowService,
             TradingFlowHistoryService historyService
+    ) {
+        return service(sender, telegramApiClient, tradingFlowService, historyService, portfolioService(List.of()), valuationService());
+    }
+
+    private TelegramCommandService service(
+            TelegramNotificationSender sender,
+            TelegramApiClient telegramApiClient,
+            TradingFlowService tradingFlowService,
+            TradingFlowHistoryService historyService,
+            PaperPortfolioService paperPortfolioService,
+            PaperPortfolioValuationService paperPortfolioValuationService
     ) {
         return new TelegramCommandService(
                 new TelegramCommandParser(),
@@ -207,8 +328,30 @@ class TelegramCommandServiceTest {
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
                 tradingFlowService,
-                historyService
+                historyService,
+                paperPortfolioService,
+                paperPortfolioValuationService
         );
+    }
+
+    private PaperPortfolioService portfolioService(List<PaperPosition> positions) {
+        PaperPortfolioService service = mock(PaperPortfolioService.class);
+        when(service.findPositions()).thenReturn(positions);
+        return service;
+    }
+
+    private PaperPortfolioValuationService valuationService() {
+        PaperPortfolioValuationService service = mock(PaperPortfolioValuationService.class);
+        when(service.valuate()).thenReturn(new PortfolioValuationResponse(
+                new BigDecimal("1000000"),
+                new BigDecimal("100000"),
+                new BigDecimal("1100000"),
+                new BigDecimal("50000"),
+                new BigDecimal("50000"),
+                new BigDecimal("100000"),
+                List.of()
+        ));
+        return service;
     }
 
     private TelegramProperties configuredTelegramProperties() {

@@ -8,6 +8,10 @@ import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.notification.NotificationMessage;
 import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.portfolio.domain.PaperPosition;
+import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.sender.TelegramNotificationSender;
@@ -37,6 +41,8 @@ public class TelegramCommandService {
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final TradingFlowService tradingFlowService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
+    private final PaperPortfolioService paperPortfolioService;
+    private final PaperPortfolioValuationService paperPortfolioValuationService;
 
     public TelegramCommandService(
             TelegramCommandParser commandParser,
@@ -52,7 +58,9 @@ public class TelegramCommandService {
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
             TradingFlowService tradingFlowService,
-            TradingFlowHistoryService tradingFlowHistoryService
+            TradingFlowHistoryService tradingFlowHistoryService,
+            PaperPortfolioService paperPortfolioService,
+            PaperPortfolioValuationService paperPortfolioValuationService
     ) {
         this.commandParser = commandParser;
         this.callbackParser = callbackParser;
@@ -68,6 +76,8 @@ public class TelegramCommandService {
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.tradingFlowService = tradingFlowService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
+        this.paperPortfolioService = paperPortfolioService;
+        this.paperPortfolioValuationService = paperPortfolioValuationService;
     }
 
     public void handle(String text) {
@@ -81,6 +91,8 @@ public class TelegramCommandService {
             case STATUS -> statusMessage();
             case RUN -> runMessage(command.market());
             case HISTORY -> historyMessage(command.market());
+            case PORTFOLIO -> portfolioMessage();
+            case POSITIONS -> positionsMessage();
         };
         if (response != null) {
             sendText(response);
@@ -94,6 +106,8 @@ public class TelegramCommandService {
             case STATUS -> statusMessage();
             case RUN -> runMessage(callback.market());
             case HISTORY -> historyMessage(callback.market());
+            case PORTFOLIO -> portfolioMessage();
+            case POSITIONS -> positionsMessage();
         };
         sendText(response);
     }
@@ -122,6 +136,8 @@ public class TelegramCommandService {
                 /status
                 /run KRW-BTC
                 /history KRW-BTC
+                /portfolio
+                /positions
                 """.trim();
     }
 
@@ -199,6 +215,47 @@ public class TelegramCommandService {
                     .append(history.orderStatus())
                     .append(" ")
                     .append(history.message());
+        }
+        return builder.toString();
+    }
+
+    private String portfolioMessage() {
+        try {
+            PortfolioValuationResponse valuation = paperPortfolioValuationService.valuate();
+            return """
+                    Paper portfolio
+                    cash=%s
+                    totalEquity=%s
+                    realizedProfit=%s
+                    unrealizedProfit=%s
+                    totalProfit=%s
+                    """.formatted(
+                    valuation.cash(),
+                    valuation.totalEquity(),
+                    valuation.realizedProfit(),
+                    valuation.unrealizedProfit(),
+                    valuation.totalProfit()
+            ).trim();
+        } catch (RuntimeException e) {
+            return "Portfolio valuation failed: current price is not available";
+        }
+    }
+
+    private String positionsMessage() {
+        List<PaperPosition> positions = paperPortfolioService.findPositions();
+        if (positions.isEmpty()) {
+            return "No paper positions";
+        }
+
+        StringBuilder builder = new StringBuilder("Paper positions");
+        for (PaperPosition position : positions) {
+            builder.append(System.lineSeparator())
+                    .append("- market=")
+                    .append(position.market())
+                    .append(", quantity=")
+                    .append(position.quantity())
+                    .append(", averageBuyPrice=")
+                    .append(position.averageBuyPrice());
         }
         return builder.toString();
     }
