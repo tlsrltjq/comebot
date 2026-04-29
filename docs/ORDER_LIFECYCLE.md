@@ -19,22 +19,29 @@
 
 ## 기본 흐름
 
-1. 테스트용 시세 조회
-2. 테스트용 전략 판단
-3. 기존 전략이 HOLD이고 position exit 설정이 활성화되어 있으면 보유 포지션 손절/익절 조건 평가
-4. `SIGNAL_DETECTED` 생성
-5. HOLD 신호면 주문 요청을 만들지 않고 흐름 종료
-6. BUY 또는 SELL 신호면 주문 요청 생성
-7. 기본 리스크 검증
-8. 일일 리스크 검증
-9. 포트폴리오 사전 검증
-10. 현금 부족 BUY 또는 보유 수량 부족 SELL이면 `REJECTED` 결과 생성
-11. 리스크와 포트폴리오 검증 승인 시 페이퍼 실행 게이트웨이 호출
-12. 리스크 거절 시 게이트웨이를 호출하지 않고 `REJECTED` 결과 생성
-13. `FILLED`, `REJECTED`, `FAILED` 중 하나로 결과 생성
-14. `FILLED` 결과만 포트폴리오에 반영
-15. 실행 결과 history 저장
-16. 알림 설정과 필터 정책을 통과하면 optional notification 실행
+1. Kill switch 검증
+2. 테스트용 시세 조회
+3. 테스트용 전략 판단
+4. 기존 전략이 HOLD이고 position exit 설정이 활성화되어 있으면 보유 포지션 손절/익절 조건 평가
+5. `SIGNAL_DETECTED` 생성
+6. HOLD 신호면 주문 요청을 만들지 않고 흐름 종료
+7. BUY 또는 SELL 신호면 주문 요청 생성
+8. 기본 리스크 검증
+9. 일일 리스크 검증
+10. 포트폴리오 사전 검증
+11. 현금 부족 BUY 또는 보유 수량 부족 SELL이면 `REJECTED` 결과 생성
+12. 리스크와 포트폴리오 검증 승인 시 페이퍼 실행 게이트웨이 호출
+13. 리스크 거절 시 게이트웨이를 호출하지 않고 `REJECTED` 결과 생성
+14. `FILLED`, `REJECTED`, `FAILED` 중 하나로 결과 생성
+15. `FILLED` 결과만 포트폴리오에 반영
+16. 실행 결과 history 저장
+17. 알림 설정과 필터 정책을 통과하면 optional notification 실행
+
+## Kill Switch 처리
+
+- kill switch가 활성화되면 시세 조회, 전략 판단, 주문 생성 전에 실행을 차단한다.
+- 차단 결과는 `REJECTED` 상태와 명확한 메시지로 기록한다.
+- status, history, portfolio 조회는 차단하지 않는다.
 
 ## HOLD 처리
 

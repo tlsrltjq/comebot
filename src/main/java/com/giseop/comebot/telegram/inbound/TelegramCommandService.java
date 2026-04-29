@@ -12,6 +12,7 @@ import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
+import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.sender.TelegramNotificationSender;
@@ -39,6 +40,7 @@ public class TelegramCommandService {
     private final TelegramInboundProperties telegramInboundProperties;
     private final NotificationProperties notificationProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
+    private final SafetyProperties safetyProperties;
     private final TradingFlowService tradingFlowService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
     private final PaperPortfolioService paperPortfolioService;
@@ -57,6 +59,7 @@ public class TelegramCommandService {
             TelegramInboundProperties telegramInboundProperties,
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
+            SafetyProperties safetyProperties,
             TradingFlowService tradingFlowService,
             TradingFlowHistoryService tradingFlowHistoryService,
             PaperPortfolioService paperPortfolioService,
@@ -74,6 +77,7 @@ public class TelegramCommandService {
         this.telegramInboundProperties = telegramInboundProperties;
         this.notificationProperties = notificationProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
+        this.safetyProperties = safetyProperties;
         this.tradingFlowService = tradingFlowService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
         this.paperPortfolioService = paperPortfolioService;
@@ -153,6 +157,7 @@ public class TelegramCommandService {
                 Max Order Amount: %s
                 Allowed Markets: %s
                 Scheduler Enabled: %s
+                Kill Switch Enabled: %s
                 Notification Enabled: %s
                 Telegram Enabled: %s
                 Telegram Inbound Enabled: %s
@@ -166,6 +171,7 @@ public class TelegramCommandService {
                 tradingProperties.getMaxOrderAmount(),
                 tradingProperties.getAllowedMarkets(),
                 tradingSchedulerProperties.isEnabled(),
+                safetyProperties.isKillSwitchEnabled(),
                 notificationProperties.isEnabled(),
                 telegramProperties.isEnabled(),
                 telegramInboundProperties.isEnabled()

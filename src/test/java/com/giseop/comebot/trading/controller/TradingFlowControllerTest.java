@@ -72,6 +72,19 @@ class TradingFlowControllerTest {
         verify(tradingFlowService).run("KRW-BTC");
     }
 
+    @Test
+    void runReturnsBlockedResultWhenKillSwitchBlocksTradingFlow() throws Exception {
+        when(tradingFlowService.run("KRW-BTC"))
+                .thenReturn(blockedResult());
+
+        mockMvc.perform(get("/api/trading-flow/run").param("market", "KRW-BTC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.market").value("KRW-BTC"))
+                .andExpect(jsonPath("$.orderCreated").value(false))
+                .andExpect(jsonPath("$.orderStatus").value("REJECTED"))
+                .andExpect(jsonPath("$.message").value("Kill switch enabled: trading flow blocked"));
+    }
+
     private TradingFlowResult filledResult() {
         return new TradingFlowResult(
                 "KRW-BTC",
@@ -81,6 +94,19 @@ class TradingFlowControllerTest {
                 true,
                 OrderStatus.FILLED,
                 "Paper trading order filled",
+                Instant.parse("2026-04-27T00:00:00Z")
+        );
+    }
+
+    private TradingFlowResult blockedResult() {
+        return new TradingFlowResult(
+                "KRW-BTC",
+                null,
+                null,
+                "Kill switch enabled",
+                false,
+                OrderStatus.REJECTED,
+                "Kill switch enabled: trading flow blocked",
                 Instant.parse("2026-04-27T00:00:00Z")
         );
     }

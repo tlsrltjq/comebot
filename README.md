@@ -141,7 +141,17 @@ GET /api/market-provider/status
 GET /api/system/status
 ```
 
-응답에는 database, marketProvider, strategy, risk, scheduler, notification, telegram 상태가 포함된다. Telegram은 configured 여부만 노출하고 Bot Token, Chat ID 원문은 포함하지 않는다. DB 연결 실패 시에도 `database.connected=false`로 응답한다.
+응답에는 database, marketProvider, strategy, risk, scheduler, safety, notification, telegram 상태가 포함된다. Telegram은 configured 여부만 노출하고 Bot Token, Chat ID 원문은 포함하지 않는다. DB 연결 실패 시에도 `database.connected=false`로 응답한다.
+
+## 긴급 정지
+
+신규 트레이딩 플로우 실행을 막는 상위 안전장치다. 기본값은 비활성이다.
+
+```properties
+safety.kill-switch-enabled=false
+```
+
+`safety.kill-switch-enabled=true`이면 REST `/api/trading-flow/run`, scheduler 실행, Telegram `/run`, RUN 버튼 실행은 시세 조회와 전략 판단 전에 차단된다. history, status, portfolio 조회는 계속 가능하다. 차단 결과는 `REJECTED` 상태와 `Kill switch enabled: trading flow blocked` 메시지로 기록된다.
 
 ## 전략 설정 상태 조회
 

@@ -69,6 +69,14 @@
 - 일일 실현 손실 계산은 페이퍼 포트폴리오의 실현손익 이벤트를 기준으로 한다.
 - 일일 리스크 기준을 변경하면 테스트와 `docs/RISK_POLICY.md`, `docs/ORDER_LIFECYCLE.md`를 함께 수정한다.
 
+## Safety 규칙
+
+- kill switch는 주문, 전략, 시세 조회보다 우선한다.
+- kill switch가 활성화되면 신규 트레이딩 플로우는 시세 조회 전에 차단해야 한다.
+- kill switch 차단을 성공 주문처럼 처리하면 안 된다.
+- status, history, portfolio 조회는 kill switch로 막으면 안 된다.
+- kill switch 흐름을 변경하면 REST, scheduler, Telegram `/run`, RUN callback 테스트를 함께 수정한다.
+
 ## Portfolio 규칙
 
 - 포트폴리오 변경은 `PAPER_TRADING` 주문이 `FILLED` 된 이후에만 수행한다.

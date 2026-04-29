@@ -46,6 +46,7 @@
 - 알 수 없는 callback data는 `/help` 안내를 응답한다.
 - 미허용 chatId의 callback은 기능을 실행하지 않는다.
 - callback query는 버튼 로딩이 남지 않도록 가능한 경우 `answerCallbackQuery`로 응답한다.
+- kill switch가 활성화된 경우 `/run`과 RUN callback은 실행 차단 메시지를 응답한다.
 
 ## Portfolio 표시 항목
 
@@ -71,6 +72,7 @@
 - Notification enabled
 - Telegram enabled
 - Telegram inbound enabled
+- Kill switch enabled
 - Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
 
 ## 금지 사항
@@ -81,6 +83,7 @@
 - `telegram.enabled=true`, `telegram.inbound.enabled=true`, configured 상태가 아니면 polling을 실행하지 않는다.
 - configured `telegram.chat-id`와 일치하지 않는 요청에는 거래 결과, history, status 정보를 응답하지 않는다.
 - 버튼 callback으로도 실제 거래소 주문을 실행하지 않는다.
+- kill switch가 활성화된 상태에서 `/run` 또는 RUN 버튼이 트레이딩 플로우를 실행하면 안 된다.
 
 ## 변경 규칙
 

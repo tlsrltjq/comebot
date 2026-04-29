@@ -10,6 +10,7 @@ public record SystemStatusResponse(
         StrategyStatus strategy,
         RiskStatus risk,
         SchedulerStatus scheduler,
+        SafetyStatus safety,
         NotificationStatus notification,
         TelegramStatus telegram
 ) {
@@ -43,6 +44,11 @@ public record SystemStatusResponse(
             boolean enabled,
             long fixedDelayMs,
             List<String> markets
+    ) {
+    }
+
+    public record SafetyStatus(
+            boolean killSwitchEnabled
     ) {
     }
 

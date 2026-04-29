@@ -21,6 +21,7 @@ import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
+import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -101,6 +102,7 @@ class TelegramCommandServiceTest {
                 "Max Order Amount: 100000",
                 "Allowed Markets: [KRW-BTC, KRW-ETH]",
                 "Scheduler Enabled: false",
+                "Kill Switch Enabled: false",
                 "Notification Enabled: false",
                 "Telegram Enabled: true",
                 "Telegram Inbound Enabled: false"
@@ -124,18 +126,62 @@ class TelegramCommandServiceTest {
         TradingFlowService tradingFlowService = mock(TradingFlowService.class);
         when(tradingFlowService.run("KRW-BTC")).thenReturn(new TradingFlowResult(
                 "KRW-BTC",
-                new BigDecimal("100"),
-                SignalType.BUY,
-                "test",
-                true,
-                OrderStatus.FILLED,
-                "Paper trading order filled",
+                null,
+                null,
+                "Kill switch enabled",
+                false,
+                OrderStatus.REJECTED,
+                "Kill switch enabled: trading flow blocked",
                 Instant.now()
         ));
 
         service(mock(TelegramNotificationSender.class), tradingFlowService).handleCallback("RUN:KRW-BTC");
 
         verify(tradingFlowService).run("KRW-BTC");
+    }
+
+    @Test
+    void runCommandSendsBlockedMessageWhenKillSwitchBlocksTradingFlow() {
+        TradingFlowService tradingFlowService = mock(TradingFlowService.class);
+        when(tradingFlowService.run("KRW-BTC")).thenReturn(new TradingFlowResult(
+                "KRW-BTC",
+                null,
+                null,
+                "Kill switch enabled",
+                false,
+                OrderStatus.REJECTED,
+                "Kill switch enabled: trading flow blocked",
+                Instant.now()
+        ));
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, tradingFlowService).handle("/run KRW-BTC");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Kill switch enabled: trading flow blocked");
+    }
+
+    @Test
+    void runCallbackSendsBlockedMessageWhenKillSwitchBlocksTradingFlow() {
+        TradingFlowService tradingFlowService = mock(TradingFlowService.class);
+        when(tradingFlowService.run("KRW-BTC")).thenReturn(new TradingFlowResult(
+                "KRW-BTC",
+                null,
+                null,
+                "Kill switch enabled",
+                false,
+                OrderStatus.REJECTED,
+                "Kill switch enabled: trading flow blocked",
+                Instant.now()
+        ));
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, tradingFlowService).handleCallback("RUN:KRW-BTC");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("Kill switch enabled: trading flow blocked");
     }
 
     @Test
@@ -327,6 +373,7 @@ class TelegramCommandServiceTest {
                 new TelegramInboundProperties(),
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
+                new SafetyProperties(),
                 tradingFlowService,
                 historyService,
                 paperPortfolioService,

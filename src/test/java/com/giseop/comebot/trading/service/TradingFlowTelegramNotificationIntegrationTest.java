@@ -21,6 +21,8 @@ import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.PositionExitSignalService;
 import com.giseop.comebot.risk.service.RiskValidationService;
+import com.giseop.comebot.safety.KillSwitchService;
+import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.SimpleThresholdStrategy;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -77,7 +79,8 @@ class TradingFlowTelegramNotificationIntegrationTest {
                 notificationProperties,
                 new NotificationPolicyService(notificationProperties),
                 new TradingFlowNotificationService(new TelegramNotificationSender(telegramProperties, telegramApiClient)),
-                new PositionExitSignalService(new PositionExitProperties(), paperPortfolioService)
+                new PositionExitSignalService(new PositionExitProperties(), paperPortfolioService),
+                new KillSwitchService(new SafetyProperties())
         );
     }
 

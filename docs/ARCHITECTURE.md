@@ -63,6 +63,14 @@
 - HOLD, REJECTED, FAILED 결과는 일일 주문 횟수 제한에 포함하지 않는다.
 - 제한을 초과하면 주문 결과는 `REJECTED`이며 페이퍼 실행 게이트웨이를 호출하지 않는다.
 
+## Safety
+
+- `safety` 계층은 트레이딩 실행보다 앞선 상위 안전장치를 제공한다.
+- `safety.kill-switch-enabled=false`가 기본값이다.
+- kill switch가 활성화되면 `TradingFlowService`는 시세 조회와 전략 판단 전에 실행을 차단한다.
+- 차단 결과는 `REJECTED` 상태와 명확한 메시지로 history에 저장한다.
+- status, history, portfolio 조회 API는 kill switch로 막지 않는다.
+
 ## Position Exit Policy
 
 - `risk.position-exit-enabled=false`가 기본값이다.
@@ -89,7 +97,7 @@
 ## 시스템 상태 조회
 
 - `GET /api/system/status`는 주요 설정 상태를 한 번에 조회한다.
-- 응답은 database, market provider, strategy, risk, scheduler, notification, telegram 섹션으로 구성한다.
+- 응답은 database, market provider, strategy, risk, scheduler, safety, notification, telegram 섹션으로 구성한다.
 - DB 연결 실패는 전체 API 실패로 처리하지 않고 `database.connected=false`로 응답한다.
 - Telegram은 enabled/configured/inboundEnabled만 노출한다.
 - System Status API는 설정 변경 기능을 제공하지 않는다.
@@ -100,16 +108,17 @@
 
 ## 기본 흐름
 
-1. Market Provider가 `MarketPrice`를 제공한다.
-2. Strategy가 `MarketPrice`를 평가해 `TradingSignal`을 만든다.
-3. 기존 전략이 HOLD이고 position exit 설정이 활성화된 경우 보유 포지션 손절/익절 조건을 평가한다.
-4. `OrderRequestFactory`가 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
-5. Risk가 `OrderRequest`와 일일 제한을 검증한다.
-6. Execution이 승인된 주문 요청만 페이퍼 트레이딩으로 처리한다.
-7. `FILLED` 결과만 Paper Portfolio에 반영한다.
-8. Trading Flow 결과를 history 저장소에 저장한다.
-9. 알림 설정과 필터 정책을 통과하면 Notification 계층이 알림을 보낸다.
-10. 수동 REST 엔드포인트와 Telegram 명령은 이 흐름을 호출한다.
+1. Safety가 kill switch 상태를 확인한다.
+2. Market Provider가 `MarketPrice`를 제공한다.
+3. Strategy가 `MarketPrice`를 평가해 `TradingSignal`을 만든다.
+4. 기존 전략이 HOLD이고 position exit 설정이 활성화된 경우 보유 포지션 손절/익절 조건을 평가한다.
+5. `OrderRequestFactory`가 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
+6. Risk가 `OrderRequest`와 일일 제한을 검증한다.
+7. Execution이 승인된 주문 요청만 페이퍼 트레이딩으로 처리한다.
+8. `FILLED` 결과만 Paper Portfolio에 반영한다.
+9. Trading Flow 결과를 history 저장소에 저장한다.
+10. 알림 설정과 필터 정책을 통과하면 Notification 계층이 알림을 보낸다.
+11. 수동 REST 엔드포인트와 Telegram 명령은 이 흐름을 호출한다.
 
 ## 기본 모듈 경계
 
@@ -118,6 +127,7 @@
 - Risk: 주문 요청과 일일 제한이 정책을 통과하는지 검증하고, 선택적으로 position exit SELL 신호 정책을 제공한다.
 - Execution: 주문 실행을 추상화하고 페이퍼 트레이딩 결과를 생성한다.
 - Portfolio: 페이퍼 체결 결과로 현금, 보유 수량, 실현 손익을 관리한다.
+- Safety: kill switch 상태를 기준으로 신규 트레이딩 실행을 차단한다.
 - Trading Flow: 시세, 전략, 주문 요청 생성, 리스크 검증, 페이퍼 실행을 한 번에 연결한다.
 - REST Controller: 수동 실행 요청을 받고 Trading Flow 결과를 응답 DTO로 변환한다.
 - Telegram: 사용자 명령, 버튼, 포트폴리오 조회, 알림 메시지를 처리한다.
@@ -138,6 +148,7 @@
 - `risk.domain`: 리스크 판단 결과와 승인/거절 상태를 정의한다.
 - `risk.service`: 주문 요청의 입력값, 주문 금액, 허용 마켓, 일일 제한을 검증하고 position exit 신호를 평가한다.
 - `portfolio`: PAPER_TRADING 포트폴리오 상태와 저장소, 조회 API를 제공한다.
+- `safety`: kill switch 설정과 실행 차단 여부를 제공한다.
 - `config`: 거래 모드, 최대 주문 금액, 허용 마켓, 전략 기준값을 관리한다.
 
 ## 주문 실행 흐름

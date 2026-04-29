@@ -1,5 +1,14 @@
 # Risk Policy
 
+## Safety Kill Switch 원칙
+
+- kill switch는 리스크 정책보다 상위 안전장치다.
+- 기본값은 `safety.kill-switch-enabled=false`다.
+- `safety.kill-switch-enabled=true`이면 신규 트레이딩 플로우 실행을 차단한다.
+- 차단 대상은 REST `/run`, scheduler 실행, Telegram `/run`, RUN 버튼 실행이다.
+- history, status, portfolio 조회는 kill switch로 막지 않는다.
+- kill switch 차단 결과는 실패를 성공으로 처리하지 않고 명확한 `REJECTED` 결과로 남긴다.
+
 ## 결과 이력 원칙
 
 - HOLD, REJECTED, FILLED 결과를 모두 이력으로 남긴다.

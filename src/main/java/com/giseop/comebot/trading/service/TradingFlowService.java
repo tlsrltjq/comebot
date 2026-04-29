@@ -2,6 +2,7 @@ package com.giseop.comebot.trading.service;
 
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderResult;
+import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.service.OrderExecutionService;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.domain.MarketPrice;
@@ -10,6 +11,7 @@ import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.risk.service.PositionExitSignalService;
+import com.giseop.comebot.safety.KillSwitchService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
@@ -34,6 +36,7 @@ public class TradingFlowService {
     private final NotificationPolicyService notificationPolicyService;
     private final TradingFlowNotificationService tradingFlowNotificationService;
     private final PositionExitSignalService positionExitSignalService;
+    private final KillSwitchService killSwitchService;
 
     public TradingFlowService(
             MarketPriceProvider marketPriceProvider,
@@ -44,7 +47,8 @@ public class TradingFlowService {
             NotificationProperties notificationProperties,
             NotificationPolicyService notificationPolicyService,
             TradingFlowNotificationService tradingFlowNotificationService,
-            PositionExitSignalService positionExitSignalService
+            PositionExitSignalService positionExitSignalService,
+            KillSwitchService killSwitchService
     ) {
         this.marketPriceProvider = marketPriceProvider;
         this.tradingStrategy = tradingStrategy;
@@ -55,9 +59,23 @@ public class TradingFlowService {
         this.notificationPolicyService = notificationPolicyService;
         this.tradingFlowNotificationService = tradingFlowNotificationService;
         this.positionExitSignalService = positionExitSignalService;
+        this.killSwitchService = killSwitchService;
     }
 
     public TradingFlowResult run(String market) {
+        if (killSwitchService.isEnabled()) {
+            return save(new TradingFlowResult(
+                    market,
+                    null,
+                    null,
+                    "Kill switch enabled",
+                    false,
+                    OrderStatus.REJECTED,
+                    "Kill switch enabled: trading flow blocked",
+                    Instant.now()
+            ));
+        }
+
         MarketPrice marketPrice = marketPriceProvider.getCurrentPrice(market);
         TradingSignal signal = selectSignal(marketPrice, tradingStrategy.evaluate(marketPrice));
         Optional<OrderRequest> request = orderRequestFactory.create(signal);

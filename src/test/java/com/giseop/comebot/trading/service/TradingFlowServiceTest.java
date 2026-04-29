@@ -22,6 +22,8 @@ import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.PositionExitSignalService;
 import com.giseop.comebot.risk.service.RiskValidationService;
+import com.giseop.comebot.safety.KillSwitchService;
+import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.SimpleThresholdStrategy;
@@ -39,6 +41,7 @@ class TradingFlowServiceTest {
     private NotificationProperties notificationProperties;
     private PaperPortfolioService paperPortfolioService;
     private PositionExitProperties positionExitProperties;
+    private SafetyProperties safetyProperties;
     private TradingFlowService tradingFlowService;
 
     @BeforeEach
@@ -58,6 +61,7 @@ class TradingFlowServiceTest {
         notificationService = new RecordingTradingFlowNotificationService();
         paperPortfolioService = paperPortfolioService();
         positionExitProperties = new PositionExitProperties();
+        safetyProperties = new SafetyProperties();
         tradingFlowService = new TradingFlowService(
                 marketPriceProvider,
                 new SimpleThresholdStrategy(strategyProperties),
@@ -72,7 +76,8 @@ class TradingFlowServiceTest {
                 notificationProperties,
                 new NotificationPolicyService(notificationProperties),
                 notificationService,
-                new PositionExitSignalService(positionExitProperties, paperPortfolioService)
+                new PositionExitSignalService(positionExitProperties, paperPortfolioService),
+                new KillSwitchService(safetyProperties)
         );
     }
 
@@ -87,6 +92,29 @@ class TradingFlowServiceTest {
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
         assertThat(historyRepository.findRecent(1)).hasSize(1);
         assertThat(notificationService.results).isEmpty();
+    }
+
+    @Test
+    void runKeepsExistingFlowWhenKillSwitchIsDisabled() {
+        safetyProperties.setKillSwitchEnabled(false);
+        marketPriceProvider.updatePrice("KRW-BTC", new BigDecimal("100"));
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+    }
+
+    @Test
+    void runBlocksBeforeTradingFlowWhenKillSwitchIsEnabled() {
+        safetyProperties.setKillSwitchEnabled(true);
+
+        TradingFlowResult result = tradingFlowService.run("KRW-BTC");
+
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(result.orderCreated()).isFalse();
+        assertThat(result.message()).isEqualTo("Kill switch enabled: trading flow blocked");
+        assertThat(historyRepository.findRecent(1).getFirst().message()).isEqualTo("Kill switch enabled: trading flow blocked");
+        assertThat(paperPortfolioService.getPortfolio().cash()).isEqualByComparingTo("1000000");
     }
 
     @Test
@@ -398,7 +426,8 @@ class TradingFlowServiceTest {
                 notificationProperties,
                 new NotificationPolicyService(notificationProperties),
                 notificationService,
-                new PositionExitSignalService(positionExitProperties, paperPortfolioService)
+                new PositionExitSignalService(positionExitProperties, paperPortfolioService),
+                new KillSwitchService(safetyProperties)
         );
     }
 
