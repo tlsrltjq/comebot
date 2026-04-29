@@ -50,6 +50,18 @@ class TradingFlowHistoryServiceTest {
         assertThat(service.findRecent("KRW-XRP", 20)).isEmpty();
     }
 
+    @Test
+    void findSinceReturnsHistoriesCreatedAfterStartTime() {
+        InMemoryTradingFlowHistoryRepository repository = new InMemoryTradingFlowHistoryRepository();
+        TradingFlowHistory oldHistory = history("old", "KRW-BTC", Instant.parse("2026-04-28T00:00:00Z"));
+        TradingFlowHistory todayHistory = history("today", "KRW-BTC", Instant.parse("2026-04-29T00:00:00Z"));
+        repository.save(oldHistory);
+        repository.save(todayHistory);
+        TradingFlowHistoryService service = new TradingFlowHistoryService(repository);
+
+        assertThat(service.findSince(Instant.parse("2026-04-29T00:00:00Z"))).containsExactly(todayHistory);
+    }
+
     private TradingFlowResult result(String market) {
         return new TradingFlowResult(
                 market,
@@ -60,6 +72,20 @@ class TradingFlowHistoryServiceTest {
                 OrderStatus.FILLED,
                 "Paper trading order filled",
                 Instant.now()
+        );
+    }
+
+    private TradingFlowHistory history(String id, String market, Instant createdAt) {
+        return new TradingFlowHistory(
+                id,
+                market,
+                new BigDecimal("100"),
+                SignalType.BUY,
+                "Test threshold buy signal",
+                true,
+                OrderStatus.FILLED,
+                "Paper trading order filled",
+                createdAt
         );
     }
 }

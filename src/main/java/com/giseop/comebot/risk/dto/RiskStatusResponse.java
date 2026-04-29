@@ -8,6 +8,9 @@ public record RiskStatusResponse(
         List<String> allowedMarkets,
         BigDecimal takeProfitRate,
         BigDecimal stopLossRate,
-        boolean positionExitEnabled
+        boolean positionExitEnabled,
+        boolean dailyRiskEnabled,
+        int dailyOrderLimit,
+        BigDecimal dailyLossLimit
 ) {
 }

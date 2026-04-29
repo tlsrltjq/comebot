@@ -63,6 +63,18 @@ class PaperPortfolioServiceTest {
     }
 
     @Test
+    void realizedLossSinceReturnsTodayLossOnly() {
+        Instant today = Instant.parse("2026-04-29T00:00:00Z");
+        service.apply(new OrderResult("KRW-BTC", OrderSide.BUY, new BigDecimal("2"), new BigDecimal("100"),
+                OrderStatus.FILLED, "filled", today));
+
+        service.apply(new OrderResult("KRW-BTC", OrderSide.SELL, new BigDecimal("1"), new BigDecimal("80"),
+                OrderStatus.FILLED, "filled", today));
+
+        assertThat(service.realizedLossSince(today)).isEqualByComparingTo("20");
+    }
+
+    @Test
     void cashShortageBuyIsRejectedByValidation() {
         assertThat(service.validate(request(OrderSide.BUY, "1", "1000001")))
                 .contains("Paper cash is not enough");

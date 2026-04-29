@@ -167,9 +167,14 @@ GET /api/risk/status
 risk.take-profit-rate=5
 risk.stop-loss-rate=-3
 risk.position-exit-enabled=false
+risk.daily-order-limit=10
+risk.daily-loss-limit=50000
+risk.daily-risk-enabled=false
 ```
 
 `risk.position-exit-enabled=true`일 때만 보유 포지션의 미실현 수익률을 기준으로 PAPER_TRADING SELL 신호를 만들 수 있다. 기존 전략이 HOLD일 때만 exit 정책을 평가하며, 기존 SimpleThresholdStrategy BUY/SELL 신호를 대체하지 않는다.
+
+`risk.daily-risk-enabled=true`일 때만 일일 주문 횟수와 일일 실현 손실 한도를 주문 실행 전에 검증한다. 오늘 FILLED 주문 수가 `risk.daily-order-limit` 이상이거나 오늘 실현 손실이 `risk.daily-loss-limit` 이상이면 신규 주문은 `REJECTED` 처리된다. HOLD, REJECTED, FAILED 결과는 일일 주문 횟수에 포함하지 않는다.
 
 ## PAPER_TRADING 포트폴리오
 

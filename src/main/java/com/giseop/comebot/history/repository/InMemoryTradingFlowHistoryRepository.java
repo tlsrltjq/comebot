@@ -1,6 +1,7 @@
 package com.giseop.comebot.history.repository;
 
 import com.giseop.comebot.history.domain.TradingFlowHistory;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,6 +42,15 @@ public class InMemoryTradingFlowHistoryRepository implements TradingFlowHistoryR
                 .filter(Objects::nonNull)
                 .filter(history -> market.equals(history.market()))
                 .limit(limit)
+                .toList();
+    }
+
+    @Override
+    public List<TradingFlowHistory> findSince(Instant from) {
+        return recentIds.stream()
+                .map(histories::get)
+                .filter(Objects::nonNull)
+                .filter(history -> !history.createdAt().isBefore(from))
                 .toList();
     }
 

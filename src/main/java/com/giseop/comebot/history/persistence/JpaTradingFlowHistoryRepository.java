@@ -2,6 +2,7 @@ package com.giseop.comebot.history.persistence;
 
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.TradingFlowHistoryRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,6 +34,13 @@ public class JpaTradingFlowHistoryRepository implements TradingFlowHistoryReposi
     @Override
     public List<TradingFlowHistory> findRecentByMarket(String market, int limit) {
         return jpaRepository.findByMarketOrderByCreatedAtDesc(market, PageRequest.of(0, limit)).stream()
+                .map(TradingFlowHistoryEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<TradingFlowHistory> findSince(Instant from) {
+        return jpaRepository.findByCreatedAtGreaterThanEqualOrderByCreatedAtDesc(from).stream()
                 .map(TradingFlowHistoryEntity::toDomain)
                 .toList();
     }

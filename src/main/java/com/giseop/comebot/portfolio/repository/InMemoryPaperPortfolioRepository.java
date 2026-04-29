@@ -2,12 +2,15 @@ package com.giseop.comebot.portfolio.repository;
 
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
+import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Repository;
 public class InMemoryPaperPortfolioRepository implements PaperPortfolioRepository {
 
     private final Map<String, PaperPosition> positions = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedDeque<PaperRealizedProfit> realizedProfitEvents = new ConcurrentLinkedDeque<>();
     private BigDecimal cash = BigDecimal.ZERO;
     private BigDecimal realizedProfit = BigDecimal.ZERO;
 
@@ -37,6 +41,18 @@ public class InMemoryPaperPortfolioRepository implements PaperPortfolioRepositor
     @Override
     public synchronized void saveRealizedProfit(BigDecimal realizedProfit) {
         this.realizedProfit = realizedProfit;
+    }
+
+    @Override
+    public void saveRealizedProfitEvent(PaperRealizedProfit realizedProfit) {
+        realizedProfitEvents.addFirst(realizedProfit);
+    }
+
+    @Override
+    public List<PaperRealizedProfit> findRealizedProfitsSince(Instant from) {
+        return realizedProfitEvents.stream()
+                .filter(event -> !event.realizedAt().isBefore(from))
+                .toList();
     }
 
     @Override

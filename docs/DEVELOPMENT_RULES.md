@@ -61,6 +61,14 @@
 - SELL 수량은 보유 포지션 수량을 초과하면 안 된다.
 - 손절/익절 기준이나 우선순위를 변경하면 테스트와 `docs/RISK_POLICY.md`, `docs/ORDER_LIFECYCLE.md`를 함께 수정한다.
 
+## Daily Risk 규칙
+
+- 일일 리스크 제한은 주문 실행 전에 검증해야 한다.
+- 일일 리스크 제한 실패는 `REJECTED`로 처리하고 실행 게이트웨이를 호출하면 안 된다.
+- HOLD, REJECTED, FAILED 결과를 일일 주문 횟수 제한에 포함하면 안 된다.
+- 일일 실현 손실 계산은 페이퍼 포트폴리오의 실현손익 이벤트를 기준으로 한다.
+- 일일 리스크 기준을 변경하면 테스트와 `docs/RISK_POLICY.md`, `docs/ORDER_LIFECYCLE.md`를 함께 수정한다.
+
 ## Portfolio 규칙
 
 - 포트폴리오 변경은 `PAPER_TRADING` 주문이 `FILLED` 된 이후에만 수행한다.

@@ -44,6 +44,10 @@ public class TradingFlowHistoryService {
         return tradingFlowHistoryRepository.findRecentByMarket(market, limit);
     }
 
+    public List<TradingFlowHistory> findSince(Instant from) {
+        return tradingFlowHistoryRepository.findSince(from);
+    }
+
     public Optional<TradingFlowHistory> findById(String id) {
         return tradingFlowHistoryRepository.findById(id);
     }

@@ -7,10 +7,12 @@ import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
+import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
 import com.giseop.comebot.portfolio.repository.PaperPortfolioRepository;
 import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -76,6 +78,14 @@ public class PaperPortfolioService {
         return paperPortfolioRepository.findPositions();
     }
 
+    public BigDecimal realizedLossSince(Instant from) {
+        return paperPortfolioRepository.findRealizedProfitsSince(from).stream()
+                .map(PaperRealizedProfit::profit)
+                .filter(profit -> profit.compareTo(BigDecimal.ZERO) < 0)
+                .map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     private void applyBuy(OrderResult result) {
         BigDecimal amount = result.quantity().multiply(result.price());
         PaperPosition current = paperPortfolioRepository.findPosition(result.market())
@@ -96,6 +106,7 @@ public class PaperPortfolioService {
 
         paperPortfolioRepository.saveCash(paperPortfolioRepository.getCash().add(result.quantity().multiply(result.price())));
         paperPortfolioRepository.saveRealizedProfit(paperPortfolioRepository.getRealizedProfit().add(profit));
+        paperPortfolioRepository.saveRealizedProfitEvent(new PaperRealizedProfit(profit, result.executedAt()));
         paperPortfolioRepository.savePosition(new PaperPosition(result.market(), remainingQuantity, current.averageBuyPrice()));
     }
 

@@ -1,6 +1,8 @@
 package com.giseop.comebot.execution.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.execution.domain.OrderRequest;
@@ -8,9 +10,15 @@ import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderSide;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.gateway.ExecutionGateway;
+import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
+import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.risk.DailyRiskProperties;
+import com.giseop.comebot.risk.domain.RiskCheckResult;
+import com.giseop.comebot.risk.domain.RiskDecision;
+import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,6 +41,7 @@ class OrderExecutionServiceTest {
         orderExecutionService = new OrderExecutionService(
                 executionGateway,
                 new RiskValidationService(tradingProperties),
+                dailyRiskValidationService(paperPortfolioService()),
                 paperPortfolioService()
         );
     }
@@ -81,6 +90,31 @@ class OrderExecutionServiceTest {
     }
 
     @Test
+    void executeRejectsOrderWhenDailyRiskValidationFails() {
+        TradingProperties tradingProperties = new TradingProperties();
+        tradingProperties.setMaxOrderAmount(new BigDecimal("100000"));
+        tradingProperties.setAllowedMarkets(List.of("KRW-BTC", "KRW-ETH"));
+        DailyRiskValidationService dailyRiskValidationService = mock(DailyRiskValidationService.class);
+        when(dailyRiskValidationService.validate()).thenReturn(new RiskCheckResult(
+                RiskDecision.REJECTED,
+                "Daily order limit exceeded",
+                Instant.now()
+        ));
+        orderExecutionService = new OrderExecutionService(
+                executionGateway,
+                new RiskValidationService(tradingProperties),
+                dailyRiskValidationService,
+                paperPortfolioService()
+        );
+
+        OrderResult result = orderExecutionService.execute(orderRequest("KRW-BTC", "0.01", "5000000"));
+
+        assertThat(result.status()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(result.message()).isEqualTo("Daily order limit exceeded");
+        assertThat(executionGateway.callCount).isZero();
+    }
+
+    @Test
     void executeRejectsNullOrderRequest() {
         OrderResult result = orderExecutionService.execute(null);
 
@@ -97,6 +131,7 @@ class OrderExecutionServiceTest {
         orderExecutionService = new OrderExecutionService(
                 executionGateway,
                 new RiskValidationService(tradingProperties),
+                dailyRiskValidationService(paperPortfolioService()),
                 paperPortfolioService()
         );
 
@@ -139,6 +174,14 @@ class OrderExecutionServiceTest {
         PaperPortfolioService service = new PaperPortfolioService(repository, properties);
         service.initialize();
         return service;
+    }
+
+    private DailyRiskValidationService dailyRiskValidationService(PaperPortfolioService paperPortfolioService) {
+        return new DailyRiskValidationService(
+                new DailyRiskProperties(),
+                new TradingFlowHistoryService(new InMemoryTradingFlowHistoryRepository()),
+                paperPortfolioService
+        );
     }
 
     private static class CountingExecutionGateway implements ExecutionGateway {

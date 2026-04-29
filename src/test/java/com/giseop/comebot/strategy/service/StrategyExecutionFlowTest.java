@@ -9,10 +9,14 @@ import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.gateway.PaperTradingExecutionGateway;
 import com.giseop.comebot.execution.service.OrderExecutionService;
+import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
+import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.risk.DailyRiskProperties;
+import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import java.math.BigDecimal;
@@ -40,6 +44,7 @@ class StrategyExecutionFlowTest {
         OrderExecutionService executionService = new OrderExecutionService(
                 new PaperTradingExecutionGateway(),
                 new RiskValidationService(tradingProperties),
+                dailyRiskValidationService(paperPortfolioService()),
                 paperPortfolioService()
         );
 
@@ -56,5 +61,13 @@ class StrategyExecutionFlowTest {
         PaperPortfolioService service = new PaperPortfolioService(repository, properties);
         service.initialize();
         return service;
+    }
+
+    private DailyRiskValidationService dailyRiskValidationService(PaperPortfolioService paperPortfolioService) {
+        return new DailyRiskValidationService(
+                new DailyRiskProperties(),
+                new TradingFlowHistoryService(new InMemoryTradingFlowHistoryRepository()),
+                paperPortfolioService
+        );
     }
 }

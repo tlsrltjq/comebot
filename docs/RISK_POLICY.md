@@ -25,6 +25,17 @@
 - SELL 수량은 보유 수량을 초과하지 않는다.
 - 손절/익절은 실제 주문이 아니라 `PAPER_TRADING` SELL 신호만 만든다.
 
+## 일일 리스크 제한 정책
+
+- 기본값은 `risk.daily-risk-enabled=false`다.
+- `risk.daily-risk-enabled=true`일 때만 일일 주문 횟수와 일일 손실 한도를 검증한다.
+- 검증은 `PAPER_TRADING` 주문 실행 전에 수행한다.
+- 오늘 발생한 `FILLED` 주문 수가 `risk.daily-order-limit` 이상이면 신규 주문은 `REJECTED` 처리한다.
+- HOLD, REJECTED, FAILED 결과는 일일 주문 횟수 제한에 포함하지 않는다.
+- 오늘 실현 손실 합계가 `risk.daily-loss-limit` 이상이면 신규 주문은 `REJECTED` 처리한다.
+- 일일 손실은 SELL 체결로 기록된 페이퍼 실현손익 이벤트 중 손실 금액만 합산한다.
+- 일일 제한 실패는 실제 실행 게이트웨이를 호출하지 않는다.
+
 ## InMemory 테스트 시세 원칙
 
 - 테스트 가격 변경 API로 설정한 가격은 실제 시장 가격이 아니다.
@@ -68,11 +79,14 @@
 - `risk.take-profit-rate=5`
 - `risk.stop-loss-rate=-3`
 - `risk.position-exit-enabled=false`
+- `risk.daily-order-limit=10`
+- `risk.daily-loss-limit=50000`
+- `risk.daily-risk-enabled=false`
 
 ## 상태 조회
 
 - `GET /api/risk/status`는 현재 리스크 정책 설정값을 조회한다.
-- 응답에는 `maxOrderAmount`, `allowedMarkets`, `takeProfitRate`, `stopLossRate`, `positionExitEnabled`를 포함한다.
+- 응답에는 `maxOrderAmount`, `allowedMarkets`, `takeProfitRate`, `stopLossRate`, `positionExitEnabled`, `dailyRiskEnabled`, `dailyOrderLimit`, `dailyLossLimit`를 포함한다.
 - 이 API는 설정 변경 기능을 제공하지 않는다.
 - 민감 정보는 응답에 포함하지 않는다.
 

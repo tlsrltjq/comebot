@@ -7,6 +7,7 @@ import com.giseop.comebot.execution.gateway.ExecutionGateway;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.domain.RiskCheckResult;
 import com.giseop.comebot.risk.domain.RiskDecision;
+import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import org.springframework.stereotype.Service;
 
@@ -15,15 +16,18 @@ public class OrderExecutionService {
 
     private final ExecutionGateway executionGateway;
     private final RiskValidationService riskValidationService;
+    private final DailyRiskValidationService dailyRiskValidationService;
     private final PaperPortfolioService paperPortfolioService;
 
     public OrderExecutionService(
             ExecutionGateway executionGateway,
             RiskValidationService riskValidationService,
+            DailyRiskValidationService dailyRiskValidationService,
             PaperPortfolioService paperPortfolioService
     ) {
         this.executionGateway = executionGateway;
         this.riskValidationService = riskValidationService;
+        this.dailyRiskValidationService = dailyRiskValidationService;
         this.paperPortfolioService = paperPortfolioService;
     }
 
@@ -31,6 +35,10 @@ public class OrderExecutionService {
         RiskCheckResult riskCheckResult = riskValidationService.validate(request);
         if (riskCheckResult.decision() == RiskDecision.REJECTED) {
             return rejected(request, riskCheckResult);
+        }
+        RiskCheckResult dailyRiskCheckResult = dailyRiskValidationService.validate();
+        if (dailyRiskCheckResult.decision() == RiskDecision.REJECTED) {
+            return rejected(request, dailyRiskCheckResult);
         }
         return paperPortfolioService.validate(request)
                 .map(reason -> rejected(request, reason))

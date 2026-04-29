@@ -16,7 +16,9 @@ import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
+import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.PositionExitSignalService;
 import com.giseop.comebot.risk.service.RiskValidationService;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
@@ -64,6 +66,11 @@ class TradingFlowTelegramNotificationIntegrationTest {
                 new OrderExecutionService(
                         new PaperTradingExecutionGateway(),
                         new RiskValidationService(tradingProperties),
+                        new DailyRiskValidationService(
+                                new DailyRiskProperties(),
+                                new TradingFlowHistoryService(historyRepository),
+                                paperPortfolioService
+                        ),
                         paperPortfolioService
                 ),
                 new TradingFlowHistoryService(historyRepository),

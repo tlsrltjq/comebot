@@ -50,9 +50,18 @@
 ## 리스크 정책 상태 조회
 
 - `GET /api/risk/status`는 현재 리스크 정책 설정값을 조회한다.
-- 응답에는 최대 주문 금액, 허용 market 목록, 손절/익절 설정을 포함한다.
+- 응답에는 최대 주문 금액, 허용 market 목록, 손절/익절 설정, 일일 리스크 설정을 포함한다.
 - Risk 상태 조회 API는 설정 변경 기능을 제공하지 않는다.
 - Risk Controller에는 리스크 검증이나 주문 실행 로직을 넣지 않는다.
+
+## Daily Risk Validation
+
+- `risk.daily-risk-enabled=false`가 기본값이다.
+- 활성화된 경우 `OrderExecutionService`가 페이퍼 실행 게이트웨이를 호출하기 전에 일일 제한을 검증한다.
+- 오늘 FILLED 주문 수는 history 저장소에서 조회한다.
+- 오늘 실현 손실은 Paper Portfolio의 실현손익 이벤트에서 손실 금액만 합산한다.
+- HOLD, REJECTED, FAILED 결과는 일일 주문 횟수 제한에 포함하지 않는다.
+- 제한을 초과하면 주문 결과는 `REJECTED`이며 페이퍼 실행 게이트웨이를 호출하지 않는다.
 
 ## Position Exit Policy
 
@@ -95,7 +104,7 @@
 2. Strategy가 `MarketPrice`를 평가해 `TradingSignal`을 만든다.
 3. 기존 전략이 HOLD이고 position exit 설정이 활성화된 경우 보유 포지션 손절/익절 조건을 평가한다.
 4. `OrderRequestFactory`가 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
-5. Risk가 `OrderRequest`를 검증한다.
+5. Risk가 `OrderRequest`와 일일 제한을 검증한다.
 6. Execution이 승인된 주문 요청만 페이퍼 트레이딩으로 처리한다.
 7. `FILLED` 결과만 Paper Portfolio에 반영한다.
 8. Trading Flow 결과를 history 저장소에 저장한다.
@@ -106,7 +115,7 @@
 
 - Market Provider: InMemory 테스트 시세 또는 Upbit 공개 시세를 제공한다.
 - Strategy: 테스트용 기준으로 BUY, SELL, HOLD 신호를 만든다.
-- Risk: 주문 요청이 정책을 통과하는지 검증하고, 선택적으로 position exit SELL 신호 정책을 제공한다.
+- Risk: 주문 요청과 일일 제한이 정책을 통과하는지 검증하고, 선택적으로 position exit SELL 신호 정책을 제공한다.
 - Execution: 주문 실행을 추상화하고 페이퍼 트레이딩 결과를 생성한다.
 - Portfolio: 페이퍼 체결 결과로 현금, 보유 수량, 실현 손익을 관리한다.
 - Trading Flow: 시세, 전략, 주문 요청 생성, 리스크 검증, 페이퍼 실행을 한 번에 연결한다.
@@ -127,7 +136,7 @@
 - `execution.gateway`: 주문 실행 인터페이스와 페이퍼 트레이딩 구현체를 둔다.
 - `execution.service`: 주문 요청을 리스크 검증 후 실행 게이트웨이에 위임한다.
 - `risk.domain`: 리스크 판단 결과와 승인/거절 상태를 정의한다.
-- `risk.service`: 주문 요청의 입력값, 주문 금액, 허용 마켓을 검증하고 position exit 신호를 평가한다.
+- `risk.service`: 주문 요청의 입력값, 주문 금액, 허용 마켓, 일일 제한을 검증하고 position exit 신호를 평가한다.
 - `portfolio`: PAPER_TRADING 포트폴리오 상태와 저장소, 조회 API를 제공한다.
 - `config`: 거래 모드, 최대 주문 금액, 허용 마켓, 전략 기준값을 관리한다.
 

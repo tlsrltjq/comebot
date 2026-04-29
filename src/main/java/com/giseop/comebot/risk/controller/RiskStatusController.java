@@ -1,6 +1,7 @@
 package com.giseop.comebot.risk.controller;
 
 import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.risk.dto.RiskStatusResponse;
 import java.util.ArrayList;
@@ -12,13 +13,16 @@ public class RiskStatusController {
 
     private final TradingProperties tradingProperties;
     private final PositionExitProperties positionExitProperties;
+    private final DailyRiskProperties dailyRiskProperties;
 
     public RiskStatusController(
             TradingProperties tradingProperties,
-            PositionExitProperties positionExitProperties
+            PositionExitProperties positionExitProperties,
+            DailyRiskProperties dailyRiskProperties
     ) {
         this.tradingProperties = tradingProperties;
         this.positionExitProperties = positionExitProperties;
+        this.dailyRiskProperties = dailyRiskProperties;
     }
 
     @GetMapping("/api/risk/status")
@@ -28,7 +32,10 @@ public class RiskStatusController {
                 new ArrayList<>(tradingProperties.getAllowedMarkets()),
                 positionExitProperties.getTakeProfitRate(),
                 positionExitProperties.getStopLossRate(),
-                positionExitProperties.isPositionExitEnabled()
+                positionExitProperties.isPositionExitEnabled(),
+                dailyRiskProperties.isDailyRiskEnabled(),
+                dailyRiskProperties.getDailyOrderLimit(),
+                dailyRiskProperties.getDailyLossLimit()
         );
     }
 }

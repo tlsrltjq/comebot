@@ -85,6 +85,16 @@ class JpaTradingFlowHistoryRepositoryTest {
         assertThat(repository.findRecentByMarket("KRW-XRP", 20)).isEmpty();
     }
 
+    @Test
+    void findSinceReturnsHistoriesCreatedAfterStartTime() {
+        Instant from = Instant.parse("2026-04-29T00:00:00Z");
+        TradingFlowHistory history = history("history-1", "KRW-BTC", from);
+        when(springDataRepository.findByCreatedAtGreaterThanEqualOrderByCreatedAtDesc(from))
+                .thenReturn(List.of(TradingFlowHistoryEntity.from(history)));
+
+        assertThat(repository.findSince(from)).containsExactly(history);
+    }
+
     private TradingFlowHistory history(String id, String market, Instant createdAt) {
         return new TradingFlowHistory(
                 id,
