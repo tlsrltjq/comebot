@@ -62,6 +62,8 @@
 - 포트폴리오 변경은 `PAPER_TRADING` 주문이 `FILLED` 된 이후에만 수행한다.
 - `GET /api/portfolio/status`는 현금과 실현 손익을 조회한다.
 - `GET /api/portfolio/positions`는 현재 보유 포지션 목록을 조회한다.
+- `GET /api/portfolio/valuation`은 현재 Market Provider 가격으로 평가금액과 미실현 손익을 계산한다.
+- 포트폴리오 평가는 조회 전용이며 portfolio 상태를 변경하지 않는다.
 
 ## 시스템 상태 조회
 

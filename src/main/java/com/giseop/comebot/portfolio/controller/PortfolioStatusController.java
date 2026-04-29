@@ -3,9 +3,14 @@ package com.giseop.comebot.portfolio.controller;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioStatusResponse;
+import com.giseop.comebot.portfolio.dto.PortfolioValuationFailureResponse;
+import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.dto.PositionResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,9 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PortfolioStatusController {
 
     private final PaperPortfolioService paperPortfolioService;
+    private final PaperPortfolioValuationService paperPortfolioValuationService;
 
-    public PortfolioStatusController(PaperPortfolioService paperPortfolioService) {
+    public PortfolioStatusController(
+            PaperPortfolioService paperPortfolioService,
+            PaperPortfolioValuationService paperPortfolioValuationService
+    ) {
         this.paperPortfolioService = paperPortfolioService;
+        this.paperPortfolioValuationService = paperPortfolioValuationService;
     }
 
     @GetMapping("/api/portfolio/status")
@@ -29,6 +39,17 @@ public class PortfolioStatusController {
         return paperPortfolioService.findPositions().stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @GetMapping("/api/portfolio/valuation")
+    public ResponseEntity<?> getValuation() {
+        try {
+            PortfolioValuationResponse response = paperPortfolioValuationService.valuate();
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException exception) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(new PortfolioValuationFailureResponse("Portfolio valuation failed"));
+        }
     }
 
     private PositionResponse toResponse(PaperPosition position) {

@@ -177,9 +177,12 @@ paper.portfolio-storage-type=IN_MEMORY
 ```http
 GET /api/portfolio/status
 GET /api/portfolio/positions
+GET /api/portfolio/valuation
 ```
 
 BUY 체결 시 현금이 차감되고 보유 수량과 평균 매수가가 갱신된다. SELL 체결 시 보유 수량이 줄고 실현 손익이 계산된다. 현금 부족 BUY와 보유 수량 부족 SELL은 `REJECTED` 처리된다.
+
+`GET /api/portfolio/valuation`은 현재 `MarketPriceProvider`의 현재가를 기준으로 평가금액, 미실현 손익, 수익률, 총 평가금액을 계산한다. 이 API는 조회 전용이며 포트폴리오 상태를 변경하지 않는다.
 
 ## 테스트 실행 방법
 
@@ -325,6 +328,7 @@ GET /api/risk/status
 ```http
 GET /api/portfolio/status
 GET /api/portfolio/positions
+GET /api/portfolio/valuation
 ```
 
 ### 테스트용 시세

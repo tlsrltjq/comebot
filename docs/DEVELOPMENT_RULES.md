@@ -58,6 +58,8 @@
 - 현금 부족 BUY와 보유 수량 부족 SELL은 `REJECTED`로 처리한다.
 - 기본 포트폴리오 저장소는 `IN_MEMORY`다.
 - JPA 포트폴리오 저장소는 별도 단계 전까지 구현하지 않는다.
+- 포트폴리오 valuation은 조회 전용이어야 하며 포트폴리오 상태를 변경하면 안 된다.
+- valuation은 기존 `MarketPriceProvider`를 통해 현재가를 조회한다.
 
 ## 작업 원칙
 
