@@ -28,7 +28,8 @@ public class SchedulerStatusController {
                 tradingSchedulerProperties.getMarkets(),
                 candidateSchedulerProperties.isEnabled(),
                 candidateSchedulerProperties.getFixedDelayMs(),
-                candidateSchedulerProperties.getMarkets()
+                candidateSchedulerProperties.getMarkets(),
+                candidateSchedulerProperties.isNotifySummary()
         );
     }
 }

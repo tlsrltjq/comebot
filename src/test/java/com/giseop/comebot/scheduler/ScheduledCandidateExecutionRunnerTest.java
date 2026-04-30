@@ -23,7 +23,7 @@ class ScheduledCandidateExecutionRunnerTest {
         properties.setMarkets(List.of("KRW-BTC"));
         CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
 
-        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(properties, candidateExecutionService).runOnce();
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
         verify(candidateExecutionService, never()).execute("KRW-BTC");
         org.assertj.core.api.Assertions.assertThat(summary.requestedMarkets()).isZero();
@@ -36,7 +36,7 @@ class ScheduledCandidateExecutionRunnerTest {
         properties.setMarkets(List.of("KRW-BTC", "KRW-ETH"));
         CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
 
-        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(properties, candidateExecutionService).runOnce();
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
         verify(candidateExecutionService).execute("KRW-BTC");
         verify(candidateExecutionService).execute("KRW-ETH");
@@ -51,7 +51,7 @@ class ScheduledCandidateExecutionRunnerTest {
         properties.setMarkets(List.of());
         CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
 
-        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(properties, candidateExecutionService).runOnce();
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
         verify(candidateExecutionService, never()).execute(org.mockito.ArgumentMatchers.anyString());
         org.assertj.core.api.Assertions.assertThat(summary.requestedMarkets()).isZero();
@@ -64,7 +64,7 @@ class ScheduledCandidateExecutionRunnerTest {
         properties.setMarkets(List.of("KRW-BTC", " "));
         CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
 
-        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(properties, candidateExecutionService).runOnce();
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
         verify(candidateExecutionService).execute("KRW-BTC");
         verify(candidateExecutionService, never()).execute(" ");
@@ -80,7 +80,7 @@ class ScheduledCandidateExecutionRunnerTest {
         when(candidateExecutionService.execute("KRW-BTC")).thenThrow(new IllegalStateException("failed"));
         when(candidateExecutionService.execute("KRW-ETH")).thenReturn(result("KRW-ETH", SignalType.HOLD, null));
 
-        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(properties, candidateExecutionService).runOnce();
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
         verify(candidateExecutionService).execute("KRW-BTC");
         verify(candidateExecutionService).execute("KRW-ETH");
@@ -98,7 +98,7 @@ class ScheduledCandidateExecutionRunnerTest {
         when(candidateExecutionService.execute("KRW-ETH")).thenReturn(result("KRW-ETH", SignalType.BUY, OrderStatus.REJECTED));
         when(candidateExecutionService.execute("KRW-XRP")).thenReturn(result("KRW-XRP", SignalType.HOLD, null));
 
-        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(properties, candidateExecutionService).runOnce();
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
         org.assertj.core.api.Assertions.assertThat(summary.requestedMarkets()).isEqualTo(3);
         org.assertj.core.api.Assertions.assertThat(summary.executedMarkets()).isEqualTo(3);
@@ -106,6 +106,33 @@ class ScheduledCandidateExecutionRunnerTest {
         org.assertj.core.api.Assertions.assertThat(summary.rejectedCount()).isEqualTo(1);
         org.assertj.core.api.Assertions.assertThat(summary.holdCount()).isEqualTo(1);
         org.assertj.core.api.Assertions.assertThat(summary.failedCount()).isZero();
+    }
+
+    @Test
+    void runScheduledSendsSummaryNotificationWhenSummaryExists() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setMarkets(List.of("KRW-BTC"));
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        when(candidateExecutionService.execute("KRW-BTC")).thenReturn(result("KRW-BTC", SignalType.BUY, OrderStatus.FILLED));
+        CandidateSchedulerNotificationService notificationService = mock(CandidateSchedulerNotificationService.class);
+
+        new ScheduledCandidateExecutionRunner(properties, candidateExecutionService, notificationService).runScheduled();
+
+        verify(notificationService).notifySummary(new CandidateSchedulerRunSummary(1, 1, 1, 0, 0, 0));
+    }
+
+    @Test
+    void runScheduledDoesNotSendSummaryNotificationWhenNoMarketRuns() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setMarkets(List.of());
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        CandidateSchedulerNotificationService notificationService = mock(CandidateSchedulerNotificationService.class);
+
+        new ScheduledCandidateExecutionRunner(properties, candidateExecutionService, notificationService).runScheduled();
+
+        verify(notificationService, never()).notifySummary(org.mockito.ArgumentMatchers.any());
     }
 
     private TradingFlowResult result(String market, SignalType signalType, OrderStatus orderStatus) {
@@ -118,6 +145,17 @@ class ScheduledCandidateExecutionRunnerTest {
                 orderStatus,
                 "message",
                 Instant.now()
+        );
+    }
+
+    private ScheduledCandidateExecutionRunner runner(
+            CandidateSchedulerProperties properties,
+            CandidateExecutionService candidateExecutionService
+    ) {
+        return new ScheduledCandidateExecutionRunner(
+                properties,
+                candidateExecutionService,
+                mock(CandidateSchedulerNotificationService.class)
         );
     }
 }

@@ -46,7 +46,8 @@ public record SystemStatusResponse(
             List<String> markets,
             boolean candidateEnabled,
             long candidateFixedDelayMs,
-            List<String> candidateMarkets
+            List<String> candidateMarkets,
+            boolean candidateNotifySummary
     ) {
     }
 

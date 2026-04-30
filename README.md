@@ -180,6 +180,7 @@ The default remains `SIMPLE_THRESHOLD`.
 Set `TRADING_CANDIDATE_SCHEDULER_ENABLED=true` only when you want the scheduler to run candidate PAPER execution automatically.
 The default is disabled.
 Candidate scheduler runs are summarized as filled, rejected, hold, and failed counts in logs.
+Set `TRADING_CANDIDATE_SCHEDULER_NOTIFY_SUMMARY=true` and `NOTIFICATION_ENABLED=true` only when you want that summary sent through the configured notification sender.
 
 Market-specific strategy overrides can be added in a properties file:
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 public class CandidateSchedulerProperties {
 
     private boolean enabled = false;
+    private boolean notifySummary = false;
     private long fixedDelayMs = 60000;
     private List<String> markets = new ArrayList<>(List.of("KRW-BTC", "KRW-ETH"));
 
@@ -19,6 +20,14 @@ public class CandidateSchedulerProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isNotifySummary() {
+        return notifySummary;
+    }
+
+    public void setNotifySummary(boolean notifySummary) {
+        this.notifySummary = notifySummary;
     }
 
     public long getFixedDelayMs() {

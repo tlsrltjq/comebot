@@ -2,9 +2,7 @@
 
 ## 목표 구조
 
-`comebot`은 실제 시세를 관찰하고, 변동성과 추세를 기준으로 롱 전용 매수 후보를 판단한 뒤, `PAPER_TRADING`으로 주문과 포트폴리오 결과를 검증하는 시스템이다.
-
-실제 주문 API와 `REAL_TRADING`은 포함하지 않는다.
+`comebot`은 실제 시세를 관찰하고, 변동성과 추세를 기준으로 롱 전용 매수 후보를 판단한 뒤, `PAPER_TRADING`으로 주문과 포트폴리오 결과를 검증하는 시스템이다. 실제 주문 API와 `REAL_TRADING`은 포함하지 않는다.
 
 ## 전체 흐름
 
@@ -36,7 +34,7 @@ market
 - `notification`: 선택적 알림 발송
 - `telegram`: 명령과 버튼 기반 운영 보조
 - Telegram 후보 명령: `CandidateScannerService`, `CandidateExecutionService`를 호출해 PAPER 흐름만 실행
-- candidate scheduler: 설정된 market 후보를 `CandidateExecutionService`로 PAPER 실행
+- candidate scheduler: 설정된 market 후보를 PAPER 실행하고 선택 설정 시 요약 알림 발송
 
 ## Market
 
@@ -47,27 +45,19 @@ market
 
 ## Strategy
 
-기본 전략은 테스트용 `SimpleThresholdStrategy`다.
-
-`STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG`이면 후보 스캔 기반 롱 전용 PAPER 전략을 사용한다.
+기본 전략은 테스트용 `SimpleThresholdStrategy`다. `STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG`이면 후보 스캔 기반 롱 전용 PAPER 전략을 사용한다.
 
 ## Safety와 Risk
 
-kill switch는 시세 조회와 전략 판단보다 먼저 확인한다.
-
-Risk는 허용 market, 주문 금액, 수량, 가격, 일일 제한, PAPER 현금과 보유 수량을 검증한다.
+kill switch는 시세 조회와 전략 판단보다 먼저 확인한다. Risk는 허용 market, 주문 금액, 수량, 가격, 일일 제한, PAPER 현금과 보유 수량을 검증한다.
 
 ## Execution과 Portfolio
 
-현재 실행 Gateway는 PAPER_TRADING 전용이다.
-
-PAPER 체결 결과만 포트폴리오에 반영한다.
+현재 실행 Gateway는 PAPER_TRADING 전용이며 PAPER 체결 결과만 포트폴리오에 반영한다.
 
 ## History와 Notification
 
-HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다.
-
-알림은 history 저장 이후 선택적으로 실행한다.
+HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다. 알림은 history 저장 이후 선택적으로 실행한다.
 
 ## 작업 관리
 

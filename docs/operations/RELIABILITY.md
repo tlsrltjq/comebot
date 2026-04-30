@@ -42,7 +42,7 @@
 
 ## Telegram 장애
 
-- Telegram sendMessage 실패는 trading result, history, portfolio를 변경하지 않는다.
+- Telegram sendMessage와 scheduler 요약 알림 실패는 trading result, history, portfolio, scheduler 결과를 변경하지 않는다.
 - Telegram polling 실패는 다음 polling 주기에 복구 가능해야 한다.
 - callback query는 가능한 경우 `answerCallbackQuery`로 로딩을 해제한다.
 - callback answer 실패가 명령 처리 결과를 바꾸면 안 된다.

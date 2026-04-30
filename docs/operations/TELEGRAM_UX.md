@@ -17,8 +17,7 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
 
-`/api/telegram/status`에서 `enabled=true`, `configured=true`여야 한다.
-`/api/system/status`에서 `telegram.inboundEnabled=true`여야 명령을 읽는다.
+`/api/telegram/status`와 `/api/system/status`에서 enabled, configured, inbound 상태를 확인한다.
 
 ## 명령
 
@@ -27,8 +26,7 @@ TELEGRAM_CHAT_ID=
 - `/status`: 시스템 상태 요약
 - `/candidates`: 롱 후보 목록 조회
 - `/candidate-run KRW-BTC`: 후보 PAPER 실행
-- `/run KRW-BTC`: 기존 트레이딩 플로우 실행
-- `/history KRW-BTC`: 최근 실행 이력
+- `/run KRW-BTC`, `/history KRW-BTC`: 실행과 최근 이력
 - `/portfolio`: PAPER 포트폴리오 평가 요약
 - `/positions`: 보유 포지션 목록
 - `/risk`: 리스크 설정 요약
@@ -38,12 +36,9 @@ TELEGRAM_CHAT_ID=
 
 - 상태 보기
 - 후보 보기
-- BTC 후보 실행
-- ETH 후보 실행
-- KRW-BTC 실행
-- KRW-ETH 실행
-- BTC 이력
-- ETH 이력
+- BTC/ETH 후보 실행
+- KRW-BTC/KRW-ETH 실행
+- BTC/ETH 이력
 - 포트폴리오
 - 보유 포지션
 - 리스크
@@ -56,6 +51,7 @@ TELEGRAM_CHAT_ID=
 `/candidate-run`과 후보 실행 버튼은 `CandidateExecutionService`만 호출한다.
 후보 실행은 선택된 후보에 대해서만 PAPER BUY 주문을 만든다.
 kill switch가 켜져 있으면 실행 명령은 차단된다.
+candidate scheduler 요약 알림은 별도 설정이 켜진 경우에만 발송된다.
 
 ## 보안
 

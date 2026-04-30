@@ -88,6 +88,7 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.candidateEnabled").value(false))
                 .andExpect(jsonPath("$.scheduler.candidateFixedDelayMs").value(60000))
                 .andExpect(jsonPath("$.scheduler.candidateMarkets[1]").value("KRW-ETH"))
+                .andExpect(jsonPath("$.scheduler.candidateNotifySummary").value(false))
                 .andExpect(jsonPath("$.safety.killSwitchEnabled").value(false))
                 .andExpect(jsonPath("$.notification.enabled").value(false))
                 .andExpect(jsonPath("$.notification.sendHold").value(false))
@@ -148,6 +149,8 @@ class SystemStatusControllerTest {
                 .thenReturn(60000L);
         org.mockito.Mockito.when(candidateSchedulerProperties.getMarkets())
                 .thenReturn(List.of("KRW-BTC", "KRW-ETH"));
+        org.mockito.Mockito.when(candidateSchedulerProperties.isNotifySummary())
+                .thenReturn(false);
         org.mockito.Mockito.when(safetyProperties.isKillSwitchEnabled())
                 .thenReturn(false);
         org.mockito.Mockito.when(notificationProperties.isEnabled())

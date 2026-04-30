@@ -38,6 +38,7 @@
 34. 과열 회피와 재진입 제한 조건
 35. market별 전략 override 설정
 36. candidate scheduler 실행 요약
+37. candidate scheduler Telegram 요약 알림
 
 ## 최근 검증
 

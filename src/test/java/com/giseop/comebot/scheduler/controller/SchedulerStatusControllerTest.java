@@ -49,7 +49,8 @@ class SchedulerStatusControllerTest {
                 .andExpect(jsonPath("$.candidateEnabled").value(false))
                 .andExpect(jsonPath("$.candidateFixedDelayMs").value(60000))
                 .andExpect(jsonPath("$.candidateMarkets[0]").value("KRW-BTC"))
-                .andExpect(jsonPath("$.candidateMarkets[1]").value("KRW-ETH"));
+                .andExpect(jsonPath("$.candidateMarkets[1]").value("KRW-ETH"))
+                .andExpect(jsonPath("$.candidateNotifySummary").value(false));
     }
 
     @Test
@@ -86,5 +87,6 @@ class SchedulerStatusControllerTest {
         when(candidateSchedulerProperties.isEnabled()).thenReturn(enabled);
         when(candidateSchedulerProperties.getFixedDelayMs()).thenReturn(fixedDelayMs);
         when(candidateSchedulerProperties.getMarkets()).thenReturn(markets);
+        when(candidateSchedulerProperties.isNotifySummary()).thenReturn(false);
     }
 }

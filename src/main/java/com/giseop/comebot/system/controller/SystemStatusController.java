@@ -80,7 +80,8 @@ public class SystemStatusController {
                         new ArrayList<>(tradingSchedulerProperties.getMarkets()),
                         candidateSchedulerProperties.isEnabled(),
                         candidateSchedulerProperties.getFixedDelayMs(),
-                        new ArrayList<>(candidateSchedulerProperties.getMarkets())
+                        new ArrayList<>(candidateSchedulerProperties.getMarkets()),
+                        candidateSchedulerProperties.isNotifySummary()
                 ),
                 new SystemStatusResponse.SafetyStatus(
                         safetyProperties.isKillSwitchEnabled()

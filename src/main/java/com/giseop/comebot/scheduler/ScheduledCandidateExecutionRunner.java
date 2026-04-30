@@ -17,13 +17,16 @@ public class ScheduledCandidateExecutionRunner {
 
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final CandidateExecutionService candidateExecutionService;
+    private final CandidateSchedulerNotificationService candidateSchedulerNotificationService;
 
     public ScheduledCandidateExecutionRunner(
             CandidateSchedulerProperties candidateSchedulerProperties,
-            CandidateExecutionService candidateExecutionService
+            CandidateExecutionService candidateExecutionService,
+            CandidateSchedulerNotificationService candidateSchedulerNotificationService
     ) {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.candidateExecutionService = candidateExecutionService;
+        this.candidateSchedulerNotificationService = candidateSchedulerNotificationService;
     }
 
     @Scheduled(fixedDelayString = "${trading.candidate-scheduler.fixed-delay-ms:60000}")
@@ -39,6 +42,7 @@ public class ScheduledCandidateExecutionRunner {
                     summary.holdCount(),
                     summary.failedCount()
             );
+            candidateSchedulerNotificationService.notifySummary(summary);
         }
     }
 
