@@ -141,6 +141,7 @@ class TelegramCommandServiceTest {
                 "후보 스케줄러 활성화: false",
                 "긴급 정지: false",
                 "알림 활성화: false",
+                "후보 요약 알림: false",
                 "텔레그램 활성화: true",
                 "텔레그램 수신 활성화: false"
         );
@@ -225,7 +226,8 @@ class TelegramCommandServiceTest {
 
         verify(scannerService).scanAllowedMarkets();
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("롱 후보 목록", "market=KRW-BTC", "decision=SELECTED");
+        assertThat(messageCaptor.getValue().body()).contains("롱 후보 목록", "KRW-BTC", "판단: 선택", "변동률: 2.5%");
+        assertThat(messageCaptor.getValue().body()).doesNotContain("market=", "decision=");
     }
 
     @Test
@@ -239,7 +241,7 @@ class TelegramCommandServiceTest {
 
         verify(scannerService).scanAllowedMarkets();
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("롱 후보 목록", "market=KRW-ETH", "decision=SKIPPED");
+        assertThat(messageCaptor.getValue().body()).contains("롱 후보 목록", "KRW-ETH", "판단: 제외");
     }
 
     @Test
@@ -254,7 +256,8 @@ class TelegramCommandServiceTest {
 
         verify(executionService).execute("KRW-BTC");
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("후보 PAPER 실행 결과", "market=KRW-BTC", "orderStatus=FILLED");
+        assertThat(messageCaptor.getValue().body()).contains("후보 PAPER 실행", "Market: KRW-BTC", "주문 상태: FILLED");
+        assertThat(messageCaptor.getValue().body()).doesNotContain("orderStatus=", "orderCreated=");
     }
 
     @Test

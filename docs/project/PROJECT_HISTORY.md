@@ -39,6 +39,7 @@
 35. market별 전략 override 설정
 36. candidate scheduler 실행 요약
 37. candidate scheduler Telegram 요약 알림
+38. Telegram 후보 조회와 실행 결과 요약 개선
 
 ## 최근 검증
 

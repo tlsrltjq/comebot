@@ -196,6 +196,7 @@ public class TelegramCommandService {
                 후보 스케줄러 활성화: %s
                 긴급 정지: %s
                 알림 활성화: %s
+                후보 요약 알림: %s
                 텔레그램 활성화: %s
                 텔레그램 수신 활성화: %s
                 """.formatted(
@@ -211,6 +212,7 @@ public class TelegramCommandService {
                 candidateSchedulerProperties.isEnabled(),
                 safetyProperties.isKillSwitchEnabled(),
                 notificationProperties.isEnabled(),
+                candidateSchedulerProperties.isNotifySummary(),
                 telegramProperties.isEnabled(),
                 telegramInboundProperties.isEnabled()
         ).trim();
@@ -225,19 +227,20 @@ public class TelegramCommandService {
         StringBuilder builder = new StringBuilder("롱 후보 목록");
         for (TradingCandidate candidate : candidates) {
             builder.append(System.lineSeparator())
-                    .append("- market=")
+                    .append("- ")
                     .append(candidate.market())
-                    .append(", decision=")
-                    .append(candidate.decision())
-                    .append(", currentPrice=")
+                    .append(" | 판단: ")
+                    .append(toKoreanDecision(candidate))
+                    .append(" | 현재가: ")
                     .append(candidate.currentPrice())
-                    .append(", priceChangeRate=")
+                    .append(" | 변동률: ")
                     .append(candidate.priceChangeRate())
-                    .append(", tradeAmountChangeRate=")
+                    .append("% | 거래대금 변화: ")
                     .append(candidate.tradeAmountChangeRate())
-                    .append(", trend=")
+                    .append("% | 추세: ")
                     .append(candidate.trend())
-                    .append(", reason=")
+                    .append(System.lineSeparator())
+                    .append("  사유: ")
                     .append(candidate.reason());
         }
         return builder.toString();
@@ -250,17 +253,17 @@ public class TelegramCommandService {
 
         TradingFlowResult result = candidateExecutionService.execute(market);
         return """
-                후보 PAPER 실행 결과
-                market=%s
-                signal=%s
-                orderCreated=%s
-                orderStatus=%s
-                message=%s
+                후보 PAPER 실행
+                Market: %s
+                신호: %s
+                주문 생성: %s
+                주문 상태: %s
+                결과: %s
                 """.formatted(
                 result.market(),
-                result.signalType(),
-                result.orderCreated(),
-                result.orderStatus(),
+                valueOrDash(result.signalType()),
+                result.orderCreated() ? "예" : "아니오",
+                valueOrDash(result.orderStatus()),
                 result.message()
         ).trim();
     }
@@ -273,16 +276,16 @@ public class TelegramCommandService {
         TradingFlowResult result = tradingFlowService.run(market);
         return """
                 트레이딩 플로우 결과
-                market=%s
-                signal=%s
-                orderCreated=%s
-                orderStatus=%s
-                message=%s
+                Market: %s
+                신호: %s
+                주문 생성: %s
+                주문 상태: %s
+                결과: %s
                 """.formatted(
                 result.market(),
-                result.signalType(),
-                result.orderCreated(),
-                result.orderStatus(),
+                valueOrDash(result.signalType()),
+                result.orderCreated() ? "예" : "아니오",
+                valueOrDash(result.orderStatus()),
                 result.message()
         ).trim();
     }
@@ -381,5 +384,16 @@ public class TelegramCommandService {
                 안전장치 상태
                 killSwitchEnabled=%s
                 """.formatted(safetyProperties.isKillSwitchEnabled()).trim();
+    }
+
+    private String toKoreanDecision(TradingCandidate candidate) {
+        return switch (candidate.decision()) {
+            case SELECTED -> "선택";
+            case SKIPPED -> "제외";
+        };
+    }
+
+    private String valueOrDash(Object value) {
+        return value == null ? "-" : value.toString();
     }
 }

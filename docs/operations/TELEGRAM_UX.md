@@ -50,6 +50,7 @@ TELEGRAM_CHAT_ID=
 `/run`과 RUN 버튼은 `TradingFlowService`만 호출한다.
 `/candidate-run`과 후보 실행 버튼은 `CandidateExecutionService`만 호출한다.
 후보 실행은 선택된 후보에 대해서만 PAPER BUY 주문을 만든다.
+후보 조회와 후보 실행 결과는 한글 라벨로 짧게 요약한다.
 kill switch가 켜져 있으면 실행 명령은 차단된다.
 candidate scheduler 요약 알림은 별도 설정이 켜진 경우에만 발송된다.
 
