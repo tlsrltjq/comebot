@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
+import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderSide;
@@ -57,7 +59,7 @@ class CandidateExecutionServiceTest {
         strategyProperties.setOrderQuantity(new BigDecimal("0.01"));
         service = new CandidateExecutionService(
                 candidateScannerService,
-                strategyProperties,
+                strategyMarketSettingsService(),
                 new OrderRequestFactory(),
                 orderExecutionService,
                 tradingFlowHistoryService,
@@ -124,6 +126,42 @@ class CandidateExecutionServiceTest {
     }
 
     @Test
+    void marketOverrideOrderQuantityIsUsed() {
+        when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
+        when(orderExecutionService.execute(any(OrderRequest.class))).thenReturn(new OrderResult(
+                "KRW-BTC",
+                OrderSide.BUY,
+                new BigDecimal("0.02"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "Paper trading order filled",
+                Instant.parse("2026-04-30T00:01:00Z")
+        ));
+        StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
+        override.setOrderQuantity(new BigDecimal("0.02"));
+        StrategyMarketOverrideProperties overrideProperties = new StrategyMarketOverrideProperties();
+        overrideProperties.setMarkets(java.util.Map.of("KRW-BTC", override));
+        service = new CandidateExecutionService(
+                candidateScannerService,
+                new StrategyMarketSettingsService(strategyProperties, new CandidateScannerProperties(), overrideProperties),
+                new OrderRequestFactory(),
+                orderExecutionService,
+                tradingFlowHistoryService,
+                notificationProperties,
+                notificationPolicyService,
+                tradingFlowNotificationService,
+                killSwitchService,
+                positionEntryGuardService
+        );
+
+        service.execute("KRW-BTC");
+
+        ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
+        verify(orderExecutionService).execute(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("0.02");
+    }
+
+    @Test
     void killSwitchBlocksCandidateExecutionBeforeScan() {
         when(killSwitchService.isEnabled()).thenReturn(true);
 
@@ -162,6 +200,14 @@ class CandidateExecutionServiceTest {
                 new BigDecimal("20"),
                 MarketTrend.DOWN,
                 Instant.parse("2026-04-30T00:00:00Z")
+        );
+    }
+
+    private StrategyMarketSettingsService strategyMarketSettingsService() {
+        return new StrategyMarketSettingsService(
+                strategyProperties,
+                new CandidateScannerProperties(),
+                new StrategyMarketOverrideProperties()
         );
     }
 }

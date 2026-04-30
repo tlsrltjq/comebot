@@ -21,9 +21,9 @@ public class TradingStrategyConfiguration {
     @ConditionalOnProperty(prefix = "strategy", name = "selected", havingValue = "VOLATILITY_BREAKOUT_LONG")
     public TradingStrategy volatilityBreakoutLongStrategy(
             CandidateScannerService candidateScannerService,
-            StrategyProperties strategyProperties,
-            com.giseop.comebot.strategy.service.PositionEntryGuardService positionEntryGuardService
+            com.giseop.comebot.strategy.service.PositionEntryGuardService positionEntryGuardService,
+            com.giseop.comebot.strategy.service.StrategyMarketSettingsService strategyMarketSettingsService
     ) {
-        return new VolatilityBreakoutLongStrategy(candidateScannerService, strategyProperties, positionEntryGuardService);
+        return new VolatilityBreakoutLongStrategy(candidateScannerService, positionEntryGuardService, strategyMarketSettingsService);
     }
 }

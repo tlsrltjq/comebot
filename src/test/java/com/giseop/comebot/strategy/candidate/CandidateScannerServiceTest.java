@@ -3,10 +3,13 @@ package com.giseop.comebot.strategy.candidate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.market.candle.domain.Candle;
 import com.giseop.comebot.market.candle.provider.CandleProvider;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
+import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
+import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -15,13 +18,16 @@ import org.junit.jupiter.api.Test;
 class CandidateScannerServiceTest {
 
     private final TradingProperties tradingProperties = new TradingProperties();
+    private final StrategyProperties strategyProperties = new StrategyProperties();
     private final CandidateScannerProperties scannerProperties = new CandidateScannerProperties();
+    private final StrategyMarketOverrideProperties overrideProperties = new StrategyMarketOverrideProperties();
     private final StubCandleProvider candleProvider = new StubCandleProvider();
     private final CandidateScannerService service = new CandidateScannerService(
             tradingProperties,
             scannerProperties,
             candleProvider,
-            new VolatilityIndicatorService()
+            new VolatilityIndicatorService(),
+            new StrategyMarketSettingsService(strategyProperties, scannerProperties, overrideProperties)
     );
 
     @Test
@@ -116,6 +122,24 @@ class CandidateScannerServiceTest {
 
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
         assertThat(candidate.reason()).isEqualTo("High low range rate is overheated");
+    }
+
+    @Test
+    void marketOverrideThresholdsAreApplied() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("30"));
+        StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
+        override.setMinPriceChangeRate(new BigDecimal("1"));
+        override.setMaxPriceChangeRate(new BigDecimal("30"));
+        override.setMaxHighLowRangeRate(new BigDecimal("40"));
+        overrideProperties.setMarkets(java.util.Map.of("KRW-BTC", override));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
     }
 
     @Test

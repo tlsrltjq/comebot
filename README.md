@@ -180,6 +180,14 @@ The default remains `SIMPLE_THRESHOLD`.
 Set `TRADING_CANDIDATE_SCHEDULER_ENABLED=true` only when you want the scheduler to run candidate PAPER execution automatically.
 The default is disabled.
 
+Market-specific strategy overrides can be added in a properties file:
+
+```properties
+strategy.market-overrides.markets.KRW-BTC.order-quantity=0.002
+strategy.market-overrides.markets.KRW-BTC.min-price-change-rate=2
+strategy.market-overrides.markets.KRW-BTC.max-price-change-rate=12
+```
+
 ## Documentation
 
 - [Architecture](docs/harness/ARCHITECTURE.md)

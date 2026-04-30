@@ -1,6 +1,5 @@
 package com.giseop.comebot.strategy.candidate;
 
-import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.service.OrderExecutionService;
@@ -13,6 +12,7 @@ import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.PositionEntryGuardService;
+import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.time.Instant;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ public class CandidateExecutionService {
     private static final Logger log = LoggerFactory.getLogger(CandidateExecutionService.class);
 
     private final CandidateScannerService candidateScannerService;
-    private final StrategyProperties strategyProperties;
+    private final StrategyMarketSettingsService strategyMarketSettingsService;
     private final OrderRequestFactory orderRequestFactory;
     private final OrderExecutionService orderExecutionService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
@@ -37,7 +37,7 @@ public class CandidateExecutionService {
 
     public CandidateExecutionService(
             CandidateScannerService candidateScannerService,
-            StrategyProperties strategyProperties,
+            StrategyMarketSettingsService strategyMarketSettingsService,
             OrderRequestFactory orderRequestFactory,
             OrderExecutionService orderExecutionService,
             TradingFlowHistoryService tradingFlowHistoryService,
@@ -48,7 +48,7 @@ public class CandidateExecutionService {
             PositionEntryGuardService positionEntryGuardService
     ) {
         this.candidateScannerService = candidateScannerService;
-        this.strategyProperties = strategyProperties;
+        this.strategyMarketSettingsService = strategyMarketSettingsService;
         this.orderRequestFactory = orderRequestFactory;
         this.orderExecutionService = orderExecutionService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
@@ -104,7 +104,7 @@ public class CandidateExecutionService {
                 SignalType.BUY,
                 candidate.reason(),
                 candidate.currentPrice(),
-                strategyProperties.getOrderQuantity(),
+                strategyMarketSettingsService.orderQuantity(candidate.market()),
                 candidate.scannedAt()
         );
 

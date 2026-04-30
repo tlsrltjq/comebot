@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.strategy.candidate.CandidateScannerProperties;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
@@ -21,15 +22,21 @@ class VolatilityBreakoutLongStrategyTest {
 
     private CandidateScannerService candidateScannerService;
     private PositionEntryGuardService positionEntryGuardService;
+    private StrategyMarketOverrideProperties overrideProperties;
     private VolatilityBreakoutLongStrategy strategy;
 
     @BeforeEach
     void setUp() {
         candidateScannerService = mock(CandidateScannerService.class);
         positionEntryGuardService = mock(PositionEntryGuardService.class);
+        overrideProperties = new StrategyMarketOverrideProperties();
         StrategyProperties strategyProperties = new StrategyProperties();
         strategyProperties.setOrderQuantity(new BigDecimal("0.002"));
-        strategy = new VolatilityBreakoutLongStrategy(candidateScannerService, strategyProperties, positionEntryGuardService);
+        strategy = new VolatilityBreakoutLongStrategy(
+                candidateScannerService,
+                positionEntryGuardService,
+                new StrategyMarketSettingsService(strategyProperties, new CandidateScannerProperties(), overrideProperties)
+        );
     }
 
     @Test
@@ -83,6 +90,18 @@ class VolatilityBreakoutLongStrategyTest {
 
         assertThat(signal.signalType()).isEqualTo(SignalType.HOLD);
         assertThat(signal.reason()).isEqualTo("Paper position already exists");
+    }
+
+    @Test
+    void marketOverrideOrderQuantityIsUsed() {
+        StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
+        override.setOrderQuantity(new BigDecimal("0.003"));
+        overrideProperties.setMarkets(java.util.Map.of("KRW-BTC", override));
+        when(candidateScannerService.scan("KRW-BTC")).thenReturn(candidate(CandidateDecision.SELECTED));
+
+        TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
+
+        assertThat(signal.quantity()).isEqualByComparingTo("0.003");
     }
 
     private MarketPrice marketPrice(String market, String currentPrice) {

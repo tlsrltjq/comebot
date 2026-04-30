@@ -1,6 +1,5 @@
 package com.giseop.comebot.strategy.service;
 
-import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
@@ -13,17 +12,17 @@ import java.time.Instant;
 public class VolatilityBreakoutLongStrategy implements TradingStrategy {
 
     private final CandidateScannerService candidateScannerService;
-    private final StrategyProperties strategyProperties;
     private final PositionEntryGuardService positionEntryGuardService;
+    private final StrategyMarketSettingsService strategyMarketSettingsService;
 
     public VolatilityBreakoutLongStrategy(
             CandidateScannerService candidateScannerService,
-            StrategyProperties strategyProperties,
-            PositionEntryGuardService positionEntryGuardService
+            PositionEntryGuardService positionEntryGuardService,
+            StrategyMarketSettingsService strategyMarketSettingsService
     ) {
         this.candidateScannerService = candidateScannerService;
-        this.strategyProperties = strategyProperties;
         this.positionEntryGuardService = positionEntryGuardService;
+        this.strategyMarketSettingsService = strategyMarketSettingsService;
     }
 
     @Override
@@ -48,7 +47,7 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
                     SignalType.BUY,
                     candidate.reason(),
                     targetPrice,
-                    strategyProperties.getOrderQuantity(),
+                    strategyMarketSettingsService.orderQuantity(marketPrice.market()),
                     candidate.scannedAt()
             );
         } catch (RuntimeException exception) {

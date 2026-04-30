@@ -1,12 +1,11 @@
 # Project Next Steps
 
-## 1단계: market별 전략 설정
+## 1단계: 자동 실행 운영 안정화
 
 목표:
 
-- market별 전략 설정을 분리한다.
-- market별 수량과 임계값을 분리한다.
-- 공통 기본값과 market override를 구분한다.
+- candidate scheduler 실행 결과를 운영 메시지로 요약한다.
+- 자동 실행 중복 진입 제한을 강화한다.
 
 ## 2단계: 자동 실행 운영 안정화
 
