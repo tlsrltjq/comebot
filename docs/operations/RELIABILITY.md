@@ -67,4 +67,4 @@
 ## Scheduler 장애
 - market 단위 실패가 전체 scheduler를 중단시키면 안 된다.
 - Scheduler에는 전략, 주문, 리스크 로직을 직접 넣지 않는다.
-- candidate scheduler도 기본 비활성이며 `CandidateExecutionService`만 호출한다.
+- candidate scheduler는 기본 비활성이며 `CandidateExecutionService`만 호출하고 결과를 filled, rejected, hold, failed로 요약한다.
