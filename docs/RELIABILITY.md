@@ -14,6 +14,7 @@
 - Upbit API 실패가 애플리케이션 전체를 중단시키면 안 된다.
 - 시세 조회 실패 시 주문을 성공으로 처리하면 안 된다.
 - InMemory provider와 Upbit provider 동작을 분리해서 테스트한다.
+- Upbit candle API 테스트는 mock/stub을 사용하고 외부 API를 직접 호출하지 않는다.
 
 ## Strategy 장애
 

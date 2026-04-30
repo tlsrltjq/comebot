@@ -40,6 +40,7 @@ Controller와 Scheduler는 비즈니스 로직을 직접 갖지 않는다.
 
 - InMemory provider는 테스트용이다.
 - Upbit provider는 공개 Ticker API만 사용한다.
+- Upbit candle provider는 공개 Candle API만 사용한다.
 - Upbit Access Key, Secret Key는 추가하지 않는다.
 - 실제 주문 API는 추가하지 않는다.
 - 실제 시세를 사용해도 주문은 PAPER_TRADING으로만 처리한다.

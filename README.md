@@ -23,6 +23,7 @@
 
 - InMemory 테스트 시세 공급
 - Upbit 공개 Ticker API 기반 현재가 조회
+- Upbit 공개 Candle API 기반 최근 분봉 조회
 - 수동 트레이딩 플로우 실행 REST API
 - PAPER_TRADING 주문 실행
 - 리스크 검증
@@ -102,6 +103,7 @@ scripts\run-upbit-paper.bat
 ```
 
 이 스크립트는 Upbit 공개 Ticker API를 사용하지만 실제 주문 API는 호출하지 않는다.
+캔들 Provider도 Upbit 공개 Candle API만 사용하며 인증키를 사용하지 않는다.
 
 ## 주요 설정
 

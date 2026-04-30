@@ -125,51 +125,30 @@
 - `.env` 기반 설정
 - Upbit 실제 시세 + PAPER_TRADING 검증 가능
 
+### 19. Upbit 캔들 데이터 Provider
+
+- Upbit 공개 Candle API provider 추가
+- 최근 분봉 조회 인터페이스 추가
+- 캔들 응답 domain 매핑 테스트
+- API 실패와 잘못된 요청 검증 테스트
+- Access Key, Secret Key 미사용
+
 ## 진행 중인 작업
 
-### Harness 문서 재정비
+### 변동성 계산 서비스 준비
 
 목표:
 
-- 프로젝트 방향을 롱 전용 변동성 추적 전략으로 정리
-- 오래된 threshold 중심 설명 정리
-- 완료 기록과 다음 작업 계획 분리
-- 실제 주문 API 금지 원칙 유지
+- 캔들 Provider 결과를 기반으로 변동성, 거래대금 증가율, 단기 추세 계산을 준비한다.
 
 완료 기준:
 
-- `AGENTS.md`, `README.md`, `docs/*` 문서가 현재 방향과 일치
-- `PROJECT_PLAN.md`에서 이전 기록과 다음 작업을 확인 가능
+- 전략에서 사용할 수 있는 지표 snapshot 설계
+- 단위 테스트 기준 확정
 
 ## 다음 작업
 
-### 1단계: Upbit 캔들 데이터 Provider
-
-목표:
-
-- Upbit 공개 candle API로 최근 캔들을 조회한다.
-- 실제 주문 API는 추가하지 않는다.
-
-생성/수정 후보:
-
-- `market.candle.domain`
-- `market.candle.provider`
-- `Candle`
-- `CandleProvider`
-- `UpbitCandleProvider`
-
-테스트:
-
-- 캔들 응답 매핑
-- API 실패 처리
-- 외부 API 직접 호출 없는 mock/stub 테스트
-
-완료 기준:
-
-- 지정 market의 최근 N개 캔들을 조회할 수 있음
-- 실패 시 앱 전체가 중단되지 않음
-
-### 2단계: 변동성 계산 서비스
+### 1단계: 변동성 계산 서비스
 
 목표:
 
@@ -193,7 +172,7 @@
 
 - 전략이 사용할 수 있는 지표 snapshot 생성
 
-### 3단계: 롱 후보 스캐너
+### 2단계: 롱 후보 스캐너
 
 목표:
 
@@ -219,7 +198,7 @@
 
 - 주문 없이 후보 목록만 확인 가능
 
-### 4단계: 롱 전용 진입 전략
+### 3단계: 롱 전용 진입 전략
 
 목표:
 
@@ -242,7 +221,7 @@
 
 - 실제 시세 기반 BUY 후보가 PAPER 주문으로 연결 가능
 
-### 5단계: 자동 PAPER 운영
+### 4단계: 자동 PAPER 운영
 
 목표:
 
@@ -260,7 +239,7 @@
 
 - 실제 시세 기반 자동 PAPER_TRADING 가능
 
-### 6단계: Telegram 운영 UX 개선
+### 5단계: Telegram 운영 UX 개선
 
 목표:
 

@@ -26,12 +26,12 @@ market
 
 - `InMemoryMarketPriceProvider`: 테스트용 가격 provider
 - `UpbitMarketPriceProvider`: Upbit 공개 Ticker API 현재가 provider
+- `UpbitCandleProvider`: Upbit 공개 Candle API 최근 분봉 provider
 - Access Key, Secret Key는 사용하지 않는다.
 - 실제 주문 API는 호출하지 않는다.
 
 앞으로 추가할 구조:
 
-- 캔들 데이터 provider
 - 거래대금 provider
 - 변동성 계산 서비스
 - market scanner
