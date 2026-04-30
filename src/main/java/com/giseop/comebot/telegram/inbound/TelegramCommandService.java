@@ -1,6 +1,7 @@
 package com.giseop.comebot.telegram.inbound;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.config.StrategySelectionProperties;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
@@ -32,8 +33,6 @@ import org.springframework.stereotype.Service;
 public class TelegramCommandService {
 
     private static final int HISTORY_LIMIT = 5;
-    private static final String STRATEGY_NAME = "SimpleThresholdStrategy";
-
     private final TelegramCommandParser commandParser;
     private final TelegramCallbackParser callbackParser;
     private final TelegramNotificationSender telegramNotificationSender;
@@ -41,6 +40,7 @@ public class TelegramCommandService {
     private final DatabaseHealthService databaseHealthService;
     private final MarketPriceProviderProperties marketPriceProviderProperties;
     private final StrategyProperties strategyProperties;
+    private final StrategySelectionProperties strategySelectionProperties;
     private final TradingProperties tradingProperties;
     private final TelegramProperties telegramProperties;
     private final TelegramInboundProperties telegramInboundProperties;
@@ -64,6 +64,7 @@ public class TelegramCommandService {
             DatabaseHealthService databaseHealthService,
             MarketPriceProviderProperties marketPriceProviderProperties,
             StrategyProperties strategyProperties,
+            StrategySelectionProperties strategySelectionProperties,
             TradingProperties tradingProperties,
             TelegramProperties telegramProperties,
             TelegramInboundProperties telegramInboundProperties,
@@ -86,6 +87,7 @@ public class TelegramCommandService {
         this.databaseHealthService = databaseHealthService;
         this.marketPriceProviderProperties = marketPriceProviderProperties;
         this.strategyProperties = strategyProperties;
+        this.strategySelectionProperties = strategySelectionProperties;
         this.tradingProperties = tradingProperties;
         this.telegramProperties = telegramProperties;
         this.telegramInboundProperties = telegramInboundProperties;
@@ -194,7 +196,7 @@ public class TelegramCommandService {
                 """.formatted(
                 databaseHealthService.check().connected(),
                 marketPriceProviderProperties.getPriceProvider(),
-                STRATEGY_NAME,
+                strategySelectionProperties.getStrategyName(),
                 strategyProperties.getBuyPrice(),
                 strategyProperties.getSellPrice(),
                 strategyProperties.getOrderQuantity(),

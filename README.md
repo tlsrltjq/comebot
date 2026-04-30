@@ -42,7 +42,8 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 
 ## Strategy Direction
 
-The current `SimpleThresholdStrategy` is only a test strategy.
+The default `SimpleThresholdStrategy` is only a test strategy.
+`VolatilityBreakoutLongStrategy` can be selected for long-only PAPER_TRADING entry validation.
 
 The target strategy is:
 
@@ -145,6 +146,7 @@ TRADING_MAX_ORDER_AMOUNT=100000
 STRATEGY_BUY_PRICE=90000000
 STRATEGY_SELL_PRICE=110000000
 STRATEGY_ORDER_QUANTITY=0.001
+STRATEGY_SELECTED=SIMPLE_THRESHOLD
 STRATEGY_CANDIDATE_CANDLE_UNIT_MINUTES=1
 STRATEGY_CANDIDATE_CANDLE_COUNT=20
 STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=1.5
@@ -165,6 +167,9 @@ Never commit real tokens, chat IDs, passwords, access keys, or secret keys.
 
 `POST /api/candidates/execute` only executes PAPER_TRADING BUY orders for selected candidates.
 It does not call any real exchange order API.
+
+Set `STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG` to let `/api/trading-flow/run` use the volatility candidate scanner for BUY signals.
+The default remains `SIMPLE_THRESHOLD`.
 
 ## Documentation
 

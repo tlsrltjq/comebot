@@ -1,21 +1,6 @@
 # Project Next Steps
 
-## 1단계: 롱 전용 진입 전략
-
-목표:
-
-- `SimpleThresholdStrategy`와 별도로 실전 검증용 PAPER 전략을 만든다.
-- 변동성, 추세, 거래대금 조건을 조합해 BUY 신호를 만든다.
-- 실제 주문 API는 만들지 않는다.
-
-구현 후보:
-
-- `VolatilityBreakoutLongStrategy`
-- market별 전략 설정
-- 전략 선택 설정
-- 후보 스캔 결과와 전략 진입 조건 연결
-
-## 2단계: 자동 PAPER 후보 실행
+## 1단계: 자동 PAPER 후보 실행
 
 목표:
 
@@ -28,6 +13,14 @@
 - risk 검증
 - history 저장
 - portfolio 반영
+
+## 2단계: 전략 조건 고도화
+
+목표:
+
+- market별 전략 설정을 분리한다.
+- 급등 과열 회피 조건을 추가한다.
+- 진입 후 재진입 제한 조건을 추가한다.
 
 ## 3단계: 운영 UX 정리
 

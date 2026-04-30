@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.config.StrategySelectionProperties;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.database.DatabaseHealthResult;
 import com.giseop.comebot.database.DatabaseHealthService;
@@ -40,6 +41,9 @@ class SystemStatusControllerTest {
 
     @MockitoBean
     private StrategyProperties strategyProperties;
+
+    @MockitoBean
+    private StrategySelectionProperties strategySelectionProperties;
 
     @MockitoBean
     private TradingProperties tradingProperties;
@@ -119,6 +123,8 @@ class SystemStatusControllerTest {
                 .thenReturn(new BigDecimal("110000000"));
         org.mockito.Mockito.when(strategyProperties.getOrderQuantity())
                 .thenReturn(new BigDecimal("0.001"));
+        org.mockito.Mockito.when(strategySelectionProperties.getStrategyName())
+                .thenReturn("SimpleThresholdStrategy");
         org.mockito.Mockito.when(tradingProperties.getMaxOrderAmount())
                 .thenReturn(new BigDecimal("100000"));
         org.mockito.Mockito.when(tradingProperties.getAllowedMarkets())

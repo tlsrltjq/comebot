@@ -6,9 +6,7 @@ import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import java.math.BigDecimal;
 import java.time.Instant;
-import org.springframework.stereotype.Component;
 
-@Component
 public class SimpleThresholdStrategy implements TradingStrategy {
 
     private final StrategyProperties strategyProperties;

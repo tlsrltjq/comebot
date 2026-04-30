@@ -46,9 +46,9 @@ market
 
 ## Strategy
 
-현재 `SimpleThresholdStrategy`는 테스트용이다.
+기본 전략은 테스트용 `SimpleThresholdStrategy`다.
 
-목표 전략은 `docs/trading/STRATEGY_POLICY.md`의 롱 전용 변동성 추적 전략이다.
+`STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG`이면 후보 스캔 기반 롱 전용 PAPER 전략을 사용한다.
 
 ## Safety와 Risk
 

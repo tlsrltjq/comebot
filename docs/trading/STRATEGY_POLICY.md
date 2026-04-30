@@ -2,70 +2,47 @@
 
 ## 목표
 
-전략 목표는 변동성이 커지는 코인 중 상승 흐름이 확인된 후보를 찾아 롱 포지션으로만 진입하는 것이다.
+변동성과 추세가 확인된 코인을 롱 전용 PAPER_TRADING으로 검증한다.
 
-현재 `SimpleThresholdStrategy`는 테스트용이다. 앞으로의 구현은 이 문서를 기준으로 진행한다.
+실제 주문 API와 `REAL_TRADING`은 전략 코드에 넣지 않는다.
+
+## 전략 종류
+
+- `SIMPLE_THRESHOLD`: 기본값, 테스트용 가격 기준 전략
+- `VOLATILITY_BREAKOUT_LONG`: 변동성 후보 스캔 결과로 BUY 신호 생성
+
+설정:
+
+`STRATEGY_SELECTED=SIMPLE_THRESHOLD` 또는 `VOLATILITY_BREAKOUT_LONG`을 사용한다.
 
 ## 거래 방향
 
 - 롱만 허용한다.
-- 숏, 마진, 레버리지 전략은 만들지 않는다.
-- 매수 후 보유 포지션에 대해서만 익절/손절 SELL 신호를 만든다.
-- 보유 수량보다 많은 SELL 신호를 만들면 안 된다.
+- 숏, 마진, 레버리지는 만들지 않는다.
+- BUY는 PAPER_TRADING 주문으로만 이어진다.
+- SELL은 보유 포지션에 대한 익절/손절 정책으로만 만든다.
 
-## 후보 선정 기준
+## 후보 기준
 
-매수 후보는 아래 조건을 분리해서 평가한다.
+롱 후보는 아래 조건을 분리해서 평가한다.
 
-- 가격 변동성 증가
-- 거래대금 증가
-- 단기 추세 상승
-- 급등 직후 과열 회피
-- 허용 market 여부
-- 최대 주문 금액 이하
-- PAPER 현금 충분 여부
-- kill switch 비활성
-
-## 변동성 추적 방향
-
-앞으로 추가할 핵심 지표:
-
-- 최근 N분 가격 변동률
-- 최근 N분 고가/저가 범위
+- 최근 캔들 기준 가격 변화율
+- 최근 캔들 기준 고가/저가 범위
 - 거래대금 증가율
-- 이동평균 기울기
-- 돌파 여부
-- 급락 감지
-
-현재 구현된 기본 지표:
-
-- `priceChangeRate`
-- `highLowRangeRate`
-- `tradeAmountChangeRate`
-- `MarketTrend`
-
-현재 후보 스캐너 기준:
-
-- `MarketTrend.UP`
-- 최소 가격 변동률
-- 최소 거래대금 증가율
+- 단기 추세 `MarketTrend.UP`
 - 허용 market 목록
 
 후보 조회 API는 주문을 실행하지 않는다.
 
-후보 실행 API는 `SELECTED` 후보만 PAPER_TRADING BUY 주문으로 연결한다.
-
-첫 구현은 단순해야 한다. 복잡한 지표를 한 번에 넣지 않는다.
+후보 실행 API와 Telegram 후보 실행은 `SELECTED` 후보만 PAPER BUY로 연결한다.
 
 ## 진입 조건
 
-BUY 신호는 아래 기준을 모두 만족해야 한다.
+`VOLATILITY_BREAKOUT_LONG`은 `CandidateScannerService` 결과가 `SELECTED`일 때만 BUY 신호를 만든다.
 
-- 상승 흐름이 확인됨
-- 변동성이 충분함
-- 거래대금이 충분함
-- 이미 같은 market 포지션을 과도하게 보유하지 않음
-- 리스크 검증 통과 가능
+후보가 `SKIPPED`이면 HOLD 신호를 만든다.
+
+최종 주문은 kill switch, risk, PAPER portfolio 검증을 통과해야 한다.
 
 ## 청산 조건
 
@@ -80,16 +57,15 @@ SELL 신호는 보유 포지션에 대해서만 만든다.
 - 상승 근거 없이 변동성만 보고 매수하지 않는다.
 - 손절 기준을 무시하지 않는다.
 - 실패한 주문을 체결로 간주하지 않는다.
-- 실제 주문 API를 전략 코드에서 직접 호출하지 않는다.
-- 전략 코드에서 Telegram, DB, Controller 로직을 직접 처리하지 않는다.
+- 전략 코드에서 Telegram, DB, Controller 로직을 처리하지 않는다.
+- 전략 코드에서 실제 주문 API를 호출하지 않는다.
 
 ## 테스트 기준
 
 전략 변경 시 최소 테스트:
 
-- BUY 후보 생성
-- HOLD 유지
-- 익절 SELL 생성
-- 손절 SELL 생성
-- 보유 포지션 없을 때 SELL 미생성
-- 리스크 실패 시 주문 미실행
+- BUY 신호 생성
+- HOLD 신호 유지
+- 후보 미선택 시 주문 미생성
+- scanner 실패 시 HOLD 처리
+- 기존 PAPER_TRADING 흐름 유지

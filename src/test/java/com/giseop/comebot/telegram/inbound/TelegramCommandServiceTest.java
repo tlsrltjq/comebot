@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.config.StrategySelectionProperties;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.database.DatabaseHealthResult;
 import com.giseop.comebot.database.DatabaseHealthService;
@@ -415,6 +416,7 @@ class TelegramCommandServiceTest {
                 databaseHealthService(),
                 marketPriceProviderProperties(),
                 strategyProperties(),
+                strategySelectionProperties(),
                 tradingProperties(),
                 configuredTelegramProperties(),
                 new TelegramInboundProperties(),
@@ -510,6 +512,12 @@ class TelegramCommandServiceTest {
         when(properties.getBuyPrice()).thenReturn(new BigDecimal("90000000"));
         when(properties.getSellPrice()).thenReturn(new BigDecimal("110000000"));
         when(properties.getOrderQuantity()).thenReturn(new BigDecimal("0.001"));
+        return properties;
+    }
+
+    private StrategySelectionProperties strategySelectionProperties() {
+        StrategySelectionProperties properties = mock(StrategySelectionProperties.class);
+        when(properties.getStrategyName()).thenReturn("SimpleThresholdStrategy");
         return properties;
     }
 

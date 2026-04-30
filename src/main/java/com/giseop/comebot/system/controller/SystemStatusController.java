@@ -1,6 +1,7 @@
 package com.giseop.comebot.system.controller;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.config.StrategySelectionProperties;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
@@ -18,11 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SystemStatusController {
 
-    private static final String STRATEGY_NAME = "SimpleThresholdStrategy";
-
     private final DatabaseHealthService databaseHealthService;
     private final MarketPriceProviderProperties marketPriceProviderProperties;
     private final StrategyProperties strategyProperties;
+    private final StrategySelectionProperties strategySelectionProperties;
     private final TradingProperties tradingProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final SafetyProperties safetyProperties;
@@ -34,6 +34,7 @@ public class SystemStatusController {
             DatabaseHealthService databaseHealthService,
             MarketPriceProviderProperties marketPriceProviderProperties,
             StrategyProperties strategyProperties,
+            StrategySelectionProperties strategySelectionProperties,
             TradingProperties tradingProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
             SafetyProperties safetyProperties,
@@ -44,6 +45,7 @@ public class SystemStatusController {
         this.databaseHealthService = databaseHealthService;
         this.marketPriceProviderProperties = marketPriceProviderProperties;
         this.strategyProperties = strategyProperties;
+        this.strategySelectionProperties = strategySelectionProperties;
         this.tradingProperties = tradingProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.safetyProperties = safetyProperties;
@@ -59,7 +61,7 @@ public class SystemStatusController {
                 new SystemStatusResponse.DatabaseStatus(databaseHealthService.check().connected()),
                 new SystemStatusResponse.MarketProviderStatus(provider, provider == MarketPriceProviderType.UPBIT),
                 new SystemStatusResponse.StrategyStatus(
-                        STRATEGY_NAME,
+                        strategySelectionProperties.getStrategyName(),
                         strategyProperties.getBuyPrice(),
                         strategyProperties.getSellPrice(),
                         strategyProperties.getOrderQuantity()
