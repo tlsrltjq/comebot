@@ -152,6 +152,9 @@ STRATEGY_CANDIDATE_CANDLE_COUNT=20
 STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=1.5
 STRATEGY_CANDIDATE_MIN_TRADE_AMOUNT_CHANGE_RATE=0
 SAFETY_KILL_SWITCH_ENABLED=false
+TRADING_CANDIDATE_SCHEDULER_ENABLED=false
+TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=60000
+TRADING_CANDIDATE_SCHEDULER_MARKETS=KRW-BTC,KRW-ETH
 ```
 
 Telegram:
@@ -170,6 +173,9 @@ It does not call any real exchange order API.
 
 Set `STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG` to let `/api/trading-flow/run` use the volatility candidate scanner for BUY signals.
 The default remains `SIMPLE_THRESHOLD`.
+
+Set `TRADING_CANDIDATE_SCHEDULER_ENABLED=true` only when you want the scheduler to run candidate PAPER execution automatically.
+The default is disabled.
 
 ## Documentation
 

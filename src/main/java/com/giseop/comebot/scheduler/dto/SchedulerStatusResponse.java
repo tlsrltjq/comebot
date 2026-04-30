@@ -5,6 +5,9 @@ import java.util.List;
 public record SchedulerStatusResponse(
         boolean enabled,
         long fixedDelayMs,
-        List<String> markets
+        List<String> markets,
+        boolean candidateEnabled,
+        long candidateFixedDelayMs,
+        List<String> candidateMarkets
 ) {
 }

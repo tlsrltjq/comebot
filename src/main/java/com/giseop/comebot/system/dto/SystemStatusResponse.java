@@ -43,7 +43,10 @@ public record SystemStatusResponse(
     public record SchedulerStatus(
             boolean enabled,
             long fixedDelayMs,
-            List<String> markets
+            List<String> markets,
+            boolean candidateEnabled,
+            long candidateFixedDelayMs,
+            List<String> candidateMarkets
     ) {
     }
 

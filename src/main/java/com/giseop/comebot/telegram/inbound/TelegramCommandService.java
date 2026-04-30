@@ -15,6 +15,7 @@ import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
+import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
@@ -46,6 +47,7 @@ public class TelegramCommandService {
     private final TelegramInboundProperties telegramInboundProperties;
     private final NotificationProperties notificationProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
+    private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final SafetyProperties safetyProperties;
     private final PositionExitProperties positionExitProperties;
     private final DailyRiskProperties dailyRiskProperties;
@@ -70,6 +72,7 @@ public class TelegramCommandService {
             TelegramInboundProperties telegramInboundProperties,
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
+            CandidateSchedulerProperties candidateSchedulerProperties,
             SafetyProperties safetyProperties,
             PositionExitProperties positionExitProperties,
             DailyRiskProperties dailyRiskProperties,
@@ -93,6 +96,7 @@ public class TelegramCommandService {
         this.telegramInboundProperties = telegramInboundProperties;
         this.notificationProperties = notificationProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
+        this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.safetyProperties = safetyProperties;
         this.positionExitProperties = positionExitProperties;
         this.dailyRiskProperties = dailyRiskProperties;
@@ -189,6 +193,7 @@ public class TelegramCommandService {
                 최대 주문 금액: %s
                 허용 Market: %s
                 스케줄러 활성화: %s
+                후보 스케줄러 활성화: %s
                 긴급 정지: %s
                 알림 활성화: %s
                 텔레그램 활성화: %s
@@ -203,6 +208,7 @@ public class TelegramCommandService {
                 tradingProperties.getMaxOrderAmount(),
                 tradingProperties.getAllowedMarkets(),
                 tradingSchedulerProperties.isEnabled(),
+                candidateSchedulerProperties.isEnabled(),
                 safetyProperties.isKillSwitchEnabled(),
                 notificationProperties.isEnabled(),
                 telegramProperties.isEnabled(),

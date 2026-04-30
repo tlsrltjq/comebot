@@ -15,6 +15,7 @@ import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -52,6 +53,9 @@ class SystemStatusControllerTest {
     private TradingSchedulerProperties tradingSchedulerProperties;
 
     @MockitoBean
+    private CandidateSchedulerProperties candidateSchedulerProperties;
+
+    @MockitoBean
     private SafetyProperties safetyProperties;
 
     @MockitoBean
@@ -81,6 +85,9 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.enabled").value(false))
                 .andExpect(jsonPath("$.scheduler.fixedDelayMs").value(60000))
                 .andExpect(jsonPath("$.scheduler.markets[1]").value("KRW-ETH"))
+                .andExpect(jsonPath("$.scheduler.candidateEnabled").value(false))
+                .andExpect(jsonPath("$.scheduler.candidateFixedDelayMs").value(60000))
+                .andExpect(jsonPath("$.scheduler.candidateMarkets[1]").value("KRW-ETH"))
                 .andExpect(jsonPath("$.safety.killSwitchEnabled").value(false))
                 .andExpect(jsonPath("$.notification.enabled").value(false))
                 .andExpect(jsonPath("$.notification.sendHold").value(false))
@@ -134,6 +141,12 @@ class SystemStatusControllerTest {
         org.mockito.Mockito.when(tradingSchedulerProperties.getFixedDelayMs())
                 .thenReturn(60000L);
         org.mockito.Mockito.when(tradingSchedulerProperties.getMarkets())
+                .thenReturn(List.of("KRW-BTC", "KRW-ETH"));
+        org.mockito.Mockito.when(candidateSchedulerProperties.isEnabled())
+                .thenReturn(false);
+        org.mockito.Mockito.when(candidateSchedulerProperties.getFixedDelayMs())
+                .thenReturn(60000L);
+        org.mockito.Mockito.when(candidateSchedulerProperties.getMarkets())
                 .thenReturn(List.of("KRW-BTC", "KRW-ETH"));
         org.mockito.Mockito.when(safetyProperties.isKillSwitchEnabled())
                 .thenReturn(false);

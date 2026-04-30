@@ -7,6 +7,7 @@ import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.system.dto.SystemStatusResponse;
@@ -25,6 +26,7 @@ public class SystemStatusController {
     private final StrategySelectionProperties strategySelectionProperties;
     private final TradingProperties tradingProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
+    private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final SafetyProperties safetyProperties;
     private final NotificationProperties notificationProperties;
     private final TelegramProperties telegramProperties;
@@ -37,6 +39,7 @@ public class SystemStatusController {
             StrategySelectionProperties strategySelectionProperties,
             TradingProperties tradingProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
+            CandidateSchedulerProperties candidateSchedulerProperties,
             SafetyProperties safetyProperties,
             NotificationProperties notificationProperties,
             TelegramProperties telegramProperties,
@@ -48,6 +51,7 @@ public class SystemStatusController {
         this.strategySelectionProperties = strategySelectionProperties;
         this.tradingProperties = tradingProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
+        this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.safetyProperties = safetyProperties;
         this.notificationProperties = notificationProperties;
         this.telegramProperties = telegramProperties;
@@ -73,7 +77,10 @@ public class SystemStatusController {
                 new SystemStatusResponse.SchedulerStatus(
                         tradingSchedulerProperties.isEnabled(),
                         tradingSchedulerProperties.getFixedDelayMs(),
-                        new ArrayList<>(tradingSchedulerProperties.getMarkets())
+                        new ArrayList<>(tradingSchedulerProperties.getMarkets()),
+                        candidateSchedulerProperties.isEnabled(),
+                        candidateSchedulerProperties.getFixedDelayMs(),
+                        new ArrayList<>(candidateSchedulerProperties.getMarkets())
                 ),
                 new SystemStatusResponse.SafetyStatus(
                         safetyProperties.isKillSwitchEnabled()

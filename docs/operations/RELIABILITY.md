@@ -49,7 +49,6 @@
 - `.env`에 token/chatId만 있어도 polling은 실행되지 않는다.
 - `TELEGRAM_ENABLED=true`, `TELEGRAM_INBOUND_ENABLED=true`, configured 상태가 모두 필요하다.
 - `api.telegram.org:443` 연결이 실패하면 getUpdates와 sendMessage가 모두 실패한다.
-- 로컬 확인은 `Test-NetConnection api.telegram.org -Port 443`로 한다.
 
 ## Offset
 
@@ -66,7 +65,6 @@
 - DB 비밀번호와 datasource URL 전체를 응답에 노출하지 않는다.
 
 ## Scheduler 장애
-
-- Scheduler는 기본 비활성이다.
 - market 단위 실패가 전체 scheduler를 중단시키면 안 된다.
 - Scheduler에는 전략, 주문, 리스크 로직을 직접 넣지 않는다.
+- candidate scheduler도 기본 비활성이며 `CandidateExecutionService`만 호출한다.

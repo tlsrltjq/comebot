@@ -27,7 +27,10 @@ GET /api/system/status
 GET /api/database/status
 GET /api/market-provider/status
 GET /api/risk/status
+GET /api/scheduler/status
 ```
+
+`/api/scheduler/status`는 기존 trading flow scheduler와 candidate scheduler 상태를 함께 보여준다.
 
 ## 트레이딩 플로우
 

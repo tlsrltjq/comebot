@@ -24,6 +24,7 @@ import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
+import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
@@ -137,6 +138,7 @@ class TelegramCommandServiceTest {
                 "최대 주문 금액: 100000",
                 "허용 Market: [KRW-BTC, KRW-ETH]",
                 "스케줄러 활성화: false",
+                "후보 스케줄러 활성화: false",
                 "긴급 정지: false",
                 "알림 활성화: false",
                 "텔레그램 활성화: true",
@@ -422,6 +424,7 @@ class TelegramCommandServiceTest {
                 new TelegramInboundProperties(),
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
+                new CandidateSchedulerProperties(),
                 new SafetyProperties(),
                 positionExitProperties(),
                 dailyRiskProperties(),
