@@ -55,6 +55,7 @@ public class CandidateScannerService {
                     null,
                     null,
                     null,
+                    null,
                     Instant.now()
             );
         }
@@ -74,6 +75,7 @@ public class CandidateScannerService {
                 snapshot.market(),
                 CandidateDecision.SELECTED,
                 "Volatility long candidate selected",
+                snapshot.currentPrice(),
                 snapshot.priceChangeRate(),
                 snapshot.highLowRangeRate(),
                 snapshot.tradeAmountChangeRate(),
@@ -87,6 +89,7 @@ public class CandidateScannerService {
                 snapshot.market(),
                 CandidateDecision.SKIPPED,
                 reason,
+                snapshot.currentPrice(),
                 snapshot.priceChangeRate(),
                 snapshot.highLowRangeRate(),
                 snapshot.tradeAmountChangeRate(),

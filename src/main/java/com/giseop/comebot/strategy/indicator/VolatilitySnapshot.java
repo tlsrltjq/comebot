@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record VolatilitySnapshot(
         String market,
+        BigDecimal currentPrice,
         BigDecimal priceChangeRate,
         BigDecimal highLowRangeRate,
         BigDecimal tradeAmountChangeRate,

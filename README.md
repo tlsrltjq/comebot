@@ -93,6 +93,7 @@ Trading flow:
 ```http
 GET /api/candidates
 GET /api/candidates?market=KRW-BTC
+POST /api/candidates/execute?market=KRW-BTC
 GET /api/trading-flow/run?market=KRW-BTC
 GET /api/trading-flow/history
 GET /api/trading-flow/history?market=KRW-BTC
@@ -143,6 +144,9 @@ TELEGRAM_CHAT_ID=
 ```
 
 Never commit real tokens, chat IDs, passwords, access keys, or secret keys.
+
+`POST /api/candidates/execute` only executes PAPER_TRADING BUY orders for selected candidates.
+It does not call any real exchange order API.
 
 ## Documentation
 

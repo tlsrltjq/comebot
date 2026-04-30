@@ -8,6 +8,7 @@ public record TradingCandidate(
         String market,
         CandidateDecision decision,
         String reason,
+        BigDecimal currentPrice,
         BigDecimal priceChangeRate,
         BigDecimal highLowRangeRate,
         BigDecimal tradeAmountChangeRate,

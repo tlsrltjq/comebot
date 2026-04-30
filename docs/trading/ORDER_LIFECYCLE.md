@@ -33,6 +33,8 @@ kill switch가 켜져 있으면 시세 조회 전에 차단한다.
 
 현재 `SimpleThresholdStrategy`는 테스트용이다. 앞으로 변동성 추적 전략으로 교체한다.
 
+후보 실행 API는 `SELECTED` 후보만 BUY 신호로 변환한다.
+
 ## ORDER_REQUEST_CREATED
 
 BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.

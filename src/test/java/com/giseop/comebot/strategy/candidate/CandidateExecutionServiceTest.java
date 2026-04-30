@@ -1,0 +1,150 @@
+package com.giseop.comebot.strategy.candidate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.execution.domain.OrderRequest;
+import com.giseop.comebot.execution.domain.OrderResult;
+import com.giseop.comebot.execution.domain.OrderSide;
+import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.execution.service.OrderExecutionService;
+import com.giseop.comebot.history.service.TradingFlowHistoryService;
+import com.giseop.comebot.notification.NotificationPolicyService;
+import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.notification.TradingFlowNotificationService;
+import com.giseop.comebot.safety.KillSwitchService;
+import com.giseop.comebot.strategy.indicator.MarketTrend;
+import com.giseop.comebot.strategy.service.OrderRequestFactory;
+import com.giseop.comebot.trading.service.TradingFlowResult;
+import java.math.BigDecimal;
+import java.time.Instant;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class CandidateExecutionServiceTest {
+
+    @Mock
+    private CandidateScannerService candidateScannerService;
+    @Mock
+    private OrderExecutionService orderExecutionService;
+    @Mock
+    private TradingFlowHistoryService tradingFlowHistoryService;
+    @Mock
+    private NotificationPolicyService notificationPolicyService;
+    @Mock
+    private TradingFlowNotificationService tradingFlowNotificationService;
+    @Mock
+    private KillSwitchService killSwitchService;
+
+    private final StrategyProperties strategyProperties = new StrategyProperties();
+    private final NotificationProperties notificationProperties = new NotificationProperties();
+    private CandidateExecutionService service;
+
+    @BeforeEach
+    void setUp() {
+        strategyProperties.setOrderQuantity(new BigDecimal("0.01"));
+        service = new CandidateExecutionService(
+                candidateScannerService,
+                strategyProperties,
+                new OrderRequestFactory(),
+                orderExecutionService,
+                tradingFlowHistoryService,
+                notificationProperties,
+                notificationPolicyService,
+                tradingFlowNotificationService,
+                killSwitchService
+        );
+    }
+
+    @Test
+    void selectedCandidateExecutesPaperBuyOrder() {
+        when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
+        when(orderExecutionService.execute(any(OrderRequest.class))).thenReturn(new OrderResult(
+                "KRW-BTC",
+                OrderSide.BUY,
+                new BigDecimal("0.01"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "Paper trading order filled",
+                Instant.parse("2026-04-30T00:01:00Z")
+        ));
+
+        TradingFlowResult result = service.execute("KRW-BTC");
+
+        assertThat(result.signalType()).isEqualTo(com.giseop.comebot.strategy.domain.SignalType.BUY);
+        assertThat(result.orderCreated()).isTrue();
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(result.currentPrice()).isEqualByComparingTo("100");
+
+        ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
+        verify(orderExecutionService).execute(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().market()).isEqualTo("KRW-BTC");
+        assertThat(requestCaptor.getValue().side()).isEqualTo(OrderSide.BUY);
+        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("0.01");
+        assertThat(requestCaptor.getValue().price()).isEqualByComparingTo("100");
+        verify(tradingFlowHistoryService).save(result);
+    }
+
+    @Test
+    void skippedCandidateDoesNotExecuteOrder() {
+        when(candidateScannerService.scan("KRW-BTC")).thenReturn(skippedCandidate());
+
+        TradingFlowResult result = service.execute("KRW-BTC");
+
+        assertThat(result.orderCreated()).isFalse();
+        assertThat(result.message()).isEqualTo("Candidate was not selected");
+        verify(orderExecutionService, never()).execute(any());
+        verify(tradingFlowHistoryService).save(result);
+    }
+
+    @Test
+    void killSwitchBlocksCandidateExecutionBeforeScan() {
+        when(killSwitchService.isEnabled()).thenReturn(true);
+
+        TradingFlowResult result = service.execute("KRW-BTC");
+
+        assertThat(result.orderCreated()).isFalse();
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(result.message()).isEqualTo("Kill switch enabled: candidate execution blocked");
+        verify(candidateScannerService, never()).scan("KRW-BTC");
+        verify(orderExecutionService, never()).execute(any());
+        verify(tradingFlowHistoryService).save(result);
+    }
+
+    private TradingCandidate selectedCandidate() {
+        return new TradingCandidate(
+                "KRW-BTC",
+                CandidateDecision.SELECTED,
+                "Volatility long candidate selected",
+                new BigDecimal("100"),
+                new BigDecimal("2.5"),
+                new BigDecimal("5"),
+                new BigDecimal("20"),
+                MarketTrend.UP,
+                Instant.parse("2026-04-30T00:00:00Z")
+        );
+    }
+
+    private TradingCandidate skippedCandidate() {
+        return new TradingCandidate(
+                "KRW-BTC",
+                CandidateDecision.SKIPPED,
+                "Trend is not UP",
+                new BigDecimal("100"),
+                new BigDecimal("-1"),
+                new BigDecimal("5"),
+                new BigDecimal("20"),
+                MarketTrend.DOWN,
+                Instant.parse("2026-04-30T00:00:00Z")
+        );
+    }
+}

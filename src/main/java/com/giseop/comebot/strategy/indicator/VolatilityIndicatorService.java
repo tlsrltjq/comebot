@@ -45,6 +45,7 @@ public class VolatilityIndicatorService {
 
         return new VolatilitySnapshot(
                 latest.market(),
+                latest.tradePrice(),
                 priceChangeRate,
                 highLowRangeRate,
                 tradeAmountChangeRate,
