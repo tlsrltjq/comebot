@@ -37,6 +37,13 @@
 - 돌파 여부
 - 급락 감지
 
+현재 구현된 기본 지표:
+
+- `priceChangeRate`
+- `highLowRangeRate`
+- `tradeAmountChangeRate`
+- `MarketTrend`
+
 첫 구현은 단순해야 한다. 복잡한 지표를 한 번에 넣지 않는다.
 
 ## 진입 조건
