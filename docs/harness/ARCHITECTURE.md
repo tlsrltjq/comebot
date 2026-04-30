@@ -25,6 +25,7 @@ market
 - `market`: 현재가와 캔들 데이터 제공
 - `strategy`: BUY, SELL, HOLD 신호 판단
 - `strategy.indicator`: 캔들 기반 변동성 지표 계산
+- `strategy.candidate`: 롱 후보 스캔
 - `safety`: kill switch 차단
 - `risk`: 주문 실행 전 리스크 검증
 - `execution`: PAPER_TRADING 주문 실행

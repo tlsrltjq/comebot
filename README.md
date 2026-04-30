@@ -21,6 +21,7 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 
 - Fetches test prices or Upbit public prices
 - Fetches recent Upbit minute candles
+- Scans long-only paper trading candidates
 - Creates BUY, SELL, HOLD signals
 - Runs risk validation before paper orders
 - Executes paper orders only
@@ -123,6 +124,10 @@ TRADING_MAX_ORDER_AMOUNT=100000
 STRATEGY_BUY_PRICE=90000000
 STRATEGY_SELL_PRICE=110000000
 STRATEGY_ORDER_QUANTITY=0.001
+STRATEGY_CANDIDATE_CANDLE_UNIT_MINUTES=1
+STRATEGY_CANDIDATE_CANDLE_COUNT=20
+STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=1.5
+STRATEGY_CANDIDATE_MIN_TRADE_AMOUNT_CHANGE_RATE=0
 SAFETY_KILL_SWITCH_ENABLED=false
 ```
 

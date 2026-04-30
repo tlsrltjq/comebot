@@ -1,21 +1,25 @@
 # Project Next Steps
 
-## 1단계: 롱 후보 스캐너
+## 1단계: 후보 조회 REST API
 
 목표:
 
-- 허용 market 목록을 순회하며 매수 후보를 만든다.
-- 후보 생성은 주문 실행과 분리한다.
+- 롱 후보 스캐너 결과를 HTTP로 조회한다.
+- 조회 API는 주문을 실행하지 않는다.
 
 구현 후보:
 
-- `strategy.candidate`
-- `TradingCandidate`
-- `CandidateScannerService`
 - 후보 조회 REST API
-- Telegram 후보 조회 명령
+- 후보 응답 DTO
 
-## 2단계: 롱 전용 진입 전략
+## 2단계: Telegram 후보 조회
+
+목표:
+
+- Telegram에서 후보 목록을 확인한다.
+- 후보 조회는 상태 변경 없는 조회 기능이다.
+
+## 3단계: 롱 전용 진입 전략
 
 목표:
 
@@ -27,7 +31,7 @@
 - 마켓별 전략 설정
 - 전략 선택 설정
 
-## 3단계: 자동 PAPER 운영
+## 4단계: 자동 PAPER 운영
 
 목표:
 
