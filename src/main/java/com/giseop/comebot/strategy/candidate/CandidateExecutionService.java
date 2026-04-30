@@ -12,6 +12,7 @@ import com.giseop.comebot.safety.KillSwitchService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
+import com.giseop.comebot.strategy.service.PositionEntryGuardService;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.time.Instant;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class CandidateExecutionService {
     private final NotificationPolicyService notificationPolicyService;
     private final TradingFlowNotificationService tradingFlowNotificationService;
     private final KillSwitchService killSwitchService;
+    private final PositionEntryGuardService positionEntryGuardService;
 
     public CandidateExecutionService(
             CandidateScannerService candidateScannerService,
@@ -42,7 +44,8 @@ public class CandidateExecutionService {
             NotificationProperties notificationProperties,
             NotificationPolicyService notificationPolicyService,
             TradingFlowNotificationService tradingFlowNotificationService,
-            KillSwitchService killSwitchService
+            KillSwitchService killSwitchService,
+            PositionEntryGuardService positionEntryGuardService
     ) {
         this.candidateScannerService = candidateScannerService;
         this.strategyProperties = strategyProperties;
@@ -53,6 +56,7 @@ public class CandidateExecutionService {
         this.notificationPolicyService = notificationPolicyService;
         this.tradingFlowNotificationService = tradingFlowNotificationService;
         this.killSwitchService = killSwitchService;
+        this.positionEntryGuardService = positionEntryGuardService;
     }
 
     public TradingFlowResult execute(String market) {
@@ -79,6 +83,18 @@ public class CandidateExecutionService {
                     false,
                     null,
                     "Candidate was not selected",
+                    candidate.scannedAt()
+            ));
+        }
+        if (positionEntryGuardService.shouldBlockEntry(candidate.market())) {
+            return save(new TradingFlowResult(
+                    candidate.market(),
+                    candidate.currentPrice(),
+                    SignalType.HOLD,
+                    "Paper position already exists",
+                    false,
+                    null,
+                    "Candidate entry blocked by existing paper position",
                     candidate.scannedAt()
             ));
         }

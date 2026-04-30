@@ -14,13 +14,16 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
 
     private final CandidateScannerService candidateScannerService;
     private final StrategyProperties strategyProperties;
+    private final PositionEntryGuardService positionEntryGuardService;
 
     public VolatilityBreakoutLongStrategy(
             CandidateScannerService candidateScannerService,
-            StrategyProperties strategyProperties
+            StrategyProperties strategyProperties,
+            PositionEntryGuardService positionEntryGuardService
     ) {
         this.candidateScannerService = candidateScannerService;
         this.strategyProperties = strategyProperties;
+        this.positionEntryGuardService = positionEntryGuardService;
     }
 
     @Override
@@ -34,6 +37,9 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
             TradingCandidate candidate = candidateScannerService.scan(marketPrice.market());
             if (candidate.decision() != CandidateDecision.SELECTED) {
                 return hold(marketPrice.market(), marketPrice.currentPrice(), "No volatility breakout long signal: " + candidate.reason());
+            }
+            if (positionEntryGuardService.shouldBlockEntry(marketPrice.market())) {
+                return hold(marketPrice.market(), marketPrice.currentPrice(), "Paper position already exists");
             }
 
             BigDecimal targetPrice = candidate.currentPrice() == null ? marketPrice.currentPrice() : candidate.currentPrice();

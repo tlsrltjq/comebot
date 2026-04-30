@@ -71,6 +71,12 @@ public class CandidateScannerService {
         if (snapshot.tradeAmountChangeRate().compareTo(candidateScannerProperties.getMinTradeAmountChangeRate()) < 0) {
             return skipped(snapshot, "Trade amount change rate is below threshold");
         }
+        if (snapshot.priceChangeRate().compareTo(candidateScannerProperties.getMaxPriceChangeRate()) > 0) {
+            return skipped(snapshot, "Price change rate is overheated");
+        }
+        if (snapshot.highLowRangeRate().compareTo(candidateScannerProperties.getMaxHighLowRangeRate()) > 0) {
+            return skipped(snapshot, "High low range rate is overheated");
+        }
         return new TradingCandidate(
                 snapshot.market(),
                 CandidateDecision.SELECTED,

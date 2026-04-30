@@ -9,11 +9,9 @@
 ## 전략 종류
 
 - `SIMPLE_THRESHOLD`: 기본값, 테스트용 가격 기준 전략
-- `VOLATILITY_BREAKOUT_LONG`: 변동성 후보 스캔 결과로 BUY 신호 생성
+- `VOLATILITY_BREAKOUT_LONG`: 후보 스캔 결과로 BUY 신호 생성
 
-설정:
-
-`STRATEGY_SELECTED=SIMPLE_THRESHOLD` 또는 `VOLATILITY_BREAKOUT_LONG`을 사용한다.
+설정은 `STRATEGY_SELECTED=SIMPLE_THRESHOLD` 또는 `VOLATILITY_BREAKOUT_LONG`을 사용한다.
 
 ## 거래 방향
 
@@ -30,6 +28,8 @@
 - 최근 캔들 기준 고가/저가 범위
 - 거래대금 증가율
 - 단기 추세 `MarketTrend.UP`
+- 과도한 가격 변화율 회피
+- 과도한 고가/저가 범위 회피
 - 허용 market 목록
 
 후보 조회 API는 주문을 실행하지 않는다.
@@ -41,6 +41,8 @@
 `VOLATILITY_BREAKOUT_LONG`은 `CandidateScannerService` 결과가 `SELECTED`일 때만 BUY 신호를 만든다.
 
 후보가 `SKIPPED`이면 HOLD 신호를 만든다.
+
+이미 PAPER 포지션을 보유 중이면 기본값에서 같은 market 재진입을 차단한다.
 
 최종 주문은 kill switch, risk, PAPER portfolio 검증을 통과해야 한다.
 
@@ -62,10 +64,4 @@ SELL 신호는 보유 포지션에 대해서만 만든다.
 
 ## 테스트 기준
 
-전략 변경 시 최소 테스트:
-
-- BUY 신호 생성
-- HOLD 신호 유지
-- 후보 미선택 시 주문 미생성
-- scanner 실패 시 HOLD 처리
-- 기존 PAPER_TRADING 흐름 유지
+전략 변경 시 BUY, HOLD, 후보 미선택, scanner 실패, 재진입 차단을 테스트한다.

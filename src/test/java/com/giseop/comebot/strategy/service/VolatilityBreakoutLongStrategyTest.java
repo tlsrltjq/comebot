@@ -20,14 +20,16 @@ import org.junit.jupiter.api.Test;
 class VolatilityBreakoutLongStrategyTest {
 
     private CandidateScannerService candidateScannerService;
+    private PositionEntryGuardService positionEntryGuardService;
     private VolatilityBreakoutLongStrategy strategy;
 
     @BeforeEach
     void setUp() {
         candidateScannerService = mock(CandidateScannerService.class);
+        positionEntryGuardService = mock(PositionEntryGuardService.class);
         StrategyProperties strategyProperties = new StrategyProperties();
         strategyProperties.setOrderQuantity(new BigDecimal("0.002"));
-        strategy = new VolatilityBreakoutLongStrategy(candidateScannerService, strategyProperties);
+        strategy = new VolatilityBreakoutLongStrategy(candidateScannerService, strategyProperties, positionEntryGuardService);
     }
 
     @Test
@@ -70,6 +72,17 @@ class VolatilityBreakoutLongStrategyTest {
 
         assertThat(signal.signalType()).isEqualTo(SignalType.HOLD);
         assertThat(signal.reason()).isEqualTo("Volatility breakout evaluation failed");
+    }
+
+    @Test
+    void existingPaperPositionCreatesHoldSignal() {
+        when(candidateScannerService.scan("KRW-BTC")).thenReturn(candidate(CandidateDecision.SELECTED));
+        when(positionEntryGuardService.shouldBlockEntry("KRW-BTC")).thenReturn(true);
+
+        TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
+
+        assertThat(signal.signalType()).isEqualTo(SignalType.HOLD);
+        assertThat(signal.reason()).isEqualTo("Paper position already exists");
     }
 
     private MarketPrice marketPrice(String market, String currentPrice) {

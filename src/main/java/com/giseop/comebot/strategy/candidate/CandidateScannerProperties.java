@@ -12,6 +12,8 @@ public class CandidateScannerProperties {
     private int candleCount = 20;
     private BigDecimal minPriceChangeRate = new BigDecimal("1.5");
     private BigDecimal minTradeAmountChangeRate = BigDecimal.ZERO;
+    private BigDecimal maxPriceChangeRate = new BigDecimal("15");
+    private BigDecimal maxHighLowRangeRate = new BigDecimal("25");
 
     public int getCandleUnitMinutes() {
         return candleUnitMinutes;
@@ -43,5 +45,21 @@ public class CandidateScannerProperties {
 
     public void setMinTradeAmountChangeRate(BigDecimal minTradeAmountChangeRate) {
         this.minTradeAmountChangeRate = minTradeAmountChangeRate == null ? BigDecimal.ZERO : minTradeAmountChangeRate;
+    }
+
+    public BigDecimal getMaxPriceChangeRate() {
+        return maxPriceChangeRate;
+    }
+
+    public void setMaxPriceChangeRate(BigDecimal maxPriceChangeRate) {
+        this.maxPriceChangeRate = maxPriceChangeRate == null ? new BigDecimal("15") : maxPriceChangeRate;
+    }
+
+    public BigDecimal getMaxHighLowRangeRate() {
+        return maxHighLowRangeRate;
+    }
+
+    public void setMaxHighLowRangeRate(BigDecimal maxHighLowRangeRate) {
+        this.maxHighLowRangeRate = maxHighLowRangeRate == null ? new BigDecimal("25") : maxHighLowRangeRate;
     }
 }

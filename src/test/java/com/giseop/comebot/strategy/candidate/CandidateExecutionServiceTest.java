@@ -19,6 +19,7 @@ import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.safety.KillSwitchService;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
+import com.giseop.comebot.strategy.service.PositionEntryGuardService;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -44,6 +45,8 @@ class CandidateExecutionServiceTest {
     private TradingFlowNotificationService tradingFlowNotificationService;
     @Mock
     private KillSwitchService killSwitchService;
+    @Mock
+    private PositionEntryGuardService positionEntryGuardService;
 
     private final StrategyProperties strategyProperties = new StrategyProperties();
     private final NotificationProperties notificationProperties = new NotificationProperties();
@@ -61,7 +64,8 @@ class CandidateExecutionServiceTest {
                 notificationProperties,
                 notificationPolicyService,
                 tradingFlowNotificationService,
-                killSwitchService
+                killSwitchService,
+                positionEntryGuardService
         );
     }
 
@@ -102,6 +106,19 @@ class CandidateExecutionServiceTest {
 
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.message()).isEqualTo("Candidate was not selected");
+        verify(orderExecutionService, never()).execute(any());
+        verify(tradingFlowHistoryService).save(result);
+    }
+
+    @Test
+    void existingPaperPositionBlocksCandidateExecution() {
+        when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
+        when(positionEntryGuardService.shouldBlockEntry("KRW-BTC")).thenReturn(true);
+
+        TradingFlowResult result = service.execute("KRW-BTC");
+
+        assertThat(result.orderCreated()).isFalse();
+        assertThat(result.message()).isEqualTo("Candidate entry blocked by existing paper position");
         verify(orderExecutionService, never()).execute(any());
         verify(tradingFlowHistoryService).save(result);
     }
