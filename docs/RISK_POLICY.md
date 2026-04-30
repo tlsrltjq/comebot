@@ -1,111 +1,63 @@
 # Risk Policy
 
-## Safety Kill Switch 원칙
+## 원칙
 
-- kill switch는 리스크 정책보다 상위 안전장치다.
+리스크 정책은 전략보다 우선한다. 전략이 BUY 또는 SELL 신호를 만들더라도 리스크 검증을 통과하지 못하면 주문은 실행하지 않는다.
+
+## Kill Switch
+
 - 기본값은 `safety.kill-switch-enabled=false`다.
-- `safety.kill-switch-enabled=true`이면 신규 트레이딩 플로우 실행을 차단한다.
-- 차단 대상은 REST `/run`, scheduler 실행, Telegram `/run`, RUN 버튼 실행이다.
-- history, status, portfolio 조회는 kill switch로 막지 않는다.
-- kill switch 차단 결과는 실패를 성공으로 처리하지 않고 명확한 `REJECTED` 결과로 남긴다.
+- 켜져 있으면 신규 트레이딩 플로우 실행을 차단한다.
+- 차단 대상은 REST `/run`, scheduler 실행, Telegram `/run`, RUN 버튼이다.
+- history, status, portfolio 조회는 차단하지 않는다.
+- kill switch는 시세 조회와 전략 판단보다 먼저 확인한다.
 
-## 결과 이력 원칙
+## 주문 요청 검증
 
-- HOLD, REJECTED, FILLED 결과를 모두 이력으로 남긴다.
-- 거절된 주문도 사유를 포함해 이력으로 남긴다.
-- 이력 저장은 주문 성공 처리가 아니며 상태를 변경하지 않는다.
+- 요청이 null이 아님
+- market이 비어 있지 않음
+- side가 null이 아님
+- quantity가 0보다 큼
+- price가 0보다 큼
+- 주문 금액이 `trading.max-order-amount` 이하
+- market이 `trading.allowed-markets`에 포함됨
 
-## 포트폴리오 평가 원칙
+실패 시 `REJECTED`로 처리한다.
 
-- 포트폴리오 평가는 주문 실행이 아니라 조회 기능이다.
-- 평가 계산은 현재 Market Provider 가격을 사용한다.
-- 평가 API는 현금, 보유 수량, 평균 매수가, 실현 손익을 변경하면 안 된다.
-- 현재가 조회 실패는 주문 실패나 포트폴리오 변경으로 처리하지 않는다.
+## PAPER 포트폴리오 검증
 
-## 손절/익절 Position Exit 정책
+- BUY는 PAPER 현금이 충분해야 한다.
+- SELL은 보유 수량이 충분해야 한다.
+- HOLD는 포트폴리오를 변경하지 않는다.
+- REJECTED, FAILED 주문은 포트폴리오를 변경하지 않는다.
+
+## 익절/손절
 
 - 기본값은 `risk.position-exit-enabled=false`다.
-- `risk.position-exit-enabled=true`일 때만 보유 포지션 기준 exit 정책을 평가한다.
-- 기존 전략이 HOLD를 만든 경우에만 position exit 정책이 SELL 신호를 만들 수 있다.
-- 기존 SimpleThresholdStrategy의 BUY/SELL 신호를 position exit 정책이 대체하지 않는다.
+- 켜져 있을 때만 보유 포지션 기준 SELL 신호를 만든다.
 - 미실현 수익률이 `risk.take-profit-rate` 이상이면 익절 SELL 신호를 만든다.
 - 미실현 수익률이 `risk.stop-loss-rate` 이하이면 손절 SELL 신호를 만든다.
-- 보유 포지션이 없으면 SELL 신호를 만들지 않는다.
-- SELL 수량은 보유 수량을 초과하지 않는다.
-- 손절/익절은 실제 주문이 아니라 `PAPER_TRADING` SELL 신호만 만든다.
+- SELL 수량은 보유 수량을 초과할 수 없다.
 
-## 일일 리스크 제한 정책
+## 일일 제한
 
 - 기본값은 `risk.daily-risk-enabled=false`다.
-- `risk.daily-risk-enabled=true`일 때만 일일 주문 횟수와 일일 손실 한도를 검증한다.
-- 검증은 `PAPER_TRADING` 주문 실행 전에 수행한다.
-- 오늘 발생한 `FILLED` 주문 수가 `risk.daily-order-limit` 이상이면 신규 주문은 `REJECTED` 처리한다.
-- HOLD, REJECTED, FAILED 결과는 일일 주문 횟수 제한에 포함하지 않는다.
-- 오늘 실현 손실 합계가 `risk.daily-loss-limit` 이상이면 신규 주문은 `REJECTED` 처리한다.
-- 일일 손실은 SELL 체결로 기록된 페이퍼 실현손익 이벤트 중 손실 금액만 합산한다.
-- 일일 제한 실패는 실제 실행 게이트웨이를 호출하지 않는다.
+- 켜져 있을 때만 일일 주문 횟수와 일일 실현 손실 한도를 검증한다.
+- 오늘 FILLED 주문 수가 `risk.daily-order-limit` 이상이면 신규 주문을 거절한다.
+- 오늘 실현 손실이 `risk.daily-loss-limit` 이상이면 신규 주문을 거절한다.
+- HOLD, REJECTED, FAILED는 일일 주문 횟수에 포함하지 않는다.
 
-## InMemory 테스트 시세 원칙
+## 시세 기준
 
-- 테스트 가격 변경 API로 설정한 가격은 실제 시장 가격이 아니다.
-- 테스트 가격은 전략 판단과 리스크 검증 흐름을 검증하는 용도로만 사용한다.
-- 테스트 가격으로 생성된 주문도 `PAPER_TRADING` 흐름만 사용한다.
-
-## 실제 시세 사용 원칙
-
-- Upbit provider를 사용하면 공개 Ticker API에서 실제 시세를 조회할 수 있다.
-- Upbit provider는 인증키를 사용하지 않는다.
-- 실제 시세를 사용해도 주문 실행은 `PAPER_TRADING`만 사용한다.
-- 실제 거래소 주문 API와 인증키 기반 주문 실행은 금지한다.
-
-## 기본 원칙
-
-- 기본 거래 모드는 `PAPER_TRADING`이다.
-- 실제 자금이 이동하는 주문은 초기 버전에서 금지한다.
-- InMemory 시세는 테스트 데이터이고, Upbit 시세는 공개 시장 데이터다.
-- 수동 실행 REST 엔드포인트도 `PAPER_TRADING` 흐름만 사용한다.
-- 전략 신호가 발생해도 리스크 검증을 통과해야 주문 실행으로 이어진다.
-- 리스크 검증을 통과하지 못한 주문 요청은 실행 게이트웨이로 전달하지 않는다.
-- 실패한 주문 또는 거절된 주문을 성공으로 처리하지 않는다.
-
-## 초기 검증 조건
-
-- 주문 요청이 null이면 `REJECTED`로 처리한다.
-- `market`이 비어 있으면 `REJECTED`로 처리한다.
-- `side`가 null이면 `REJECTED`로 처리한다.
-- `quantity`가 null 또는 0 이하이면 `REJECTED`로 처리한다.
-- `price`가 null 또는 0 이하이면 `REJECTED`로 처리한다.
-- 주문 금액(`quantity * price`)이 `trading.max-order-amount`를 초과하면 `REJECTED`로 처리한다.
-- `market`이 `trading.allowed-markets`에 없으면 `REJECTED`로 처리한다.
-- BUY 주문 금액이 페이퍼 현금보다 크면 `REJECTED`로 처리한다.
-- SELL 주문 수량이 페이퍼 보유 수량보다 크면 `REJECTED`로 처리한다.
-
-## 기본 설정
-
-- `trading.mode=PAPER_TRADING`
-- `trading.max-order-amount=100000`
-- `trading.allowed-markets=KRW-BTC,KRW-ETH`
-- `risk.take-profit-rate=5`
-- `risk.stop-loss-rate=-3`
-- `risk.position-exit-enabled=false`
-- `risk.daily-order-limit=10`
-- `risk.daily-loss-limit=50000`
-- `risk.daily-risk-enabled=false`
+- InMemory 시세는 테스트용이다.
+- Upbit 시세는 실제 공개 현재가지만 주문은 PAPER_TRADING으로만 처리한다.
+- Upbit 시세를 사용해도 Access Key, Secret Key, 실제 주문 API는 사용하지 않는다.
+- 실제 시세 기반 결과가 수익을 보장하지 않는다.
 
 ## 상태 조회
 
-- `GET /api/risk/status`는 현재 리스크 정책 설정값을 조회한다.
-- 응답에는 `maxOrderAmount`, `allowedMarkets`, `takeProfitRate`, `stopLossRate`, `positionExitEnabled`, `dailyRiskEnabled`, `dailyOrderLimit`, `dailyLossLimit`를 포함한다.
-- 이 API는 설정 변경 기능을 제공하지 않는다.
-- 민감 정보는 응답에 포함하지 않는다.
+```http
+GET /api/risk/status
+```
 
-## 실패 처리
-
-- 리스크 검증 실패는 명확한 사유를 남긴다.
-- 리스크 검증 실패 시 실제 실행 게이트웨이를 호출하지 않는다.
-- 현금 부족 또는 보유 수량 부족으로 거절된 주문은 포트폴리오를 변경하지 않는다.
-- 예외 발생 시 알림 또는 로그로 확인 가능해야 한다.
-
-## 변경 규칙
-
-리스크 정책을 변경하면 이 문서와 관련 테스트를 함께 수정한다.
+응답에는 maxOrderAmount, allowedMarkets, 익절/손절, 일일 제한 설정이 포함된다.

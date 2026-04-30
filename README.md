@@ -1,201 +1,171 @@
 # comebot
 
-## PostgreSQL Docker
+`comebot`은 코인 시세를 수집하고, 변동성과 추세를 기준으로 롱 전용 매수 후보를 판단한 뒤 `PAPER_TRADING`으로 검증하는 프로젝트다.
 
-로컬 PostgreSQL은 Docker Compose로 실행할 수 있다.
+현재 목표는 실제 매매가 아니다. 실제 Upbit 공개 시세를 사용한 모의 매매 환경을 만들고, 전략과 리스크 정책이 안전하게 동작하는지 검증하는 것이다.
+
+## 현재 상태
+
+- Java 21
+- Spring Boot
+- 기본 거래 모드: `PAPER_TRADING`
+- 기본 시세 Provider: `IN_MEMORY`
+- 선택 가능 시세 Provider: `UPBIT`
+- 실제 주문 API: 미구현
+- `REAL_TRADING`: 미구현
+- 기본 history 저장소: `IN_MEMORY`
+- 선택 가능 history 저장소: `JPA`
+- 기본 Telegram inbound: 비활성
+- 기본 scheduler: 비활성
+- 기본 notification: 비활성
+
+## 현재 지원 기능
+
+- InMemory 테스트 시세 공급
+- Upbit 공개 Ticker API 기반 현재가 조회
+- 수동 트레이딩 플로우 실행 REST API
+- PAPER_TRADING 주문 실행
+- 리스크 검증
+- 익절/손절 PAPER SELL 신호 정책
+- 일일 주문 횟수와 일일 손실 제한
+- kill switch
+- 실행 이력 저장과 조회
+- PAPER 포트폴리오 현금, 포지션, 실현손익 관리
+- 현재가 기준 포트폴리오 평가
+- Telegram 발송 구조
+- Telegram getUpdates polling 기반 명령 처리
+- Telegram inline button 처리
+- 주요 설정 상태 조회 API
+
+## 아직 지원하지 않는 기능
+
+- 실제 거래소 주문 API
+- `REAL_TRADING`
+- Upbit 인증키 기반 계정 잔고 조회
+- Upbit 인증키 기반 주문/취소/체결 조회
+- 숏, 마진, 레버리지
+- 실시간 WebSocket 시세
+- 캔들 기반 변동성/추세 전략
+- 운영용 영구 포트폴리오 저장소
+- 수익 보장 기능
+
+## 목표 전략 방향
+
+현재 단순 threshold 전략은 테스트용이다. 앞으로의 전략 방향은 다음과 같다.
+
+1. Upbit 공개 시세와 캔들 데이터를 수집한다.
+2. 변동성이 커지는 마켓을 찾는다.
+3. 상승 흐름이 확인된 마켓만 매수 후보로 만든다.
+4. 롱 포지션만 진입한다.
+5. 목표 수익률에 도달하면 익절 SELL 신호를 만든다.
+6. 손실률이 기준 이하로 내려가면 손절 SELL 신호를 만든다.
+7. 모든 주문은 리스크 검증을 통과해야 한다.
+8. 실제 주문 API를 붙이기 전까지는 PAPER_TRADING으로만 검증한다.
+
+세부 원칙은 `docs/STRATEGY_POLICY.md`를 따른다.
+
+완료된 작업 기록과 앞으로 진행할 단계는 `docs/PROJECT_PLAN.md`에서 관리한다.
+
+## 전체 흐름
+
+```text
+MarketPriceProvider
+-> Strategy
+-> OrderRequestFactory
+-> RiskValidationService
+-> PaperTradingExecutionGateway
+-> PaperPortfolioService
+-> TradingFlowHistoryService
+-> Optional Notification
+```
+
+실행 전에는 `KillSwitchService`가 가장 먼저 차단 여부를 확인한다.
+
+## 로컬 실행
+
+PostgreSQL 실행:
 
 ```bat
 docker compose up -d postgres
 ```
 
-기본 데이터베이스 설정은 로컬 Docker 기준이다.
-
-```properties
-POSTGRES_DB=comebot
-POSTGRES_USER=comebot
-POSTGRES_PASSWORD=
-POSTGRES_PORT=5432
-```
-
-Spring Boot datasource 설정은 환경 변수 기반이다.
-
-```properties
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:comebot}}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:comebot}}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:}}
-spring.jpa.hibernate.ddl-auto=none
-```
-
-기본 이력 저장소는 InMemory다. `history.storage-type=JPA`로 변경하면 PostgreSQL에 트레이딩 플로우 이력을 저장할 수 있다.
-
-DB 연결 상태는 아래 API로 확인한다.
-
-```http
-GET /api/database/status
-```
-
-PostgreSQL 실행 후 응답 예시:
-
-```json
-{
-  "connected": true,
-  "database": "PostgreSQL"
-}
-```
-
-연결 실패 시에도 서버 에러로 터뜨리지 않고 `connected=false`를 반환한다. 응답에는 DB 비밀번호, datasource URL, username 원문을 포함하지 않는다.
-
-`comebot`은 코인 시세를 기준으로 테스트용 전략을 평가하고, 주문 요청을 리스크 검증한 뒤, `PAPER_TRADING` 결과와 실행 이력을 남기는 MVP 프로젝트다.
-
-현재 프로젝트는 실제 매매 시스템이 아니다. 실제 거래소 주문 API와 `REAL_TRADING`은 구현하지 않는다.
-
-## 프로젝트 개요
-
-- 프로젝트 이름: `comebot`
-- 기본 패키지: `com.giseop.comebot`
-- 기본 거래 모드: `PAPER_TRADING`
-- Java 버전: 21
-- 저장소: 기본값은 InMemory, 설정으로 PostgreSQL/JPA 선택 가능
-- 시세 Provider: 기본값은 InMemory, 설정으로 Upbit 공개 시세 조회 선택 가능
-
-## 현재 지원 기능
-
-- 테스트용 InMemory 시세 조회 및 가격 변경
-- Upbit 공개 Ticker API 기반 현재가 조회 옵션
-- 테스트용 단순 threshold 전략
-- BUY, SELL, HOLD 신호 생성
-- 주문 요청 생성
-- 리스크 검증
-- 페이퍼 주문 실행
-- PAPER_TRADING 포트폴리오 현금, 보유 수량, 실현 손익 관리
-- 트레이딩 플로우 수동 실행 REST API
-- 트레이딩 플로우 실행 이력 저장 및 조회
-- 스케줄러 설정 및 주기 실행 구조
-- 알림 필터 정책
-- Telegram 설정 상태 조회
-- Telegram 테스트 메시지 발송 API
-- TelegramNotificationSender 기반 발송 구조
-
-## 아직 지원하지 않는 기능
-
-- 인증키 기반 거래소 계정 연동
-- 실제 거래소 주문 API 연동
-- `REAL_TRADING`
-- 실제 포지션/잔고 동기화
-- 수익 보장 또는 성과 예측
-
-## 전체 흐름
-
-1. `MarketPriceProvider`가 테스트용 시세를 제공한다.
-2. `TradingStrategy`가 BUY, SELL, HOLD 신호를 생성한다.
-3. `OrderRequestFactory`가 BUY/SELL 신호를 주문 요청으로 변환한다.
-4. `RiskValidationService`가 주문 요청을 검증한다.
-5. `OrderExecutionService`가 페이퍼 주문을 실행한다.
-6. `TradingFlowHistoryService`가 실행 결과를 설정된 history 저장소에 저장한다.
-7. 설정이 켜져 있고 알림 정책을 통과하면 알림을 보낸다.
-
-## 로컬 실행 방법
+기본 실행:
 
 ```bat
 gradlew.bat bootRun
 ```
 
-기본 설정에서는 스케줄러와 알림, Telegram 발송이 모두 비활성이다.
-
-## 시세 Provider 설정
-
-기본값은 InMemory다. 테스트 가격 변경 API와 수동 검증 흐름은 기본적으로 이 provider를 사용한다.
-
-```properties
-market.price-provider=IN_MEMORY
-```
-
-Upbit 공개 Ticker API로 현재가를 조회하려면 아래처럼 설정한다.
-
-```properties
-market.price-provider=UPBIT
-```
-
-환경 변수로 실행할 수도 있다.
+Upbit 실제 시세 기반 PAPER_TRADING 실행:
 
 ```bat
-set MARKET_PRICE_PROVIDER=UPBIT
-gradlew.bat bootRun
+scripts\run-upbit-paper.bat
 ```
 
-Upbit provider는 공개 시세 API만 호출한다. Access Key, Secret Key, 주문 API는 사용하지 않는다. 시세를 Upbit에서 조회하더라도 주문 실행은 기존 `PAPER_TRADING` 흐름만 사용한다.
+이 스크립트는 Upbit 공개 Ticker API를 사용하지만 실제 주문 API는 호출하지 않는다.
 
-현재 적용된 시세 provider는 아래 API로 확인한다.
+## 주요 설정
 
-```http
-GET /api/market-provider/status
+`.env` 또는 환경 변수로 관리한다.
+
+```properties
+MARKET_PRICE_PROVIDER=UPBIT
+HISTORY_STORAGE_TYPE=IN_MEMORY
+PAPER_INITIAL_CASH=1000000
+PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY
+
+TRADING_ALLOWED_MARKETS=KRW-BTC,KRW-ETH
+TRADING_MAX_ORDER_AMOUNT=100000
+
+STRATEGY_BUY_PRICE=90000000
+STRATEGY_SELL_PRICE=110000000
+STRATEGY_ORDER_QUANTITY=0.001
+
+RISK_TAKE_PROFIT_RATE=5
+RISK_STOP_LOSS_RATE=-3
+RISK_POSITION_EXIT_ENABLED=false
+
+RISK_DAILY_RISK_ENABLED=false
+RISK_DAILY_ORDER_LIMIT=10
+RISK_DAILY_LOSS_LIMIT=50000
+
+SAFETY_KILL_SWITCH_ENABLED=false
+TRADING_SCHEDULER_ENABLED=false
 ```
 
-응답에는 provider, 외부 provider 여부, 설명 메시지만 포함한다. Access Key, Secret Key는 사용하지 않으며 응답에도 포함하지 않는다.
+현재 전략 설정은 테스트용 단순 threshold다. 여러 코인을 제대로 검증하려면 마켓별 전략 설정과 캔들 기반 전략이 필요하다.
 
-## 시스템 상태 조회
+## 주요 API
 
-여러 상태 API의 주요 설정은 아래 API로 한 번에 확인한다. 설정 변경 API는 제공하지 않는다.
+상태 조회:
 
 ```http
 GET /api/system/status
-```
-
-응답에는 database, marketProvider, strategy, risk, scheduler, safety, notification, telegram 상태가 포함된다. Telegram은 configured 여부만 노출하고 Bot Token, Chat ID 원문은 포함하지 않는다. DB 연결 실패 시에도 `database.connected=false`로 응답한다.
-
-## 긴급 정지
-
-신규 트레이딩 플로우 실행을 막는 상위 안전장치다. 기본값은 비활성이다.
-
-```properties
-safety.kill-switch-enabled=false
-```
-
-`safety.kill-switch-enabled=true`이면 REST `/api/trading-flow/run`, scheduler 실행, Telegram `/run`, RUN 버튼 실행은 시세 조회와 전략 판단 전에 차단된다. history, status, portfolio 조회는 계속 가능하다. 차단 결과는 `REJECTED` 상태와 `Kill switch enabled: trading flow blocked` 메시지로 기록된다.
-
-## 전략 설정 상태 조회
-
-현재 `SimpleThresholdStrategy` 설정값은 아래 API로 확인한다. 설정 변경 API는 제공하지 않는다.
-
-```http
+GET /api/database/status
+GET /api/market-provider/status
 GET /api/strategy/status
+GET /api/risk/status
+GET /api/scheduler/status
+GET /api/notifications/status
+GET /api/telegram/status
 ```
 
-응답에는 `strategyName`, `buyPrice`, `sellPrice`, `orderQuantity`만 포함한다.
-
-## 리스크 정책 상태 조회
-
-현재 리스크 정책 설정값은 아래 API로 확인한다. 설정 변경 API는 제공하지 않는다.
+트레이딩 플로우:
 
 ```http
-GET /api/risk/status
+GET /api/trading-flow/run?market=KRW-BTC
+GET /api/trading-flow/history
+GET /api/trading-flow/history?market=KRW-BTC
+GET /api/trading-flow/history/{id}
 ```
 
-응답에는 `maxOrderAmount`, `allowedMarkets`, 손절/익절 설정이 포함된다.
+테스트 시세:
 
-```properties
-risk.take-profit-rate=5
-risk.stop-loss-rate=-3
-risk.position-exit-enabled=false
-risk.daily-order-limit=10
-risk.daily-loss-limit=50000
-risk.daily-risk-enabled=false
+```http
+GET /api/market-prices/KRW-BTC
+PUT /api/market-prices/KRW-BTC
 ```
 
-`risk.position-exit-enabled=true`일 때만 보유 포지션의 미실현 수익률을 기준으로 PAPER_TRADING SELL 신호를 만들 수 있다. 기존 전략이 HOLD일 때만 exit 정책을 평가하며, 기존 SimpleThresholdStrategy BUY/SELL 신호를 대체하지 않는다.
-
-`risk.daily-risk-enabled=true`일 때만 일일 주문 횟수와 일일 실현 손실 한도를 주문 실행 전에 검증한다. 오늘 FILLED 주문 수가 `risk.daily-order-limit` 이상이거나 오늘 실현 손실이 `risk.daily-loss-limit` 이상이면 신규 주문은 `REJECTED` 처리된다. HOLD, REJECTED, FAILED 결과는 일일 주문 횟수에 포함하지 않는다.
-
-## PAPER_TRADING 포트폴리오
-
-페이퍼 체결 결과를 기반으로 현금, 보유 수량, 평균 매수가, 실현 손익을 관리한다. 실제 거래소 계좌나 실제 자금은 사용하지 않는다.
-
-```properties
-paper.initial-cash=1000000
-paper.portfolio-storage-type=IN_MEMORY
-```
-
-기본 저장소는 InMemory다. JPA 포트폴리오 저장소는 아직 없다.
+포트폴리오:
 
 ```http
 GET /api/portfolio/status
@@ -203,301 +173,62 @@ GET /api/portfolio/positions
 GET /api/portfolio/valuation
 ```
 
-BUY 체결 시 현금이 차감되고 보유 수량과 평균 매수가가 갱신된다. SELL 체결 시 보유 수량이 줄고 실현 손익이 계산된다. 현금 부족 BUY와 보유 수량 부족 SELL은 `REJECTED` 처리된다.
+Telegram:
 
-`GET /api/portfolio/valuation`은 현재 `MarketPriceProvider`의 현재가를 기준으로 평가금액, 미실현 손익, 수익률, 총 평가금액을 계산한다. 이 API는 조회 전용이며 포트폴리오 상태를 변경하지 않는다.
+```http
+POST /api/telegram/test-message
+```
 
-## 테스트 실행 방법
+## Telegram 명령
+
+기본값은 비활성이다. 사용하려면 `.env`에 설정한다.
+
+```properties
+TELEGRAM_ENABLED=true
+TELEGRAM_INBOUND_ENABLED=true
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+```
+
+지원 명령:
+
+- `/help`
+- `/menu`
+- `/status`
+- `/run KRW-BTC`
+- `/history KRW-BTC`
+- `/portfolio`
+- `/positions`
+- `/risk`
+- `/safety`
+
+Telegram 명령은 configured `TELEGRAM_CHAT_ID`와 일치하는 채팅에서 온 요청만 처리한다.
+
+## 테스트
 
 ```bat
 gradlew.bat test
 ```
 
-Java 21 환경에서 실행한다.
+테스트는 Java 21 기준으로 실행한다.
 
-## History 저장소 설정
+## DB 스키마 적용
 
-기본값은 InMemory다. 애플리케이션 재시작 시 이력이 사라진다.
-
-```properties
-history.storage-type=IN_MEMORY
-```
-
-PostgreSQL에 이력을 저장하려면 PostgreSQL을 실행하고 테이블을 생성한 뒤 JPA 저장소로 변경한다. `spring.jpa.hibernate.ddl-auto=none`을 유지하므로 애플리케이션이 테이블을 자동 생성하지 않는다.
-
-1. PostgreSQL 실행
-
-```bat
-docker compose up -d postgres
-```
-
-2. schema.sql 적용
+JPA history 또는 JPA Telegram offset 저장소를 사용할 때만 필요하다.
 
 ```bat
 scripts\apply-schema.bat
 ```
 
-스크립트는 실행 중인 `comebot-postgres` 컨테이너에 [schema.sql](src/main/resources/schema.sql)을 적용한다. `POSTGRES_DB`, `POSTGRES_USER`는 `.env` 값이 있으면 사용하고, 없으면 `comebot`을 기본값으로 사용한다. DB 비밀번호는 출력하지 않는다.
+기본 history 저장소는 `IN_MEMORY`이므로 애플리케이션 재시작 시 이력이 사라진다.
 
-3. JPA 저장소 설정
+## 운영 주의사항
 
-```properties
-history.storage-type=JPA
-```
-
-환경 변수로 실행할 수도 있다.
-
-```bat
-set HISTORY_STORAGE_TYPE=JPA
-gradlew.bat bootRun
-```
-
-4. 앱 실행 후 이력 저장 확인
-
-```http
-GET /api/trading-flow/run?market=KRW-BTC
-GET /api/trading-flow/history
-```
-
-5. 앱 재시작 후 이력 유지 확인
-
-앱을 종료했다가 다시 실행한 뒤 아래 API를 다시 호출한다.
-
-```http
-GET /api/trading-flow/history
-```
-
-JPA 저장소를 사용 중이면 PostgreSQL에 저장된 기존 이력이 조회된다. `history.storage-type=IN_MEMORY` 상태에서는 재시작 후 이력이 사라지는 것이 정상이다.
-
-## 로컬 JPA History 검증 체크리스트
-
-1. PostgreSQL 컨테이너 실행
-
-```bat
-docker compose up -d postgres
-```
-
-2. DB 연결 상태 확인
-
-```http
-GET /api/database/status
-```
-
-문제가 생기면 먼저 이 응답의 `connected` 값을 확인한다.
-
-3. schema.sql 적용
-
-```bat
-scripts\apply-schema.bat
-```
-
-스크립트는 `comebot-postgres` 컨테이너에 `src/main/resources/schema.sql`을 적용한다. `.env`의 `POSTGRES_DB`, `POSTGRES_USER`를 사용하며, 값이 없으면 둘 다 `comebot`을 기본값으로 사용한다. DB 비밀번호는 출력하지 않는다.
-
-4. JPA history 저장소로 앱 실행
-
-```bat
-set HISTORY_STORAGE_TYPE=JPA
-gradlew.bat bootRun
-```
-
-5. 트레이딩 플로우 실행
-
-```http
-GET /api/trading-flow/run?market=KRW-BTC
-```
-
-6. 이력 조회
-
-```http
-GET /api/trading-flow/history
-GET /api/trading-flow/history?market=KRW-BTC
-```
-
-7. 앱 재시작 후 이력 유지 확인
-
-앱을 종료했다가 다시 실행한 뒤 같은 history API를 호출한다. JPA 저장소를 사용 중이면 이전 실행 이력이 유지된다.
-
-## 주요 API
-
-### 트레이딩 플로우
-
-```http
-GET /api/trading-flow/run?market=KRW-BTC
-GET /api/trading-flow/history
-GET /api/trading-flow/history?market=KRW-BTC&limit=20
-GET /api/trading-flow/history/{id}
-```
-
-### 시스템
-
-```http
-GET /api/system/status
-```
-
-### 전략
-
-```http
-GET /api/strategy/status
-```
-
-### 리스크
-
-```http
-GET /api/risk/status
-```
-
-### 포트폴리오
-
-```http
-GET /api/portfolio/status
-GET /api/portfolio/positions
-GET /api/portfolio/valuation
-```
-
-### 테스트용 시세
-
-```http
-GET /api/market-provider/status
-GET /api/market-prices/KRW-BTC
-PUT /api/market-prices/KRW-BTC
-Content-Type: application/json
-
-{
-  "price": 50000000
-}
-```
-
-### 스케줄러
-
-```http
-GET /api/scheduler/status
-```
-
-### 알림
-
-```http
-GET /api/notifications/status
-```
-
-### Telegram
-
-```http
-GET /api/telegram/status
-POST /api/telegram/test-message
-Content-Type: application/json
-
-{
-  "message": "hello"
-}
-```
-
-## Telegram 설정 방법
-
-민감 정보는 코드에 하드코딩하지 않는다. 환경 변수로만 주입한다.
-
-```properties
-telegram.enabled=true
-telegram.bot-token=${TELEGRAM_BOT_TOKEN:}
-telegram.chat-id=${TELEGRAM_CHAT_ID:}
-```
-
-텔레그램 명령어 수신은 로컬 개발 기준 polling 방식이며 기본 비활성이다. Webhook은 사용하지 않는다.
-
-```properties
-telegram.inbound.enabled=false
-telegram.inbound.fixed-delay-ms=3000
-```
-
-getUpdates offset은 `TelegramUpdateOffsetRepository`로 관리한다. 기본값은 InMemory 저장소다.
-
-```properties
-telegram.inbound.offset-storage-type=IN_MEMORY
-# telegram.inbound.offset-storage-type=JPA
-```
-
-JPA offset 저장소를 사용하려면 PostgreSQL에 `schema.sql`을 적용해야 한다. JPA 사용 시 앱 재시작 후에도 마지막 처리 offset을 유지해 update 중복 처리 가능성을 줄인다. update 처리 성공 후 `updateId + 1`을 저장하며, polling 또는 명령 처리 실패 시 offset을 증가시키지 않는다.
-
-명령어 수신을 켜려면 Telegram 발송 설정도 함께 필요하다.
-
-```bat
-set TELEGRAM_BOT_TOKEN=...
-set TELEGRAM_CHAT_ID=...
-set TELEGRAM_INBOUND_ENABLED=true
-gradlew.bat bootRun
-```
-
-지원 명령어:
-
-- `/help`: 사용 가능한 명령어 목록
-- `/menu`: 인라인 버튼 메뉴 표시
-- `/status`: DB, Market Provider, Strategy, Risk, Scheduler, Notification, Telegram 상태 요약
-- `/run KRW-BTC`: 해당 market의 PAPER_TRADING 플로우 수동 실행
-- `/history KRW-BTC`: 해당 market의 최근 이력 요약
-- `/portfolio`: PAPER_TRADING 포트폴리오 현금, 평가자산, 손익 요약
-- `/positions`: PAPER_TRADING 보유 포지션 목록
-- `/risk`: 현재 리스크 정책 요약
-- `/safety`: kill switch 상태 요약
-
-명령어와 버튼 callback은 설정된 `telegram.chat-id`와 일치하는 채팅에서 온 요청만 처리한다. 다른 chatId의 요청은 실행하지 않으며 거래 결과, history, status 정보를 응답하지 않는다.
-
-지원 버튼:
-
-- 상태 보기
-- KRW-BTC 실행
-- KRW-ETH 실행
-- BTC 이력 보기
-- ETH 이력 보기
-- 포트폴리오 보기
-- 보유 포지션 보기
-- 리스크 보기
-- 안전장치 보기
-- 도움말
-
-`/status`와 `상태 보기` 버튼은 DB 연결 여부, Market Provider, 전략 기준값, 주문 수량, 최대 주문 금액, 허용 Market, Scheduler/Notification/Telegram 활성화 상태를 표시한다. Bot Token, Chat ID, DB 비밀번호 원문은 표시하지 않는다.
-
-`/portfolio`, `/positions`, 포트폴리오 버튼은 조회 전용이다. 포트폴리오 상태를 변경하지 않으며 현재가 조회 실패 시 실패 사유를 텔레그램 메시지로 안내한다.
-
-`/risk`, `/safety`, 리스크/안전장치 버튼은 조회 전용이다. 리스크 정책과 kill switch 설정값을 보여주며 설정을 변경하지 않는다.
-
-`.env.example`을 참고한다.
-
-## 스케줄러 설정 방법
-
-기본값은 비활성이다.
-
-```properties
-trading.scheduler.enabled=false
-trading.scheduler.fixed-delay-ms=60000
-trading.scheduler.markets=KRW-BTC,KRW-ETH
-```
-
-`trading.scheduler.enabled=true`일 때만 설정된 market 목록을 주기적으로 실행한다.
-
-## 알림 설정 방법
-
-기본값은 알림 비활성이다.
-
-```properties
-notification.enabled=false
-notification.send-hold=false
-notification.send-filled=true
-notification.send-rejected=true
-```
-
-기본 정책에서는 HOLD 결과는 알림 대상이 아니고, FILLED/REJECTED 결과만 알림 대상이다. 실제 Telegram 발송에는 `notification.enabled=true`, `telegram.enabled=true`, Telegram 설정 완료가 모두 필요하다.
-
-## 주의사항
-
-- 기본 거래 모드는 항상 `PAPER_TRADING`이다.
-- 실제 거래소 주문 API는 아직 없다.
-- Upbit provider는 공개 시세 조회만 수행하며 주문 API를 호출하지 않는다.
+- 현재 프로젝트는 실제 매매 시스템이 아니다.
+- 실제 주문 API는 구현하지 않는다.
 - `REAL_TRADING`은 구현하지 않는다.
-- 기본 InMemory history는 애플리케이션 재시작 시 사라진다.
-- 기본 InMemory portfolio는 애플리케이션 재시작 시 사라진다.
-- JPA history를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
-- JPA Telegram offset 저장소를 사용하려면 PostgreSQL 테이블을 먼저 생성해야 한다.
-- Bot Token, Chat ID는 코드에 하드코딩하지 않는다.
-- Telegram inbound polling은 기본 비활성이다.
-- Telegram 버튼 callback도 기존 `PAPER_TRADING` 플로우만 사용한다.
-- 이 프로젝트는 실제 수익을 보장하지 않는다.
-- 테스트용 가격 변경 API는 실제 시장 가격을 바꾸는 기능이 아니다.
+- Upbit Access Key, Secret Key는 사용하지 않는다.
+- Bot Token, Chat ID, DB 비밀번호는 로그와 응답에 노출하지 않는다.
+- 실제 시세를 사용해도 주문은 PAPER_TRADING으로만 처리한다.
+- 전략 변경은 테스트와 문서 변경을 동반해야 한다.
+- kill switch는 전략, 리스크, 주문보다 우선한다.
