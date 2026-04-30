@@ -91,6 +91,8 @@ GET /api/risk/status
 Trading flow:
 
 ```http
+GET /api/candidates
+GET /api/candidates?market=KRW-BTC
 GET /api/trading-flow/run?market=KRW-BTC
 GET /api/trading-flow/history
 GET /api/trading-flow/history?market=KRW-BTC

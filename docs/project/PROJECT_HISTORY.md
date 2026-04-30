@@ -30,6 +30,7 @@
 26. Upbit 공개 Candle Provider
 27. 변동성 계산 서비스
 28. 롱 후보 스캐너
+29. 후보 조회 REST API
 
 ## 최근 검증
 
