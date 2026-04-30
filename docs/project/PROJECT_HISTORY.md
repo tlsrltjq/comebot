@@ -40,6 +40,7 @@
 36. candidate scheduler 실행 요약
 37. candidate scheduler Telegram 요약 알림
 38. Telegram 후보 조회와 실행 결과 요약 개선
+39. candidate scheduler 요약과 history 저장 검증
 
 ## 최근 검증
 

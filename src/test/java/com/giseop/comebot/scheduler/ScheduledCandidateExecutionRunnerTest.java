@@ -6,6 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
+import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
@@ -135,6 +137,33 @@ class ScheduledCandidateExecutionRunnerTest {
         verify(notificationService, never()).notifySummary(org.mockito.ArgumentMatchers.any());
     }
 
+    @Test
+    void runOnceSummaryMatchesSavedHistoryForHandledResults() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setMarkets(List.of("KRW-BTC", "KRW-ETH", "KRW-XRP"));
+        InMemoryTradingFlowHistoryRepository historyRepository = new InMemoryTradingFlowHistoryRepository();
+        TradingFlowHistoryService historyService = new TradingFlowHistoryService(historyRepository);
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        when(candidateExecutionService.execute("KRW-BTC"))
+                .thenAnswer(invocation -> save(historyService, result("KRW-BTC", SignalType.BUY, OrderStatus.FILLED)));
+        when(candidateExecutionService.execute("KRW-ETH"))
+                .thenAnswer(invocation -> save(historyService, result("KRW-ETH", SignalType.BUY, OrderStatus.REJECTED)));
+        when(candidateExecutionService.execute("KRW-XRP"))
+                .thenAnswer(invocation -> save(historyService, result("KRW-XRP", SignalType.HOLD, null)));
+
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
+
+        org.assertj.core.api.Assertions.assertThat(historyRepository.findRecent(10)).hasSize(summary.executedMarkets());
+        org.assertj.core.api.Assertions.assertThat(historyRepository.findRecent(10))
+                .extracting(history -> history.orderStatus() == null ? "HOLD" : history.orderStatus().name())
+                .containsExactlyInAnyOrder("FILLED", "REJECTED", "HOLD");
+        org.assertj.core.api.Assertions.assertThat(summary.filledCount()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(summary.rejectedCount()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(summary.holdCount()).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(summary.failedCount()).isZero();
+    }
+
     private TradingFlowResult result(String market, SignalType signalType, OrderStatus orderStatus) {
         return new TradingFlowResult(
                 market,
@@ -157,5 +186,10 @@ class ScheduledCandidateExecutionRunnerTest {
                 candidateExecutionService,
                 mock(CandidateSchedulerNotificationService.class)
         );
+    }
+
+    private TradingFlowResult save(TradingFlowHistoryService historyService, TradingFlowResult result) {
+        historyService.save(result);
+        return result;
     }
 }

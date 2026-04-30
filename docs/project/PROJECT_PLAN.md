@@ -17,9 +17,9 @@ Upbit 공개 시세와 캔들 데이터를 사용해 변동성 기반 롱 전용
 
 ## 현재 단계
 
-캔들 Provider, 변동성 계산, 후보 실행, Telegram 후보 명령, 전략 선택, 후보 자동 실행, 과열 회피, 재진입 제한, market별 override, scheduler 요약 알림, Telegram 후보 요약 개선까지 추가했다.
+캔들 Provider, 변동성 계산, 후보 실행, Telegram 후보 명령, 전략 선택, 후보 자동 실행, 과열 회피, 재진입 제한, market별 override, scheduler 요약 알림, Telegram 후보 요약 개선, scheduler/history 검증까지 추가했다.
 
-다음 단계는 scheduler 요약과 history 기록 점검이다.
+다음 단계는 중복 진입 제한 강화다.
 
 ## 작업 진행 규칙
 
