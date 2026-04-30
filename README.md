@@ -114,6 +114,24 @@ GET /api/telegram/status
 POST /api/telegram/test-message
 ```
 
+Telegram commands:
+
+```text
+/help
+/menu
+/status
+/candidates
+/candidate-run KRW-BTC
+/run KRW-BTC
+/history KRW-BTC
+/portfolio
+/positions
+/risk
+/safety
+```
+
+Telegram messages and inline button labels are Korean.
+
 ## Configuration
 
 Use `.env` or environment variables.

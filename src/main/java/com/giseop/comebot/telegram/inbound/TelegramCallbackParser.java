@@ -17,6 +17,9 @@ public class TelegramCallbackParser {
         if ("STATUS".equals(normalized)) {
             return new TelegramCallback(TelegramCallbackType.STATUS, null);
         }
+        if ("CANDIDATES".equals(normalized)) {
+            return new TelegramCallback(TelegramCallbackType.CANDIDATES, null);
+        }
         if ("PORTFOLIO".equals(normalized)) {
             return new TelegramCallback(TelegramCallbackType.PORTFOLIO, null);
         }
@@ -31,6 +34,9 @@ public class TelegramCallbackParser {
         }
         if (normalized.startsWith("RUN:")) {
             return new TelegramCallback(TelegramCallbackType.RUN, valueAfterPrefix(normalized, "RUN:"));
+        }
+        if (normalized.startsWith("CANDIDATE_RUN:")) {
+            return new TelegramCallback(TelegramCallbackType.CANDIDATE_RUN, valueAfterPrefix(normalized, "CANDIDATE_RUN:"));
         }
         if (normalized.startsWith("HISTORY:")) {
             return new TelegramCallback(TelegramCallbackType.HISTORY, valueAfterPrefix(normalized, "HISTORY:"));

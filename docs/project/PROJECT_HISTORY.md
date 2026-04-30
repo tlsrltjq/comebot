@@ -14,7 +14,7 @@
 10. 상태 조회 API
 11. Notification 계층
 12. Telegram outbound/inbound
-13. Upbit 공개 Ticker 시세 Provider
+13. Upbit 공개 Ticker Provider
 14. PostgreSQL 준비와 DB status API
 15. JPA history 선택 저장소
 16. Telegram offset 저장소
@@ -29,12 +29,13 @@
 25. 보안 린트 테스트
 26. Upbit 공개 Candle Provider
 27. 변동성 계산 서비스
-28. 롱 후보 스캐너
+28. 롱 후보 스캔
 29. 후보 조회 REST API
 30. 후보 PAPER 주문 실행 API
+31. Telegram 후보 조회/실행 명령
 
 ## 최근 검증
 
 - `gradlew.bat test` 통과
 - Java 21.0.10
-- 최신 커밋: 작업 중
+- 최신 커밋은 작업 완료 후 갱신한다.

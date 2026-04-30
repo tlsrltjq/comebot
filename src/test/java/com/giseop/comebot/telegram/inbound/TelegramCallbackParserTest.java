@@ -25,6 +25,22 @@ class TelegramCallbackParserTest {
     }
 
     @Test
+    void parseCandidatesCallback() {
+        TelegramCallback callback = parser.parse("CANDIDATES");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.CANDIDATES);
+        assertThat(callback.market()).isNull();
+    }
+
+    @Test
+    void parseCandidateRunCallback() {
+        TelegramCallback callback = parser.parse("CANDIDATE_RUN:KRW-BTC");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.CANDIDATE_RUN);
+        assertThat(callback.market()).isEqualTo("KRW-BTC");
+    }
+
+    @Test
     void parseHistoryCallback() {
         TelegramCallback callback = parser.parse("HISTORY:KRW-BTC");
 

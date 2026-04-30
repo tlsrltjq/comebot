@@ -35,6 +35,7 @@ market
 - `history`: 트레이딩 플로우 결과 저장
 - `notification`: 선택적 알림 발송
 - `telegram`: 명령과 버튼 기반 운영 보조
+- Telegram 후보 명령: `CandidateScannerService`, `CandidateExecutionService`를 호출해 PAPER 흐름만 실행
 
 ## Market
 

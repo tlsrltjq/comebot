@@ -18,6 +18,8 @@ public class TelegramCommandParser {
             case "/help" -> new TelegramCommand(TelegramCommandType.HELP, null);
             case "/menu" -> new TelegramCommand(TelegramCommandType.MENU, null);
             case "/status" -> new TelegramCommand(TelegramCommandType.STATUS, null);
+            case "/candidates" -> new TelegramCommand(TelegramCommandType.CANDIDATES, null);
+            case "/candidate-run" -> new TelegramCommand(TelegramCommandType.CANDIDATE_RUN, market);
             case "/run" -> new TelegramCommand(TelegramCommandType.RUN, market);
             case "/history" -> new TelegramCommand(TelegramCommandType.HISTORY, market);
             case "/portfolio" -> new TelegramCommand(TelegramCommandType.PORTFOLIO, null);

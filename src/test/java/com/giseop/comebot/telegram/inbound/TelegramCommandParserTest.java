@@ -41,6 +41,22 @@ class TelegramCommandParserTest {
     }
 
     @Test
+    void parseCandidatesCommand() {
+        TelegramCommand command = parser.parse("/candidates");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.CANDIDATES);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
+    void parseCandidateRunCommandWithMarket() {
+        TelegramCommand command = parser.parse("/candidate-run KRW-BTC");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.CANDIDATE_RUN);
+        assertThat(command.market()).isEqualTo("KRW-BTC");
+    }
+
+    @Test
     void parseHistoryCommandWithMarket() {
         TelegramCommand command = parser.parse("/history KRW-BTC");
 
