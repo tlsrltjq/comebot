@@ -2,6 +2,7 @@ export type SignalType = 'BUY' | 'SELL' | 'HOLD';
 export type OrderStatus = 'FILLED' | 'REJECTED' | 'FAILED';
 export type CandidateDecision = 'SELECTED' | 'SKIPPED';
 export type MarketTrend = 'UP' | 'DOWN' | 'SIDEWAYS';
+export type AnalyticsRange = '1h' | '24h' | '3d' | '7d';
 
 export interface SystemStatusResponse {
   database: { connected: boolean };
@@ -93,4 +94,60 @@ export interface TradingFlowHistoryResponse {
   orderStatus: OrderStatus | null;
   message: string;
   createdAt: string;
+}
+
+export interface ReasonCountResponse {
+  reason: string;
+  count: number;
+}
+
+export interface MarketCountResponse {
+  market: string;
+  count: number;
+}
+
+export interface AnalyticsSummaryResponse {
+  range: AnalyticsRange;
+  from: string;
+  to: string;
+  total: number;
+  buyCount: number;
+  sellCount: number;
+  holdCount: number;
+  filledCount: number;
+  rejectedCount: number;
+  failedCount: number;
+  stopLossCount: number;
+  takeProfitCount: number;
+  averageStopLossRate: string;
+  averageTakeProfitRate: string;
+  topHoldReasons: ReasonCountResponse[];
+  topMarkets: MarketCountResponse[];
+}
+
+export interface AnalyticsPnlResponse {
+  range: AnalyticsRange;
+  from: string;
+  to: string;
+  cash: string;
+  totalPositionValue: string;
+  totalEquity: string;
+  realizedProfit: string;
+  unrealizedProfit: string;
+  totalProfit: string;
+  positionCount: number;
+}
+
+export interface LossTradeResponse {
+  market: string;
+  currentPrice: string | null;
+  rate: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface AnalyticsLossResponse {
+  range: AnalyticsRange;
+  worstTrades: LossTradeResponse[];
+  repeatedStopLossMarkets: MarketCountResponse[];
 }

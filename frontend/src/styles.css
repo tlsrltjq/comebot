@@ -121,6 +121,50 @@ button:disabled {
   gap: 14px;
 }
 
+.status-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.status-pill {
+  min-height: 54px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  color: #40515f;
+}
+
+.status-pill svg {
+  flex: 0 0 auto;
+}
+
+.status-pill span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #60717f;
+}
+
+.status-pill strong {
+  margin-left: auto;
+  text-align: right;
+  font-size: 13px;
+  color: #25333d;
+  overflow-wrap: anywhere;
+}
+
+.status-pill-good {
+  border-color: #bfe8d7;
+}
+
+.status-pill-bad {
+  border-color: #f2c7be;
+}
+
 .metric-card,
 .panel,
 .result-panel,
@@ -163,6 +207,10 @@ button:disabled {
   font-size: 18px;
 }
 
+.panel-title-row h2 {
+  margin: 0;
+}
+
 .panel p {
   color: #60717f;
   margin: 0;
@@ -195,6 +243,46 @@ button:disabled {
 .definition-list dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.chart-panel {
+  min-height: 330px;
+}
+
+.chart-wrap {
+  height: 260px;
+  min-width: 0;
+}
+
+.loss-list {
+  display: grid;
+  gap: 10px;
+}
+
+.loss-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf1f4;
+}
+
+.loss-item:last-child {
+  border-bottom: 0;
+}
+
+.loss-item small {
+  grid-column: 1 / -1;
+  color: #60717f;
+}
+
+.tone-positive {
+  color: #116149;
+}
+
+.tone-negative {
+  color: #bd3d2f;
 }
 
 .toolbar {
@@ -504,7 +592,8 @@ td:nth-child(7) {
   }
 
   .metric-grid,
-  .section-grid {
+  .section-grid,
+  .status-strip {
     grid-template-columns: 1fr;
   }
 

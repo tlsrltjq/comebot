@@ -149,7 +149,7 @@ class TelegramCommandServiceTest {
                 "전략: SimpleThresholdStrategy",
                 "매수 기준가: 90000000",
                 "매도 기준가: 110000000",
-                "주문 금액: 5000 KRW",
+                "주문 금액: 10000 KRW",
                 "주문 수량: 0.001",
                 "최대 주문 금액: 100000",
                 "허용 Market: [KRW-BTC, KRW-ETH]",
@@ -204,7 +204,7 @@ class TelegramCommandServiceTest {
                 "현재 매매 조건",
                 "PAPER_TRADING",
                 "전체 KRW 중 24시간 거래대금 상위 50개",
-                "1회 BUY 금액: 5000 KRW",
+                "1회 BUY 금액: 10000 KRW",
                 "실제 주문 API: 없음"
         );
     }
@@ -699,7 +699,7 @@ class TelegramCommandServiceTest {
         when(properties.getBuyPrice()).thenReturn(new BigDecimal("90000000"));
         when(properties.getSellPrice()).thenReturn(new BigDecimal("110000000"));
         when(properties.getOrderQuantity()).thenReturn(new BigDecimal("0.001"));
-        when(properties.getOrderAmount()).thenReturn(new BigDecimal("5000"));
+        when(properties.getOrderAmount()).thenReturn(new BigDecimal("10000"));
         return properties;
     }
 

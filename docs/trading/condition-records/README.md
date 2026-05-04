@@ -13,7 +13,7 @@
 - 현재가 수집: Upbit 공개 KRW ticker, 1초 fixedDelay
 - 자동 실행 주기: 30초 fixedDelay
 - 후보 자동 실행 주기: 30초 fixedDelay
-- 1회 매수 금액: 5,000 KRW
+- 1회 매수 금액: 10,000 KRW
 - 매수 방향: 롱 전용 BUY
 - 매도 방향: 보유 PAPER 포지션에 대한 익절/손절 SELL
 - 중복 진입: 같은 market PAPER 포지션 보유 시 재진입 차단

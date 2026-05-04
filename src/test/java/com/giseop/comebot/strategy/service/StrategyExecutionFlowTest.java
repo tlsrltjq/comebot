@@ -32,7 +32,7 @@ class StrategyExecutionFlowTest {
         strategyProperties.setBuyPrice(new BigDecimal("100"));
         strategyProperties.setSellPrice(new BigDecimal("200"));
         strategyProperties.setOrderQuantity(new BigDecimal("1"));
-        strategyProperties.setOrderAmount(new BigDecimal("5000"));
+        strategyProperties.setOrderAmount(new BigDecimal("10000"));
 
         TradingSignal signal = new SimpleThresholdStrategy(strategyProperties)
                 .evaluate(new MarketPrice("KRW-BTC", new BigDecimal("100"), Instant.now()));

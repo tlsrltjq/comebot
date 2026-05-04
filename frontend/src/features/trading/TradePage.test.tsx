@@ -31,7 +31,7 @@ describe('TradePage', () => {
           JSON.stringify({
             database: { connected: true },
             marketProvider: { provider: 'UPBIT', externalProvider: true },
-            strategy: { strategyName: 'VolatilityBreakoutLongStrategy', buyPrice: '90000000', sellPrice: '110000000', orderQuantity: '0.001', orderAmount: '5000' },
+            strategy: { strategyName: 'VolatilityBreakoutLongStrategy', buyPrice: '90000000', sellPrice: '110000000', orderQuantity: '0.001', orderAmount: '10000' },
             risk: { maxOrderAmount: '100000', allowedMarkets: ['KRW-BTC', 'KRW-ETH'] },
             scheduler: {
               enabled: true,

@@ -119,6 +119,14 @@ GET /api/portfolio/positions
 GET /api/portfolio/valuation
 ```
 
+Analytics:
+
+```http
+GET /api/analytics/summary?range=24h
+GET /api/analytics/pnl?range=24h
+GET /api/analytics/losses?range=24h
+```
+
 Telegram:
 
 ```http
@@ -159,7 +167,7 @@ TRADING_MAX_ORDER_AMOUNT=100000
 STRATEGY_BUY_PRICE=90000000
 STRATEGY_SELL_PRICE=110000000
 STRATEGY_ORDER_QUANTITY=0.01
-STRATEGY_ORDER_AMOUNT=5000
+STRATEGY_ORDER_AMOUNT=10000
 STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG
 STRATEGY_CANDIDATE_CANDLE_UNIT_MINUTES=1
 STRATEGY_CANDIDATE_CANDLE_COUNT=5
@@ -236,6 +244,7 @@ strategy.market-overrides.markets.KRW-BTC.max-price-change-rate=12
 - [Risk Policy](docs/trading/RISK_POLICY.md)
 - [Strategy Policy](docs/trading/STRATEGY_POLICY.md)
 - [Project Plan](docs/project/PROJECT_PLAN.md)
+- [Web UX Upgrade Plan](docs/project/WEB_UX_UPGRADE_PLAN.md)
 - [Project History](docs/project/PROJECT_HISTORY.md)
 - [Next Steps](docs/project/PROJECT_NEXT_STEPS.md)
 

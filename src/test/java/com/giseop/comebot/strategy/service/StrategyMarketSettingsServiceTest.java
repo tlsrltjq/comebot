@@ -21,7 +21,7 @@ class StrategyMarketSettingsServiceTest {
         );
 
         assertThat(service.orderQuantity("KRW-BTC")).isEqualByComparingTo("0.001");
-        assertThat(service.buyQuantity("KRW-BTC", new BigDecimal("100"))).isEqualByComparingTo("50.00000000");
+        assertThat(service.buyQuantity("KRW-BTC", new BigDecimal("100"))).isEqualByComparingTo("100.00000000");
         assertThat(service.minPriceChangeRate("KRW-BTC")).isEqualByComparingTo("0.3");
         assertThat(service.minTradeAmountChangeRate("KRW-BTC")).isEqualByComparingTo("20");
         assertThat(service.maxPriceChangeRate("KRW-BTC")).isEqualByComparingTo("10");

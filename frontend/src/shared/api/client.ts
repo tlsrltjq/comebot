@@ -1,4 +1,8 @@
 import type {
+  AnalyticsLossResponse,
+  AnalyticsPnlResponse,
+  AnalyticsRange,
+  AnalyticsSummaryResponse,
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
@@ -40,6 +44,11 @@ export const api = {
   portfolioValuation: () => request<PortfolioValuationResponse>('/api/portfolio/valuation'),
   history: (market?: string, limit = 20) =>
     request<TradingFlowHistoryResponse[]>(`/api/trading-flow/history${query({ market, limit })}`),
+  analyticsSummary: (range: AnalyticsRange) =>
+    request<AnalyticsSummaryResponse>(`/api/analytics/summary${query({ range })}`),
+  analyticsPnl: (range: AnalyticsRange) => request<AnalyticsPnlResponse>(`/api/analytics/pnl${query({ range })}`),
+  analyticsLosses: (range: AnalyticsRange) =>
+    request<AnalyticsLossResponse>(`/api/analytics/losses${query({ range })}`),
 };
 
 export const queryKeys = {
@@ -49,4 +58,7 @@ export const queryKeys = {
   positions: ['positions'] as const,
   portfolioValuation: ['portfolioValuation'] as const,
   history: (market?: string, limit = 20) => ['history', market ?? 'all', limit] as const,
+  analyticsSummary: (range: AnalyticsRange) => ['analyticsSummary', range] as const,
+  analyticsPnl: (range: AnalyticsRange) => ['analyticsPnl', range] as const,
+  analyticsLosses: (range: AnalyticsRange) => ['analyticsLosses', range] as const,
 };

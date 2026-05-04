@@ -30,7 +30,7 @@ class StrategyStatusControllerTest {
         org.mockito.Mockito.when(strategyProperties.getBuyPrice()).thenReturn(new BigDecimal("90000000"));
         org.mockito.Mockito.when(strategyProperties.getSellPrice()).thenReturn(new BigDecimal("110000000"));
         org.mockito.Mockito.when(strategyProperties.getOrderQuantity()).thenReturn(new BigDecimal("0.001"));
-        org.mockito.Mockito.when(strategyProperties.getOrderAmount()).thenReturn(new BigDecimal("5000"));
+        org.mockito.Mockito.when(strategyProperties.getOrderAmount()).thenReturn(new BigDecimal("10000"));
         org.mockito.Mockito.when(strategySelectionProperties.getStrategyName()).thenReturn("SimpleThresholdStrategy");
 
         mockMvc.perform(get("/api/strategy/status"))
@@ -39,6 +39,6 @@ class StrategyStatusControllerTest {
                 .andExpect(jsonPath("$.buyPrice").value(90000000))
                 .andExpect(jsonPath("$.sellPrice").value(110000000))
                 .andExpect(jsonPath("$.orderQuantity").value(0.001))
-                .andExpect(jsonPath("$.orderAmount").value(5000));
+                .andExpect(jsonPath("$.orderAmount").value(10000));
     }
 }

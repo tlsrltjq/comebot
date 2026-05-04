@@ -32,9 +32,10 @@ web
 - `execution`: PAPER_TRADING 주문 실행
 - `portfolio`: PAPER 현금, 포지션, 손익 관리
 - `history`: 트레이딩 플로우 결과 저장
+- `analytics`: history와 PAPER 포트폴리오 기반 운영 집계 API
 - `notification`: 선택적 알림 발송
 - `telegram`: 명령과 버튼 기반 운영 보조
-- `web`: React 기반 모니터링 화면. 기존 REST API를 호출해 상태, 후보, 포트폴리오, history를 표시한다.
+- `web`: React 기반 모니터링 화면. 기존 REST API를 호출해 상태, 후보, 포트폴리오, history, analytics를 표시한다.
 - Telegram 후보 명령: `CandidateScannerService`, `CandidateExecutionService`를 호출해 PAPER 흐름만 실행
 - candidate scheduler: 설정된 market 후보를 PAPER 실행하고 선택 설정 시 요약 알림 발송
 
@@ -63,11 +64,15 @@ kill switch는 시세 조회와 전략 판단보다 먼저 확인한다. Risk는
 
 HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다. 알림은 history 저장 이후 선택적으로 실행한다.
 
+## Analytics
+
+Analytics는 React 화면이 직접 history를 재계산하지 않도록 서버에서 집계한다. 최근 실행 수, BUY/SELL/HOLD 개수, 체결/거절/실패 개수, 익절/손절 평균, PAPER 포트폴리오 손익, 반복 손실 market을 제공한다.
+
 ## Web
 
 웹 화면은 `frontend/`의 Vite React 앱으로 관리한다. 웹은 비즈니스 판단, 리스크 검증, 주문 상태 변경을 직접 구현하지 않고 Spring REST API만 호출한다.
 
-웹은 모니터링 전용이다. 자동 실행 상태, 후보, 포트폴리오, history를 표시하며 수동 BUY/SELL 버튼을 제공하지 않는다.
+웹은 모니터링 전용이다. 자동 실행 상태, 후보, 포트폴리오, history, analytics를 표시하며 수동 BUY/SELL 버튼을 제공하지 않는다.
 
 자동 실행은 scheduler가 담당한다. 후보 실행은 `CandidateExecutionService`, 전략 실행과 익절/손절 평가는 `TradingFlowService`를 통해 PAPER 흐름만 실행한다.
 
