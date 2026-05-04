@@ -17,6 +17,7 @@ import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.TradingStrategy;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,33 @@ public class TradingFlowService {
         }
 
         MarketPrice marketPrice = marketPriceProvider.getCurrentPrice(market);
+        return run(marketPrice);
+    }
+
+    public List<TradingFlowResult> runAll(List<String> markets) {
+        if (markets == null || markets.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> requestedMarkets = markets.stream()
+                .filter(market -> market != null && !market.isBlank())
+                .toList();
+        if (requestedMarkets.isEmpty()) {
+            return List.of();
+        }
+        if (killSwitchService.isEnabled()) {
+            return requestedMarkets.stream()
+                    .map(this::killSwitchResult)
+                    .map(this::save)
+                    .toList();
+        }
+
+        return marketPriceProvider.getCurrentPrices(requestedMarkets).stream()
+                .map(this::run)
+                .toList();
+    }
+
+    public TradingFlowResult run(MarketPrice marketPrice) {
         TradingSignal signal = selectSignal(marketPrice, tradingStrategy.evaluate(marketPrice));
         Optional<OrderRequest> request = orderRequestFactory.create(signal);
 
@@ -104,6 +132,19 @@ public class TradingFlowService {
                 orderResult.message(),
                 orderResult.executedAt()
         ));
+    }
+
+    private TradingFlowResult killSwitchResult(String market) {
+        return new TradingFlowResult(
+                market,
+                null,
+                null,
+                "Kill switch enabled",
+                false,
+                OrderStatus.REJECTED,
+                "Kill switch enabled: trading flow blocked",
+                Instant.now()
+        );
     }
 
     private TradingSignal selectSignal(MarketPrice marketPrice, TradingSignal strategySignal) {

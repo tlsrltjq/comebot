@@ -5,9 +5,12 @@ import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 
 public class SimpleThresholdStrategy implements TradingStrategy {
+
+    private static final int QUANTITY_SCALE = 8;
 
     private final StrategyProperties strategyProperties;
 
@@ -26,7 +29,7 @@ public class SimpleThresholdStrategy implements TradingStrategy {
                     SignalType.BUY,
                     "Test threshold buy signal",
                     marketPrice.currentPrice(),
-                    strategyProperties.getOrderQuantity(),
+                    buyQuantity(marketPrice.currentPrice()),
                     Instant.now()
             );
         }
@@ -52,5 +55,12 @@ public class SimpleThresholdStrategy implements TradingStrategy {
                 BigDecimal.ZERO,
                 Instant.now()
         );
+    }
+
+    private BigDecimal buyQuantity(BigDecimal price) {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            return strategyProperties.getOrderQuantity();
+        }
+        return strategyProperties.getOrderAmount().divide(price, QUANTITY_SCALE, RoundingMode.DOWN);
     }
 }

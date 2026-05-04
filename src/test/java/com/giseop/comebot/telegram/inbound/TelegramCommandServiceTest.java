@@ -3,6 +3,7 @@ package com.giseop.comebot.telegram.inbound;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,11 +48,24 @@ import org.mockito.ArgumentCaptor;
 class TelegramCommandServiceTest {
 
     @Test
-    void runCommandCallsTradingFlowService() {
+    void runCommandIsBlockedByDefault() {
+        TradingFlowService tradingFlowService = mock(TradingFlowService.class);
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, tradingFlowService).handle("/run KRW-BTC");
+
+        verify(tradingFlowService, never()).run("KRW-BTC");
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 비활성화");
+    }
+
+    @Test
+    void runCommandCallsTradingFlowServiceWhenManualExecutionEnabled() {
         TradingFlowService tradingFlowService = mock(TradingFlowService.class);
         when(tradingFlowService.run("KRW-BTC")).thenReturn(flowResult("KRW-BTC", SignalType.BUY, true, OrderStatus.FILLED));
 
-        service(mock(TelegramNotificationSender.class), tradingFlowService).handle("/run KRW-BTC");
+        serviceWithManualExecution(mock(TelegramNotificationSender.class), tradingFlowService).handle("/run KRW-BTC");
 
         verify(tradingFlowService).run("KRW-BTC");
     }
@@ -67,9 +81,10 @@ class TelegramCommandServiceTest {
         assertThat(messageCaptor.getValue().body()).contains(
                 "사용 가능한 명령",
                 "/candidates",
-                "/candidate-run KRW-BTC",
-                "/run KRW-BTC"
-        );
+                "/auto",
+                "/conditions",
+                "/pnl"
+        ).doesNotContain("/candidate-run KRW-BTC", "/run KRW-BTC");
     }
 
     @Test
@@ -134,11 +149,13 @@ class TelegramCommandServiceTest {
                 "전략: SimpleThresholdStrategy",
                 "매수 기준가: 90000000",
                 "매도 기준가: 110000000",
+                "주문 금액: 5000 KRW",
                 "주문 수량: 0.001",
                 "최대 주문 금액: 100000",
                 "허용 Market: [KRW-BTC, KRW-ETH]",
                 "스케줄러 활성화: false",
                 "후보 스케줄러 활성화: false",
+                "수동 PAPER 실행: false",
                 "긴급 정지: false",
                 "알림 활성화: false",
                 "후보 요약 알림: false",
@@ -160,11 +177,71 @@ class TelegramCommandServiceTest {
     }
 
     @Test
-    void runCallbackCallsTradingFlowService() {
+    void autoCommandSendsSchedulerStatus() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handle("/auto");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains(
+                "자동 실행 상태",
+                "전략 스케줄러:",
+                "후보 스케줄러:",
+                "수동 PAPER 실행: false"
+        );
+    }
+
+    @Test
+    void conditionsCommandSendsCurrentTradingConditions() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class)).handle("/conditions");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains(
+                "현재 매매 조건",
+                "PAPER_TRADING",
+                "전체 KRW 중 24시간 거래대금 상위 50개",
+                "1회 BUY 금액: 5000 KRW",
+                "실제 주문 API: 없음"
+        );
+    }
+
+    @Test
+    void pnlCommandSendsProfitSummary() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class), portfolioService(List.of()), valuationService()).handle("/pnl");
+
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains(
+                "손익 요약",
+                "총 평가 자산: 1100000",
+                "실현 손익: 50000",
+                "미실현 손익: 50000",
+                "총 손익: 100000"
+        );
+    }
+
+    @Test
+    void runCallbackIsBlockedByDefault() {
         TradingFlowService tradingFlowService = mock(TradingFlowService.class);
         when(tradingFlowService.run("KRW-BTC")).thenReturn(flowResult("KRW-BTC", null, false, OrderStatus.REJECTED));
 
         service(mock(TelegramNotificationSender.class), tradingFlowService).handleCallback("RUN:KRW-BTC");
+
+        verify(tradingFlowService, never()).run("KRW-BTC");
+    }
+
+    @Test
+    void runCallbackCallsTradingFlowServiceWhenManualExecutionEnabled() {
+        TradingFlowService tradingFlowService = mock(TradingFlowService.class);
+        when(tradingFlowService.run("KRW-BTC")).thenReturn(flowResult("KRW-BTC", null, false, OrderStatus.REJECTED));
+
+        serviceWithManualExecution(mock(TelegramNotificationSender.class), tradingFlowService).handleCallback("RUN:KRW-BTC");
 
         verify(tradingFlowService).run("KRW-BTC");
     }
@@ -185,7 +262,7 @@ class TelegramCommandServiceTest {
         TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
         ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
 
-        service(sender, tradingFlowService).handle("/run KRW-BTC");
+        serviceWithManualExecution(sender, tradingFlowService).handle("/run KRW-BTC");
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains("Kill switch enabled: trading flow blocked");
@@ -245,13 +322,27 @@ class TelegramCommandServiceTest {
     }
 
     @Test
-    void candidateRunCommandCallsCandidateExecutionService() {
+    void candidateRunCommandIsBlockedByDefault() {
+        TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
+        CandidateExecutionService executionService = mock(CandidateExecutionService.class);
+        ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
+
+        service(sender, mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
+                .handle("/candidate-run KRW-BTC");
+
+        verify(executionService, never()).execute("KRW-BTC");
+        verify(sender).sendMessage(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 비활성화");
+    }
+
+    @Test
+    void candidateRunCommandCallsCandidateExecutionServiceWhenManualExecutionEnabled() {
         TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
         CandidateExecutionService executionService = mock(CandidateExecutionService.class);
         when(executionService.execute("KRW-BTC")).thenReturn(flowResult("KRW-BTC", SignalType.BUY, true, OrderStatus.FILLED));
         ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
 
-        service(sender, mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
+        serviceWithManualExecution(sender, mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
                 .handle("/candidate-run KRW-BTC");
 
         verify(executionService).execute("KRW-BTC");
@@ -261,11 +352,21 @@ class TelegramCommandServiceTest {
     }
 
     @Test
-    void candidateRunCallbackCallsCandidateExecutionService() {
+    void candidateRunCallbackIsBlockedByDefault() {
+        CandidateExecutionService executionService = mock(CandidateExecutionService.class);
+
+        service(mock(TelegramNotificationSender.class), mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
+                .handleCallback("CANDIDATE_RUN:KRW-BTC");
+
+        verify(executionService, never()).execute("KRW-BTC");
+    }
+
+    @Test
+    void candidateRunCallbackCallsCandidateExecutionServiceWhenManualExecutionEnabled() {
         CandidateExecutionService executionService = mock(CandidateExecutionService.class);
         when(executionService.execute("KRW-BTC")).thenReturn(flowResult("KRW-BTC", SignalType.BUY, true, OrderStatus.FILLED));
 
-        service(mock(TelegramNotificationSender.class), mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
+        serviceWithManualExecution(mock(TelegramNotificationSender.class), mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
                 .handleCallback("CANDIDATE_RUN:KRW-BTC");
 
         verify(executionService).execute("KRW-BTC");
@@ -349,6 +450,37 @@ class TelegramCommandServiceTest {
         return service(sender, mock(TelegramApiClient.class), tradingFlowService, mock(TradingFlowHistoryService.class));
     }
 
+    private TelegramCommandService serviceWithManualExecution(TelegramNotificationSender sender, TradingFlowService tradingFlowService) {
+        return serviceWithManualExecution(
+                sender,
+                mock(TelegramApiClient.class),
+                tradingFlowService,
+                mock(TradingFlowHistoryService.class),
+                portfolioService(List.of()),
+                valuationService(),
+                defaultCandidateScannerService(),
+                mock(CandidateExecutionService.class)
+        );
+    }
+
+    private TelegramCommandService serviceWithManualExecution(
+            TelegramNotificationSender sender,
+            TradingFlowService tradingFlowService,
+            CandidateScannerService candidateScannerService,
+            CandidateExecutionService candidateExecutionService
+    ) {
+        return serviceWithManualExecution(
+                sender,
+                mock(TelegramApiClient.class),
+                tradingFlowService,
+                mock(TradingFlowHistoryService.class),
+                portfolioService(List.of()),
+                valuationService(),
+                candidateScannerService,
+                candidateExecutionService
+        );
+    }
+
     private TelegramCommandService service(
             TelegramNotificationSender sender,
             TradingFlowService tradingFlowService,
@@ -413,6 +545,55 @@ class TelegramCommandServiceTest {
             CandidateScannerService candidateScannerService,
             CandidateExecutionService candidateExecutionService
     ) {
+        return service(
+                sender,
+                telegramApiClient,
+                tradingFlowService,
+                historyService,
+                paperPortfolioService,
+                paperPortfolioValuationService,
+                candidateScannerService,
+                candidateExecutionService,
+                new TelegramInboundProperties()
+        );
+    }
+
+    private TelegramCommandService serviceWithManualExecution(
+            TelegramNotificationSender sender,
+            TelegramApiClient telegramApiClient,
+            TradingFlowService tradingFlowService,
+            TradingFlowHistoryService historyService,
+            PaperPortfolioService paperPortfolioService,
+            PaperPortfolioValuationService paperPortfolioValuationService,
+            CandidateScannerService candidateScannerService,
+            CandidateExecutionService candidateExecutionService
+    ) {
+        TelegramInboundProperties telegramInboundProperties = new TelegramInboundProperties();
+        telegramInboundProperties.setManualPaperExecutionEnabled(true);
+        return service(
+                sender,
+                telegramApiClient,
+                tradingFlowService,
+                historyService,
+                paperPortfolioService,
+                paperPortfolioValuationService,
+                candidateScannerService,
+                candidateExecutionService,
+                telegramInboundProperties
+        );
+    }
+
+    private TelegramCommandService service(
+            TelegramNotificationSender sender,
+            TelegramApiClient telegramApiClient,
+            TradingFlowService tradingFlowService,
+            TradingFlowHistoryService historyService,
+            PaperPortfolioService paperPortfolioService,
+            PaperPortfolioValuationService paperPortfolioValuationService,
+            CandidateScannerService candidateScannerService,
+            CandidateExecutionService candidateExecutionService,
+            TelegramInboundProperties telegramInboundProperties
+    ) {
         return new TelegramCommandService(
                 new TelegramCommandParser(),
                 new TelegramCallbackParser(),
@@ -424,7 +605,7 @@ class TelegramCommandServiceTest {
                 strategySelectionProperties(),
                 tradingProperties(),
                 configuredTelegramProperties(),
-                new TelegramInboundProperties(),
+                telegramInboundProperties,
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
                 new CandidateSchedulerProperties(),
@@ -518,6 +699,7 @@ class TelegramCommandServiceTest {
         when(properties.getBuyPrice()).thenReturn(new BigDecimal("90000000"));
         when(properties.getSellPrice()).thenReturn(new BigDecimal("110000000"));
         when(properties.getOrderQuantity()).thenReturn(new BigDecimal("0.001"));
+        when(properties.getOrderAmount()).thenReturn(new BigDecimal("5000"));
         return properties;
     }
 

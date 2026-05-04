@@ -17,6 +17,30 @@ class TelegramCallbackParserTest {
     }
 
     @Test
+    void parseAutoCallback() {
+        TelegramCallback callback = parser.parse("AUTO");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.AUTO);
+        assertThat(callback.market()).isNull();
+    }
+
+    @Test
+    void parsePnlCallback() {
+        TelegramCallback callback = parser.parse("PNL");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.PNL);
+        assertThat(callback.market()).isNull();
+    }
+
+    @Test
+    void parseConditionsCallback() {
+        TelegramCallback callback = parser.parse("CONDITIONS");
+
+        assertThat(callback.type()).isEqualTo(TelegramCallbackType.CONDITIONS);
+        assertThat(callback.market()).isNull();
+    }
+
+    @Test
     void parseRunCallback() {
         TelegramCallback callback = parser.parse("RUN:KRW-BTC");
 

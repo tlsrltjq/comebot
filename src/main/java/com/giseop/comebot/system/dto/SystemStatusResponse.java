@@ -30,7 +30,8 @@ public record SystemStatusResponse(
             String strategyName,
             BigDecimal buyPrice,
             BigDecimal sellPrice,
-            BigDecimal orderQuantity
+            BigDecimal orderQuantity,
+            BigDecimal orderAmount
     ) {
     }
 
@@ -67,7 +68,8 @@ public record SystemStatusResponse(
     public record TelegramStatus(
             boolean enabled,
             boolean configured,
-            boolean inboundEnabled
+            boolean inboundEnabled,
+            boolean manualPaperExecutionEnabled
     ) {
     }
 }

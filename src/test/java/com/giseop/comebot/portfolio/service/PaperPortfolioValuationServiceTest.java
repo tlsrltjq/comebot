@@ -13,6 +13,8 @@ import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,6 +84,22 @@ class PaperPortfolioValuationServiceTest {
     }
 
     @Test
+    void valuateFetchesCurrentPricesInOneBatch() {
+        portfolioService.apply(filled("KRW-BTC", OrderSide.BUY, "2", "100"));
+        portfolioService.apply(filled("KRW-ETH", OrderSide.BUY, "1", "200"));
+        marketPriceProvider.prices = Map.of(
+                "KRW-BTC", new BigDecimal("150"),
+                "KRW-ETH", new BigDecimal("250")
+        );
+
+        PortfolioValuationResponse response = valuationService.valuate();
+
+        assertThat(response.positions()).hasSize(2);
+        assertThat(marketPriceProvider.batchRequests).containsExactly(List.of("KRW-BTC", "KRW-ETH"));
+        assertThat(marketPriceProvider.singleRequests).isEmpty();
+    }
+
+    @Test
     void valuateFailsClearlyWhenCurrentPriceLookupFails() {
         portfolioService.apply(filled(OrderSide.BUY, "1", "100"));
         marketPriceProvider.fail = true;
@@ -92,8 +110,12 @@ class PaperPortfolioValuationServiceTest {
     }
 
     private OrderResult filled(OrderSide side, String quantity, String price) {
+        return filled("KRW-BTC", side, quantity, price);
+    }
+
+    private OrderResult filled(String market, OrderSide side, String quantity, String price) {
         return new OrderResult(
-                "KRW-BTC",
+                market,
                 side,
                 new BigDecimal(quantity),
                 new BigDecimal(price),
@@ -107,13 +129,27 @@ class PaperPortfolioValuationServiceTest {
 
         private Map<String, BigDecimal> prices = Map.of();
         private boolean fail;
+        private final List<String> singleRequests = new ArrayList<>();
+        private final List<List<String>> batchRequests = new ArrayList<>();
 
         @Override
         public MarketPrice getCurrentPrice(String market) {
+            singleRequests.add(market);
             if (fail) {
                 throw new IllegalStateException("Current price lookup failed");
             }
             return new MarketPrice(market, prices.get(market), Instant.now());
+        }
+
+        @Override
+        public List<MarketPrice> getCurrentPrices(List<String> markets) {
+            batchRequests.add(List.copyOf(markets));
+            if (fail) {
+                throw new IllegalStateException("Current price lookup failed");
+            }
+            return markets.stream()
+                    .map(market -> new MarketPrice(market, prices.get(market), Instant.now()))
+                    .toList();
         }
     }
 }

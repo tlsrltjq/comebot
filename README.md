@@ -14,14 +14,14 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 - Candle provider: Upbit public Candle API
 - History storage: `IN_MEMORY` by default, optional `JPA`
 - Portfolio storage: `IN_MEMORY`
-- Scheduler: disabled by default
+- Scheduler: enabled by default for PAPER_TRADING automation
 - Telegram inbound/outbound: disabled by default
 
 ## What This Project Does
 
 - Fetches test prices or Upbit public prices
 - Fetches recent Upbit minute candles
-- Scans long-only paper trading candidates
+- Scans long-only paper trading candidates automatically
 - Creates BUY, SELL, HOLD signals
 - Runs risk validation before paper orders
 - Executes paper orders only
@@ -29,6 +29,7 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 - Calculates portfolio valuation from current prices
 - Stores trading flow history
 - Sends optional notifications
+- Supports a React monitoring web UI
 - Supports Telegram commands and inline buttons
 
 ## What This Project Does Not Do
@@ -77,6 +78,16 @@ Run with Upbit public ticker data and PAPER_TRADING:
 scripts\run-upbit-paper.bat
 ```
 
+Run the web UI:
+
+```bat
+cd frontend
+npm install
+npm run dev
+```
+
+The web UI is available at `http://localhost:5173/`.
+
 ## Main APIs
 
 Status:
@@ -121,9 +132,10 @@ Telegram commands:
 /help
 /menu
 /status
+/auto
+/conditions
+/pnl
 /candidates
-/candidate-run KRW-BTC
-/run KRW-BTC
 /history KRW-BTC
 /portfolio
 /positions
@@ -132,6 +144,7 @@ Telegram commands:
 ```
 
 Telegram messages and inline button labels are Korean.
+Telegram is monitoring-first by default. `/run` and `/candidate-run` are parsed for compatibility, but they execute only when `TELEGRAM_MANUAL_PAPER_EXECUTION_ENABLED=true`.
 
 ## Configuration
 
@@ -141,23 +154,30 @@ Use `.env` or environment variables.
 MARKET_PRICE_PROVIDER=UPBIT
 HISTORY_STORAGE_TYPE=IN_MEMORY
 PAPER_INITIAL_CASH=1000000
-TRADING_ALLOWED_MARKETS=KRW-BTC,KRW-ETH
+TRADING_ALLOWED_MARKETS=ALL_KRW
 TRADING_MAX_ORDER_AMOUNT=100000
 STRATEGY_BUY_PRICE=90000000
 STRATEGY_SELL_PRICE=110000000
-STRATEGY_ORDER_QUANTITY=0.001
-STRATEGY_SELECTED=SIMPLE_THRESHOLD
+STRATEGY_ORDER_QUANTITY=0.01
+STRATEGY_ORDER_AMOUNT=5000
+STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG
 STRATEGY_CANDIDATE_CANDLE_UNIT_MINUTES=1
-STRATEGY_CANDIDATE_CANDLE_COUNT=20
-STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=1.5
-STRATEGY_CANDIDATE_MIN_TRADE_AMOUNT_CHANGE_RATE=0
-STRATEGY_CANDIDATE_MAX_PRICE_CHANGE_RATE=15
-STRATEGY_CANDIDATE_MAX_HIGH_LOW_RANGE_RATE=25
+STRATEGY_CANDIDATE_CANDLE_COUNT=5
+STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=0.3
+STRATEGY_CANDIDATE_MIN_TRADE_AMOUNT_CHANGE_RATE=20
+STRATEGY_CANDIDATE_MAX_PRICE_CHANGE_RATE=10
+STRATEGY_CANDIDATE_MAX_HIGH_LOW_RANGE_RATE=20
 STRATEGY_ENTRY_PREVENT_REENTRY_WITH_POSITION=true
 SAFETY_KILL_SWITCH_ENABLED=false
-TRADING_CANDIDATE_SCHEDULER_ENABLED=false
-TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=60000
-TRADING_CANDIDATE_SCHEDULER_MARKETS=KRW-BTC,KRW-ETH
+RISK_POSITION_EXIT_ENABLED=true
+RISK_TAKE_PROFIT_RATE=1.5
+RISK_STOP_LOSS_RATE=-0.7
+TRADING_SCHEDULER_ENABLED=true
+TRADING_CANDIDATE_SCHEDULER_ENABLED=true
+TRADING_SCHEDULER_FIXED_DELAY_MS=30000
+TRADING_SCHEDULER_MARKETS=ALL_KRW
+TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=30000
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW
 ```
 
 Telegram:
@@ -165,6 +185,7 @@ Telegram:
 ```properties
 TELEGRAM_ENABLED=true
 TELEGRAM_INBOUND_ENABLED=true
+TELEGRAM_MANUAL_PAPER_EXECUTION_ENABLED=false
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
@@ -174,13 +195,26 @@ Never commit real tokens, chat IDs, passwords, access keys, or secret keys.
 `POST /api/candidates/execute` only executes PAPER_TRADING BUY orders for selected candidates.
 It does not call any real exchange order API.
 
-Set `STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG` to let `/api/trading-flow/run` use the volatility candidate scanner for BUY signals.
-The default remains `SIMPLE_THRESHOLD`.
+`STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG` lets `/api/trading-flow/run` use the volatility candidate scanner for BUY signals.
+The default is `VOLATILITY_BREAKOUT_LONG`.
 
-Set `TRADING_CANDIDATE_SCHEDULER_ENABLED=true` only when you want the scheduler to run candidate PAPER execution automatically.
-The default is disabled.
-Candidate scheduler runs are summarized as filled, rejected, hold, and failed counts in logs.
+`TRADING_CANDIDATE_SCHEDULER_ENABLED=true` lets the legacy candidate scheduler run candidate PAPER execution automatically.
+The default is enabled for local monitoring, while the trading flow scheduler remains the main automatic PAPER order path.
+Candidate scheduler runs are summarized as filled, rejected, hold, and failed counts in logs when enabled.
 Set `TRADING_CANDIDATE_SCHEDULER_NOTIFY_SUMMARY=true` and `NOTIFICATION_ENABLED=true` only when you want that summary sent through the configured notification sender.
+
+`TRADING_SCHEDULER_ENABLED=true` lets the scheduler run the selected strategy automatically.
+With `RISK_POSITION_EXIT_ENABLED=true`, take-profit and stop-loss SELL signals can be evaluated automatically for existing PAPER positions.
+
+## Web UI
+
+The React web UI is monitoring-only.
+
+- Korean labels include English in parentheses.
+- Manual BUY/SELL buttons are not exposed.
+- Automatic execution status, candidates, portfolio, and history are visible.
+- All trading remains PAPER_TRADING.
+- The UI does not add real order APIs or `REAL_TRADING`.
 
 Market-specific strategy overrides can be added in a properties file:
 
@@ -215,3 +249,12 @@ gradlew.bat test
 
 The test suite includes security lint checks.
 If tests or security lint fail, do not commit.
+
+Frontend:
+
+```bat
+cd frontend
+npm run lint
+npm run build
+npm test
+```

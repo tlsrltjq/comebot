@@ -3,10 +3,13 @@ package com.giseop.comebot.strategy.service;
 import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.strategy.candidate.CandidateScannerProperties;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import org.springframework.stereotype.Service;
 
 @Service
 public class StrategyMarketSettingsService {
+
+    private static final int QUANTITY_SCALE = 8;
 
     private final StrategyProperties strategyProperties;
     private final CandidateScannerProperties candidateScannerProperties;
@@ -27,6 +30,13 @@ public class StrategyMarketSettingsService {
         return override != null && override.getOrderQuantity() != null
                 ? override.getOrderQuantity()
                 : strategyProperties.getOrderQuantity();
+    }
+
+    public BigDecimal buyQuantity(String market, BigDecimal price) {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            return orderQuantity(market);
+        }
+        return strategyProperties.getOrderAmount().divide(price, QUANTITY_SCALE, RoundingMode.DOWN);
     }
 
     public BigDecimal minPriceChangeRate(String market) {

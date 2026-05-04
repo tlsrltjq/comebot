@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,9 +37,10 @@ public class PaperPortfolioValuationService {
         List<PositionValuationResponse> positionValuations = new ArrayList<>();
         BigDecimal totalPositionValue = BigDecimal.ZERO;
         BigDecimal totalUnrealizedProfit = BigDecimal.ZERO;
+        Map<String, MarketPrice> currentPrices = currentPrices(portfolio.positions());
 
         for (PaperPosition position : portfolio.positions()) {
-            MarketPrice currentPrice = marketPriceProvider.getCurrentPrice(position.market());
+            MarketPrice currentPrice = currentPrices.get(position.market());
             if (currentPrice == null || currentPrice.currentPrice() == null) {
                 throw new IllegalStateException("Current price is not available");
             }
@@ -58,6 +62,20 @@ public class PaperPortfolioValuationService {
                 totalProfit,
                 positionValuations
         );
+    }
+
+    private Map<String, MarketPrice> currentPrices(List<PaperPosition> positions) {
+        List<String> markets = positions.stream()
+                .map(PaperPosition::market)
+                .filter(market -> market != null && !market.isBlank())
+                .distinct()
+                .toList();
+        if (markets.isEmpty()) {
+            return Map.of();
+        }
+        return marketPriceProvider.getCurrentPrices(markets).stream()
+                .filter(price -> price.market() != null)
+                .collect(Collectors.toMap(MarketPrice::market, Function.identity(), (first, second) -> first));
     }
 
     private PositionValuationResponse valuatePosition(PaperPosition position, BigDecimal currentPrice) {

@@ -11,6 +11,7 @@ public class StrategyProperties {
     private BigDecimal buyPrice = new BigDecimal("90000000");
     private BigDecimal sellPrice = new BigDecimal("110000000");
     private BigDecimal orderQuantity = new BigDecimal("0.001");
+    private BigDecimal orderAmount = new BigDecimal("5000");
 
     public BigDecimal getBuyPrice() {
         return buyPrice;
@@ -34,5 +35,13 @@ public class StrategyProperties {
 
     public void setOrderQuantity(BigDecimal orderQuantity) {
         this.orderQuantity = orderQuantity == null ? new BigDecimal("0.001") : orderQuantity;
+    }
+
+    public BigDecimal getOrderAmount() {
+        return orderAmount;
+    }
+
+    public void setOrderAmount(BigDecimal orderAmount) {
+        this.orderAmount = orderAmount == null ? new BigDecimal("5000") : orderAmount;
     }
 }

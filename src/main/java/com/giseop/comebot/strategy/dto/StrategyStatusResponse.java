@@ -6,6 +6,7 @@ public record StrategyStatusResponse(
         String strategyName,
         BigDecimal buyPrice,
         BigDecimal sellPrice,
-        BigDecimal orderQuantity
+        BigDecimal orderQuantity,
+        BigDecimal orderAmount
 ) {
 }

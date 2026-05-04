@@ -41,9 +41,15 @@
 37. candidate scheduler Telegram 요약 알림
 38. Telegram 후보 조회와 실행 결과 요약 개선
 39. candidate scheduler 요약과 history 저장 검증
+40. React 모니터링 웹 UI
+41. 전체 KRW ticker polling과 ALL_KRW 자동 후보 범위
+42. 5,000 KRW 단위 PAPER 자동 매수
+43. 매매 조건과 PAPER 운용 결과 기록 문서
+44. 마이너스 손익 원인 분석과 다음 개선 기준 문서화
+45. Telegram 기본 조회 전용화와 웹 수동 실행 API 제거
 
 ## 최근 검증
 
-- `gradlew.bat test` 통과
-- Java 21.0.10
+- `./gradlew test` 통과
+- Java 21
 - 최신 커밋은 작업 완료 후 갱신한다.

@@ -3,40 +3,66 @@ package com.giseop.comebot.strategy.candidate;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.market.candle.domain.Candle;
 import com.giseop.comebot.market.candle.provider.CandleProvider;
+import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
 import com.giseop.comebot.strategy.indicator.VolatilitySnapshot;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.time.Instant;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CandidateScannerService {
+
+    private static final Logger log = LoggerFactory.getLogger(CandidateScannerService.class);
 
     private final TradingProperties tradingProperties;
     private final CandidateScannerProperties candidateScannerProperties;
     private final CandleProvider candleProvider;
     private final VolatilityIndicatorService volatilityIndicatorService;
     private final StrategyMarketSettingsService strategyMarketSettingsService;
+    private final MarketSelectionService marketSelectionService;
 
+    @Autowired
     public CandidateScannerService(
             TradingProperties tradingProperties,
             CandidateScannerProperties candidateScannerProperties,
             CandleProvider candleProvider,
             VolatilityIndicatorService volatilityIndicatorService,
-            StrategyMarketSettingsService strategyMarketSettingsService
+            StrategyMarketSettingsService strategyMarketSettingsService,
+            MarketSelectionService marketSelectionService
     ) {
         this.tradingProperties = tradingProperties;
         this.candidateScannerProperties = candidateScannerProperties;
         this.candleProvider = candleProvider;
         this.volatilityIndicatorService = volatilityIndicatorService;
         this.strategyMarketSettingsService = strategyMarketSettingsService;
+        this.marketSelectionService = marketSelectionService;
+    }
+
+    CandidateScannerService(
+            TradingProperties tradingProperties,
+            CandidateScannerProperties candidateScannerProperties,
+            CandleProvider candleProvider,
+            VolatilityIndicatorService volatilityIndicatorService,
+            StrategyMarketSettingsService strategyMarketSettingsService
+    ) {
+        this(
+                tradingProperties,
+                candidateScannerProperties,
+                candleProvider,
+                volatilityIndicatorService,
+                strategyMarketSettingsService,
+                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore())
+        );
     }
 
     public List<TradingCandidate> scanAllowedMarkets() {
-        return tradingProperties.getAllowedMarkets().stream()
-                .filter(market -> market != null && !market.isBlank())
+        return marketSelectionService.resolve(tradingProperties.getAllowedMarkets()).stream()
                 .map(this::scan)
                 .toList();
     }
@@ -51,10 +77,11 @@ public class CandidateScannerService {
             VolatilitySnapshot snapshot = volatilityIndicatorService.calculate(candles);
             return toCandidate(snapshot);
         } catch (RuntimeException exception) {
+            log.warn("Candidate scan failed. market={}, reason={}", market, failureReason(exception));
             return new TradingCandidate(
                     market,
                     CandidateDecision.SKIPPED,
-                    "Candidate scan failed: " + exception.getClass().getSimpleName(),
+                    "Candidate scan failed: " + failureReason(exception),
                     null,
                     null,
                     null,
@@ -63,6 +90,27 @@ public class CandidateScannerService {
                     Instant.now()
             );
         }
+    }
+
+    private String failureReason(RuntimeException exception) {
+        if (exception.getMessage() == null || exception.getMessage().isBlank()) {
+            return exception.getClass().getSimpleName();
+        }
+        Throwable rootCause = rootCause(exception);
+        if (rootCause == exception || rootCause.getMessage() == null || rootCause.getMessage().isBlank()) {
+            return exception.getClass().getSimpleName() + " - " + exception.getMessage();
+        }
+        return exception.getClass().getSimpleName()
+                + " - " + exception.getMessage()
+                + " (cause: " + rootCause.getClass().getSimpleName() + " - " + rootCause.getMessage() + ")";
+    }
+
+    private Throwable rootCause(Throwable exception) {
+        Throwable current = exception;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current;
     }
 
     private TradingCandidate toCandidate(VolatilitySnapshot snapshot) {

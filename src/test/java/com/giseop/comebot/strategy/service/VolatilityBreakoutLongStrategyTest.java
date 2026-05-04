@@ -32,6 +32,7 @@ class VolatilityBreakoutLongStrategyTest {
         overrideProperties = new StrategyMarketOverrideProperties();
         StrategyProperties strategyProperties = new StrategyProperties();
         strategyProperties.setOrderQuantity(new BigDecimal("0.002"));
+        strategyProperties.setOrderAmount(new BigDecimal("5000"));
         strategy = new VolatilityBreakoutLongStrategy(
                 candidateScannerService,
                 positionEntryGuardService,
@@ -48,7 +49,7 @@ class VolatilityBreakoutLongStrategyTest {
         assertThat(signal.signalType()).isEqualTo(SignalType.BUY);
         assertThat(signal.market()).isEqualTo("KRW-BTC");
         assertThat(signal.targetPrice()).isEqualByComparingTo("100");
-        assertThat(signal.quantity()).isEqualByComparingTo("0.002");
+        assertThat(signal.quantity()).isEqualByComparingTo("50.00000000");
         assertThat(signal.reason()).isEqualTo("Volatility long candidate selected");
     }
 
@@ -93,7 +94,7 @@ class VolatilityBreakoutLongStrategyTest {
     }
 
     @Test
-    void marketOverrideOrderQuantityIsUsed() {
+    void buyQuantityUsesConfiguredOrderAmount() {
         StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
         override.setOrderQuantity(new BigDecimal("0.003"));
         overrideProperties.setMarkets(java.util.Map.of("KRW-BTC", override));
@@ -101,7 +102,7 @@ class VolatilityBreakoutLongStrategyTest {
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 
-        assertThat(signal.quantity()).isEqualByComparingTo("0.003");
+        assertThat(signal.quantity()).isEqualByComparingTo("50.00000000");
     }
 
     private MarketPrice marketPrice(String market, String currentPrice) {

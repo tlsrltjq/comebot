@@ -117,6 +117,9 @@ public class TelegramCommandService {
                 yield null;
             }
             case STATUS -> statusMessage();
+            case AUTO -> autoMessage();
+            case PNL -> pnlMessage();
+            case CONDITIONS -> conditionsMessage();
             case CANDIDATES -> candidatesMessage();
             case CANDIDATE_RUN -> candidateRunMessage(command.market());
             case RUN -> runMessage(command.market());
@@ -136,6 +139,9 @@ public class TelegramCommandService {
         String response = switch (callback.type()) {
             case HELP, UNKNOWN -> helpMessage();
             case STATUS -> statusMessage();
+            case AUTO -> autoMessage();
+            case PNL -> pnlMessage();
+            case CONDITIONS -> conditionsMessage();
             case CANDIDATES -> candidatesMessage();
             case CANDIDATE_RUN -> candidateRunMessage(callback.market());
             case RUN -> runMessage(callback.market());
@@ -170,9 +176,10 @@ public class TelegramCommandService {
                 /help - 도움말
                 /menu - 버튼 메뉴
                 /status - 시스템 상태
+                /auto - 자동 실행 상태
+                /conditions - 현재 매매 조건
+                /pnl - 손익 요약
                 /candidates - 롱 후보 조회
-                /candidate-run KRW-BTC - 후보 PAPER 실행
-                /run KRW-BTC - 기존 트레이딩 플로우 실행
                 /history KRW-BTC - 실행 이력
                 /portfolio - 포트폴리오 요약
                 /positions - 보유 포지션
@@ -189,11 +196,13 @@ public class TelegramCommandService {
                 전략: %s
                 매수 기준가: %s
                 매도 기준가: %s
+                주문 금액: %s KRW
                 주문 수량: %s
                 최대 주문 금액: %s
                 허용 Market: %s
                 스케줄러 활성화: %s
                 후보 스케줄러 활성화: %s
+                수동 PAPER 실행: %s
                 긴급 정지: %s
                 알림 활성화: %s
                 후보 요약 알림: %s
@@ -205,17 +214,90 @@ public class TelegramCommandService {
                 strategySelectionProperties.getStrategyName(),
                 strategyProperties.getBuyPrice(),
                 strategyProperties.getSellPrice(),
+                strategyProperties.getOrderAmount(),
                 strategyProperties.getOrderQuantity(),
                 tradingProperties.getMaxOrderAmount(),
                 tradingProperties.getAllowedMarkets(),
                 tradingSchedulerProperties.isEnabled(),
                 candidateSchedulerProperties.isEnabled(),
+                telegramInboundProperties.isManualPaperExecutionEnabled(),
                 safetyProperties.isKillSwitchEnabled(),
                 notificationProperties.isEnabled(),
                 candidateSchedulerProperties.isNotifySummary(),
                 telegramProperties.isEnabled(),
                 telegramInboundProperties.isEnabled()
         ).trim();
+    }
+
+    private String autoMessage() {
+        return """
+                자동 실행 상태
+                전략 스케줄러: %s
+                전략 주기: %s ms
+                전략 대상: %s
+                후보 스케줄러: %s
+                후보 주기: %s ms
+                후보 대상: %s
+                후보 요약 알림: %s
+                수동 PAPER 실행: %s
+                """.formatted(
+                tradingSchedulerProperties.isEnabled(),
+                tradingSchedulerProperties.getFixedDelayMs(),
+                tradingSchedulerProperties.getMarkets(),
+                candidateSchedulerProperties.isEnabled(),
+                candidateSchedulerProperties.getFixedDelayMs(),
+                candidateSchedulerProperties.getMarkets(),
+                candidateSchedulerProperties.isNotifySummary(),
+                telegramInboundProperties.isManualPaperExecutionEnabled()
+        ).trim();
+    }
+
+    private String conditionsMessage() {
+        return """
+                현재 매매 조건
+                거래 모드: PAPER_TRADING
+                전략: %s
+                대상: %s
+                후보 범위: 전체 KRW 중 24시간 거래대금 상위 50개
+                현재가 수집: 1초 fixedDelay
+                자동 실행 주기: %s ms
+                후보 실행 주기: %s ms
+                1회 BUY 금액: %s KRW
+                BUY 추세: UP만 허용
+                SELL 익절: %s
+                SELL 손절: %s
+                실제 주문 API: 없음
+                """.formatted(
+                strategySelectionProperties.getStrategyName(),
+                tradingProperties.getAllowedMarkets(),
+                tradingSchedulerProperties.getFixedDelayMs(),
+                candidateSchedulerProperties.getFixedDelayMs(),
+                strategyProperties.getOrderAmount(),
+                positionExitProperties.getTakeProfitRate(),
+                positionExitProperties.getStopLossRate()
+        ).trim();
+    }
+
+    private String pnlMessage() {
+        try {
+            PortfolioValuationResponse valuation = paperPortfolioValuationService.valuate();
+            return """
+                    손익 요약
+                    현금: %s
+                    총 평가 자산: %s
+                    실현 손익: %s
+                    미실현 손익: %s
+                    총 손익: %s
+                    """.formatted(
+                    valuation.cash(),
+                    valuation.totalEquity(),
+                    valuation.realizedProfit(),
+                    valuation.unrealizedProfit(),
+                    valuation.totalProfit()
+            ).trim();
+        } catch (RuntimeException e) {
+            return "손익 평가 실패: 현재가를 가져올 수 없습니다.";
+        }
     }
 
     private String candidatesMessage() {
@@ -247,6 +329,9 @@ public class TelegramCommandService {
     }
 
     private String candidateRunMessage(String market) {
+        if (!telegramInboundProperties.isManualPaperExecutionEnabled()) {
+            return manualExecutionDisabledMessage();
+        }
         if (market == null || market.isBlank()) {
             return "사용법: /candidate-run KRW-BTC";
         }
@@ -269,6 +354,9 @@ public class TelegramCommandService {
     }
 
     private String runMessage(String market) {
+        if (!telegramInboundProperties.isManualPaperExecutionEnabled()) {
+            return manualExecutionDisabledMessage();
+        }
         if (market == null || market.isBlank()) {
             return "사용법: /run KRW-BTC";
         }
@@ -288,6 +376,10 @@ public class TelegramCommandService {
                 valueOrDash(result.orderStatus()),
                 result.message()
         ).trim();
+    }
+
+    private String manualExecutionDisabledMessage() {
+        return "텔레그램 수동 PAPER 실행은 비활성화되어 있습니다. 자동 실행 결과는 /auto, /history, /portfolio, /pnl로 확인하세요.";
     }
 
     private String historyMessage(String market) {

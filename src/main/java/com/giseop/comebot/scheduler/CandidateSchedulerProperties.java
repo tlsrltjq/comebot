@@ -12,6 +12,7 @@ public class CandidateSchedulerProperties {
     private boolean enabled = false;
     private boolean notifySummary = false;
     private long fixedDelayMs = 60000;
+    private long perMarketDelayMs = 0;
     private List<String> markets = new ArrayList<>(List.of("KRW-BTC", "KRW-ETH"));
 
     public boolean isEnabled() {
@@ -36,6 +37,14 @@ public class CandidateSchedulerProperties {
 
     public void setFixedDelayMs(long fixedDelayMs) {
         this.fixedDelayMs = fixedDelayMs;
+    }
+
+    public long getPerMarketDelayMs() {
+        return perMarketDelayMs;
+    }
+
+    public void setPerMarketDelayMs(long perMarketDelayMs) {
+        this.perMarketDelayMs = Math.max(0, perMarketDelayMs);
     }
 
     public List<String> getMarkets() {

@@ -8,7 +8,7 @@
 
 - 기본값은 `safety.kill-switch-enabled=false`다.
 - 켜져 있으면 신규 트레이딩 플로우 실행을 차단한다.
-- 차단 대상은 REST `/run`, scheduler 실행, Telegram `/run`, RUN 버튼이다.
+- 차단 대상은 REST `/run`, scheduler 실행, 수동 PAPER 실행이 허용된 Telegram `/run`이다.
 - history, status, portfolio 조회는 차단하지 않는다.
 - kill switch는 시세 조회와 전략 판단보다 먼저 확인한다.
 
@@ -33,8 +33,9 @@
 
 ## 익절/손절
 
-- 기본값은 `risk.position-exit-enabled=false`다.
+- 기본값은 `risk.position-exit-enabled=true`다.
 - 켜져 있을 때만 보유 포지션 기준 SELL 신호를 만든다.
+- 현재 PAPER 자동 실행 기본값은 `risk.take-profit-rate=1.5`, `risk.stop-loss-rate=-0.7`다.
 - 미실현 수익률이 `risk.take-profit-rate` 이상이면 익절 SELL 신호를 만든다.
 - 미실현 수익률이 `risk.stop-loss-rate` 이하이면 손절 SELL 신호를 만든다.
 - SELL 수량은 보유 수량을 초과할 수 없다.

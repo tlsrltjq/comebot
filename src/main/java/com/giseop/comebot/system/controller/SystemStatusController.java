@@ -68,7 +68,8 @@ public class SystemStatusController {
                         strategySelectionProperties.getStrategyName(),
                         strategyProperties.getBuyPrice(),
                         strategyProperties.getSellPrice(),
-                        strategyProperties.getOrderQuantity()
+                        strategyProperties.getOrderQuantity(),
+                        strategyProperties.getOrderAmount()
                 ),
                 new SystemStatusResponse.RiskStatus(
                         tradingProperties.getMaxOrderAmount(),
@@ -95,7 +96,8 @@ public class SystemStatusController {
                 new SystemStatusResponse.TelegramStatus(
                         telegramProperties.isEnabled(),
                         telegramProperties.isConfigured(),
-                        telegramInboundProperties.isEnabled()
+                        telegramInboundProperties.isEnabled(),
+                        telegramInboundProperties.isManualPaperExecutionEnabled()
                 )
         );
     }

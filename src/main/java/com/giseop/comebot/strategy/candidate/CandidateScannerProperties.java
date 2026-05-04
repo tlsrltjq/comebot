@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 public class CandidateScannerProperties {
 
     private int candleUnitMinutes = 1;
-    private int candleCount = 20;
-    private BigDecimal minPriceChangeRate = new BigDecimal("1.5");
-    private BigDecimal minTradeAmountChangeRate = BigDecimal.ZERO;
-    private BigDecimal maxPriceChangeRate = new BigDecimal("15");
-    private BigDecimal maxHighLowRangeRate = new BigDecimal("25");
+    private int candleCount = 5;
+    private BigDecimal minPriceChangeRate = new BigDecimal("0.3");
+    private BigDecimal minTradeAmountChangeRate = new BigDecimal("20");
+    private BigDecimal maxPriceChangeRate = new BigDecimal("10");
+    private BigDecimal maxHighLowRangeRate = new BigDecimal("20");
 
     public int getCandleUnitMinutes() {
         return candleUnitMinutes;
@@ -36,7 +36,7 @@ public class CandidateScannerProperties {
     }
 
     public void setMinPriceChangeRate(BigDecimal minPriceChangeRate) {
-        this.minPriceChangeRate = minPriceChangeRate == null ? new BigDecimal("1.5") : minPriceChangeRate;
+        this.minPriceChangeRate = minPriceChangeRate == null ? new BigDecimal("0.3") : minPriceChangeRate;
     }
 
     public BigDecimal getMinTradeAmountChangeRate() {
@@ -44,7 +44,7 @@ public class CandidateScannerProperties {
     }
 
     public void setMinTradeAmountChangeRate(BigDecimal minTradeAmountChangeRate) {
-        this.minTradeAmountChangeRate = minTradeAmountChangeRate == null ? BigDecimal.ZERO : minTradeAmountChangeRate;
+        this.minTradeAmountChangeRate = minTradeAmountChangeRate == null ? new BigDecimal("20") : minTradeAmountChangeRate;
     }
 
     public BigDecimal getMaxPriceChangeRate() {
@@ -52,7 +52,7 @@ public class CandidateScannerProperties {
     }
 
     public void setMaxPriceChangeRate(BigDecimal maxPriceChangeRate) {
-        this.maxPriceChangeRate = maxPriceChangeRate == null ? new BigDecimal("15") : maxPriceChangeRate;
+        this.maxPriceChangeRate = maxPriceChangeRate == null ? new BigDecimal("10") : maxPriceChangeRate;
     }
 
     public BigDecimal getMaxHighLowRangeRate() {
@@ -60,6 +60,6 @@ public class CandidateScannerProperties {
     }
 
     public void setMaxHighLowRangeRate(BigDecimal maxHighLowRangeRate) {
-        this.maxHighLowRangeRate = maxHighLowRangeRate == null ? new BigDecimal("25") : maxHighLowRangeRate;
+        this.maxHighLowRangeRate = maxHighLowRangeRate == null ? new BigDecimal("20") : maxHighLowRangeRate;
     }
 }

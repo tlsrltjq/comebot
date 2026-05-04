@@ -63,6 +63,24 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void sidewaysMarketIsSkipped() {
+        scannerProperties.setMinPriceChangeRate(BigDecimal.ZERO);
+        scannerProperties.setMinTradeAmountChangeRate(BigDecimal.ZERO);
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "100", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "100", "110", "95", "100", "1000")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.trend()).isEqualTo(MarketTrend.SIDEWAYS);
+        assertThat(candidate.reason()).isEqualTo("Trend is not UP");
+    }
+
+    @Test
     void lowPriceChangeRateIsSkipped() {
         scannerProperties.setMinPriceChangeRate(new BigDecimal("5"));
         candleProvider.candles = List.of(
@@ -163,7 +181,7 @@ class CandidateScannerServiceTest {
         TradingCandidate candidate = service.scan("KRW-BTC");
 
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
-        assertThat(candidate.reason()).isEqualTo("Candidate scan failed: IllegalStateException");
+        assertThat(candidate.reason()).isEqualTo("Candidate scan failed: IllegalStateException - failed");
     }
 
     private Candle candle(

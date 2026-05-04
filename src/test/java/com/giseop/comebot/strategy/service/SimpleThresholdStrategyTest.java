@@ -21,6 +21,7 @@ class SimpleThresholdStrategyTest {
         properties.setBuyPrice(new BigDecimal("100"));
         properties.setSellPrice(new BigDecimal("200"));
         properties.setOrderQuantity(new BigDecimal("0.5"));
+        properties.setOrderAmount(new BigDecimal("5000"));
         strategy = new SimpleThresholdStrategy(properties);
     }
 
@@ -31,7 +32,7 @@ class SimpleThresholdStrategyTest {
         assertThat(signal.signalType()).isEqualTo(SignalType.BUY);
         assertThat(signal.market()).isEqualTo("KRW-BTC");
         assertThat(signal.targetPrice()).isEqualByComparingTo("100");
-        assertThat(signal.quantity()).isEqualByComparingTo("0.5");
+        assertThat(signal.quantity()).isEqualByComparingTo("50.00000000");
     }
 
     @Test

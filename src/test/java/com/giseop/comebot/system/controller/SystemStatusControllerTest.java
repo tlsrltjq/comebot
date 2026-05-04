@@ -80,6 +80,7 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.strategy.buyPrice").value(90000000))
                 .andExpect(jsonPath("$.strategy.sellPrice").value(110000000))
                 .andExpect(jsonPath("$.strategy.orderQuantity").value(0.001))
+                .andExpect(jsonPath("$.strategy.orderAmount").value(5000))
                 .andExpect(jsonPath("$.risk.maxOrderAmount").value(100000))
                 .andExpect(jsonPath("$.risk.allowedMarkets[0]").value("KRW-BTC"))
                 .andExpect(jsonPath("$.scheduler.enabled").value(false))
@@ -96,7 +97,8 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.notification.sendRejected").value(true))
                 .andExpect(jsonPath("$.telegram.enabled").value(true))
                 .andExpect(jsonPath("$.telegram.configured").value(true))
-                .andExpect(jsonPath("$.telegram.inboundEnabled").value(true));
+                .andExpect(jsonPath("$.telegram.inboundEnabled").value(true))
+                .andExpect(jsonPath("$.telegram.manualPaperExecutionEnabled").value(false));
     }
 
     @Test
@@ -131,6 +133,8 @@ class SystemStatusControllerTest {
                 .thenReturn(new BigDecimal("110000000"));
         org.mockito.Mockito.when(strategyProperties.getOrderQuantity())
                 .thenReturn(new BigDecimal("0.001"));
+        org.mockito.Mockito.when(strategyProperties.getOrderAmount())
+                .thenReturn(new BigDecimal("5000"));
         org.mockito.Mockito.when(strategySelectionProperties.getStrategyName())
                 .thenReturn("SimpleThresholdStrategy");
         org.mockito.Mockito.when(tradingProperties.getMaxOrderAmount())

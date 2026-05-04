@@ -47,7 +47,7 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
                     SignalType.BUY,
                     candidate.reason(),
                     targetPrice,
-                    strategyMarketSettingsService.orderQuantity(marketPrice.market()),
+                    strategyMarketSettingsService.buyQuantity(marketPrice.market(), targetPrice),
                     candidate.scannedAt()
             );
         } catch (RuntimeException exception) {

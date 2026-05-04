@@ -50,6 +50,7 @@ class TradingFlowServiceTest {
         strategyProperties.setBuyPrice(new BigDecimal("100"));
         strategyProperties.setSellPrice(new BigDecimal("200"));
         strategyProperties.setOrderQuantity(new BigDecimal("1"));
+        strategyProperties.setOrderAmount(new BigDecimal("5000"));
 
         TradingProperties tradingProperties = new TradingProperties();
         tradingProperties.setMaxOrderAmount(new BigDecimal("100000"));

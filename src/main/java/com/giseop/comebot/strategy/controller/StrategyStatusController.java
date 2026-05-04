@@ -26,7 +26,8 @@ public class StrategyStatusController {
                 strategySelectionProperties.getStrategyName(),
                 strategyProperties.getBuyPrice(),
                 strategyProperties.getSellPrice(),
-                strategyProperties.getOrderQuantity()
+                strategyProperties.getOrderQuantity(),
+                strategyProperties.getOrderAmount()
         );
     }
 }

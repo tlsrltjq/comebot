@@ -2,19 +2,28 @@ package com.giseop.comebot.risk.service;
 
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.execution.domain.OrderRequest;
+import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.risk.domain.RiskCheckResult;
 import com.giseop.comebot.risk.domain.RiskDecision;
 import java.math.BigDecimal;
 import java.time.Instant;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RiskValidationService {
 
     private final TradingProperties tradingProperties;
+    private final MarketSelectionService marketSelectionService;
+
+    @Autowired
+    public RiskValidationService(TradingProperties tradingProperties, MarketSelectionService marketSelectionService) {
+        this.tradingProperties = tradingProperties;
+        this.marketSelectionService = marketSelectionService;
+    }
 
     public RiskValidationService(TradingProperties tradingProperties) {
-        this.tradingProperties = tradingProperties;
+        this(tradingProperties, new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()));
     }
 
     public RiskCheckResult validate(OrderRequest request) {
@@ -33,7 +42,7 @@ public class RiskValidationService {
         if (request.price() == null || request.price().compareTo(BigDecimal.ZERO) <= 0) {
             return rejected("Price must be greater than zero");
         }
-        if (!tradingProperties.getAllowedMarkets().contains(request.market())) {
+        if (!marketSelectionService.isAllowed(request.market(), tradingProperties.getAllowedMarkets())) {
             return rejected("Market is not allowed");
         }
 

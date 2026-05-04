@@ -2,12 +2,13 @@
 
 ## 목표 구조
 
-`comebot`은 실제 시세를 관찰하고, 변동성과 추세를 기준으로 롱 전용 매수 후보를 판단한 뒤, `PAPER_TRADING`으로 주문과 포트폴리오 결과를 검증하는 시스템이다. 실제 주문 API와 `REAL_TRADING`은 포함하지 않는다.
+`comebot`은 실제 시세를 관찰하고, 변동성과 추세를 기준으로 롱 전용 매수 후보를 자동 판단한 뒤, `PAPER_TRADING`으로 주문과 포트폴리오 결과를 검증하는 시스템이다. 실제 주문 API와 `REAL_TRADING`은 포함하지 않는다.
 
 ## 전체 흐름
 
 ```text
-market
+web
+-> market
 -> strategy
 -> safety
 -> risk
@@ -33,6 +34,7 @@ market
 - `history`: 트레이딩 플로우 결과 저장
 - `notification`: 선택적 알림 발송
 - `telegram`: 명령과 버튼 기반 운영 보조
+- `web`: React 기반 모니터링 화면. 기존 REST API를 호출해 상태, 후보, 포트폴리오, history를 표시한다.
 - Telegram 후보 명령: `CandidateScannerService`, `CandidateExecutionService`를 호출해 PAPER 흐름만 실행
 - candidate scheduler: 설정된 market 후보를 PAPER 실행하고 선택 설정 시 요약 알림 발송
 
@@ -45,7 +47,9 @@ market
 
 ## Strategy
 
-기본 전략은 테스트용 `SimpleThresholdStrategy`다. `STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG`이면 후보 스캔 기반 롱 전용 PAPER 전략을 사용한다.
+기본 전략은 `VolatilityBreakoutLongStrategy`다. 후보 스캔 기반 롱 전용 PAPER 전략을 사용한다.
+
+현재 매매 조건과 조건 변경 후 PAPER 운용 결과는 `docs/trading/condition-records/`에 기록한다.
 
 ## Safety와 Risk
 
@@ -58,6 +62,16 @@ kill switch는 시세 조회와 전략 판단보다 먼저 확인한다. Risk는
 ## History와 Notification
 
 HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다. 알림은 history 저장 이후 선택적으로 실행한다.
+
+## Web
+
+웹 화면은 `frontend/`의 Vite React 앱으로 관리한다. 웹은 비즈니스 판단, 리스크 검증, 주문 상태 변경을 직접 구현하지 않고 Spring REST API만 호출한다.
+
+웹은 모니터링 전용이다. 자동 실행 상태, 후보, 포트폴리오, history를 표시하며 수동 BUY/SELL 버튼을 제공하지 않는다.
+
+자동 실행은 scheduler가 담당한다. 후보 실행은 `CandidateExecutionService`, 전략 실행과 익절/손절 평가는 `TradingFlowService`를 통해 PAPER 흐름만 실행한다.
+
+웹은 실제 주문 API, `REAL_TRADING`, Upbit 인증 설정을 추가하지 않는다.
 
 ## 작업 관리
 

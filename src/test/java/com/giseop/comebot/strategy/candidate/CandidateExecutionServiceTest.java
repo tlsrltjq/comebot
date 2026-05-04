@@ -57,6 +57,7 @@ class CandidateExecutionServiceTest {
     @BeforeEach
     void setUp() {
         strategyProperties.setOrderQuantity(new BigDecimal("0.01"));
+        strategyProperties.setOrderAmount(new BigDecimal("5000"));
         service = new CandidateExecutionService(
                 candidateScannerService,
                 strategyMarketSettingsService(),
@@ -77,7 +78,7 @@ class CandidateExecutionServiceTest {
         when(orderExecutionService.execute(any(OrderRequest.class))).thenReturn(new OrderResult(
                 "KRW-BTC",
                 OrderSide.BUY,
-                new BigDecimal("0.01"),
+                new BigDecimal("50.00000000"),
                 new BigDecimal("100"),
                 OrderStatus.FILLED,
                 "Paper trading order filled",
@@ -95,7 +96,7 @@ class CandidateExecutionServiceTest {
         verify(orderExecutionService).execute(requestCaptor.capture());
         assertThat(requestCaptor.getValue().market()).isEqualTo("KRW-BTC");
         assertThat(requestCaptor.getValue().side()).isEqualTo(OrderSide.BUY);
-        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("0.01");
+        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("50.00000000");
         assertThat(requestCaptor.getValue().price()).isEqualByComparingTo("100");
         verify(tradingFlowHistoryService).save(result);
     }
@@ -126,12 +127,12 @@ class CandidateExecutionServiceTest {
     }
 
     @Test
-    void marketOverrideOrderQuantityIsUsed() {
+    void selectedCandidateUsesConfiguredOrderAmount() {
         when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
         when(orderExecutionService.execute(any(OrderRequest.class))).thenReturn(new OrderResult(
                 "KRW-BTC",
                 OrderSide.BUY,
-                new BigDecimal("0.02"),
+                new BigDecimal("50.00000000"),
                 new BigDecimal("100"),
                 OrderStatus.FILLED,
                 "Paper trading order filled",
@@ -158,7 +159,7 @@ class CandidateExecutionServiceTest {
 
         ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
         verify(orderExecutionService).execute(requestCaptor.capture());
-        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("0.02");
+        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("50.00000000");
     }
 
     @Test

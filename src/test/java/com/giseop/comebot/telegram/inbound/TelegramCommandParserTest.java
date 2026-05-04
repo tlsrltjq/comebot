@@ -25,6 +25,30 @@ class TelegramCommandParserTest {
     }
 
     @Test
+    void parseAutoCommand() {
+        TelegramCommand command = parser.parse("/auto");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.AUTO);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
+    void parsePnlCommand() {
+        TelegramCommand command = parser.parse("/pnl");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.PNL);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
+    void parseConditionsCommand() {
+        TelegramCommand command = parser.parse("/conditions");
+
+        assertThat(command.type()).isEqualTo(TelegramCommandType.CONDITIONS);
+        assertThat(command.market()).isNull();
+    }
+
+    @Test
     void parseMenuCommand() {
         TelegramCommand command = parser.parse("/menu");
 

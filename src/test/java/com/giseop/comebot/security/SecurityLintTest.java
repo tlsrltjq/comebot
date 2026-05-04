@@ -142,6 +142,22 @@ class SecurityLintTest {
     }
 
     @Test
+    void scheduledTasksMustNotUseFixedRate() throws IOException {
+        List<String> violations = new ArrayList<>();
+
+        for (Path file : javaMainFiles()) {
+            String normalizedPath = ROOT.relativize(file).toString().replace('\\', '/');
+            String content = Files.readString(file, StandardCharsets.UTF_8);
+
+            if (content.contains("@Scheduled") && content.contains("fixedRate")) {
+                violations.add(normalizedPath);
+            }
+        }
+
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
     void upbitAuthenticationConfigurationMustNotBeAdded() throws IOException {
         List<String> violations = new ArrayList<>();
 

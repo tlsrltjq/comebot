@@ -104,7 +104,7 @@ public class CandidateExecutionService {
                 SignalType.BUY,
                 candidate.reason(),
                 candidate.currentPrice(),
-                strategyMarketSettingsService.orderQuantity(candidate.market()),
+                strategyMarketSettingsService.buyQuantity(candidate.market(), candidate.currentPrice()),
                 candidate.scannedAt()
         );
 

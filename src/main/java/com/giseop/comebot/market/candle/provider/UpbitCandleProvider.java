@@ -1,6 +1,7 @@
 package com.giseop.comebot.market.candle.provider;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.giseop.comebot.market.candle.domain.Candle;
 import java.math.BigDecimal;
@@ -8,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -18,8 +20,13 @@ public class UpbitCandleProvider implements CandleProvider {
     private static final List<Integer> SUPPORTED_MINUTE_UNITS = List.of(1, 3, 5, 10, 15, 30, 60, 240);
     private static final int MIN_COUNT = 1;
     private static final int MAX_COUNT = 200;
+    private static final long MIN_REQUEST_INTERVAL_MILLIS = 250;
+    private static final long TOO_MANY_REQUESTS_BACKOFF_MILLIS = 1000;
+    private static final int MAX_ATTEMPTS = 3;
 
     private final RestClient restClient;
+    private final Object requestThrottleLock = new Object();
+    private long lastRequestStartedAtMillis = 0;
 
     public UpbitCandleProvider() {
         this(RestClient.builder().baseUrl(UPBIT_API_BASE_URL).build());
@@ -32,23 +39,52 @@ public class UpbitCandleProvider implements CandleProvider {
     @Override
     public List<Candle> getRecentCandles(String market, int unitMinutes, int count) {
         validateRequest(market, unitMinutes, count);
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            waitForRequestSlot();
+            try {
+                List<UpbitMinuteCandleResponse> response = restClient.get()
+                        .uri("/v1/candles/minutes/{unit}?market={market}&count={count}", unitMinutes, market, count)
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<List<UpbitMinuteCandleResponse>>() {
+                        });
 
-        try {
-            List<UpbitMinuteCandleResponse> response = restClient.get()
-                    .uri("/v1/candles/minutes/{unit}?market={market}&count={count}", unitMinutes, market, count)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<List<UpbitMinuteCandleResponse>>() {
-                    });
+                if (response == null || response.isEmpty()) {
+                    throw new IllegalStateException("Upbit candle response is empty");
+                }
 
-            if (response == null || response.isEmpty()) {
-                throw new IllegalStateException("Upbit candle response is empty");
+                return response.stream()
+                        .map(UpbitMinuteCandleResponse::toCandle)
+                        .toList();
+            } catch (HttpClientErrorException.TooManyRequests exception) {
+                if (attempt == MAX_ATTEMPTS) {
+                    throw new IllegalStateException("Failed to fetch Upbit candle data", exception);
+                }
+                sleep(TOO_MANY_REQUESTS_BACKOFF_MILLIS);
+            } catch (RestClientException exception) {
+                throw new IllegalStateException("Failed to fetch Upbit candle data", exception);
             }
+        }
+        throw new IllegalStateException("Failed to fetch Upbit candle data");
+    }
 
-            return response.stream()
-                    .map(UpbitMinuteCandleResponse::toCandle)
-                    .toList();
-        } catch (RestClientException exception) {
-            throw new IllegalStateException("Failed to fetch Upbit candle data", exception);
+    private void waitForRequestSlot() {
+        synchronized (requestThrottleLock) {
+            long now = System.currentTimeMillis();
+            long waitMillis = lastRequestStartedAtMillis + MIN_REQUEST_INTERVAL_MILLIS - now;
+            if (waitMillis > 0) {
+                sleep(waitMillis);
+                now = System.currentTimeMillis();
+            }
+            lastRequestStartedAtMillis = now;
+        }
+    }
+
+    private void sleep(long waitMillis) {
+        try {
+            Thread.sleep(waitMillis);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting to fetch Upbit candle data", exception);
         }
     }
 
@@ -64,6 +100,7 @@ public class UpbitCandleProvider implements CandleProvider {
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record UpbitMinuteCandleResponse(
             String market,
             Long timestamp,

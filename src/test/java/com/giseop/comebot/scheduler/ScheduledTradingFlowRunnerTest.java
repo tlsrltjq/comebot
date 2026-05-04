@@ -109,5 +109,11 @@ class ScheduledTradingFlowRunnerTest {
             executedMarkets.add(market);
             return null;
         }
+
+        @Override
+        public List<TradingFlowResult> runAll(List<String> markets) {
+            markets.forEach(this::run);
+            return List.of();
+        }
     }
 }

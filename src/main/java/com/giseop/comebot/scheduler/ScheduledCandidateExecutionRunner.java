@@ -1,5 +1,6 @@
 package com.giseop.comebot.scheduler;
 
+import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.strategy.domain.SignalType;
@@ -7,6 +8,7 @@ import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,15 +20,32 @@ public class ScheduledCandidateExecutionRunner {
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final CandidateExecutionService candidateExecutionService;
     private final CandidateSchedulerNotificationService candidateSchedulerNotificationService;
+    private final MarketSelectionService marketSelectionService;
 
+    @Autowired
     public ScheduledCandidateExecutionRunner(
             CandidateSchedulerProperties candidateSchedulerProperties,
             CandidateExecutionService candidateExecutionService,
-            CandidateSchedulerNotificationService candidateSchedulerNotificationService
+            CandidateSchedulerNotificationService candidateSchedulerNotificationService,
+            MarketSelectionService marketSelectionService
     ) {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.candidateExecutionService = candidateExecutionService;
         this.candidateSchedulerNotificationService = candidateSchedulerNotificationService;
+        this.marketSelectionService = marketSelectionService;
+    }
+
+    ScheduledCandidateExecutionRunner(
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            CandidateExecutionService candidateExecutionService,
+            CandidateSchedulerNotificationService candidateSchedulerNotificationService
+    ) {
+        this(
+                candidateSchedulerProperties,
+                candidateExecutionService,
+                candidateSchedulerNotificationService,
+                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore())
+        );
     }
 
     @Scheduled(fixedDelayString = "${trading.candidate-scheduler.fixed-delay-ms:60000}")
@@ -51,13 +70,13 @@ public class ScheduledCandidateExecutionRunner {
             return CandidateSchedulerRunSummary.empty();
         }
 
-        List<String> markets = candidateSchedulerProperties.getMarkets().stream()
-                .filter(market -> market != null && !market.isBlank())
-                .toList();
+        List<String> markets = marketSelectionService.resolve(candidateSchedulerProperties.getMarkets());
 
         CandidateSchedulerRunSummary summary = CandidateSchedulerRunSummary.empty();
-        for (String market : markets) {
+        for (int index = 0; index < markets.size(); index++) {
+            String market = markets.get(index);
             summary = summary.add(executeMarket(market));
+            delayBeforeNextMarket(index, markets.size());
         }
         return new CandidateSchedulerRunSummary(
                 markets.size(),
@@ -93,5 +112,18 @@ public class ScheduledCandidateExecutionRunner {
             return new CandidateSchedulerRunSummary(0, 1, 0, 0, 1, 0);
         }
         return new CandidateSchedulerRunSummary(0, 1, 0, 0, 0, 1);
+    }
+
+    private void delayBeforeNextMarket(int currentIndex, int marketCount) {
+        long delayMs = candidateSchedulerProperties.getPerMarketDelayMs();
+        if (delayMs <= 0 || currentIndex >= marketCount - 1) {
+            return;
+        }
+        try {
+            Thread.sleep(delayMs);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            log.warn("Scheduled candidate execution delay interrupted");
+        }
     }
 }

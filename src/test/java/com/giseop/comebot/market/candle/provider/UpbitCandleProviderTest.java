@@ -25,23 +25,29 @@ class UpbitCandleProviderTest {
                         [
                           {
                             "market": "KRW-BTC",
+                            "candle_date_time_utc": "2026-04-30T12:33:00",
+                            "candle_date_time_kst": "2026-04-30T21:33:00",
                             "timestamp": 1714435200000,
                             "opening_price": 100,
                             "high_price": 120,
                             "low_price": 90,
                             "trade_price": 110,
                             "candle_acc_trade_price": 1000000,
-                            "candle_acc_trade_volume": 10.5
+                            "candle_acc_trade_volume": 10.5,
+                            "unit": 1
                           },
                           {
                             "market": "KRW-BTC",
+                            "candle_date_time_utc": "2026-04-30T12:32:00",
+                            "candle_date_time_kst": "2026-04-30T21:32:00",
                             "timestamp": 1714435140000,
                             "opening_price": 95,
                             "high_price": 105,
                             "low_price": 91,
                             "trade_price": 100,
                             "candle_acc_trade_price": 800000,
-                            "candle_acc_trade_volume": 8.2
+                            "candle_acc_trade_volume": 8.2,
+                            "unit": 1
                           }
                         ]
                         """, APPLICATION_JSON));
