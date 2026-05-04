@@ -236,6 +236,7 @@ strategy.market-overrides.markets.KRW-BTC.max-price-change-rate=12
 
 - [Architecture](docs/harness/ARCHITECTURE.md)
 - [Development Rules](docs/harness/DEVELOPMENT_RULES.md)
+- [Harness Status](docs/harness/HARNESS_STATUS.md)
 - [Security Rules](docs/harness/SECURITY_RULES.md)
 - [Operations](docs/operations/OPERATIONS.md)
 - [Reliability](docs/operations/RELIABILITY.md)
