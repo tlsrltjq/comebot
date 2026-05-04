@@ -1,32 +1,6 @@
 # Project Next Steps
 
-## 1단계: History 분석 화면 개선
-
-목표:
-
-- 자동 PAPER 거래가 왜 BUY, SELL, HOLD를 냈는지 웹에서 추적한다.
-- 손실이 반복되는 market과 사유를 먼저 확인하고, 그 결과를 다음 전략 변경 근거로 쓴다.
-- React는 history를 직접 재계산하지 않고 기존 analytics API와 history API를 조합해서 표시한다.
-
-작업:
-
-- 시간 범위 선택을 추가한다: `1h`, `24h`, `3d`, `7d`.
-- 신호 필터를 추가한다: BUY, SELL, HOLD.
-- 주문 상태 필터를 추가한다: FILLED, REJECTED, FAILED.
-- 사유 필터를 추가한다: 익절(Take profit), 손절(Stop loss), 일반 HOLD.
-- 손실 큰 SELL 목록을 보여준다.
-- 반복 손절 market을 보여준다.
-- 반복 HOLD 사유 TOP 5를 보여준다.
-- History 화면의 수동 실행 버튼은 만들지 않는다.
-
-완료 기준:
-
-- 웹에서 최근 손실 원인과 HOLD 사유를 한 화면에서 확인할 수 있다.
-- `npm run lint`, `npm run build`, `npm test`가 성공한다.
-- 필요 시 backend analytics 테스트를 보강하고 `./gradlew test`를 통과시킨다.
-- 웹 API client가 수동 실행 endpoint를 추가하지 않는다.
-
-## 2단계: 중복 진입 제한 강화
+## 1단계: 중복 진입 제한 강화
 
 목표:
 
@@ -50,7 +24,7 @@
 - 차단 사유가 history에 HOLD 또는 REJECTED 흐름으로 남는다.
 - `./gradlew test`가 성공한다.
 
-## 3단계: 포트폴리오 모바일 카드형 UX
+## 2단계: 포트폴리오 모바일 카드형 UX
 
 목표:
 
@@ -69,7 +43,7 @@
 - 모바일 폭에서도 텍스트가 겹치지 않는다.
 - `npm run lint`, `npm run build`, `npm test`가 성공한다.
 
-## 4단계: 후보 화면 개선
+## 3단계: 후보 화면 개선
 
 목표:
 
@@ -89,7 +63,7 @@
 - 후보 화면에서 선택 후보와 제외 사유를 바로 확인할 수 있다.
 - 수동 후보 실행 버튼은 만들지 않는다.
 
-## 5단계: 운영 상태 화면과 Telegram 용어 정리
+## 4단계: 운영 상태 화면과 Telegram 용어 정리
 
 목표:
 
