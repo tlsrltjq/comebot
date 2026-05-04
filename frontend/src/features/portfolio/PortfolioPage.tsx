@@ -1,16 +1,42 @@
+import { useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { ArrowDownAZ, CircleDollarSign, PieChart, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
+import type { PositionValuationResponse } from '../../shared/api/types';
+import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatKrw, formatNumber } from '../../shared/format';
 
+type SortKey = 'value' | 'profitRate' | 'market';
+
+const TAKE_PROFIT_RATE = 1.5;
+const STOP_LOSS_RATE = -0.7;
+
 export function PortfolioPage() {
+  const [sortKey, setSortKey] = useState<SortKey>('profitRate');
   const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus, queryFn: api.portfolioStatus, refetchInterval: 5_000 });
   const positionsQuery = useQuery({ queryKey: queryKeys.positions, queryFn: api.positions, refetchInterval: 5_000 });
   const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation, queryFn: api.portfolioValuation, refetchInterval: 5_000 });
 
-  const positions = valuationQuery.data?.positions ?? [];
+  const positions = useMemo(
+    () => sortPositions(valuationQuery.data?.positions ?? [], sortKey),
+    [sortKey, valuationQuery.data?.positions],
+  );
+  const totalEquity = Number(valuationQuery.data?.totalEquity ?? 0);
+  const cash = Number(valuationQuery.data?.cash ?? statusQuery.data?.cash ?? 0);
+  const positionValue = Number(valuationQuery.data?.totalPositionValue ?? 0);
+  const cashRate = totalEquity > 0 ? (cash / totalEquity) * 100 : 0;
+  const positionRate = totalEquity > 0 ? (positionValue / totalEquity) * 100 : 0;
+  const bestPosition = positions.reduce<PositionValuationResponse | null>(
+    (best, position) => (best === null || Number(position.unrealizedProfitRate) > Number(best.unrealizedProfitRate) ? position : best),
+    null,
+  );
+  const worstPosition = positions.reduce<PositionValuationResponse | null>(
+    (worst, position) => (worst === null || Number(position.unrealizedProfitRate) < Number(worst.unrealizedProfitRate) ? position : worst),
+    null,
+  );
 
   return (
     <section className="page">
@@ -26,10 +52,50 @@ export function PortfolioPage() {
       {valuationQuery.error ? <ErrorPanel title="포트폴리오 평가 조회 실패(Portfolio valuation failed)" error={valuationQuery.error} /> : null}
 
       <div className="metric-grid">
-        <MetricCard label="현금(Cash)" value={formatKrw(valuationQuery.data?.cash ?? statusQuery.data?.cash)} />
-        <MetricCard label="포지션 가치(Position Value)" value={formatKrw(valuationQuery.data?.totalPositionValue)} />
-        <MetricCard label="총자산(Total Equity)" value={formatKrw(valuationQuery.data?.totalEquity)} />
-        <MetricCard label="총손익(Total Profit)" value={formatKrw(valuationQuery.data?.totalProfit)} />
+        <MetricCard label="현금(Cash)" value={formatKrw(valuationQuery.data?.cash ?? statusQuery.data?.cash)} detail={`${formatNumber(cashRate, 1)}%`} />
+        <MetricCard label="포지션 가치(Position Value)" value={formatKrw(valuationQuery.data?.totalPositionValue)} detail={`${formatNumber(positionRate, 1)}%`} />
+        <MetricCard label="총자산(Total Equity)" value={formatKrw(valuationQuery.data?.totalEquity)} detail={`보유(Positions) ${formatNumber(positions.length)}`} />
+        <MetricCard label="총손익(Total Profit)" value={formatKrw(valuationQuery.data?.totalProfit)} detail={`실현(Realized) ${formatKrw(valuationQuery.data?.realizedProfit)}`} />
+      </div>
+
+      <div className="portfolio-overview">
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>자산 배분(Allocation)</h2>
+            <PieChart size={20} />
+          </div>
+          <div className="allocation-bars">
+            <AllocationBar icon={<Wallet size={17} />} label="현금(Cash)" value={cashRate} />
+            <AllocationBar icon={<CircleDollarSign size={17} />} label="포지션(Positions)" value={positionRate} />
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>손익 리더(Profit Leaders)</h2>
+            <Badge tone={positions.length ? 'info' : 'neutral'}>{positions.length} positions</Badge>
+          </div>
+          <div className="leader-grid">
+            <LeaderItem title="최고 수익(Best)" position={bestPosition} positive />
+            <LeaderItem title="최대 손실(Worst)" position={worstPosition} />
+          </div>
+        </article>
+      </div>
+
+      <div className="toolbar portfolio-toolbar" aria-label="포트폴리오 정렬(Portfolio sort)">
+        <span>정렬(Sort)</span>
+        <button className={sortKey === 'profitRate' ? 'button button-primary' : 'button button-secondary'} type="button" onClick={() => setSortKey('profitRate')}>
+          <TrendingDown size={16} />
+          손익률(PnL %)
+        </button>
+        <button className={sortKey === 'value' ? 'button button-primary' : 'button button-secondary'} type="button" onClick={() => setSortKey('value')}>
+          <CircleDollarSign size={16} />
+          평가액(Value)
+        </button>
+        <button className={sortKey === 'market' ? 'button button-primary' : 'button button-secondary'} type="button" onClick={() => setSortKey('market')}>
+          <ArrowDownAZ size={16} />
+          마켓(Market)
+        </button>
       </div>
 
       <div className="table-wrap">
@@ -43,18 +109,27 @@ export function PortfolioPage() {
               <th>가치(Value)</th>
               <th>미실현손익(Unrealized)</th>
               <th>수익률(Rate)</th>
+              <th>상태(Status)</th>
             </tr>
           </thead>
           <tbody>
             {positions.map((position) => (
               <tr key={position.market}>
-                <td>{position.market}</td>
+                <td><strong>{position.market}</strong></td>
                 <td>{formatNumber(position.quantity, 8)}</td>
                 <td>{formatKrw(position.averageBuyPrice)}</td>
                 <td>{formatKrw(position.currentPrice)}</td>
                 <td>{formatKrw(position.positionValue)}</td>
-                <td>{formatKrw(position.unrealizedProfit)}</td>
-                <td>{formatNumber(position.unrealizedProfitRate, 2)}%</td>
+                <td className={profitClass(position.unrealizedProfit)}>{formatKrw(position.unrealizedProfit)}</td>
+                <td>
+                  <span className={`profit-rate ${profitClass(position.unrealizedProfitRate)}`}>
+                    {Number(position.unrealizedProfitRate) >= 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
+                    {formatNumber(position.unrealizedProfitRate, 2)}%
+                  </span>
+                </td>
+                <td>
+                  <ExitBadge rate={Number(position.unrealizedProfitRate)} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -72,4 +147,81 @@ export function PortfolioPage() {
       ) : null}
     </section>
   );
+}
+
+function sortPositions(positions: PositionValuationResponse[], sortKey: SortKey) {
+  return [...positions].sort((left, right) => {
+    if (sortKey === 'market') {
+      return left.market.localeCompare(right.market);
+    }
+    if (sortKey === 'value') {
+      return Number(right.positionValue) - Number(left.positionValue);
+    }
+    return Number(left.unrealizedProfitRate) - Number(right.unrealizedProfitRate);
+  });
+}
+
+function profitClass(value: string | number) {
+  return Number(value) >= 0 ? 'tone-positive' : 'tone-negative';
+}
+
+function AllocationBar({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
+  return (
+    <div className="allocation-row">
+      <div className="allocation-label">
+        {icon}
+        <span>{label}</span>
+        <strong>{formatNumber(value, 1)}%</strong>
+      </div>
+      <div className="allocation-track">
+        <span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function LeaderItem({
+  title,
+  position,
+  positive = false,
+}: {
+  title: string;
+  position: PositionValuationResponse | null;
+  positive?: boolean;
+}) {
+  if (!position) {
+    return (
+      <div className="leader-item">
+        <span>{title}</span>
+        <strong>-</strong>
+        <small>보유 없음(No position)</small>
+      </div>
+    );
+  }
+
+  return (
+    <div className="leader-item">
+      <span>{title}</span>
+      <strong>{position.market}</strong>
+      <small className={positive ? 'tone-positive' : profitClass(position.unrealizedProfitRate)}>
+        {formatNumber(position.unrealizedProfitRate, 2)}% / {formatKrw(position.unrealizedProfit)}
+      </small>
+    </div>
+  );
+}
+
+function ExitBadge({ rate }: { rate: number }) {
+  if (rate >= TAKE_PROFIT_RATE) {
+    return <Badge tone="good">익절권(Take profit)</Badge>;
+  }
+  if (rate <= STOP_LOSS_RATE) {
+    return <Badge tone="bad">손절권(Stop loss)</Badge>;
+  }
+  if (TAKE_PROFIT_RATE - rate <= 0.3) {
+    return <Badge tone="info">익절 근접(Near TP)</Badge>;
+  }
+  if (rate - STOP_LOSS_RATE <= 0.3) {
+    return <Badge tone="warn">손절 근접(Near SL)</Badge>;
+  }
+  return <Badge>보유(Hold)</Badge>;
 }
