@@ -32,6 +32,16 @@
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 
+## MVP2 방향
+
+MVP2 계획은 `docs/project/MVP2_PLAN.md`에 분리한다.
+
+- Upbit / Binance 멀티 거래소 지원
+- 거래소별 대시보드 분리
+- 안정형 / 공격형 / 수비형 전략 profile 동시 테스트
+- spot, futures long simulation, futures short simulation 분리
+- 실제 주문 없이 PAPER/SIMULATION으로 먼저 검증
+
 ## 검증 기준
 
 - Backend 변경: `./gradlew test`

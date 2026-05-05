@@ -7,6 +7,7 @@
 - `docs/project/PROJECT_HISTORY.md`: 완료 작업 기록
 - `docs/project/PROJECT_NEXT_STEPS.md`: 다음 구현 단계
 - `docs/project/WEB_UX_UPGRADE_PLAN.md`: 웹 UX/UI 개선 계획
+- `docs/project/MVP2_PLAN.md`: MVP2 멀티 거래소/멀티 전략 실험 계획
 - `docs/trading/STRATEGY_POLICY.md`: 전략 방향
 - `docs/trading/condition-records/`: 매매 조건과 PAPER 운용 기록
 - `docs/harness/DEVELOPMENT_RULES.md`: 작업 규칙
@@ -23,6 +24,8 @@ Upbit 공개 시세와 캔들 데이터를 사용해 변동성 기반 롱 전용
 캔들 Provider, 변동성 계산, 후보 실행, Telegram 후보 명령, 전략 선택, 후보 자동 실행, 과열 회피, 재진입 제한, market별 override, scheduler 요약 알림, Telegram 후보 요약 개선, scheduler/history 검증, React 모니터링 웹 UI, 기본 자동 PAPER 실행 설정, 매매 조건 기록 문서, analytics API, 대시보드 손익 요약, 포트폴리오 자산 배분/손익 UX, History 분석 화면까지 추가했다.
 
 다음 단계는 중복 진입 제한 강화다. History에서 확인한 손실 원인과 반복 HOLD 사유를 근거로 재진입 cooldown을 설계한다.
+
+MVP2는 별도 계획으로 분리한다. MVP2는 Upbit/Binance, 멀티 전략 profile, spot/futures simulation을 다루되 초기 구현은 실제 주문 없이 PAPER/SIMULATION으로만 진행한다.
 
 ## 작업 진행 규칙
 
