@@ -28,13 +28,14 @@
 - 포트폴리오 market별 비중 TOP과 쏠림 경고 표시
 - 2026-05-06 PAPER 매매기록 기준 마이너스 손익 원인 분석 문서화
 - MVP2 `exchange`, `experiment`, `simulation`, `strategy`, `leaderboard` 패키지 경계 생성
+- MVP2 Exchange 공통 ticker/candle 모델과 Upbit adapter 생성
 
 ## 다음 작업
 
-1. MVP2 Exchange 공통 모델과 Upbit adapter
-2. Binance public market data
-3. 거래소별 상태 API와 웹 선택 버튼
-4. 전략 profile 3종 동시 실행
+1. Binance public market data
+2. 거래소별 상태 API와 웹 선택 버튼
+3. 전략 profile 3종 동시 실행
+4. MVP2 실험 대시보드
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 
