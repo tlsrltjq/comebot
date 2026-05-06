@@ -1,27 +1,5 @@
 # Project Next Steps
 
-## 현재 우선순위: MVP2 시작
-
-MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
-
-완료:
-
-- `com.giseop.comebot.mvp2` 패키지 경계 생성
-- `Exchange`, `MarketType`, `StrategyProfile`, `ExperimentStatus` 용어 추가
-- MVP2도 public market data와 PAPER/SIMULATION만 사용한다는 테스트 추가
-
-다음:
-
-- Exchange 공통 모델을 만든다.
-- Upbit 기존 provider를 MVP2 exchange adapter로 연결한다.
-- Binance public ticker/candle 조회는 인증키 없이 별도 단계에서 추가한다.
-
-완료 기준:
-
-- MVP1 자동매매 흐름은 그대로 유지된다.
-- MVP2 코드는 MVP1 portfolio/history와 섞이지 않는다.
-- 실제 주문 API와 `REAL_TRADING`은 계속 금지된다.
-
 ## 1단계: 자금 활용률과 포지션 분산 개선
 
 목표:
