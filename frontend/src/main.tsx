@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { App } from './app/App';
+import { BinancePage } from './features/binance/BinancePage';
 import { CandidatesPage } from './features/candidates/CandidatesPage';
 import { HistoryPage } from './features/history/HistoryPage';
 import { Mvp2Page } from './features/mvp2/Mvp2Page';
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: 'portfolio', element: <PortfolioPage /> },
       { path: 'history', element: <HistoryPage /> },
       { path: 'mvp2', element: <Mvp2Page /> },
+      { path: 'binance', element: <BinancePage /> },
     ],
   },
 ]);

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Clock3, FlaskConical, PlayCircle, ShieldCheck, Store, TrendingUp, Wallet } from 'lucide-react';
+import { BarChart3, Clock3, FlaskConical, ShieldCheck, Store, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
 import type { Mvp2Exchange, Mvp2ExchangeResponse, Mvp2PaperPositionResponse, Mvp2PaperPositionValuationResponse } from '../../shared/api/types';
 import { formatDateTime, formatNumber } from '../../shared/format';
@@ -62,14 +62,13 @@ export function Mvp2Page() {
   const binanceStatus = binancePaperStatusQuery.data;
   const binanceCandidates = binancePaperCandidatesQuery.data ?? [];
   const binanceHistory = binancePaperHistoryQuery.data ?? [];
-  const selectedCandidates = binanceCandidates.filter((candidate) => candidate.decision === 'SELECTED');
 
   return (
     <section className="page">
       <header className="page-header">
         <div>
           <h1>MVP2 실험 대시보드(Experiment Dashboard)</h1>
-          <p>하나의 화면에서 Upbit/Binance 모드를 전환해 public market data와 PAPER 실험 상태를 확인합니다.</p>
+          <p>거래소별 public market data와 전략 profile 실험 준비 상태를 확인합니다.</p>
         </div>
         <span className="live-indicator">자동 갱신(Live)</span>
       </header>
@@ -81,7 +80,7 @@ export function Mvp2Page() {
       {binancePaperValuationQuery.error ? <ErrorPanel title="Binance PAPER 평가 조회 실패(Binance paper valuation failed)" error={binancePaperValuationQuery.error} /> : null}
       {binancePaperCandidatesQuery.error ? <ErrorPanel title="Binance PAPER 후보 조회 실패(Binance paper candidates failed)" error={binancePaperCandidatesQuery.error} /> : null}
 
-      <div className="exchange-switch" aria-label="거래 모드 선택(Trading mode selector)">
+      <div className="exchange-switch" aria-label="거래소 선택(Exchange selector)">
         {exchanges.map((exchange) => (
           <button
             className={selected.exchange === exchange.exchange ? 'exchange-button active' : 'exchange-button'}
@@ -90,7 +89,7 @@ export function Mvp2Page() {
             onClick={() => setSelectedExchange(exchange.exchange)}
           >
             <Store size={18} />
-            <span>{exchange.displayName} 모드(Mode)</span>
+            <span>{exchange.displayName}</span>
             <Badge tone={exchange.publicMarketDataOnly ? 'good' : 'bad'}>{exchange.publicMarketDataOnly ? '공개시세(Public)' : '점검(Review)'}</Badge>
           </button>
         ))}
@@ -102,31 +101,6 @@ export function Mvp2Page() {
         <MetricCard label="실거래(Real Trading)" value={statusQuery.data?.realTradingSupported ? '지원(Supported)' : '미지원(Not supported)'} detail="PAPER/SIMULATION only" />
         <MetricCard label="PAPER 총자산(Paper Equity)" value={binanceSelected ? `${formatNumber(binanceValuation?.totalEquity ?? binancePortfolio?.cash, 2)} USDT` : 'MVP1 화면 사용'} detail={binanceSelected ? `주문(Order) ${formatNumber(binanceStatus?.orderAmount, 2)} USDT` : 'Upbit PAPER dashboard'} />
       </div>
-
-      {binanceSelected ? (
-        <div className="status-strip" aria-label="Binance PAPER 모드 상태(Binance paper mode status)">
-          <div className={`status-pill ${binanceStatus?.schedulerEnabled ? 'status-pill-good' : 'status-pill-bad'}`}>
-            <PlayCircle size={16} />
-            <span>스케줄러(Scheduler)</span>
-            <strong>{binanceStatus?.schedulerEnabled ? `${formatNumber((binanceStatus.schedulerFixedDelayMs ?? 0) / 1000)}s` : '꺼짐(Off)'}</strong>
-          </div>
-          <div className="status-pill status-pill-good">
-            <Wallet size={16} />
-            <span>주문(Order)</span>
-            <strong>PAPER only</strong>
-          </div>
-          <div className="status-pill status-pill-good">
-            <BarChart3 size={16} />
-            <span>보유(Positions)</span>
-            <strong>{formatNumber(binancePositions.length)}</strong>
-          </div>
-          <div className="status-pill status-pill-good">
-            <TrendingUp size={16} />
-            <span>선택 후보(Selected)</span>
-            <strong>{formatNumber(selectedCandidates.length)}</strong>
-          </div>
-        </div>
-      ) : null}
 
       <div className="section-grid">
         <article className="panel">
