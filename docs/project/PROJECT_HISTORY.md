@@ -63,7 +63,6 @@
 59. Binance PAPER 현재가 평가액, 미실현손익, 총손익 API와 웹 표시 추가
 60. Binance PAPER scheduler 운영 기본값 켜짐과 심볼별 실패 격리
 61. React `/mvp2` 단일 화면의 Upbit/Binance 모드 전환 UI 정리
-62. React `/mvp2` Upbit/Binance 버튼 데이터 소스 전환 구현
 
 ## 최근 검증
 

@@ -22,7 +22,6 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - React `/mvp2` Binance 화면에 PAPER 총자산/평가손익 표시
 - Binance PAPER scheduler 운영 기본값을 켜고 심볼별 실패를 격리
 - React `/mvp2` 한 화면 안에서 Upbit/Binance 모드 전환 UI 정리
-- React `/mvp2` Upbit/Binance 버튼이 같은 화면 구조의 데이터 소스만 전환하도록 정리
 
 다음:
 
@@ -40,7 +39,6 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - Binance도 public 현재가 기준 평가액과 손익을 조회할 수 있다.
 - Binance PAPER scheduler가 기본 켜짐으로 동작하고, 한 심볼 실패가 다음 심볼 실행을 막지 않는다.
 - 웹에서 같은 MVP2 화면을 유지한 채 Binance PAPER 상태와 손익을 모드 전환으로 볼 수 있다.
-- Upbit 버튼은 기존 Upbit PAPER API를, Binance 버튼은 Binance PAPER API를 같은 UI에 표시한다.
 
 ## 1단계: 자금 활용률과 포지션 분산 개선
 

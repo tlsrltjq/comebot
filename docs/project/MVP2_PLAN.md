@@ -365,7 +365,6 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 - 완료: Binance PAPER 평가손익 웹 지표 보강
 - 완료: Binance PAPER 자동 실행 운영 기본값 켜짐과 심볼별 실패 격리
 - 완료: React `/mvp2` 단일 화면의 Upbit/Binance 모드 전환 UI
-- 완료: 모드 전환 시 화면 구조 유지, Upbit/Binance 데이터 소스 전환
 
 ### 2단계: Strategy Profile 3종 동시 실행
 

@@ -55,83 +55,6 @@ describe('Mvp2Page', () => {
           message: 'MVP2 uses public market data only. Orders remain PAPER/SIMULATION only.',
         });
       }
-      if (url === '/api/system/status') {
-        return json({
-          database: { connected: true },
-          marketProvider: { provider: 'UPBIT', externalProvider: true },
-          strategy: {
-            strategyName: 'VolatilityBreakoutLongStrategy',
-            buyPrice: '0',
-            sellPrice: '0',
-            orderQuantity: '0',
-            orderAmount: '10000',
-          },
-          risk: { maxOrderAmount: '10000', allowedMarkets: ['ALL_KRW'] },
-          scheduler: {
-            enabled: false,
-            fixedDelayMs: 30000,
-            markets: [],
-            candidateEnabled: true,
-            candidateFixedDelayMs: 30000,
-            candidateMarkets: ['ALL_KRW'],
-            candidateNotifySummary: false,
-          },
-          safety: { killSwitchEnabled: false },
-          notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
-          telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
-        });
-      }
-      if (url === '/api/portfolio/valuation') {
-        return json({
-          cash: '990000',
-          totalPositionValue: '12000',
-          totalEquity: '1002000',
-          realizedProfit: '0',
-          unrealizedProfit: '2000',
-          totalProfit: '2000',
-          positions: [
-            {
-              market: 'KRW-BTC',
-              quantity: '0.0001',
-              averageBuyPrice: '100000000',
-              currentPrice: '120000000',
-              positionValue: '12000',
-              unrealizedProfit: '2000',
-              unrealizedProfitRate: '20',
-            },
-          ],
-        });
-      }
-      if (url === '/api/candidates') {
-        return json([
-          {
-            market: 'KRW-BTC',
-            decision: 'SELECTED',
-            reason: 'Volatility long candidate selected',
-            currentPrice: '120000000',
-            priceChangeRate: '1',
-            highLowRangeRate: '2',
-            tradeAmountChangeRate: '30',
-            trend: 'UP',
-            scannedAt: '2026-05-06T00:00:00Z',
-          },
-        ]);
-      }
-      if (url === '/api/trading-flow/history?limit=10') {
-        return json([
-          {
-            id: '1',
-            market: 'KRW-BTC',
-            currentPrice: '120000000',
-            signalType: 'BUY',
-            signalReason: 'Volatility long candidate selected',
-            orderCreated: true,
-            orderStatus: 'FILLED',
-            message: 'PAPER order filled',
-            createdAt: '2026-05-06T00:00:00Z',
-          },
-        ]);
-      }
       if (url === '/api/mvp2/exchanges/BINANCE/status') {
         return json({
           exchange: 'BINANCE',
@@ -222,10 +145,7 @@ describe('Mvp2Page', () => {
     renderWithClient();
 
     expect(await screen.findByText('MVP2 실험 대시보드(Experiment Dashboard)')).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: /Upbit 모드/ })).toBeInTheDocument();
-    expect(await screen.findByText('Upbit PAPER')).toBeInTheDocument();
-    expect(await screen.findByText('₩1,002,000')).toBeInTheDocument();
-    expect((await screen.findAllByText('KRW-BTC')).length).toBeGreaterThan(0);
+    expect(await screen.findByRole('button', { name: /Upbit/ })).toBeInTheDocument();
     fireEvent.click(await screen.findByRole('button', { name: /Binance/ }));
 
     expect((await screen.findAllByText('Binance public ticker/kline provider is available.')).length).toBeGreaterThan(0);
