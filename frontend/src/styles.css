@@ -272,15 +272,13 @@ button:disabled {
 }
 
 .profile-list,
-.mvp2-next-list,
-.mvp2-list {
+.mvp2-next-list {
   display: grid;
   gap: 12px;
 }
 
 .profile-item,
-.next-item,
-.mvp2-row {
+.next-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -290,7 +288,6 @@ button:disabled {
   border-radius: 8px;
 }
 
-.mvp2-row div,
 .profile-item div {
   display: grid;
   gap: 4px;
@@ -298,7 +295,6 @@ button:disabled {
 }
 
 .profile-item small,
-.mvp2-row small,
 .next-item {
   color: #60717f;
 }

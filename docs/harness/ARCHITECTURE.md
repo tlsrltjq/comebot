@@ -139,19 +139,3 @@ MVP2 exchange 상태 API는 다음과 같다.
 - `GET /api/mvp2/exchanges/{exchange}/status`: 거래소별 public data/PAPER-only 상태
 
 React 웹은 `/mvp2` 경로에서 Upbit/Binance 선택 버튼과 strategy profile 준비 상태를 표시한다. 이 화면도 모니터링 전용이며 수동 BUY/SELL 버튼을 제공하지 않는다.
-
-Binance PAPER 흐름은 MVP1 Upbit PAPER 자동매매와 같은 기능 범위를 목표로 하되, MVP1 포트폴리오와 분리한다.
-
-- Binance public ticker/kline 기반 후보 판단
-- Binance 전용 PAPER 현금, 포지션, 실현손익
-- 익절/손절 기반 PAPER SELL
-- Binance PAPER history 저장
-- 자동 scheduler는 `mvp2.paper.binance-scheduler-enabled=false`가 기본값
-- 웹 `/mvp2`에서 Binance PAPER 상태, 후보, 포지션, 이력을 조회
-
-초기 Binance PAPER API는 다음과 같다.
-
-- `GET /api/mvp2/binance/paper/status`
-- `GET /api/mvp2/binance/paper/candidates`
-- `GET /api/mvp2/binance/paper/portfolio`
-- `GET /api/mvp2/binance/paper/history`

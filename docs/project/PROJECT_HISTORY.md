@@ -59,7 +59,6 @@
 55. MVP2 Exchange 공통 시세 모델과 Upbit adapter 생성
 56. MVP2 Binance public ticker/candle provider 생성
 57. MVP2 거래소 상태 API와 React 거래소 선택 UI 생성
-58. Binance PAPER 포트폴리오, 후보 판단, 이력, 스케줄러 골격 생성
 
 ## 최근 검증
 

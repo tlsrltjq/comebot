@@ -198,16 +198,6 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```
 
-MVP2 Binance PAPER:
-
-```properties
-MVP2_PAPER_INITIAL_CASH=1000
-MVP2_PAPER_ORDER_AMOUNT=10
-MVP2_PAPER_BINANCE_SYMBOLS=BTCUSDT,ETHUSDT,XRPUSDT,SOLUSDT
-MVP2_PAPER_BINANCE_SCHEDULER_ENABLED=false
-MVP2_PAPER_BINANCE_SCHEDULER_FIXED_DELAY_MS=30000
-```
-
 Never commit real tokens, chat IDs, passwords, access keys, or secret keys.
 
 `POST /api/candidates/execute` only executes PAPER_TRADING BUY orders for selected candidates.
