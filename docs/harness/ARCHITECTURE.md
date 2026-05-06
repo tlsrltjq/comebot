@@ -149,7 +149,7 @@ Binance PAPER 흐름은 MVP1 Upbit PAPER 자동매매와 같은 기능 범위를
 - Binance PAPER history 저장
 - 자동 scheduler는 `mvp2.paper.binance-scheduler-enabled=true`가 기본값
 - scheduler는 심볼별 예외를 분리해서 한 심볼 실패가 다음 심볼 실행을 막지 않는다
-- 웹 `/mvp2`와 `/binance`에서 Binance PAPER 상태, 후보, 평가 포지션, 이력을 조회
+- 웹 `/mvp2` 한 화면에서 Upbit/Binance 모드를 전환해 Binance PAPER 상태, 후보, 평가 포지션, 이력을 조회
 
 초기 Binance PAPER API는 다음과 같다.
 
