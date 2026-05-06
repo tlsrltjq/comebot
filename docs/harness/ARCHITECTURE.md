@@ -126,9 +126,3 @@ MVP2 exchange 공통 시세 경계는 다음 모델을 사용한다.
 - `ExchangeCandle`: 거래소, symbol, OHLCV, 누적 거래대금/거래량
 - `ExchangeSymbolNormalizer`: 거래소별 symbol 정규화
 - `UpbitExchangeMarketDataAdapter`: 기존 Upbit ticker/candle provider를 MVP2 공통 모델로 변환
-- `BinanceExchangeMarketDataProvider`: Binance public ticker/kline API를 MVP2 공통 모델로 변환
-
-Binance는 인증키 없이 public endpoint만 사용한다.
-
-- ticker: `GET https://api.binance.com/api/v3/ticker/price`
-- candle: `GET https://api.binance.com/api/v3/klines`

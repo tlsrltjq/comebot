@@ -225,7 +225,6 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
    - Binance candle 조회
    - 인증키 없는 public API만 사용
    - API 실패 예외 처리와 테스트
-   - 상태: 완료
 
 4. 거래소별 상태 API 만들기
    - `GET /api/mvp2/exchanges`
@@ -347,8 +346,7 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 - 완료: exchange 공통 ticker/candle 모델
 - 완료: exchange별 symbol 정규화
 - 완료: Upbit 기존 ticker/candle provider adapter
-- 완료: Binance public ticker/candle provider
-- 다음: 거래소별 상태 API
+- 다음: Binance public ticker/candle provider
 
 ### 2단계: Strategy Profile 3종 동시 실행
 
