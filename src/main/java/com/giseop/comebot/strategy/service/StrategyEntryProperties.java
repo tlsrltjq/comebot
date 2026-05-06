@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "strategy.entry")
 public class StrategyEntryProperties {
 
-    private boolean preventReentryWithPosition = true;
+    private boolean preventReentryWithPosition = false;
 
     public boolean isPreventReentryWithPosition() {
         return preventReentryWithPosition;

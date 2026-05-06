@@ -81,8 +81,8 @@ MVP2:
   - 목표: 높은 수익률 후보 탐색
 
 - 수비형(Defensive)
-  - 거래대금, 추세, 재진입 제한을 강하게 적용
-  - 손절 cooldown을 길게 적용
+  - 거래대금, 추세, market별 노출 제한을 강하게 적용
+  - 특정 market 쏠림을 낮게 유지
   - 목표: 횡보장과 급락장에서 방어
 
 ### Market Type
@@ -110,7 +110,7 @@ MVP2는 market type을 분리한다.
 
 - `strategy.profile`
   - 안정형, 공격형, 수비형 설정
-  - threshold, cooldown, take profit, stop loss, max positions 등을 profile별로 분리한다.
+  - threshold, take profit, stop loss, max positions, max market exposure 등을 profile별로 분리한다.
 
 - `simulation`
   - spot/futures simulation position 관리
@@ -288,11 +288,11 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
 
 MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계 만들기`다.
 
-다만 MVP1 안정성을 먼저 올릴 경우에는 `docs/project/PROJECT_NEXT_STEPS.md`의 중복 진입 제한 강화를 먼저 끝낸 뒤 MVP2로 넘어간다.
+다만 MVP1 자금 활용률을 먼저 올릴 경우에는 `docs/project/PROJECT_NEXT_STEPS.md`의 자금 활용률과 포지션 분산 개선을 먼저 끝낸 뒤 MVP2로 넘어간다.
 
 추천 순서:
 
-1. MVP1 중복 진입 제한 강화
+1. MVP1 자금 활용률과 포지션 분산 개선
 2. MVP2 패키지와 용어 경계 만들기
 3. Exchange 공통 모델 만들기
 4. Binance public market data 추가
@@ -419,11 +419,11 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 
 초기값은 실험용이며 실제 성과를 보장하지 않는다.
 
-| Profile | 진입 빈도 | 추세 확인 | 손절 | 익절 | 재진입 cooldown | 목표 |
+| Profile | 진입 빈도 | 추세 확인 | 손절 | 익절 | market별 노출 | 목표 |
 | --- | --- | --- | --- | --- | --- | --- |
 | STABLE | 낮음 | 강함 | 좁음 | 보통 | 보통 | 안정 수익 |
-| AGGRESSIVE | 높음 | 보통 | 넓음 | 높음 | 짧음 | 높은 수익률 탐색 |
-| DEFENSIVE | 매우 낮음 | 매우 강함 | 매우 좁음 | 낮음 | 길게 | 손실 방어 |
+| AGGRESSIVE | 높음 | 보통 | 넓음 | 높음 | 높음 | 높은 수익률 탐색 |
+| DEFENSIVE | 매우 낮음 | 매우 강함 | 매우 좁음 | 낮음 | 낮음 | 손실 방어 |
 
 ## 주요 리스크
 

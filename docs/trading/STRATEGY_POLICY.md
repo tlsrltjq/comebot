@@ -36,7 +36,9 @@
 
 후보가 `SKIPPED`이면 HOLD 신호를 만든다.
 
-이미 PAPER 포지션을 보유 중이면 기본값에서 같은 market 재진입을 차단한다.
+현재 기본값에서는 같은 market PAPER 포지션을 보유 중이어도 추가 진입을 허용한다.
+이 설정은 1,000,000 KRW PAPER 현금을 더 적극적으로 사용하기 위한 것이다.
+같은 market 재진입 차단이 필요하면 `STRATEGY_ENTRY_PREVENT_REENTRY_WITH_POSITION=true`로 명시 설정한다.
 
 최종 주문은 kill switch, risk, PAPER portfolio 검증을 통과해야 한다.
 
@@ -59,7 +61,7 @@ SELL 신호는 보유 포지션에 대해서만 만든다.
 - 실패한 주문을 체결로 간주하지 않는다.
 - 전략 코드에서 Telegram, DB, Controller 로직을 처리하지 않는다.
 - 전략 코드에서 실제 주문 API를 호출하지 않는다.
-전략 변경 시 BUY, HOLD, 후보 미선택, scanner 실패, 재진입 차단을 테스트한다.
+전략 변경 시 BUY, HOLD, 후보 미선택, scanner 실패, 재진입 허용/차단 설정을 테스트한다.
 
 현재 로컬 PAPER 자동 검증 기본값은 거래대금 상위 코인에서 상승과 거래대금 증가가 같이 확인된 경우만 매수한다.
 
