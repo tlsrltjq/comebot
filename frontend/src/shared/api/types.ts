@@ -3,7 +3,6 @@ export type OrderStatus = 'FILLED' | 'REJECTED' | 'FAILED';
 export type CandidateDecision = 'SELECTED' | 'SKIPPED';
 export type MarketTrend = 'UP' | 'DOWN' | 'SIDEWAYS';
 export type AnalyticsRange = '1h' | '24h' | '3d' | '7d';
-export type Mvp2Exchange = 'UPBIT' | 'BINANCE';
 
 export interface SystemStatusResponse {
   database: { connected: boolean };
@@ -151,22 +150,4 @@ export interface AnalyticsLossResponse {
   range: AnalyticsRange;
   worstTrades: LossTradeResponse[];
   repeatedStopLossMarkets: MarketCountResponse[];
-}
-
-export interface Mvp2ExchangeResponse {
-  exchange: Mvp2Exchange;
-  displayName: string;
-  enabled: boolean;
-  publicMarketDataOnly: boolean;
-  statusPath: string;
-}
-
-export interface Mvp2ExchangeStatusResponse {
-  exchange: Mvp2Exchange;
-  displayName: string;
-  enabled: boolean;
-  publicMarketDataOnly: boolean;
-  realTradingSupported: boolean;
-  marketData: string;
-  message: string;
 }

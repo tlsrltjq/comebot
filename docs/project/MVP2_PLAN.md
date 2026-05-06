@@ -231,7 +231,6 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
    - `GET /api/mvp2/exchanges`
    - `GET /api/mvp2/exchanges/{exchange}/status`
    - 웹에서 Upbit/Binance 버튼을 만들 수 있는 최소 데이터 제공
-   - 상태: 완료
 
 5. 실험 엔진의 저장 모델 만들기
    - `experimentId`
@@ -349,9 +348,7 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 - 완료: exchange별 symbol 정규화
 - 완료: Upbit 기존 ticker/candle provider adapter
 - 완료: Binance public ticker/candle provider
-- 완료: 거래소별 상태 API
-- 완료: React MVP2 Upbit/Binance 선택 UI
-- 다음: 실험 엔진의 저장 모델
+- 다음: 거래소별 상태 API
 
 ### 2단계: Strategy Profile 3종 동시 실행
 

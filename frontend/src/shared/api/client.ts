@@ -3,9 +3,6 @@ import type {
   AnalyticsPnlResponse,
   AnalyticsRange,
   AnalyticsSummaryResponse,
-  Mvp2Exchange,
-  Mvp2ExchangeResponse,
-  Mvp2ExchangeStatusResponse,
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
@@ -52,9 +49,6 @@ export const api = {
   analyticsPnl: (range: AnalyticsRange) => request<AnalyticsPnlResponse>(`/api/analytics/pnl${query({ range })}`),
   analyticsLosses: (range: AnalyticsRange) =>
     request<AnalyticsLossResponse>(`/api/analytics/losses${query({ range })}`),
-  mvp2Exchanges: () => request<Mvp2ExchangeResponse[]>('/api/mvp2/exchanges'),
-  mvp2ExchangeStatus: (exchange: Mvp2Exchange) =>
-    request<Mvp2ExchangeStatusResponse>(`/api/mvp2/exchanges/${exchange}/status`),
 };
 
 export const queryKeys = {
@@ -67,6 +61,4 @@ export const queryKeys = {
   analyticsSummary: (range: AnalyticsRange) => ['analyticsSummary', range] as const,
   analyticsPnl: (range: AnalyticsRange) => ['analyticsPnl', range] as const,
   analyticsLosses: (range: AnalyticsRange) => ['analyticsLosses', range] as const,
-  mvp2Exchanges: ['mvp2Exchanges'] as const,
-  mvp2ExchangeStatus: (exchange: Mvp2Exchange) => ['mvp2ExchangeStatus', exchange] as const,
 };

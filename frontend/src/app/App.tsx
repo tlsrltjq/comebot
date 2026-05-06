@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Activity, BarChart3, Clock3, FlaskConical, LineChart, PieChart, Radar } from 'lucide-react';
+import { Activity, BarChart3, Clock3, LineChart, PieChart, Radar } from 'lucide-react';
 
 const navItems = [
   { to: '/', label: '대시보드(Dashboard)', icon: Activity },
@@ -7,7 +7,6 @@ const navItems = [
   { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
   { to: '/portfolio', label: '포트폴리오(Portfolio)', icon: PieChart },
   { to: '/history', label: '이력(History)', icon: Clock3 },
-  { to: '/mvp2', label: 'MVP2 실험(Experiments)', icon: FlaskConical },
 ];
 
 export function App() {

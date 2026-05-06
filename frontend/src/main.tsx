@@ -5,7 +5,6 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { App } from './app/App';
 import { CandidatesPage } from './features/candidates/CandidatesPage';
 import { HistoryPage } from './features/history/HistoryPage';
-import { Mvp2Page } from './features/mvp2/Mvp2Page';
 import { PortfolioPage } from './features/portfolio/PortfolioPage';
 import { DashboardPage } from './features/system/DashboardPage';
 import { TradePage } from './features/trading/TradePage';
@@ -30,7 +29,6 @@ const router = createBrowserRouter([
       { path: 'trade', element: <TradePage /> },
       { path: 'portfolio', element: <PortfolioPage /> },
       { path: 'history', element: <HistoryPage /> },
-      { path: 'mvp2', element: <Mvp2Page /> },
     ],
   },
 ]);
