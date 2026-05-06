@@ -36,7 +36,6 @@
 - Binance PAPER 포트폴리오, 후보 판단, 이력, scheduler 골격 생성
 - Binance PAPER valuation과 웹 손익 지표 표시
 - Binance PAPER scheduler 운영 기본값 켜짐과 심볼별 실패 격리
-- Binance PAPER 전용 React 대시보드 `/binance` 추가
 
 ## 다음 작업
 
