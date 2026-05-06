@@ -37,6 +37,7 @@
 - Binance PAPER valuation과 웹 손익 지표 표시
 - Binance PAPER scheduler 운영 기본값 켜짐과 심볼별 실패 격리
 - React `/mvp2` 한 화면 안에서 Upbit/Binance 모드 전환 UI 정리
+- React `/mvp2` 모드 전환 시 같은 화면 구조에서 Upbit/Binance 데이터 소스 전환
 
 ## 다음 작업
 
