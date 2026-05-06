@@ -16,6 +16,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -87,6 +90,48 @@ public class Mvp2PaperTradingService {
 
     public Mvp2PaperPortfolioSnapshot portfolio(Exchange exchange) {
         return portfolioService.snapshot(exchange);
+    }
+
+    public Mvp2PaperPortfolioValuation valuation(Exchange exchange) {
+        Mvp2PaperPortfolioSnapshot snapshot = portfolio(exchange);
+        if (snapshot.positions().isEmpty()) {
+            return new Mvp2PaperPortfolioValuation(
+                    exchange,
+                    snapshot.cash(),
+                    BigDecimal.ZERO,
+                    snapshot.cash(),
+                    snapshot.realizedProfit(),
+                    BigDecimal.ZERO,
+                    snapshot.realizedProfit(),
+                    List.of()
+            );
+        }
+
+        List<String> symbols = snapshot.positions().stream()
+                .map(Mvp2PaperPosition::symbol)
+                .toList();
+        Map<String, ExchangeTicker> tickers = provider(exchange).getTickers(symbols).stream()
+                .collect(Collectors.toMap(ExchangeTicker::symbol, Function.identity()));
+        List<Mvp2PaperPositionValuation> positions = snapshot.positions().stream()
+                .map(position -> valuePosition(position, tickers))
+                .toList();
+        BigDecimal totalPositionValue = positions.stream()
+                .map(Mvp2PaperPositionValuation::positionValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal unrealizedProfit = positions.stream()
+                .map(Mvp2PaperPositionValuation::unrealizedProfit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new Mvp2PaperPortfolioValuation(
+                exchange,
+                snapshot.cash(),
+                totalPositionValue,
+                snapshot.cash().add(totalPositionValue),
+                snapshot.realizedProfit(),
+                unrealizedProfit,
+                snapshot.realizedProfit().add(unrealizedProfit),
+                positions
+        );
     }
 
     public List<Mvp2PaperTradeHistory> history(Exchange exchange, int limit) {
@@ -198,6 +243,29 @@ public class Mvp2PaperTradingService {
         return currentPrice.subtract(averageBuyPrice)
                 .multiply(new BigDecimal("100"))
                 .divide(averageBuyPrice, 8, RoundingMode.HALF_UP);
+    }
+
+    private Mvp2PaperPositionValuation valuePosition(Mvp2PaperPosition position, Map<String, ExchangeTicker> tickers) {
+        ExchangeTicker ticker = tickers.get(position.symbol());
+        if (ticker == null || ticker.tradePrice() == null) {
+            throw new IllegalStateException("MVP2 current price is not available: " + position.symbol());
+        }
+        BigDecimal cost = position.quantity().multiply(position.averageBuyPrice());
+        BigDecimal positionValue = position.quantity().multiply(ticker.tradePrice());
+        BigDecimal unrealizedProfit = positionValue.subtract(cost);
+        BigDecimal unrealizedProfitRate = cost.compareTo(BigDecimal.ZERO) == 0
+                ? BigDecimal.ZERO
+                : unrealizedProfit.multiply(new BigDecimal("100")).divide(cost, 8, RoundingMode.HALF_UP);
+
+        return new Mvp2PaperPositionValuation(
+                position.symbol(),
+                position.quantity(),
+                position.averageBuyPrice(),
+                ticker.tradePrice(),
+                positionValue,
+                unrealizedProfit,
+                unrealizedProfitRate
+        );
     }
 
     private String failureReason(RuntimeException exception) {

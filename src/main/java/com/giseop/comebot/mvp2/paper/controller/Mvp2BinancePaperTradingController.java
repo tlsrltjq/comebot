@@ -3,6 +3,7 @@ package com.giseop.comebot.mvp2.paper.controller;
 import com.giseop.comebot.mvp2.exchange.Exchange;
 import com.giseop.comebot.mvp2.paper.Mvp2PaperCandidate;
 import com.giseop.comebot.mvp2.paper.Mvp2PaperPortfolioSnapshot;
+import com.giseop.comebot.mvp2.paper.Mvp2PaperPortfolioValuation;
 import com.giseop.comebot.mvp2.paper.Mvp2PaperTradeHistory;
 import com.giseop.comebot.mvp2.paper.Mvp2PaperTradingProperties;
 import com.giseop.comebot.mvp2.paper.Mvp2PaperTradingService;
@@ -47,6 +48,11 @@ public class Mvp2BinancePaperTradingController {
     @GetMapping("/api/mvp2/binance/paper/portfolio")
     public Mvp2PaperPortfolioSnapshot portfolio() {
         return tradingService.portfolio(Exchange.BINANCE);
+    }
+
+    @GetMapping("/api/mvp2/binance/paper/valuation")
+    public Mvp2PaperPortfolioValuation valuation() {
+        return tradingService.valuation(Exchange.BINANCE);
     }
 
     @GetMapping("/api/mvp2/binance/paper/history")

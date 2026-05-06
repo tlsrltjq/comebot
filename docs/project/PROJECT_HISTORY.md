@@ -60,6 +60,7 @@
 56. MVP2 Binance public ticker/candle provider 생성
 57. MVP2 거래소 상태 API와 React 거래소 선택 UI 생성
 58. Binance PAPER 포트폴리오, 후보 판단, 이력, 스케줄러 골격 생성
+59. Binance PAPER 현재가 평가액, 미실현손익, 총손익 API와 웹 표시 추가
 
 ## 최근 검증
 
