@@ -246,7 +246,6 @@ strategy.market-overrides.markets.KRW-BTC.max-price-change-rate=12
 - [Strategy Policy](docs/trading/STRATEGY_POLICY.md)
 - [Project Plan](docs/project/PROJECT_PLAN.md)
 - [Web UX Upgrade Plan](docs/project/WEB_UX_UPGRADE_PLAN.md)
-- [MVP2 Plan](docs/project/MVP2_PLAN.md)
 - [Project History](docs/project/PROJECT_HISTORY.md)
 - [Next Steps](docs/project/PROJECT_NEXT_STEPS.md)
 
