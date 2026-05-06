@@ -212,6 +212,7 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
    - `exchange`, `experiment`, `simulation`, `leaderboard` 패키지 초안
    - enum 초안: `Exchange`, `MarketType`, `StrategyProfile`
    - 실제 주문 금지 테스트 유지
+   - 상태: 완료
 
 2. Exchange 공통 모델 만들기
    - 거래소별 symbol 정규화 규칙

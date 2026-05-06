@@ -12,6 +12,7 @@
 - 1회 PAPER 주문 금액: 10,000 KRW
 - 익절/손절 기준: 1.5 / -0.7
 - 같은 market 추가 진입: 기본 허용
+- MVP2: 패키지와 용어 경계 생성 시작
 
 ## 최근 완료
 
@@ -26,13 +27,14 @@
 - 포트폴리오 자금 사용률과 남은 매수 가능 횟수 표시
 - 포트폴리오 market별 비중 TOP과 쏠림 경고 표시
 - 2026-05-06 PAPER 매매기록 기준 마이너스 손익 원인 분석 문서화
+- MVP2 `exchange`, `experiment`, `simulation`, `strategy`, `leaderboard` 패키지 경계 생성
 
 ## 다음 작업
 
-1. market별 쏠림 최소 리스크 기준 문서화
-2. 포트폴리오 모바일 카드형 UX
-3. 후보 화면 개선
-4. 운영 상태 화면과 Telegram 용어 정리
+1. MVP2 Exchange 공통 모델과 Upbit adapter
+2. Binance public market data
+3. 거래소별 상태 API와 웹 선택 버튼
+4. 전략 profile 3종 동시 실행
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

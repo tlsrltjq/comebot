@@ -176,6 +176,25 @@ class SecurityLintTest {
         assertThat(violations).isEmpty();
     }
 
+    @Test
+    void binanceAuthenticationConfigurationMustNotBeAdded() throws IOException {
+        List<String> violations = new ArrayList<>();
+
+        for (Path file : trackedTextFiles()) {
+            String normalizedPath = ROOT.relativize(file).toString().replace('\\', '/');
+            String content = Files.readString(file, StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
+
+            if (content.contains("binance_api_key")
+                    || content.contains("binance_secret_key")
+                    || content.contains("binance.api-key")
+                    || content.contains("binance.secret-key")) {
+                violations.add(normalizedPath);
+            }
+        }
+
+        assertThat(violations).isEmpty();
+    }
+
     private static List<Path> trackedTextFiles() throws IOException {
         List<Path> files = new ArrayList<>();
         for (Path scanRoot : SCAN_ROOTS) {

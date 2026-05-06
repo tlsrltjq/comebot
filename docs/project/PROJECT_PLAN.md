@@ -23,9 +23,9 @@ Upbit 공개 시세와 캔들 데이터를 사용해 변동성 기반 롱 전용
 
 캔들 Provider, 변동성 계산, 후보 실행, Telegram 후보 명령, 전략 선택, 후보 자동 실행, 과열 회피, 재진입 제한, market별 override, scheduler 요약 알림, Telegram 후보 요약 개선, scheduler/history 검증, React 모니터링 웹 UI, 기본 자동 PAPER 실행 설정, 매매 조건 기록 문서, analytics API, 대시보드 손익 요약, 포트폴리오 자산 배분/손익 UX, History 분석 화면까지 추가했다.
 
-다음 단계는 자금 활용률과 포지션 분산 개선이다. 같은 market 추가 진입은 기본 허용하고, 1,000,000 KRW PAPER 현금이 놀지 않도록 현금 사용률과 market별 쏠림을 관리한다.
+다음 단계는 MVP2다. MVP1의 market별 최소 리스크 제한은 보류하고, Upbit/Binance, 멀티 전략 profile, spot/futures simulation을 다루는 실험 플랫폼으로 확장한다.
 
-MVP2는 별도 계획으로 분리한다. MVP2는 Upbit/Binance, 멀티 전략 profile, spot/futures simulation을 다루되 초기 구현은 실제 주문 없이 PAPER/SIMULATION으로만 진행한다.
+MVP2 초기 구현은 실제 주문 없이 public market data와 PAPER/SIMULATION으로만 진행한다. 첫 단계는 `com.giseop.comebot.mvp2` 패키지와 용어 경계를 만들고 MVP1 자동매매 흐름과 섞이지 않게 분리하는 것이다.
 
 ## 작업 진행 규칙
 
