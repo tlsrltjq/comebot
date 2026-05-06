@@ -218,7 +218,6 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
    - 거래소별 symbol 정규화 규칙
    - 공통 ticker/candle DTO
    - Upbit adapter부터 기존 provider와 연결
-   - 상태: 완료
 
 3. Binance public market data 추가
    - Binance ticker 조회
@@ -340,13 +339,6 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 
 - `UPBIT`, `BINANCE` public ticker/candle 조회가 테스트된다.
 - API 실패 시 앱이 죽지 않는다.
-
-진행 상태:
-
-- 완료: exchange 공통 ticker/candle 모델
-- 완료: exchange별 symbol 정규화
-- 완료: Upbit 기존 ticker/candle provider adapter
-- 다음: Binance public ticker/candle provider
 
 ### 2단계: Strategy Profile 3종 동시 실행
 

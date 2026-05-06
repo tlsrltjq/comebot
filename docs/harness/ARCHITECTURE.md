@@ -118,11 +118,3 @@ MVP2에서도 실제 주문 API와 `REAL_TRADING`은 구현하지 않는다. Bin
 - `mvp2.leaderboard`: 실험 결과 비교와 순위 집계 경계
 
 MVP1의 `market`, `strategy`, `portfolio`, `history` 구현은 MVP2 실험 저장소와 섞지 않는다. MVP2가 기존 Upbit 시세를 재사용하더라도 adapter 계층을 통해 연결한다.
-
-MVP2 exchange 공통 시세 경계는 다음 모델을 사용한다.
-
-- `ExchangeMarketDataProvider`: 거래소별 ticker/candle 조회 adapter 인터페이스
-- `ExchangeTicker`: 거래소, symbol, 현재가, 수집 시각
-- `ExchangeCandle`: 거래소, symbol, OHLCV, 누적 거래대금/거래량
-- `ExchangeSymbolNormalizer`: 거래소별 symbol 정규화
-- `UpbitExchangeMarketDataAdapter`: 기존 Upbit ticker/candle provider를 MVP2 공통 모델로 변환
