@@ -85,28 +85,6 @@ describe('Mvp2Page', () => {
           positions: [{ symbol: 'BTCUSDT', quantity: '0.0001', averageBuyPrice: '100000' }],
         });
       }
-      if (url === '/api/mvp2/binance/paper/valuation') {
-        return json({
-          exchange: 'BINANCE',
-          cash: '990',
-          totalPositionValue: '10.5',
-          totalEquity: '1000.5',
-          realizedProfit: '0',
-          unrealizedProfit: '0.5',
-          totalProfit: '0.5',
-          positions: [
-            {
-              symbol: 'BTCUSDT',
-              quantity: '0.0001',
-              averageBuyPrice: '100000',
-              currentPrice: '105000',
-              positionValue: '10.5',
-              unrealizedProfit: '0.5',
-              unrealizedProfitRate: '5',
-            },
-          ],
-        });
-      }
       if (url === '/api/mvp2/binance/paper/candidates') {
         return json([
           {
@@ -150,8 +128,6 @@ describe('Mvp2Page', () => {
 
     expect((await screen.findAllByText('Binance public ticker/kline provider is available.')).length).toBeGreaterThan(0);
     expect(await screen.findByText('Binance PAPER')).toBeInTheDocument();
-    expect(await screen.findByText('총손익(Total PnL)')).toBeInTheDocument();
-    expect(await screen.findByText('1,000.5 USDT')).toBeInTheDocument();
     expect((await screen.findAllByText('BTCUSDT')).length).toBeGreaterThan(0);
     expect((await screen.findAllByText((_, element) => element?.textContent?.includes('MVP2 paper order filled') ?? false)).length).toBeGreaterThan(0);
     expect(screen.getByText('안정형(Stable)')).toBeInTheDocument();

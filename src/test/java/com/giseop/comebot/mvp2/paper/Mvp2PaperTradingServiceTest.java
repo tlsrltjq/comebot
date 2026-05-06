@@ -49,26 +49,6 @@ class Mvp2PaperTradingServiceTest {
         assertThat(service.history(Exchange.BINANCE, 10)).hasSize(2);
     }
 
-    @Test
-    void binanceValuationUsesCurrentTickerForUnrealizedProfit() {
-        StubProvider provider = new StubProvider(new BigDecimal("105"));
-        Mvp2PaperTradingService service = service(provider);
-        service.run(Exchange.BINANCE, "BTCUSDT");
-
-        provider.price = new BigDecimal("110");
-        Mvp2PaperPortfolioValuation valuation = service.valuation(Exchange.BINANCE);
-
-        assertThat(valuation.cash()).isBetween(new BigDecimal("90"), new BigDecimal("90.000001"));
-        assertThat(valuation.totalPositionValue()).isGreaterThan(new BigDecimal("10"));
-        assertThat(valuation.totalEquity()).isGreaterThan(new BigDecimal("100"));
-        assertThat(valuation.realizedProfit()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(valuation.unrealizedProfit()).isGreaterThan(BigDecimal.ZERO);
-        assertThat(valuation.totalProfit()).isGreaterThan(BigDecimal.ZERO);
-        assertThat(valuation.positions()).hasSize(1);
-        assertThat(valuation.positions().getFirst().currentPrice()).isEqualByComparingTo("110");
-        assertThat(valuation.positions().getFirst().unrealizedProfitRate()).isGreaterThan(BigDecimal.ZERO);
-    }
-
     private Mvp2PaperTradingService service(StubProvider provider) {
         Mvp2PaperTradingProperties properties = new Mvp2PaperTradingProperties();
         properties.setInitialCash(new BigDecimal("100"));

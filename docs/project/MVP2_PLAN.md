@@ -247,8 +247,7 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
 - Binance public candle 기반 후보 판단
 - Binance public ticker 기반 익절/손절
 - Binance PAPER 이력 조회
-- Binance PAPER 현재가 기준 평가액, 미실현손익, 총손익 조회
-- 웹 `/mvp2` Binance 화면에 상태/후보/평가 포지션/이력 표시
+- 웹 `/mvp2` Binance 화면에 상태/후보/포지션/이력 표시
 - 실제 Binance 주문 API 없음
 
 6. 전략 profile 3종 설정 분리

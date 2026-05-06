@@ -208,24 +208,6 @@ export interface Mvp2PaperPortfolioResponse {
   positions: Mvp2PaperPositionResponse[];
 }
 
-export interface Mvp2PaperPositionValuationResponse extends Mvp2PaperPositionResponse {
-  currentPrice: string;
-  positionValue: string;
-  unrealizedProfit: string;
-  unrealizedProfitRate: string;
-}
-
-export interface Mvp2PaperPortfolioValuationResponse {
-  exchange: Mvp2Exchange;
-  cash: string;
-  totalPositionValue: string;
-  totalEquity: string;
-  realizedProfit: string;
-  unrealizedProfit: string;
-  totalProfit: string;
-  positions: Mvp2PaperPositionValuationResponse[];
-}
-
 export interface Mvp2PaperTradeHistoryResponse {
   exchange: Mvp2Exchange;
   symbol: string;

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Clock3, FlaskConical, ShieldCheck, Store, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
-import type { Mvp2Exchange, Mvp2ExchangeResponse, Mvp2PaperPositionResponse, Mvp2PaperPositionValuationResponse } from '../../shared/api/types';
+import type { Mvp2Exchange, Mvp2ExchangeResponse } from '../../shared/api/types';
 import { formatDateTime, formatNumber } from '../../shared/format';
 import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
@@ -38,12 +38,6 @@ export function Mvp2Page() {
     enabled: binanceSelected,
     refetchInterval: 15_000,
   });
-  const binancePaperValuationQuery = useQuery({
-    queryKey: queryKeys.mvp2BinancePaperValuation,
-    queryFn: api.mvp2BinancePaperValuation,
-    enabled: binanceSelected,
-    refetchInterval: 5_000,
-  });
   const binancePaperCandidatesQuery = useQuery({
     queryKey: queryKeys.mvp2BinancePaperCandidates,
     queryFn: api.mvp2BinancePaperCandidates,
@@ -57,8 +51,6 @@ export function Mvp2Page() {
     refetchInterval: 15_000,
   });
   const binancePortfolio = binancePaperPortfolioQuery.data;
-  const binanceValuation = binancePaperValuationQuery.data;
-  const binancePositions = binanceValuation?.positions ?? binancePortfolio?.positions ?? [];
   const binanceStatus = binancePaperStatusQuery.data;
   const binanceCandidates = binancePaperCandidatesQuery.data ?? [];
   const binanceHistory = binancePaperHistoryQuery.data ?? [];
@@ -77,7 +69,6 @@ export function Mvp2Page() {
       {statusQuery.error ? <ErrorPanel title="MVP2 거래소 상태 조회 실패(Exchange status failed)" error={statusQuery.error} /> : null}
       {binancePaperStatusQuery.error ? <ErrorPanel title="Binance PAPER 상태 조회 실패(Binance paper status failed)" error={binancePaperStatusQuery.error} /> : null}
       {binancePaperPortfolioQuery.error ? <ErrorPanel title="Binance PAPER 포트폴리오 조회 실패(Binance paper portfolio failed)" error={binancePaperPortfolioQuery.error} /> : null}
-      {binancePaperValuationQuery.error ? <ErrorPanel title="Binance PAPER 평가 조회 실패(Binance paper valuation failed)" error={binancePaperValuationQuery.error} /> : null}
       {binancePaperCandidatesQuery.error ? <ErrorPanel title="Binance PAPER 후보 조회 실패(Binance paper candidates failed)" error={binancePaperCandidatesQuery.error} /> : null}
 
       <div className="exchange-switch" aria-label="거래소 선택(Exchange selector)">
@@ -99,7 +90,7 @@ export function Mvp2Page() {
         <MetricCard label="선택 거래소(Exchange)" value={statusQuery.data?.displayName ?? selected.displayName} detail={selected.exchange} />
         <MetricCard label="시세 모드(Market Data)" value={statusQuery.data?.publicMarketDataOnly ? '공개 시세(Public)' : '점검 필요(Review)'} detail={statusQuery.data?.marketData ?? '-'} />
         <MetricCard label="실거래(Real Trading)" value={statusQuery.data?.realTradingSupported ? '지원(Supported)' : '미지원(Not supported)'} detail="PAPER/SIMULATION only" />
-        <MetricCard label="PAPER 총자산(Paper Equity)" value={binanceSelected ? `${formatNumber(binanceValuation?.totalEquity ?? binancePortfolio?.cash, 2)} USDT` : 'MVP1 화면 사용'} detail={binanceSelected ? `주문(Order) ${formatNumber(binanceStatus?.orderAmount, 2)} USDT` : 'Upbit PAPER dashboard'} />
+        <MetricCard label="PAPER 현금(Paper Cash)" value={binanceSelected ? `${formatNumber(binancePortfolio?.cash, 2)} USDT` : 'MVP1 화면 사용'} detail={binanceSelected ? `주문(Order) ${formatNumber(binanceStatus?.orderAmount, 2)} USDT` : 'Upbit PAPER dashboard'} />
       </div>
 
       <div className="section-grid">
@@ -152,13 +143,7 @@ export function Mvp2Page() {
               <dt>대상(Symbols)</dt>
               <dd>{binanceStatus?.symbols.join(', ') ?? '-'}</dd>
               <dt>실현손익(Realized)</dt>
-              <dd>{formatNumber(binanceValuation?.realizedProfit ?? binancePortfolio?.realizedProfit, 4)} USDT</dd>
-              <dt>포지션 평가(Position Value)</dt>
-              <dd>{formatNumber(binanceValuation?.totalPositionValue, 4)} USDT</dd>
-              <dt>미실현손익(Unrealized)</dt>
-              <dd>{formatNumber(binanceValuation?.unrealizedProfit, 4)} USDT</dd>
-              <dt>총손익(Total PnL)</dt>
-              <dd>{formatNumber(binanceValuation?.totalProfit, 4)} USDT</dd>
+              <dd>{formatNumber(binancePortfolio?.realizedProfit, 4)} USDT</dd>
             </dl>
           ) : (
             <p>Upbit PAPER 거래는 기존 대시보드, 후보, 포트폴리오 화면에서 확인합니다.</p>
@@ -193,15 +178,15 @@ export function Mvp2Page() {
               <BarChart3 size={20} />
             </div>
             <div className="mvp2-list">
-              {binancePositions.map((position) => (
+              {(binancePortfolio?.positions ?? []).map((position) => (
                 <div className="mvp2-row" key={position.symbol}>
                   <div>
                     <strong>{position.symbol}</strong>
-                    <small>{positionSummary(position)}</small>
+                    <small>Avg {formatNumber(position.averageBuyPrice, 6)} / Qty {formatNumber(position.quantity, 8)}</small>
                   </div>
                 </div>
               ))}
-              {(binancePortfolio || binanceValuation) && binancePositions.length === 0 ? <p>보유 포지션 없음(No positions)</p> : null}
+              {binancePortfolio && binancePortfolio.positions.length === 0 ? <p>보유 포지션 없음(No positions)</p> : null}
             </div>
           </article>
 
@@ -229,18 +214,6 @@ export function Mvp2Page() {
       ) : null}
     </section>
   );
-}
-
-function isValuedPosition(position: Mvp2PaperPositionResponse): position is Mvp2PaperPositionValuationResponse {
-  return 'currentPrice' in position;
-}
-
-function positionSummary(position: Mvp2PaperPositionResponse) {
-  const base = `Avg ${formatNumber(position.averageBuyPrice, 6)} / Qty ${formatNumber(position.quantity, 8)}`;
-  if (!isValuedPosition(position)) {
-    return base;
-  }
-  return `${base} / Now ${formatNumber(position.currentPrice, 6)} / Value ${formatNumber(position.positionValue, 4)} / PnL ${formatNumber(position.unrealizedProfit, 4)} (${formatNumber(position.unrealizedProfitRate, 2)}%)`;
 }
 
 function selectExchange(exchanges: Mvp2ExchangeResponse[], selectedExchange: Mvp2Exchange) {
