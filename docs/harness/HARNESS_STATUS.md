@@ -9,7 +9,9 @@
 - Telegram: 기본 조회 전용
 - 자동 실행 대상: `ALL_KRW`
 - 자동 실행 주기: 30초
+- MVP2 Binance PAPER 자동 실행: 기본 켜짐, 30초
 - 1회 PAPER 주문 금액: 10,000 KRW
+- MVP2 Binance 1회 PAPER 주문 금액: 10 USDT
 - 익절/손절 기준: 1.5 / -0.7
 - 같은 market 추가 진입: 기본 허용
 - MVP2: 패키지와 용어 경계 생성 시작
@@ -33,13 +35,13 @@
 - MVP2 거래소 상태 API와 React `/mvp2` 거래소 선택 화면 생성
 - Binance PAPER 포트폴리오, 후보 판단, 이력, scheduler 골격 생성
 - Binance PAPER valuation과 웹 손익 지표 표시
+- Binance PAPER scheduler 운영 기본값 켜짐과 심볼별 실패 격리
 
 ## 다음 작업
 
-1. Binance PAPER scheduler 운영 설정 적용
-2. MVP2 실험 엔진 저장 모델
-3. 전략 profile 3종 동시 실행
-4. Binance PAPER 평가손익 기반 분석 화면 확장
+1. MVP2 실험 엔진 저장 모델
+2. 전략 profile 3종 동시 실행
+3. Binance PAPER 평가손익 기반 분석 화면 확장
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

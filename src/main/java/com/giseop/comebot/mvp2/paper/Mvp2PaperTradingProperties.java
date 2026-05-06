@@ -21,7 +21,7 @@ public class Mvp2PaperTradingProperties {
     private BigDecimal maxPriceChangeRate = new BigDecimal("10");
     private BigDecimal maxHighLowRangeRate = new BigDecimal("20");
     private List<String> binanceSymbols = new ArrayList<>(List.of("BTCUSDT", "ETHUSDT", "XRPUSDT", "SOLUSDT"));
-    private boolean binanceSchedulerEnabled = false;
+    private boolean binanceSchedulerEnabled = true;
     private long binanceSchedulerFixedDelayMs = 30000;
 
     public BigDecimal getInitialCash() {
