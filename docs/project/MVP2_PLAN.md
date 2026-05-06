@@ -241,6 +241,15 @@ MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 
    - 실행 상태, 시작/종료 시각
    - 처음에는 DB 저장보다 in-memory로 시작 가능
 
+현재 사용자 요청에 따라 5단계보다 먼저 Binance PAPER 자동매매 기능을 MVP1 Upbit PAPER 기능과 유사한 범위로 확장한다.
+
+- Binance 전용 PAPER 포트폴리오
+- Binance public candle 기반 후보 판단
+- Binance public ticker 기반 익절/손절
+- Binance PAPER 이력 조회
+- 웹 `/mvp2` Binance 화면에 상태/후보/포지션/이력 표시
+- 실제 Binance 주문 API 없음
+
 6. 전략 profile 3종 설정 분리
    - `STABLE`
    - `AGGRESSIVE`
@@ -351,7 +360,8 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 - 완료: Binance public ticker/candle provider
 - 완료: 거래소별 상태 API
 - 완료: React MVP2 Upbit/Binance 선택 UI
-- 다음: 실험 엔진의 저장 모델
+- 완료: Binance PAPER 포트폴리오/후보/이력/스케줄러 골격
+- 다음: Binance PAPER 자동 실행을 운영 설정으로 켜고 웹 지표를 보강
 
 ### 2단계: Strategy Profile 3종 동시 실행
 

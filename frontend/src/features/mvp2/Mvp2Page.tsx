@@ -1,8 +1,9 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, CheckCircle2, FlaskConical, ShieldCheck, Store, TrendingUp } from 'lucide-react';
+import { BarChart3, Clock3, FlaskConical, ShieldCheck, Store, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
 import type { Mvp2Exchange, Mvp2ExchangeResponse } from '../../shared/api/types';
+import { formatDateTime, formatNumber } from '../../shared/format';
 import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { MetricCard } from '../../shared/ui/MetricCard';
@@ -24,6 +25,35 @@ export function Mvp2Page() {
     enabled: Boolean(selected.exchange),
     refetchInterval: 15_000,
   });
+  const binanceSelected = selected.exchange === 'BINANCE';
+  const binancePaperStatusQuery = useQuery({
+    queryKey: queryKeys.mvp2BinancePaperStatus,
+    queryFn: api.mvp2BinancePaperStatus,
+    enabled: binanceSelected,
+    refetchInterval: 15_000,
+  });
+  const binancePaperPortfolioQuery = useQuery({
+    queryKey: queryKeys.mvp2BinancePaperPortfolio,
+    queryFn: api.mvp2BinancePaperPortfolio,
+    enabled: binanceSelected,
+    refetchInterval: 15_000,
+  });
+  const binancePaperCandidatesQuery = useQuery({
+    queryKey: queryKeys.mvp2BinancePaperCandidates,
+    queryFn: api.mvp2BinancePaperCandidates,
+    enabled: binanceSelected,
+    refetchInterval: 30_000,
+  });
+  const binancePaperHistoryQuery = useQuery({
+    queryKey: queryKeys.mvp2BinancePaperHistory(10),
+    queryFn: () => api.mvp2BinancePaperHistory(10),
+    enabled: binanceSelected,
+    refetchInterval: 15_000,
+  });
+  const binancePortfolio = binancePaperPortfolioQuery.data;
+  const binanceStatus = binancePaperStatusQuery.data;
+  const binanceCandidates = binancePaperCandidatesQuery.data ?? [];
+  const binanceHistory = binancePaperHistoryQuery.data ?? [];
 
   return (
     <section className="page">
@@ -37,6 +67,9 @@ export function Mvp2Page() {
 
       {exchangesQuery.error ? <ErrorPanel title="MVP2 거래소 조회 실패(Exchange list failed)" error={exchangesQuery.error} /> : null}
       {statusQuery.error ? <ErrorPanel title="MVP2 거래소 상태 조회 실패(Exchange status failed)" error={statusQuery.error} /> : null}
+      {binancePaperStatusQuery.error ? <ErrorPanel title="Binance PAPER 상태 조회 실패(Binance paper status failed)" error={binancePaperStatusQuery.error} /> : null}
+      {binancePaperPortfolioQuery.error ? <ErrorPanel title="Binance PAPER 포트폴리오 조회 실패(Binance paper portfolio failed)" error={binancePaperPortfolioQuery.error} /> : null}
+      {binancePaperCandidatesQuery.error ? <ErrorPanel title="Binance PAPER 후보 조회 실패(Binance paper candidates failed)" error={binancePaperCandidatesQuery.error} /> : null}
 
       <div className="exchange-switch" aria-label="거래소 선택(Exchange selector)">
         {exchanges.map((exchange) => (
@@ -57,7 +90,7 @@ export function Mvp2Page() {
         <MetricCard label="선택 거래소(Exchange)" value={statusQuery.data?.displayName ?? selected.displayName} detail={selected.exchange} />
         <MetricCard label="시세 모드(Market Data)" value={statusQuery.data?.publicMarketDataOnly ? '공개 시세(Public)' : '점검 필요(Review)'} detail={statusQuery.data?.marketData ?? '-'} />
         <MetricCard label="실거래(Real Trading)" value={statusQuery.data?.realTradingSupported ? '지원(Supported)' : '미지원(Not supported)'} detail="PAPER/SIMULATION only" />
-        <MetricCard label="전략 Profile" value="3개(3 profiles)" detail="Stable / Aggressive / Defensive" />
+        <MetricCard label="PAPER 현금(Paper Cash)" value={binanceSelected ? `${formatNumber(binancePortfolio?.cash, 2)} USDT` : 'MVP1 화면 사용'} detail={binanceSelected ? `주문(Order) ${formatNumber(binanceStatus?.orderAmount, 2)} USDT` : 'Upbit PAPER dashboard'} />
       </div>
 
       <div className="section-grid">
@@ -98,16 +131,87 @@ export function Mvp2Page() {
 
         <article className="panel">
           <div className="panel-title-row">
-            <h2>다음 연결(Next)</h2>
-            <BarChart3 size={20} />
+            <h2>Binance PAPER</h2>
+            <Wallet size={20} />
           </div>
-          <div className="mvp2-next-list">
-            <NextItem icon={<CheckCircle2 size={17} />} text="거래소별 상태 API 연결" />
-            <NextItem icon={<TrendingUp size={17} />} text="profile별 PAPER/SIMULATION 성과 분리" />
-            <NextItem icon={<FlaskConical size={17} />} text="Leaderboard 수익률/승률/낙폭 비교" />
-          </div>
+          {binanceSelected ? (
+            <dl className="definition-list">
+              <dt>스케줄러(Scheduler)</dt>
+              <dd>{binanceStatus?.schedulerEnabled ? '켜짐(On)' : '꺼짐(Off)'}</dd>
+              <dt>주기(Delay)</dt>
+              <dd>{formatNumber(binanceStatus?.schedulerFixedDelayMs)}ms</dd>
+              <dt>대상(Symbols)</dt>
+              <dd>{binanceStatus?.symbols.join(', ') ?? '-'}</dd>
+              <dt>실현손익(Realized)</dt>
+              <dd>{formatNumber(binancePortfolio?.realizedProfit, 4)} USDT</dd>
+            </dl>
+          ) : (
+            <p>Upbit PAPER 거래는 기존 대시보드, 후보, 포트폴리오 화면에서 확인합니다.</p>
+          )}
         </article>
       </div>
+
+      {binanceSelected ? (
+        <div className="section-grid">
+          <article className="panel">
+            <div className="panel-title-row">
+              <h2>Binance 후보(Candidates)</h2>
+              <TrendingUp size={20} />
+            </div>
+            <div className="mvp2-list">
+              {binanceCandidates.slice(0, 6).map((candidate) => (
+                <div className="mvp2-row" key={candidate.symbol}>
+                  <div>
+                    <strong>{candidate.symbol}</strong>
+                    <small>{candidate.reason}</small>
+                  </div>
+                  <Badge tone={candidate.decision === 'SELECTED' ? 'good' : 'neutral'}>{candidate.decision}</Badge>
+                </div>
+              ))}
+              {binanceCandidates.length === 0 ? <p>후보 조회 대기 중(Waiting for candidates)</p> : null}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="panel-title-row">
+              <h2>Binance 포지션(Positions)</h2>
+              <BarChart3 size={20} />
+            </div>
+            <div className="mvp2-list">
+              {(binancePortfolio?.positions ?? []).map((position) => (
+                <div className="mvp2-row" key={position.symbol}>
+                  <div>
+                    <strong>{position.symbol}</strong>
+                    <small>Avg {formatNumber(position.averageBuyPrice, 6)} / Qty {formatNumber(position.quantity, 8)}</small>
+                  </div>
+                </div>
+              ))}
+              {binancePortfolio && binancePortfolio.positions.length === 0 ? <p>보유 포지션 없음(No positions)</p> : null}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="panel-title-row">
+              <h2>Binance 이력(History)</h2>
+              <Clock3 size={20} />
+            </div>
+            <div className="mvp2-list">
+              {binanceHistory.slice(0, 6).map((history) => (
+                <div className="mvp2-row" key={`${history.symbol}-${history.createdAt}-${history.message}`}>
+                  <div>
+                    <strong>{history.symbol}</strong>
+                    <small>{history.reason} / {history.message} / {formatDateTime(history.createdAt)}</small>
+                  </div>
+                  <Badge tone={history.status === 'FILLED' ? 'good' : history.status === 'REJECTED' ? 'warn' : 'neutral'}>
+                    {history.side ?? 'HOLD'}
+                  </Badge>
+                </div>
+              ))}
+              {binanceHistory.length === 0 ? <p>거래 이력 없음(No history)</p> : null}
+            </div>
+          </article>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -122,13 +226,4 @@ function selectExchange(exchanges: Mvp2ExchangeResponse[], selectedExchange: Mvp
       publicMarketDataOnly: true,
       statusPath: `/api/mvp2/exchanges/${selectedExchange}/status`,
     };
-}
-
-function NextItem({ icon, text }: { icon: ReactNode; text: string }) {
-  return (
-    <div className="next-item">
-      {icon}
-      <span>{text}</span>
-    </div>
-  );
 }

@@ -66,6 +66,56 @@ describe('Mvp2Page', () => {
           message: 'MVP2 uses public market data only. Orders remain PAPER/SIMULATION only.',
         });
       }
+      if (url === '/api/mvp2/binance/paper/status') {
+        return json({
+          schedulerEnabled: false,
+          schedulerFixedDelayMs: 30000,
+          symbols: ['BTCUSDT', 'ETHUSDT'],
+          initialCash: '1000',
+          orderAmount: '10',
+          takeProfitRate: '1.5',
+          stopLossRate: '-0.7',
+        });
+      }
+      if (url === '/api/mvp2/binance/paper/portfolio') {
+        return json({
+          exchange: 'BINANCE',
+          cash: '990',
+          realizedProfit: '0',
+          positions: [{ symbol: 'BTCUSDT', quantity: '0.0001', averageBuyPrice: '100000' }],
+        });
+      }
+      if (url === '/api/mvp2/binance/paper/candidates') {
+        return json([
+          {
+            exchange: 'BINANCE',
+            symbol: 'BTCUSDT',
+            decision: 'SELECTED',
+            reason: 'Volatility long candidate selected',
+            currentPrice: '100000',
+            priceChangeRate: '1',
+            highLowRangeRate: '2',
+            tradeAmountChangeRate: '30',
+            trend: 'UP',
+            scannedAt: '2026-05-06T00:00:00Z',
+          },
+        ]);
+      }
+      if (url === '/api/mvp2/binance/paper/history?limit=10') {
+        return json([
+          {
+            exchange: 'BINANCE',
+            symbol: 'BTCUSDT',
+            side: 'BUY',
+            quantity: '0.0001',
+            price: '100000',
+            status: 'FILLED',
+            reason: 'Volatility long candidate selected',
+            message: 'MVP2 paper order filled',
+            createdAt: '2026-05-06T00:00:00Z',
+          },
+        ]);
+      }
       return json({});
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -77,6 +127,9 @@ describe('Mvp2Page', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Binance/ }));
 
     expect((await screen.findAllByText('Binance public ticker/kline provider is available.')).length).toBeGreaterThan(0);
+    expect(await screen.findByText('Binance PAPER')).toBeInTheDocument();
+    expect((await screen.findAllByText('BTCUSDT')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText((_, element) => element?.textContent?.includes('MVP2 paper order filled') ?? false)).length).toBeGreaterThan(0);
     expect(screen.getByText('안정형(Stable)')).toBeInTheDocument();
     expect(screen.getByText('공격형(Aggressive)')).toBeInTheDocument();
     expect(screen.getByText('수비형(Defensive)')).toBeInTheDocument();
@@ -84,6 +137,7 @@ describe('Mvp2Page', () => {
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
+    expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/mvp2/binance/paper/run'), expect.anything());
   });
 });
 

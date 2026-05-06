@@ -4,6 +4,7 @@ export type CandidateDecision = 'SELECTED' | 'SKIPPED';
 export type MarketTrend = 'UP' | 'DOWN' | 'SIDEWAYS';
 export type AnalyticsRange = '1h' | '24h' | '3d' | '7d';
 export type Mvp2Exchange = 'UPBIT' | 'BINANCE';
+export type OrderSide = 'BUY' | 'SELL';
 
 export interface SystemStatusResponse {
   database: { connected: boolean };
@@ -169,4 +170,52 @@ export interface Mvp2ExchangeStatusResponse {
   realTradingSupported: boolean;
   marketData: string;
   message: string;
+}
+
+export interface Mvp2PaperStatusResponse {
+  schedulerEnabled: boolean;
+  schedulerFixedDelayMs: number;
+  symbols: string[];
+  initialCash: string;
+  orderAmount: string;
+  takeProfitRate: string;
+  stopLossRate: string;
+}
+
+export interface Mvp2PaperCandidateResponse {
+  exchange: Mvp2Exchange;
+  symbol: string;
+  decision: CandidateDecision;
+  reason: string;
+  currentPrice: string | null;
+  priceChangeRate: string | null;
+  highLowRangeRate: string | null;
+  tradeAmountChangeRate: string | null;
+  trend: MarketTrend | null;
+  scannedAt: string;
+}
+
+export interface Mvp2PaperPositionResponse {
+  symbol: string;
+  quantity: string;
+  averageBuyPrice: string;
+}
+
+export interface Mvp2PaperPortfolioResponse {
+  exchange: Mvp2Exchange;
+  cash: string;
+  realizedProfit: string;
+  positions: Mvp2PaperPositionResponse[];
+}
+
+export interface Mvp2PaperTradeHistoryResponse {
+  exchange: Mvp2Exchange;
+  symbol: string;
+  side: OrderSide | null;
+  quantity: string | null;
+  price: string | null;
+  status: OrderStatus | null;
+  reason: string;
+  message: string;
+  createdAt: string;
 }

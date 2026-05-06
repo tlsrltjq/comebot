@@ -31,13 +31,14 @@
 - MVP2 Exchange 공통 ticker/candle 모델과 Upbit adapter 생성
 - MVP2 Binance public ticker/candle provider 생성
 - MVP2 거래소 상태 API와 React `/mvp2` 거래소 선택 화면 생성
+- Binance PAPER 포트폴리오, 후보 판단, 이력, scheduler 골격 생성
 
 ## 다음 작업
 
-1. MVP2 실험 엔진 저장 모델
-2. 전략 profile 3종 동시 실행
-3. MVP2 실험 대시보드 확장
-4. Leaderboard
+1. Binance PAPER valuation과 손익 지표 보강
+2. Binance PAPER scheduler 운영 설정 적용
+3. MVP2 실험 엔진 저장 모델
+4. 전략 profile 3종 동시 실행
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

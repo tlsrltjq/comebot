@@ -6,6 +6,10 @@ import type {
   Mvp2Exchange,
   Mvp2ExchangeResponse,
   Mvp2ExchangeStatusResponse,
+  Mvp2PaperCandidateResponse,
+  Mvp2PaperPortfolioResponse,
+  Mvp2PaperStatusResponse,
+  Mvp2PaperTradeHistoryResponse,
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
@@ -55,6 +59,11 @@ export const api = {
   mvp2Exchanges: () => request<Mvp2ExchangeResponse[]>('/api/mvp2/exchanges'),
   mvp2ExchangeStatus: (exchange: Mvp2Exchange) =>
     request<Mvp2ExchangeStatusResponse>(`/api/mvp2/exchanges/${exchange}/status`),
+  mvp2BinancePaperStatus: () => request<Mvp2PaperStatusResponse>('/api/mvp2/binance/paper/status'),
+  mvp2BinancePaperCandidates: () => request<Mvp2PaperCandidateResponse[]>('/api/mvp2/binance/paper/candidates'),
+  mvp2BinancePaperPortfolio: () => request<Mvp2PaperPortfolioResponse>('/api/mvp2/binance/paper/portfolio'),
+  mvp2BinancePaperHistory: (limit = 20) =>
+    request<Mvp2PaperTradeHistoryResponse[]>(`/api/mvp2/binance/paper/history${query({ limit })}`),
 };
 
 export const queryKeys = {
@@ -69,4 +78,8 @@ export const queryKeys = {
   analyticsLosses: (range: AnalyticsRange) => ['analyticsLosses', range] as const,
   mvp2Exchanges: ['mvp2Exchanges'] as const,
   mvp2ExchangeStatus: (exchange: Mvp2Exchange) => ['mvp2ExchangeStatus', exchange] as const,
+  mvp2BinancePaperStatus: ['mvp2BinancePaperStatus'] as const,
+  mvp2BinancePaperCandidates: ['mvp2BinancePaperCandidates'] as const,
+  mvp2BinancePaperPortfolio: ['mvp2BinancePaperPortfolio'] as const,
+  mvp2BinancePaperHistory: (limit = 20) => ['mvp2BinancePaperHistory', limit] as const,
 };
