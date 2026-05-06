@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart, Radar, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
 import type { PositionValuationResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
@@ -34,6 +34,8 @@ export function PortfolioPage() {
   const capitalUseRate = totalEquity > 0 ? (positionValue / totalEquity) * 100 : 0;
   const remainingBuyCount = orderAmount > 0 ? Math.floor(cash / orderAmount) : 0;
   const reservedCashAfterBuys = orderAmount > 0 ? cash - remainingBuyCount * orderAmount : cash;
+  const exposureRows = useMemo(() => buildExposureRows(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
+  const largestExposureRate = exposureRows[0]?.exposureRate ?? 0;
   const bestPosition = positions.reduce<PositionValuationResponse | null>(
     (best, position) => (best === null || Number(position.unrealizedProfitRate) > Number(best.unrealizedProfitRate) ? position : best),
     null,
@@ -103,6 +105,35 @@ export function PortfolioPage() {
           <div className="leader-grid">
             <LeaderItem title="최고 수익(Best)" position={bestPosition} positive />
             <LeaderItem title="최대 손실(Worst)" position={worstPosition} />
+          </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>market별 비중(Market Exposure)</h2>
+            <Radar size={20} />
+          </div>
+          <div className="exposure-summary">
+            <Badge tone={largestExposureRate >= 10 ? 'warn' : 'good'}>
+              {largestExposureRate >= 10 ? '쏠림 점검(Review)' : '분산 양호(Diversified)'}
+            </Badge>
+            <span>TOP {Math.min(5, exposureRows.length)}</span>
+          </div>
+          <div className="exposure-list">
+            {exposureRows.slice(0, 5).map((row) => (
+              <div className="exposure-item" key={row.market}>
+                <div className="exposure-item-main">
+                  <strong>{row.market}</strong>
+                  <span>{formatKrw(row.positionValue)}</span>
+                  <small className={profitClass(row.unrealizedProfitRate)}>{formatNumber(row.unrealizedProfitRate, 2)}%</small>
+                </div>
+                <div className="allocation-track">
+                  <span style={{ width: `${Math.max(0, Math.min(100, row.exposureRate))}%` }} />
+                </div>
+                <small>{formatNumber(row.exposureRate, 2)}% of equity</small>
+              </div>
+            ))}
+            {exposureRows.length === 0 ? <EmptyState title="비중 데이터 없음(No exposure)" description="보유 포지션이 생기면 market별 비중이 표시됩니다." /> : null}
           </div>
         </article>
       </div>
@@ -184,6 +215,17 @@ function sortPositions(positions: PositionValuationResponse[], sortKey: SortKey)
     }
     return Number(left.unrealizedProfitRate) - Number(right.unrealizedProfitRate);
   });
+}
+
+function buildExposureRows(positions: PositionValuationResponse[], totalEquity: number) {
+  return [...positions]
+    .map((position) => ({
+      market: position.market,
+      positionValue: Number(position.positionValue),
+      unrealizedProfitRate: Number(position.unrealizedProfitRate),
+      exposureRate: totalEquity > 0 ? (Number(position.positionValue) / totalEquity) * 100 : 0,
+    }))
+    .sort((left, right) => right.positionValue - left.positionValue);
 }
 
 function profitClass(value: string | number) {

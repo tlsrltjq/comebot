@@ -95,6 +95,8 @@ describe('PortfolioPage', () => {
     expect(screen.getByText('98회')).toBeInTheDocument();
     expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
     expect(screen.getByText('손익 리더(Profit Leaders)')).toBeInTheDocument();
+    expect(screen.getByText('market별 비중(Market Exposure)')).toBeInTheDocument();
+    expect(screen.getByText('분산 양호(Diversified)')).toBeInTheDocument();
     expect(screen.getByText('손절권(Stop loss)')).toBeInTheDocument();
     expect(screen.getByText('보유(Hold)')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();

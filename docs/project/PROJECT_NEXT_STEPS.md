@@ -13,7 +13,8 @@
 
 - `STRATEGY_ENTRY_PREVENT_REENTRY_WITH_POSITION=false`를 기본값으로 둔다.
 - 완료: 현금 사용률, 포지션 비중, 남은 매수 가능 횟수를 portfolio 화면에서 확인한다.
-- 다음: market별 평가액 비중과 쏠림 TOP을 portfolio 화면에서 확인한다.
+- 완료: market별 평가액 비중과 쏠림 TOP을 portfolio 화면에서 확인한다.
+- 다음: 특정 market 쏠림을 막을 최소 리스크 기준을 문서화한다.
 - 필요하면 market별 최대 평가액 또는 최대 추가 매수 횟수만 제한한다.
 - 후보 scanner 조건을 너무 보수적으로 막는 HOLD 사유를 확인한다.
 - 전략/후보 실행 테스트에 재진입 허용 케이스를 유지한다.
@@ -23,6 +24,7 @@
 
 - 같은 market 포지션 보유 중에도 설정 기본값에서 추가 매수가 가능하다.
 - PAPER 현금 사용률을 웹에서 판단할 수 있다.
+- market별 평가액 비중과 TOP exposure를 웹에서 판단할 수 있다.
 - 특정 market 쏠림을 막을 최소 리스크 기준이 문서화된다.
 - `./gradlew test`가 성공한다.
 

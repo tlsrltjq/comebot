@@ -54,6 +54,7 @@ SELL은 보유 PAPER 포지션에 대해서만 만든다.
 
 ## 변경 기록
 
+- [2026-05-06 자금 활용과 손실 분석](./2026-05-06-capital-usage-and-loss-review.md)
 - [2026-05-04 PAPER run](./2026-05-04-paper-run.md)
 
 ## 손실 분석 규칙

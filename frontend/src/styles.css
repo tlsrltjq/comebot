@@ -279,7 +279,7 @@ button:disabled {
 
 .portfolio-overview {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -354,6 +354,42 @@ button:disabled {
 
 .capital-list {
   margin-top: 16px;
+}
+
+.exposure-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: #60717f;
+  font-weight: 800;
+}
+
+.exposure-list {
+  display: grid;
+  gap: 12px;
+}
+
+.exposure-item {
+  display: grid;
+  gap: 8px;
+}
+
+.exposure-item-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.exposure-item-main strong {
+  overflow-wrap: anywhere;
+}
+
+.exposure-item-main span,
+.exposure-item > small {
+  color: #60717f;
 }
 
 .history-toolbar {
