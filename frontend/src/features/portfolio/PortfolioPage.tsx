@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDownAZ, CircleDollarSign, PieChart, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
 import type { PositionValuationResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
@@ -19,6 +19,7 @@ export function PortfolioPage() {
   const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus, queryFn: api.portfolioStatus, refetchInterval: 5_000 });
   const positionsQuery = useQuery({ queryKey: queryKeys.positions, queryFn: api.positions, refetchInterval: 5_000 });
   const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation, queryFn: api.portfolioValuation, refetchInterval: 5_000 });
+  const systemQuery = useQuery({ queryKey: queryKeys.system, queryFn: api.systemStatus, refetchInterval: 10_000 });
 
   const positions = useMemo(
     () => sortPositions(valuationQuery.data?.positions ?? [], sortKey),
@@ -27,8 +28,12 @@ export function PortfolioPage() {
   const totalEquity = Number(valuationQuery.data?.totalEquity ?? 0);
   const cash = Number(valuationQuery.data?.cash ?? statusQuery.data?.cash ?? 0);
   const positionValue = Number(valuationQuery.data?.totalPositionValue ?? 0);
+  const orderAmount = Number(systemQuery.data?.strategy.orderAmount ?? 0);
   const cashRate = totalEquity > 0 ? (cash / totalEquity) * 100 : 0;
   const positionRate = totalEquity > 0 ? (positionValue / totalEquity) * 100 : 0;
+  const capitalUseRate = totalEquity > 0 ? (positionValue / totalEquity) * 100 : 0;
+  const remainingBuyCount = orderAmount > 0 ? Math.floor(cash / orderAmount) : 0;
+  const reservedCashAfterBuys = orderAmount > 0 ? cash - remainingBuyCount * orderAmount : cash;
   const bestPosition = positions.reduce<PositionValuationResponse | null>(
     (best, position) => (best === null || Number(position.unrealizedProfitRate) > Number(best.unrealizedProfitRate) ? position : best),
     null,
@@ -50,11 +55,12 @@ export function PortfolioPage() {
 
       {statusQuery.error ? <ErrorPanel title="포트폴리오 상태 조회 실패(Portfolio status failed)" error={statusQuery.error} /> : null}
       {valuationQuery.error ? <ErrorPanel title="포트폴리오 평가 조회 실패(Portfolio valuation failed)" error={valuationQuery.error} /> : null}
+      {systemQuery.error ? <ErrorPanel title="시스템 상태 조회 실패(System status failed)" error={systemQuery.error} /> : null}
 
       <div className="metric-grid">
         <MetricCard label="현금(Cash)" value={formatKrw(valuationQuery.data?.cash ?? statusQuery.data?.cash)} detail={`${formatNumber(cashRate, 1)}%`} />
         <MetricCard label="포지션 가치(Position Value)" value={formatKrw(valuationQuery.data?.totalPositionValue)} detail={`${formatNumber(positionRate, 1)}%`} />
-        <MetricCard label="총자산(Total Equity)" value={formatKrw(valuationQuery.data?.totalEquity)} detail={`보유(Positions) ${formatNumber(positions.length)}`} />
+        <MetricCard label="자금 사용률(Capital Used)" value={`${formatNumber(capitalUseRate, 1)}%`} detail={`매수 가능(Buys left) ${formatNumber(remainingBuyCount)}`} />
         <MetricCard label="총손익(Total Profit)" value={formatKrw(valuationQuery.data?.totalProfit)} detail={`실현(Realized) ${formatKrw(valuationQuery.data?.realizedProfit)}`} />
       </div>
 
@@ -68,6 +74,25 @@ export function PortfolioPage() {
             <AllocationBar icon={<Wallet size={17} />} label="현금(Cash)" value={cashRate} />
             <AllocationBar icon={<CircleDollarSign size={17} />} label="포지션(Positions)" value={positionRate} />
           </div>
+        </article>
+
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>자금 활용(Capital Usage)</h2>
+            <Gauge size={20} />
+          </div>
+          <div className="allocation-bars">
+            <AllocationBar icon={<CircleDollarSign size={17} />} label="사용 중(Used)" value={capitalUseRate} />
+            <AllocationBar icon={<Wallet size={17} />} label="대기 현금(Idle cash)" value={cashRate} />
+          </div>
+          <dl className="definition-list capital-list">
+            <dt>1회 매수(Order)</dt>
+            <dd>{formatKrw(orderAmount)}</dd>
+            <dt>매수 가능(Buys left)</dt>
+            <dd>{formatNumber(remainingBuyCount)}회</dd>
+            <dt>단위 미만 현금(Residual cash)</dt>
+            <dd>{formatKrw(reservedCashAfterBuys)}</dd>
+          </dl>
         </article>
 
         <article className="panel">

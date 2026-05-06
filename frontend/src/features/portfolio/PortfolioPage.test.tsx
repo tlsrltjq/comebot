@@ -29,6 +29,26 @@ describe('PortfolioPage', () => {
       if (url === '/api/portfolio/status') {
         return json({ cash: '985000', realizedProfit: '1200' });
       }
+      if (url === '/api/system/status') {
+        return json({
+          database: { connected: true },
+          marketProvider: { provider: 'UPBIT', externalProvider: true },
+          strategy: { strategyName: 'VolatilityBreakoutLongStrategy', buyPrice: '90000000', sellPrice: '110000000', orderQuantity: '0.01', orderAmount: '10000' },
+          risk: { maxOrderAmount: '100000', allowedMarkets: ['ALL_KRW'] },
+          scheduler: {
+            enabled: true,
+            fixedDelayMs: 30000,
+            markets: ['ALL_KRW'],
+            candidateEnabled: true,
+            candidateFixedDelayMs: 30000,
+            candidateMarkets: ['ALL_KRW'],
+            candidateNotifySummary: false,
+          },
+          safety: { killSwitchEnabled: false },
+          notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
+          telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
+        });
+      }
       if (url === '/api/portfolio/positions') {
         return json([]);
       }
@@ -70,6 +90,9 @@ describe('PortfolioPage', () => {
     renderWithClient();
 
     expect(await screen.findByText('자산 배분(Allocation)')).toBeInTheDocument();
+    expect(await screen.findByText('자금 활용(Capital Usage)')).toBeInTheDocument();
+    expect(screen.getByText('매수 가능(Buys left) 98')).toBeInTheDocument();
+    expect(screen.getByText('98회')).toBeInTheDocument();
     expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
     expect(screen.getByText('손익 리더(Profit Leaders)')).toBeInTheDocument();
     expect(screen.getByText('손절권(Stop loss)')).toBeInTheDocument();

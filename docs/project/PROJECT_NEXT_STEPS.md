@@ -12,7 +12,8 @@
 작업:
 
 - `STRATEGY_ENTRY_PREVENT_REENTRY_WITH_POSITION=false`를 기본값으로 둔다.
-- 현금 사용률, 포지션 수, market별 평가액 비중을 analytics 또는 portfolio 화면에서 확인한다.
+- 완료: 현금 사용률, 포지션 비중, 남은 매수 가능 횟수를 portfolio 화면에서 확인한다.
+- 다음: market별 평가액 비중과 쏠림 TOP을 portfolio 화면에서 확인한다.
 - 필요하면 market별 최대 평가액 또는 최대 추가 매수 횟수만 제한한다.
 - 후보 scanner 조건을 너무 보수적으로 막는 HOLD 사유를 확인한다.
 - 전략/후보 실행 테스트에 재진입 허용 케이스를 유지한다.
