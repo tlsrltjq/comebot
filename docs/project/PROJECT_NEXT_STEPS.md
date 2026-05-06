@@ -14,13 +14,15 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - Upbit 기존 provider를 MVP2 exchange adapter로 연결
 - Binance public ticker/candle provider 추가
 - Binance API 실패 예외 처리와 테스트 추가
+- 거래소별 상태 API 추가
+- React `/mvp2` 화면에 Upbit/Binance 선택 버튼 추가
 
 다음:
 
-- 거래소별 상태 API를 만든다.
-- `GET /api/mvp2/exchanges`
-- `GET /api/mvp2/exchanges/{exchange}/status`
-- 웹에서 Upbit/Binance 선택 버튼을 만들 수 있는 최소 데이터를 제공한다.
+- 실험 엔진의 저장 모델을 만든다.
+- `experimentId`, `exchange`, `marketType`, `strategyProfile`, 실행 상태, 시작/종료 시각을 묶는다.
+- 처음에는 DB 저장 없이 in-memory repository로 시작한다.
+- MVP1 portfolio/history와 섞지 않는다.
 
 완료 기준:
 
@@ -29,6 +31,7 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - 실제 주문 API와 `REAL_TRADING`은 계속 금지된다.
 - Upbit 기존 provider를 MVP2 공통 모델로 조회할 수 있다.
 - Binance public ticker/candle을 MVP2 공통 모델로 조회할 수 있다.
+- 웹에서 Upbit/Binance 대시보드 상태를 분리해서 볼 수 있다.
 
 ## 1단계: 자금 활용률과 포지션 분산 개선
 

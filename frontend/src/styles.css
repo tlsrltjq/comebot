@@ -245,6 +245,64 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+.exchange-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.exchange-button {
+  border: 1px solid #d8e1e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #25333d;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.exchange-button.active {
+  background: #176b87;
+  border-color: #176b87;
+  color: #ffffff;
+}
+
+.profile-list,
+.mvp2-next-list {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-item,
+.next-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #edf1f4;
+  border-radius: 8px;
+}
+
+.profile-item div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.profile-item small,
+.next-item {
+  color: #60717f;
+}
+
+.next-item {
+  justify-content: flex-start;
+}
+
 .chart-panel {
   min-height: 330px;
 }

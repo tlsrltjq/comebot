@@ -132,3 +132,10 @@ Binance는 인증키 없이 public endpoint만 사용한다.
 
 - ticker: `GET https://api.binance.com/api/v3/ticker/price`
 - candle: `GET https://api.binance.com/api/v3/klines`
+
+MVP2 exchange 상태 API는 다음과 같다.
+
+- `GET /api/mvp2/exchanges`: 웹에서 선택 가능한 거래소 목록
+- `GET /api/mvp2/exchanges/{exchange}/status`: 거래소별 public data/PAPER-only 상태
+
+React 웹은 `/mvp2` 경로에서 Upbit/Binance 선택 버튼과 strategy profile 준비 상태를 표시한다. 이 화면도 모니터링 전용이며 수동 BUY/SELL 버튼을 제공하지 않는다.
