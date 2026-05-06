@@ -12,12 +12,15 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - Exchange 공통 ticker/candle 모델 추가
 - 거래소별 symbol 정규화 추가
 - Upbit 기존 provider를 MVP2 exchange adapter로 연결
+- Binance public ticker/candle provider 추가
+- Binance API 실패 예외 처리와 테스트 추가
 
 다음:
 
-- Binance public ticker/candle 조회를 인증키 없이 추가한다.
-- Binance adapter도 `ExchangeMarketDataProvider`를 구현하게 만든다.
-- API 실패 시 앱이 죽지 않는 예외 처리와 테스트를 추가한다.
+- 거래소별 상태 API를 만든다.
+- `GET /api/mvp2/exchanges`
+- `GET /api/mvp2/exchanges/{exchange}/status`
+- 웹에서 Upbit/Binance 선택 버튼을 만들 수 있는 최소 데이터를 제공한다.
 
 완료 기준:
 
@@ -25,6 +28,7 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - MVP2 코드는 MVP1 portfolio/history와 섞이지 않는다.
 - 실제 주문 API와 `REAL_TRADING`은 계속 금지된다.
 - Upbit 기존 provider를 MVP2 공통 모델로 조회할 수 있다.
+- Binance public ticker/candle을 MVP2 공통 모델로 조회할 수 있다.
 
 ## 1단계: 자금 활용률과 포지션 분산 개선
 

@@ -29,13 +29,14 @@
 - 2026-05-06 PAPER 매매기록 기준 마이너스 손익 원인 분석 문서화
 - MVP2 `exchange`, `experiment`, `simulation`, `strategy`, `leaderboard` 패키지 경계 생성
 - MVP2 Exchange 공통 ticker/candle 모델과 Upbit adapter 생성
+- MVP2 Binance public ticker/candle provider 생성
 
 ## 다음 작업
 
-1. Binance public market data
-2. 거래소별 상태 API와 웹 선택 버튼
-3. 전략 profile 3종 동시 실행
-4. MVP2 실험 대시보드
+1. 거래소별 상태 API와 웹 선택 버튼
+2. 전략 profile 3종 동시 실행
+3. MVP2 실험 대시보드
+4. Leaderboard
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 
