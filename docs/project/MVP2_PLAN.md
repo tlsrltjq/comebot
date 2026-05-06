@@ -204,6 +204,104 @@ GET /api/mvp2/leaderboard?marketType=FUTURES_SHORT_SIM&range=7d
 
 ## 구현 단계
 
+## 권장 진행 순서
+
+MVP2는 아래 순서대로 진행한다. 각 항목은 가능한 한 하나의 PR 또는 하나의 커밋 단위로 끝낼 수 있게 자른다.
+
+1. MVP2 패키지와 용어 경계 만들기
+   - `exchange`, `experiment`, `simulation`, `leaderboard` 패키지 초안
+   - enum 초안: `Exchange`, `MarketType`, `StrategyProfile`
+   - 실제 주문 금지 테스트 유지
+
+2. Exchange 공통 모델 만들기
+   - 거래소별 symbol 정규화 규칙
+   - 공통 ticker/candle DTO
+   - Upbit adapter부터 기존 provider와 연결
+
+3. Binance public market data 추가
+   - Binance ticker 조회
+   - Binance candle 조회
+   - 인증키 없는 public API만 사용
+   - API 실패 예외 처리와 테스트
+
+4. 거래소별 상태 API 만들기
+   - `GET /api/mvp2/exchanges`
+   - `GET /api/mvp2/exchanges/{exchange}/status`
+   - 웹에서 Upbit/Binance 버튼을 만들 수 있는 최소 데이터 제공
+
+5. 실험 엔진의 저장 모델 만들기
+   - `experimentId`
+   - `exchange`
+   - `marketType`
+   - `strategyProfile`
+   - 실행 상태, 시작/종료 시각
+   - 처음에는 DB 저장보다 in-memory로 시작 가능
+
+6. 전략 profile 3종 설정 분리
+   - `STABLE`
+   - `AGGRESSIVE`
+   - `DEFENSIVE`
+   - 같은 market data로 각 profile이 독립 신호를 내도록 구성
+
+7. Profile별 PAPER portfolio 분리
+   - profile별 현금, 포지션, 실현/미실현 손익 분리
+   - MVP1 portfolio와 섞지 않음
+
+8. Profile 동시 실행 scheduler 추가
+   - Upbit 기준으로 먼저 3개 profile 동시 실행
+   - 이후 Binance로 확장
+   - fixedDelay 사용
+   - 중복 실행 방지
+
+9. MVP2 실험 대시보드 1차
+   - Upbit / Binance 선택 버튼
+   - profile별 손익 카드
+   - profile별 BUY/SELL/HOLD count
+   - profile별 최근 history
+
+10. Analytics와 Leaderboard 추가
+    - 수익률
+    - 승률
+    - 최대 낙폭
+    - 손실 빈도
+    - 거래 수
+    - profile별 순위
+
+11. 선물 long/short simulation 추가
+    - `FUTURES_LONG_SIM`
+    - `FUTURES_SHORT_SIM`
+    - 수수료, 슬리피지, 레버리지 가정값
+    - 실제 Binance futures order API 없음
+
+12. Strategy Lab 화면 추가
+    - 실험 목록
+    - 실험 상세
+    - profile 설정 확인
+    - Leaderboard와 반복 손실 market 확인
+
+13. 자동 개선 후보 문서화
+    - 수익률만 기준으로 자동 변경하지 않음
+    - 손실 빈도, 최대 낙폭, 거래 수를 함께 기준으로 사용
+    - 변경 전후 운용 시간과 손익을 `docs/trading/condition-records/`에 기록
+
+## 우선순위
+
+MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계 만들기`다.
+
+다만 MVP1 안정성을 먼저 올릴 경우에는 `docs/project/PROJECT_NEXT_STEPS.md`의 중복 진입 제한 강화를 먼저 끝낸 뒤 MVP2로 넘어간다.
+
+추천 순서:
+
+1. MVP1 중복 진입 제한 강화
+2. MVP2 패키지와 용어 경계 만들기
+3. Exchange 공통 모델 만들기
+4. Binance public market data 추가
+5. 거래소별 상태 API와 웹 버튼
+6. 전략 profile 3종 동시 실행
+7. MVP2 실험 대시보드
+8. Leaderboard
+9. 선물 simulation
+
 ### 0단계: MVP2 경계 만들기
 
 목표:
