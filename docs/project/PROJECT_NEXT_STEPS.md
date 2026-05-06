@@ -20,10 +20,10 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - React `/mvp2` Binance 화면에 PAPER 상태/후보/포지션/이력 표시
 - Binance PAPER 현재가 기준 평가액, 미실현손익, 총손익 API 추가
 - React `/mvp2` Binance 화면에 PAPER 총자산/평가손익 표시
-- Binance PAPER scheduler 운영 기본값을 켜고 심볼별 실패를 격리
 
 다음:
 
+- Binance PAPER scheduler를 운영 설정으로 켤지 결정한다.
 - 이후 실험 엔진 저장 모델로 `exchange`, `marketType`, `strategyProfile`을 분리한다.
 
 완료 기준:
@@ -36,7 +36,6 @@ MVP1의 최소 리스크 제한은 보류하고 MVP2를 시작한다.
 - 웹에서 Upbit/Binance 대시보드 상태를 분리해서 볼 수 있다.
 - Binance도 public 시세 기반 PAPER 후보, 포트폴리오, 이력을 조회할 수 있다.
 - Binance도 public 현재가 기준 평가액과 손익을 조회할 수 있다.
-- Binance PAPER scheduler가 기본 켜짐으로 동작하고, 한 심볼 실패가 다음 심볼 실행을 막지 않는다.
 
 ## 1단계: 자금 활용률과 포지션 분산 개선
 

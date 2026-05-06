@@ -362,8 +362,7 @@ MVP2를 바로 시작한다면 첫 작업은 `1. MVP2 패키지와 용어 경계
 - 완료: 거래소별 상태 API
 - 완료: React MVP2 Upbit/Binance 선택 UI
 - 완료: Binance PAPER 포트폴리오/후보/이력/스케줄러 골격
-- 완료: Binance PAPER 평가손익 웹 지표 보강
-- 완료: Binance PAPER 자동 실행 운영 기본값 켜짐과 심볼별 실패 격리
+- 다음: Binance PAPER 자동 실행을 운영 설정으로 켜고 웹 지표를 보강
 
 ### 2단계: Strategy Profile 3종 동시 실행
 
