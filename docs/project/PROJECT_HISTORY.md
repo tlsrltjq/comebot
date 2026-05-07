@@ -56,6 +56,16 @@
 52. 포트폴리오 market별 비중 TOP 표시와 2026-05-06 마이너스 손익 분석 문서화
 53. 거래소 모드, 선택 PAPER 매도, WebSocket 시세 개선 계획 문서화
 54. Stage 2 ExchangeMode 백엔드 도메인/API 골격 상세 계획 문서화
+55. Stage 3 프론트 ExchangeMode와 Stage 4 Binance REST provider 상세 계획 문서화
+56. Stage 5 Exchange별 PAPER 포트폴리오와 history 분리 상세 계획 문서화
+57. Exchange dashboard 구현 폴더와 Stage 1-10 단계별 계획 파일 정리
+58. Stage 6 선택 포지션 PAPER 수동 매도 상세 계획 문서화
+59. Stage 6 중복 market 중복 제거와 일부 실패 허용 정책 확정
+60. Stage 7 포트폴리오 원형 그래프 UI 상세 계획 문서화
+61. Stage 8 WebSocket 시세 수신 기반 상세 계획 문서화
+62. Stage 9 자동매매 주기 분리와 설정 정리 상세 계획 문서화
+63. Stage 10 BTC 등락률 그래프 페이지 상세 계획 문서화
+64. Stage 2 ExchangeMode 백엔드 도메인/API 골격 구현
 
 ## 최근 검증
 

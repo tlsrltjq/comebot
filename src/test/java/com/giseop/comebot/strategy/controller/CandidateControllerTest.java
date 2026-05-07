@@ -70,6 +70,33 @@ class CandidateControllerTest {
     }
 
     @Test
+    void getCandidatesAcceptsLowercaseUpbitExchange() throws Exception {
+        when(candidateScannerService.scanAllowedMarkets()).thenReturn(List.of(
+                candidate("KRW-BTC", CandidateDecision.SELECTED)
+        ));
+
+        mockMvc.perform(get("/api/candidates").param("exchange", "upbit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+    }
+
+    @Test
+    void getCandidatesReturnsNotImplementedForBinanceExchange() throws Exception {
+        mockMvc.perform(get("/api/candidates").param("exchange", "binance"))
+                .andExpect(status().isNotImplemented());
+
+        verify(candidateScannerService, never()).scanAllowedMarkets();
+    }
+
+    @Test
+    void getCandidatesReturnsBadRequestForUnknownExchange() throws Exception {
+        mockMvc.perform(get("/api/candidates").param("exchange", "coinbase"))
+                .andExpect(status().isBadRequest());
+
+        verify(candidateScannerService, never()).scanAllowedMarkets();
+    }
+
+    @Test
     void blankMarketReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/candidates").param("market", " "))
                 .andExpect(status().isBadRequest());

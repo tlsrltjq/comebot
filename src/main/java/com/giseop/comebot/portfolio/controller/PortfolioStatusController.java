@@ -1,5 +1,7 @@
 package com.giseop.comebot.portfolio.controller;
 
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.exchange.ExchangeModeResolver;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioStatusResponse;
@@ -12,6 +14,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,20 +32,29 @@ public class PortfolioStatusController {
     }
 
     @GetMapping("/api/portfolio/status")
-    public PortfolioStatusResponse getStatus() {
+    public ResponseEntity<PortfolioStatusResponse> getStatus(@RequestParam(required = false) String exchange) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        ExchangeModeResolver.requireImplemented(exchangeMode);
+
         PaperPortfolio portfolio = paperPortfolioService.getPortfolio();
-        return new PortfolioStatusResponse(portfolio.cash(), portfolio.realizedProfit());
+        return ResponseEntity.ok(new PortfolioStatusResponse(portfolio.cash(), portfolio.realizedProfit()));
     }
 
     @GetMapping("/api/portfolio/positions")
-    public List<PositionResponse> getPositions() {
-        return paperPortfolioService.findPositions().stream()
+    public ResponseEntity<List<PositionResponse>> getPositions(@RequestParam(required = false) String exchange) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        ExchangeModeResolver.requireImplemented(exchangeMode);
+
+        return ResponseEntity.ok(paperPortfolioService.findPositions().stream()
                 .map(this::toResponse)
-                .toList();
+                .toList());
     }
 
     @GetMapping("/api/portfolio/valuation")
-    public ResponseEntity<?> getValuation() {
+    public ResponseEntity<?> getValuation(@RequestParam(required = false) String exchange) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        ExchangeModeResolver.requireImplemented(exchangeMode);
+
         try {
             PortfolioValuationResponse response = paperPortfolioValuationService.valuate();
             return ResponseEntity.ok(response);

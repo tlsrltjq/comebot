@@ -1,5 +1,7 @@
 package com.giseop.comebot.history.controller;
 
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.exchange.ExchangeModeResolver;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.dto.TradingFlowHistoryResponse;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
@@ -22,8 +24,12 @@ public class TradingFlowHistoryController {
     @GetMapping("/api/trading-flow/history")
     public ResponseEntity<List<TradingFlowHistoryResponse>> findRecent(
             @RequestParam(required = false) String market,
-            @RequestParam(defaultValue = "20") int limit
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String exchange
     ) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        ExchangeModeResolver.requireImplemented(exchangeMode);
+
         if (limit <= 0 || (market != null && market.isBlank())) {
             return ResponseEntity.badRequest().build();
         }

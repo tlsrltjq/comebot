@@ -4,6 +4,8 @@ import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.config.StrategySelectionProperties;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.database.DatabaseHealthService;
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.exchange.ExchangeModeResolver;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationProperties;
@@ -14,7 +16,9 @@ import com.giseop.comebot.system.dto.SystemStatusResponse;
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.inbound.TelegramInboundProperties;
 import java.util.ArrayList;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -59,9 +63,12 @@ public class SystemStatusController {
     }
 
     @GetMapping("/api/system/status")
-    public SystemStatusResponse getStatus() {
+    public ResponseEntity<SystemStatusResponse> getStatus(@RequestParam(required = false) String exchange) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        ExchangeModeResolver.requireImplemented(exchangeMode);
+
         MarketPriceProviderType provider = marketPriceProviderProperties.getPriceProvider();
-        return new SystemStatusResponse(
+        return ResponseEntity.ok(new SystemStatusResponse(
                 new SystemStatusResponse.DatabaseStatus(databaseHealthService.check().connected()),
                 new SystemStatusResponse.MarketProviderStatus(provider, provider == MarketPriceProviderType.UPBIT),
                 new SystemStatusResponse.StrategyStatus(
@@ -99,6 +106,6 @@ public class SystemStatusController {
                         telegramInboundProperties.isEnabled(),
                         telegramInboundProperties.isManualPaperExecutionEnabled()
                 )
-        );
+        ));
     }
 }

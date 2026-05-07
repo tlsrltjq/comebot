@@ -122,6 +122,27 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.database.connected").value(false));
     }
 
+    @Test
+    void statusAcceptsLowercaseUpbitExchange() throws Exception {
+        setUpStatus(true);
+
+        mockMvc.perform(get("/api/system/status").param("exchange", "upbit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.marketProvider.provider").value("UPBIT"));
+    }
+
+    @Test
+    void statusReturnsNotImplementedForBinanceExchange() throws Exception {
+        mockMvc.perform(get("/api/system/status").param("exchange", "binance"))
+                .andExpect(status().isNotImplemented());
+    }
+
+    @Test
+    void statusReturnsBadRequestForUnknownExchange() throws Exception {
+        mockMvc.perform(get("/api/system/status").param("exchange", "coinbase"))
+                .andExpect(status().isBadRequest());
+    }
+
     private void setUpStatus(boolean databaseConnected) {
         org.mockito.Mockito.when(databaseHealthService.check())
                 .thenReturn(new DatabaseHealthResult(databaseConnected, "PostgreSQL"));

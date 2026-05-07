@@ -1,5 +1,7 @@
 package com.giseop.comebot.strategy.controller;
 
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.exchange.ExchangeModeResolver;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.strategy.dto.TradingCandidateResponse;
@@ -28,8 +30,12 @@ public class CandidateController {
 
     @GetMapping("/api/candidates")
     public ResponseEntity<List<TradingCandidateResponse>> getCandidates(
-            @RequestParam(required = false) String market
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) String exchange
     ) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        ExchangeModeResolver.requireImplemented(exchangeMode);
+
         if (market != null && market.isBlank()) {
             return ResponseEntity.badRequest().build();
         }

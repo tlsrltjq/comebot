@@ -12,10 +12,22 @@
 작업:
 
 - 완료: Stage 1 문서 제약 정리와 계획 문서화
+- 완료: Stage 2 ExchangeMode 백엔드 도메인/API 골격 구현
 - 준비 완료: Stage 2 ExchangeMode 백엔드 도메인/API 골격 상세 계획
-- 다음 구현: Stage 2 ExchangeMode 백엔드 도메인/API 골격
+- 준비 완료: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 상세 계획
+- 준비 완료: Stage 4 Binance REST market/candle provider 상세 계획
+- 준비 완료: Stage 5 Exchange별 PAPER 포트폴리오와 history 분리 상세 계획
+- 준비 완료: Stage 6 선택 포지션 PAPER 수동 매도 상세 계획
+- 준비 완료: Stage 7 포트폴리오 원형 그래프 UI 상세 계획
+- 준비 완료: Stage 8 WebSocket 시세 수신 기반 상세 계획
+- 준비 완료: Stage 9 자동매매 주기 분리와 설정 정리 상세 계획
+- 준비 완료: Stage 10 BTC 등락률 그래프 페이지 상세 계획
+- 다음 구현: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 준비
 - 다음: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 준비
 - 다음: Stage 4 Binance REST market/candle provider 추가
+- 다음: Stage 5 Exchange별 PAPER 포트폴리오와 history 분리
+- 계획 완료: Stage 1-10 거래소 대시보드 확장 계획
+- 다음 구현: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 준비
 
 완료 기준:
 
@@ -24,6 +36,8 @@
 - 수동 SELL은 선택된 보유 PAPER 포지션에만 제한한다.
 - WebSocket 실패 시 REST fallback 또는 stale snapshot 유지 전략을 가진다.
 - 세부 계획은 `docs/project/EXCHANGE_DASHBOARD_UPGRADE_PLAN.md`를 따른다.
+- Stage 3/4 상세 계획은 `docs/project/exchange-dashboard/` 아래 문서를 따른다.
+- 이번 구현의 단계별 상세 파일은 `docs/project/exchange-dashboard/README.md`에서 관리한다.
 
 ## 1단계: 자금 활용률과 포지션 분산 개선
 

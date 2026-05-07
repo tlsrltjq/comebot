@@ -46,6 +46,31 @@ class PortfolioStatusControllerTest {
     }
 
     @Test
+    void statusAcceptsLowercaseUpbitExchange() throws Exception {
+        when(paperPortfolioService.getPortfolio()).thenReturn(new PaperPortfolio(
+                new BigDecimal("999900"),
+                new BigDecimal("20"),
+                List.of()
+        ));
+
+        mockMvc.perform(get("/api/portfolio/status").param("exchange", "upbit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cash").value(999900));
+    }
+
+    @Test
+    void statusReturnsNotImplementedForBinanceExchange() throws Exception {
+        mockMvc.perform(get("/api/portfolio/status").param("exchange", "binance"))
+                .andExpect(status().isNotImplemented());
+    }
+
+    @Test
+    void statusReturnsBadRequestForUnknownExchange() throws Exception {
+        mockMvc.perform(get("/api/portfolio/status").param("exchange", "coinbase"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void positionsReturnsPositions() throws Exception {
         when(paperPortfolioService.findPositions()).thenReturn(List.of(
                 new PaperPosition("KRW-BTC", new BigDecimal("1.5"), new BigDecimal("100"))
@@ -56,6 +81,12 @@ class PortfolioStatusControllerTest {
                 .andExpect(jsonPath("$[0].market").value("KRW-BTC"))
                 .andExpect(jsonPath("$[0].quantity").value(1.5))
                 .andExpect(jsonPath("$[0].averageBuyPrice").value(100));
+    }
+
+    @Test
+    void positionsReturnsNotImplementedForBinanceExchange() throws Exception {
+        mockMvc.perform(get("/api/portfolio/positions").param("exchange", "binance"))
+                .andExpect(status().isNotImplemented());
     }
 
     @Test

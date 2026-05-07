@@ -52,6 +52,28 @@ class TradingFlowHistoryControllerTest {
     }
 
     @Test
+    void findRecentAcceptsLowercaseUpbitExchange() throws Exception {
+        when(tradingFlowHistoryService.findRecent(null, 20))
+                .thenReturn(List.of(history("history-1")));
+
+        mockMvc.perform(get("/api/trading-flow/history").param("exchange", "upbit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+    }
+
+    @Test
+    void findRecentReturnsNotImplementedForBinanceExchange() throws Exception {
+        mockMvc.perform(get("/api/trading-flow/history").param("exchange", "binance"))
+                .andExpect(status().isNotImplemented());
+    }
+
+    @Test
+    void findRecentReturnsBadRequestForUnknownExchange() throws Exception {
+        mockMvc.perform(get("/api/trading-flow/history").param("exchange", "coinbase"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void findRecentReturnsFilteredKrwEthHistoryList() throws Exception {
         when(tradingFlowHistoryService.findRecent("KRW-ETH", 20))
                 .thenReturn(List.of(history("history-2", "KRW-ETH")));
