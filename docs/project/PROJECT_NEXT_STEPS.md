@@ -12,7 +12,8 @@
 작업:
 
 - 완료: Stage 1 문서 제약 정리와 계획 문서화
-- 다음: Stage 2 ExchangeMode 백엔드 도메인/API 골격
+- 준비 완료: Stage 2 ExchangeMode 백엔드 도메인/API 골격 상세 계획
+- 다음 구현: Stage 2 ExchangeMode 백엔드 도메인/API 골격
 - 다음: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 준비
 - 다음: Stage 4 Binance REST market/candle provider 추가
 
