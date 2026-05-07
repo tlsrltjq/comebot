@@ -7,6 +7,7 @@
 - `docs/project/PROJECT_HISTORY.md`: 완료 작업 기록
 - `docs/project/PROJECT_NEXT_STEPS.md`: 다음 구현 단계
 - `docs/project/WEB_UX_UPGRADE_PLAN.md`: 웹 UX/UI 개선 계획
+- `docs/project/EXCHANGE_DASHBOARD_UPGRADE_PLAN.md`: 거래소 모드, 선택 PAPER 매도, WebSocket 시세 계획
 - `docs/trading/STRATEGY_POLICY.md`: 전략 방향
 - `docs/trading/condition-records/`: 매매 조건과 PAPER 운용 기록
 - `docs/harness/DEVELOPMENT_RULES.md`: 작업 규칙
@@ -22,7 +23,7 @@ Upbit 공개 시세와 캔들 데이터를 사용해 변동성 기반 롱 전용
 
 캔들 Provider, 변동성 계산, 후보 실행, Telegram 후보 명령, 전략 선택, 후보 자동 실행, 과열 회피, 재진입 제한, market별 override, scheduler 요약 알림, Telegram 후보 요약 개선, scheduler/history 검증, React 모니터링 웹 UI, 기본 자동 PAPER 실행 설정, 매매 조건 기록 문서, analytics API, 대시보드 손익 요약, 포트폴리오 자산 배분/손익 UX, History 분석 화면까지 추가했다.
 
-다음 단계는 자금 활용률과 포지션 분산 개선이다. 같은 market 추가 진입은 기본 허용하고, 1,000,000 KRW PAPER 현금이 놀지 않도록 현금 사용률과 market별 쏠림을 관리한다.
+다음 단계는 거래소 모드와 포트폴리오 운영 UX 확장 계획이다. 실제 주문 API 없이 `PAPER_TRADING` 기준으로만 Upbit/Binance 데이터 소스 전환, 선택 포지션 PAPER 매도, WebSocket 시세 수신, 자산 비중 차트를 단계적으로 검토한다.
 
 ## 작업 진행 규칙
 

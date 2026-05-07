@@ -6,6 +6,8 @@
 - Bot Token, Chat ID, DB 비밀번호, Access Key, Secret Key는 코드에 하드코딩하지 않는다.
 - 민감 정보 원문은 로그와 API 응답에 포함하지 않는다.
 - 실제 주문 API와 `REAL_TRADING`은 구현하지 않는다.
+- Binance를 추가하더라도 public market data만 사용하며 API Key, Secret Key 설정을 추가하지 않는다.
+- WebSocket 시세 수신에도 인증키를 사용하지 않는다.
 
 ## 보안 린트
 

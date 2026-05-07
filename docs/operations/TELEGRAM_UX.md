@@ -7,6 +7,7 @@
 - configured chatId와 일치하는 요청만 처리한다.
 - 기본 명령과 버튼은 조회 전용이다.
 - 수동 PAPER 실행은 별도 설정이 켜진 경우에만 허용한다.
+- 웹 선택 PAPER SELL 계획은 Telegram으로 확장하지 않는다.
 - 실제 주문 API, `REAL_TRADING`, 거래소 인증키는 연결하지 않는다.
 
 ## 활성 조건
@@ -58,6 +59,8 @@ TELEGRAM_CHAT_ID=
 기본 메뉴에는 실행 버튼을 노출하지 않는다.
 자동 실행은 scheduler가 담당한다.
 조회 명령은 자동 실행 상태, 후보, 손익, 포트폴리오, history를 보여준다.
+
+포트폴리오 선택 PAPER SELL은 웹 전용 계획이다. Telegram inline menu에는 선택 매도 버튼을 추가하지 않는다.
 
 수동 PAPER 실행 설정이 켜진 경우에만 `/run`은 `TradingFlowService`를 호출하고, `/candidate-run`은 `CandidateExecutionService`를 호출한다.
 후보 실행은 선택된 후보에 대해서만 PAPER BUY 주문을 만든다.

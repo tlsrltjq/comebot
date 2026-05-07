@@ -15,6 +15,23 @@ RUN_REQUESTED
 -> OPTIONAL_NOTIFICATION_SENT
 ```
 
+## 웹 선택 PAPER SELL 흐름
+
+```text
+SELL_SELECTION_REQUESTED
+-> KILL_SWITCH_CHECKED
+-> POSITION_OWNERSHIP_CHECKED
+-> MARKET_PRICE_CAPTURED
+-> SELL_ORDER_REQUEST_CREATED
+-> RISK_CHECKED
+-> PAPER_ORDER_EXECUTED
+-> PORTFOLIO_UPDATED
+-> HISTORY_SAVED
+-> OPTIONAL_NOTIFICATION_SENT
+```
+
+이 흐름은 사용자가 웹 포트폴리오에서 명시 선택한 보유 PAPER 포지션 매도에만 사용한다. 수동 BUY, 실제 주문 API, `REAL_TRADING`은 포함하지 않는다.
+
 ## Kill Switch 차단
 
 kill switch가 켜져 있으면 시세 조회 전에 차단한다.
@@ -41,6 +58,8 @@ BUY 또는 SELL 신호만 `OrderRequest`로 변환한다.
 
 HOLD는 주문 실행으로 이어지면 안 된다.
 
+웹 선택 PAPER SELL은 전략 신호가 아니라 사용자 선택 이벤트에서 시작하지만, 서버에서 보유 포지션과 현재가를 다시 확인한 뒤 SELL `OrderRequest`를 만든다. 프론트가 수량, 가격, 체결 성공 여부를 결정하면 안 된다.
+
 ## RISK_CHECKED
 
 리스크 검증 실패 시:
@@ -61,6 +80,7 @@ HOLD는 주문 실행으로 이어지면 안 된다.
 
 - BUY FILLED: 현금 차감, 수량 증가, 평균 매수가 갱신
 - SELL FILLED: 수량 감소, 실현손익 계산
+- 웹 선택 PAPER SELL FILLED: 선택한 보유 포지션 수량만 감소, 실현손익 계산
 - HOLD, REJECTED, FAILED: 변경 없음
 
 ## HISTORY_SAVED

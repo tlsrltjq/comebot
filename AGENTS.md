@@ -8,6 +8,8 @@
 - 기본 거래 모드는 항상 `PAPER_TRADING`이다.
 - `REAL_TRADING`은 구현하지 않는다.
 - 실제 주문 API는 아직 구현하지 않는다.
+- 웹 포트폴리오에서 사용자가 명시 선택한 보유 PAPER 포지션 매도만 예외적으로 허용한다.
+- 수동 BUY와 실제 거래소 주문은 계속 금지한다.
 - Upbit Access Key, Secret Key, API Key, Bot Token, Chat ID는 코드에 하드코딩하지 않는다.
 - 민감 정보는 `.env` 또는 환경 변수로만 관리한다.
 - 현재 전략 방향은 롱 전용이다. 숏, 레버리지, 마진 거래는 다루지 않는다.
@@ -17,6 +19,7 @@
 - 주문 상태 흐름을 바꾸면 `docs/trading/ORDER_LIFECYCLE.md`도 함께 수정해야 한다.
 - 리스크 정책을 바꾸면 `docs/trading/RISK_POLICY.md`도 함께 수정해야 한다.
 - 텔레그램 명령이나 버튼 흐름을 바꾸면 `docs/operations/TELEGRAM_UX.md`도 함께 수정해야 한다.
+- 거래소 모드, WebSocket 시세 수신, REST fallback을 바꾸면 `docs/harness/ARCHITECTURE.md`와 `docs/operations/RELIABILITY.md`도 함께 수정해야 한다.
 - 실패한 주문을 성공으로 처리하면 안 된다.
 - 예외를 무시하면 안 된다.
 - 하나의 클래스에 시세 조회, 전략 판단, 주문 실행, 포트폴리오, 텔레그램 처리를 모두 넣으면 안 된다.

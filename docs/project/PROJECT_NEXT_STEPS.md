@@ -1,5 +1,29 @@
 # Project Next Steps
 
+## 현재 우선순위: 거래소 모드와 포트폴리오 운영 UX 계획
+
+목표:
+
+- `UPBIT / BINANCE` 모드 버튼으로 같은 화면 구조에서 데이터 소스만 전환한다.
+- 사용자가 웹 포트폴리오에서 명시 선택한 보유 PAPER 포지션만 수동 매도할 수 있게 설계한다.
+- WebSocket 시세 수신과 REST fallback을 거래소별로 분리한다.
+- 포트폴리오 원형 그래프와 BTC 등락률 그래프를 추가할 설계를 준비한다.
+
+작업:
+
+- 완료: Stage 1 문서 제약 정리와 계획 문서화
+- 다음: Stage 2 ExchangeMode 백엔드 도메인/API 골격
+- 다음: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 준비
+- 다음: Stage 4 Binance REST market/candle provider 추가
+
+완료 기준:
+
+- 실제 주문 API와 `REAL_TRADING`을 추가하지 않는다.
+- 수동 BUY는 계속 금지한다.
+- 수동 SELL은 선택된 보유 PAPER 포지션에만 제한한다.
+- WebSocket 실패 시 REST fallback 또는 stale snapshot 유지 전략을 가진다.
+- 세부 계획은 `docs/project/EXCHANGE_DASHBOARD_UPGRADE_PLAN.md`를 따른다.
+
 ## 1단계: 자금 활용률과 포지션 분산 개선
 
 목표:
