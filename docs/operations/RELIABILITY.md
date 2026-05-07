@@ -11,11 +11,12 @@
 ## Market 장애
 
 - Upbit API 실패는 명확한 실패로 처리한다.
-- Binance API를 추가하면 Binance 장애는 Upbit 흐름을 중단시키지 않도록 거래소별로 격리한다.
+- Binance API 장애는 Upbit 흐름을 중단시키지 않도록 거래소별 provider에서 격리한다.
 - Upbit API 실패가 애플리케이션 전체를 중단시키면 안 된다.
 - 시세 조회 실패 시 주문을 성공으로 처리하면 안 된다.
-- InMemory provider와 Upbit provider 동작을 분리해서 테스트한다.
+- InMemory, Upbit, Binance provider 동작을 분리해서 테스트한다.
 - Upbit candle API 테스트는 mock/stub을 사용하고 외부 API를 직접 호출하지 않는다.
+- Binance ticker/kline API 테스트는 mock/stub을 사용하고 외부 API를 직접 호출하지 않는다.
 - WebSocket 수신 실패는 애플리케이션 전체를 중단시키면 안 된다.
 - WebSocket reconnect는 backoff를 둔다.
 - WebSocket snapshot이 stale이면 REST fallback을 사용하거나 stale 상태를 명확히 표시한다.

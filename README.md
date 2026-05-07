@@ -10,8 +10,8 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 - Language: Java 21
 - Base package: `com.giseop.comebot`
 - Default trading mode: `PAPER_TRADING`
-- Market price providers: `IN_MEMORY`, `UPBIT`
-- Candle provider: Upbit public Candle API
+- Market price providers: `IN_MEMORY`, `UPBIT`, `BINANCE`
+- Candle providers: Upbit public Candle API, Binance public spot Kline API
 - History storage: `IN_MEMORY` by default, optional `JPA`
 - Portfolio storage: `IN_MEMORY`
 - Scheduler: enabled by default for PAPER_TRADING automation
@@ -19,8 +19,8 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 
 ## What This Project Does
 
-- Fetches test prices or Upbit public prices
-- Fetches recent Upbit minute candles
+- Fetches test prices, Upbit public prices, or Binance public spot prices
+- Fetches recent Upbit minute candles or Binance spot klines
 - Scans long-only paper trading candidates automatically
 - Creates BUY, SELL, HOLD signals
 - Runs risk validation before paper orders

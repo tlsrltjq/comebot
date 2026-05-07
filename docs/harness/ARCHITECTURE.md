@@ -59,9 +59,11 @@ web
 - `InMemoryMarketPriceProvider`: 테스트용 가격 provider
 - `UpbitMarketPriceProvider`: Upbit 공개 Ticker API provider
 - `UpbitCandleProvider`: Upbit 공개 Candle API provider
+- `BinanceMarketPriceProvider`: Binance 공개 Spot Ticker API provider. `USDT` 현물 symbol만 지원한다.
+- `BinanceCandleProvider`: Binance 공개 Spot Kline API provider. `USDT` 현물 symbol과 지원 interval만 사용한다.
 - Access Key, Secret Key는 사용하지 않는다.
 
-향후 거래소 모드는 `UPBIT`과 `BINANCE`를 분리한다. 프론트 사이드바 상단의 mode switch가 선택한 거래소를 API 요청 파라미터로 전달하고, 백엔드는 같은 화면 구조에 필요한 데이터를 거래소별 provider, portfolio, history에서 조회한다. 기본값은 `UPBIT`이다.
+거래소 모드는 `UPBIT`과 `BINANCE`를 분리한다. 프론트 사이드바 상단의 mode switch가 선택한 거래소를 API 요청 파라미터로 전달하고, 백엔드는 같은 화면 구조에 필요한 데이터를 거래소별 provider, portfolio, history에서 조회한다. 기본값은 `UPBIT`이다. Stage 4 기준 Binance는 공개 REST provider 기반만 준비됐고, portfolio/history 분리는 Stage 5에서 처리한다.
 
 WebSocket 시세 수신은 REST provider와 분리한다.
 

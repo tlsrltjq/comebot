@@ -106,3 +106,25 @@ GET https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30
 - Stage 5 전에는 portfolio/history가 거래소별로 분리되지 않았으므로 Binance 화면에 Upbit PAPER 데이터가 섞이지 않게 제한이 필요하다.
 - Binance candle interval과 Upbit minute candle unit이 다르므로 mapper를 명확히 둬야 한다.
 - Binance API 제한에 걸릴 수 있으므로 batch 조회와 fallback 정책은 Stage 8/WebSocket 전까지 보수적으로 둔다.
+
+## 구현 결과
+
+- `BinanceMarketPriceProvider`를 추가했다.
+  - `GET /api/v3/ticker/price?symbol=BTCUSDT` 형식의 Binance 공개 Spot Ticker API를 사용한다.
+  - `market.price-provider=BINANCE` 설정 시 Spring bean으로 선택된다.
+  - `USDT` 현물 symbol만 허용한다.
+- `BinanceCandleProvider`를 추가했다.
+  - `GET /api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30` 형식의 Binance 공개 Spot Kline API를 사용한다.
+  - `market.candle-provider=BINANCE` 설정 시 Spring bean으로 선택된다.
+  - `1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `4h`에 대응하는 minute unit만 허용한다.
+- `MarketPriceProviderType`에 `BINANCE`를 추가했다.
+- `/api/market-provider/status`는 Binance provider 설정을 외부 공개 시세 provider로 표시한다.
+- Stage 5 전까지 `exchange=binance` portfolio/history/candidate API의 완전 연결은 하지 않는다. Upbit PAPER 데이터와 Binance 데이터가 섞이지 않게 하기 위해 거래소별 portfolio/history 분리 이후 연결한다.
+
+## 검증 결과
+
+- `BinanceMarketPriceProviderTest`
+- `BinanceCandleProviderTest`
+- `MarketPriceProviderSelectionTest`
+- `MarketProviderStatusControllerTest`
+- `./gradlew test`

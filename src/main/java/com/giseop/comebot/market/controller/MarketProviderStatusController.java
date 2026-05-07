@@ -18,7 +18,8 @@ public class MarketProviderStatusController {
     @GetMapping("/api/market-provider/status")
     public MarketProviderStatusResponse getStatus() {
         MarketPriceProviderType provider = marketPriceProviderProperties.getPriceProvider();
-        boolean externalProvider = provider == MarketPriceProviderType.UPBIT;
+        boolean externalProvider = provider == MarketPriceProviderType.UPBIT
+                || provider == MarketPriceProviderType.BINANCE;
         return new MarketProviderStatusResponse(
                 provider,
                 externalProvider,
@@ -29,6 +30,9 @@ public class MarketProviderStatusController {
     private String message(MarketPriceProviderType provider) {
         if (provider == MarketPriceProviderType.UPBIT) {
             return "Using Upbit public ticker API for market prices. Orders remain PAPER_TRADING only.";
+        }
+        if (provider == MarketPriceProviderType.BINANCE) {
+            return "Using Binance public spot ticker API for market prices. Orders remain PAPER_TRADING only.";
         }
         return "Using in-memory test market prices.";
     }

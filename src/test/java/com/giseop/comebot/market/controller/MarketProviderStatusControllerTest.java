@@ -49,6 +49,18 @@ class MarketProviderStatusControllerTest {
     }
 
     @Test
+    void statusReturnsBinanceProviderWhenConfigured() throws Exception {
+        org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
+                .thenReturn(MarketPriceProviderType.BINANCE);
+
+        mockMvc.perform(get("/api/market-provider/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.provider").value("BINANCE"))
+                .andExpect(jsonPath("$.externalProvider").value(true))
+                .andExpect(jsonPath("$.message").value(containsString("Binance public spot ticker API")));
+    }
+
+    @Test
     void statusDoesNotExposeSensitiveValues() throws Exception {
         org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
                 .thenReturn(MarketPriceProviderType.UPBIT);

@@ -67,6 +67,7 @@
 63. Stage 10 BTC 등락률 그래프 페이지 상세 계획 문서화
 64. Stage 2 ExchangeMode 백엔드 도메인/API 골격 구현
 65. Stage 3 프론트 ExchangeMode 버튼과 API 파라미터 구현
+66. Stage 4 Binance 공개 REST 현재가/캔들 provider 구현
 
 ## 최근 검증
 
