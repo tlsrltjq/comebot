@@ -66,6 +66,17 @@
 - 거래소 변경 시 이전 거래소 cache가 섞이지 않는다.
 - 실제 주문 API, 수동 BUY, `REAL_TRADING`은 추가되지 않는다.
 
+## 구현 결과
+
+- 사이드바 상단에 `UPBIT / BINANCE` mode switch를 추가했다.
+- 기본값은 `UPBIT`이다.
+- URL query의 `exchange=binance`를 읽어 새로고침 후에도 선택 모드를 유지한다.
+- 메뉴 이동 시 현재 `exchange` query를 유지한다.
+- 주요 조회 API에 `exchange=upbit` 또는 `exchange=binance` 파라미터를 전달한다.
+- React Query key에 `exchange`를 포함해 거래소별 cache가 섞이지 않게 했다.
+- `BINANCE` 선택 시 Stage 2 backend의 `501 Not Implemented` 응답을 화면 에러로 표시한다.
+- 실제 주문 API, 수동 BUY, `REAL_TRADING`은 추가하지 않았다.
+
 ## 리스크
 
 - Stage 2 없이 Stage 3을 먼저 구현하면 backend 응답 기준과 맞지 않는다.

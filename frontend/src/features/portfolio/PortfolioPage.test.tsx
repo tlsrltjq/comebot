@@ -26,10 +26,10 @@ describe('PortfolioPage', () => {
   it('shows allocation and position exit status without manual trading controls', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url === '/api/portfolio/status') {
+      if (url === '/api/portfolio/status?exchange=upbit') {
         return json({ cash: '985000', realizedProfit: '1200' });
       }
-      if (url === '/api/system/status') {
+      if (url === '/api/system/status?exchange=upbit') {
         return json({
           database: { connected: true },
           marketProvider: { provider: 'UPBIT', externalProvider: true },
@@ -49,10 +49,10 @@ describe('PortfolioPage', () => {
           telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
         });
       }
-      if (url === '/api/portfolio/positions') {
+      if (url === '/api/portfolio/positions?exchange=upbit') {
         return json([]);
       }
-      if (url === '/api/portfolio/valuation') {
+      if (url === '/api/portfolio/valuation?exchange=upbit') {
         return json({
           cash: '985000',
           totalPositionValue: '15000',

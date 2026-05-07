@@ -47,7 +47,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .brand strong {
@@ -59,6 +59,34 @@ button:disabled {
   color: #99e6c8;
   font-size: 12px;
   font-weight: 700;
+}
+
+.exchange-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #31414d;
+  border-radius: 8px;
+  background: #11191f;
+}
+
+.exchange-switch button {
+  min-width: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #aebbc6;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 9px 8px;
+}
+
+.exchange-switch button.active,
+.exchange-switch button:hover {
+  background: #f8fafc;
+  color: #172026;
 }
 
 .nav {

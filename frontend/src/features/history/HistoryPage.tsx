@@ -8,6 +8,7 @@ import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatDateTime, formatKrw, formatNumber } from '../../shared/format';
+import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 type SignalFilter = 'ALL' | SignalType;
 type OrderFilter = 'ALL' | OrderStatus | 'NO_ORDER';
@@ -25,20 +26,21 @@ export function HistoryPage() {
   const [signalFilter, setSignalFilter] = useState<SignalFilter>('ALL');
   const [orderFilter, setOrderFilter] = useState<OrderFilter>('ALL');
   const [reasonFilter, setReasonFilter] = useState<ReasonFilter>('ALL');
+  const { exchange } = useExchangeMode();
   const normalizedMarket = market.trim().toUpperCase();
   const historyQuery = useQuery({
-    queryKey: queryKeys.history(normalizedMarket || undefined, limit),
-    queryFn: () => api.history(normalizedMarket || undefined, limit),
+    queryKey: queryKeys.history(exchange, normalizedMarket || undefined, limit),
+    queryFn: () => api.history(exchange, normalizedMarket || undefined, limit),
     refetchInterval: 3_000,
   });
   const summaryQuery = useQuery({
-    queryKey: queryKeys.analyticsSummary(range),
-    queryFn: () => api.analyticsSummary(range),
+    queryKey: queryKeys.analyticsSummary(range, exchange),
+    queryFn: () => api.analyticsSummary(range, exchange),
     refetchInterval: 5_000,
   });
   const lossesQuery = useQuery({
-    queryKey: queryKeys.analyticsLosses(range),
-    queryFn: () => api.analyticsLosses(range),
+    queryKey: queryKeys.analyticsLosses(range, exchange),
+    queryFn: () => api.analyticsLosses(range, exchange),
     refetchInterval: 5_000,
   });
 

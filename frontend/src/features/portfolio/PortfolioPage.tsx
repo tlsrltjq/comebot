@@ -8,6 +8,7 @@ import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatKrw, formatNumber } from '../../shared/format';
+import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 type SortKey = 'value' | 'profitRate' | 'market';
 
@@ -16,10 +17,11 @@ const STOP_LOSS_RATE = -0.7;
 
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
-  const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus, queryFn: api.portfolioStatus, refetchInterval: 5_000 });
-  const positionsQuery = useQuery({ queryKey: queryKeys.positions, queryFn: api.positions, refetchInterval: 5_000 });
-  const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation, queryFn: api.portfolioValuation, refetchInterval: 5_000 });
-  const systemQuery = useQuery({ queryKey: queryKeys.system, queryFn: api.systemStatus, refetchInterval: 10_000 });
+  const { exchange } = useExchangeMode();
+  const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: 5_000 });
+  const positionsQuery = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: 5_000 });
+  const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: 5_000 });
+  const systemQuery = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: 10_000 });
 
   const positions = useMemo(
     () => sortPositions(valuationQuery.data?.positions ?? [], sortKey),

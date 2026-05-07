@@ -2,8 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CandidatesPage } from './CandidatesPage';
+import { ExchangeModeContext } from '../../shared/exchange/ExchangeModeContext';
+import type { ExchangeMode } from '../../shared/api/types';
 
-function renderWithClient() {
+function renderWithClient(exchange: ExchangeMode = 'UPBIT') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -13,7 +15,9 @@ function renderWithClient() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <CandidatesPage />
+      <ExchangeModeContext.Provider value={{ exchange, setExchange: vi.fn() }}>
+        <CandidatesPage />
+      </ExchangeModeContext.Provider>
     </QueryClientProvider>,
   );
 }
@@ -26,7 +30,7 @@ describe('CandidatesPage', () => {
   it('shows candidates without exposing manual execution controls', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url === '/api/candidates') {
+      if (url === '/api/candidates?exchange=upbit') {
         return new Response(
           JSON.stringify([
             {
@@ -55,5 +59,15 @@ describe('CandidatesPage', () => {
     expect(screen.getByText('SELECTED')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
+  });
+
+  it('shows the backend not implemented response for Binance mode', async () => {
+    const fetchMock = vi.fn(async () => new Response('Binance exchange mode is not implemented yet', { status: 501 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithClient('BINANCE');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Binance exchange mode is not implemented yet');
+    expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=binance', expect.anything());
   });
 });

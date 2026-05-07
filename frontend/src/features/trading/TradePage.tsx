@@ -3,16 +3,18 @@ import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { formatDateTime } from '../../shared/format';
+import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 export function TradePage() {
+  const { exchange } = useExchangeMode();
   const systemQuery = useQuery({
-    queryKey: queryKeys.system,
-    queryFn: api.systemStatus,
+    queryKey: queryKeys.system(exchange),
+    queryFn: () => api.systemStatus(exchange),
     refetchInterval: 10_000,
   });
   const historyQuery = useQuery({
-    queryKey: queryKeys.history(undefined, 10),
-    queryFn: () => api.history(undefined, 10),
+    queryKey: queryKeys.history(exchange, undefined, 10),
+    queryFn: () => api.history(exchange, undefined, 10),
     refetchInterval: 10_000,
   });
 

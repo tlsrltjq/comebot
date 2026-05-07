@@ -5,14 +5,16 @@ import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { formatDateTime, formatKrw, formatNumber } from '../../shared/format';
+import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 export function CandidatesPage() {
   const [market, setMarket] = useState('');
   const normalizedMarket = market.trim().toUpperCase();
+  const { exchange } = useExchangeMode();
 
   const candidatesQuery = useQuery({
-    queryKey: queryKeys.candidates(normalizedMarket || undefined),
-    queryFn: () => api.candidates(normalizedMarket || undefined),
+    queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined),
+    queryFn: () => api.candidates(exchange, normalizedMarket || undefined),
     refetchInterval: 5_000,
   });
 

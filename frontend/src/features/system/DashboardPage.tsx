@@ -7,28 +7,30 @@ import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatDateTime, formatKrw, formatNumber } from '../../shared/format';
+import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 const DASHBOARD_RANGE = '24h' as const;
 
 export function DashboardPage() {
+  const { exchange } = useExchangeMode();
   const { data, error, isLoading } = useQuery({
-    queryKey: queryKeys.system,
-    queryFn: api.systemStatus,
+    queryKey: queryKeys.system(exchange),
+    queryFn: () => api.systemStatus(exchange),
     refetchInterval: 5_000,
   });
   const { data: summary } = useQuery({
-    queryKey: queryKeys.analyticsSummary(DASHBOARD_RANGE),
-    queryFn: () => api.analyticsSummary(DASHBOARD_RANGE),
+    queryKey: queryKeys.analyticsSummary(DASHBOARD_RANGE, exchange),
+    queryFn: () => api.analyticsSummary(DASHBOARD_RANGE, exchange),
     refetchInterval: 5_000,
   });
   const { data: pnl } = useQuery({
-    queryKey: queryKeys.analyticsPnl(DASHBOARD_RANGE),
-    queryFn: () => api.analyticsPnl(DASHBOARD_RANGE),
+    queryKey: queryKeys.analyticsPnl(DASHBOARD_RANGE, exchange),
+    queryFn: () => api.analyticsPnl(DASHBOARD_RANGE, exchange),
     refetchInterval: 5_000,
   });
   const { data: losses } = useQuery({
-    queryKey: queryKeys.analyticsLosses(DASHBOARD_RANGE),
-    queryFn: () => api.analyticsLosses(DASHBOARD_RANGE),
+    queryKey: queryKeys.analyticsLosses(DASHBOARD_RANGE, exchange),
+    queryFn: () => api.analyticsLosses(DASHBOARD_RANGE, exchange),
     refetchInterval: 5_000,
   });
 

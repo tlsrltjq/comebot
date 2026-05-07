@@ -3,6 +3,7 @@ import type {
   AnalyticsPnlResponse,
   AnalyticsRange,
   AnalyticsSummaryResponse,
+  ExchangeMode,
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
@@ -25,6 +26,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+const exchangeParam = (exchange: ExchangeMode) => exchange.toLowerCase();
+
 const query = (params: Record<string, string | number | undefined>) => {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -37,28 +40,34 @@ const query = (params: Record<string, string | number | undefined>) => {
 };
 
 export const api = {
-  systemStatus: () => request<SystemStatusResponse>('/api/system/status'),
-  candidates: (market?: string) => request<TradingCandidateResponse[]>(`/api/candidates${query({ market })}`),
-  portfolioStatus: () => request<PortfolioStatusResponse>('/api/portfolio/status'),
-  positions: () => request<PositionResponse[]>('/api/portfolio/positions'),
-  portfolioValuation: () => request<PortfolioValuationResponse>('/api/portfolio/valuation'),
-  history: (market?: string, limit = 20) =>
-    request<TradingFlowHistoryResponse[]>(`/api/trading-flow/history${query({ market, limit })}`),
-  analyticsSummary: (range: AnalyticsRange) =>
-    request<AnalyticsSummaryResponse>(`/api/analytics/summary${query({ range })}`),
-  analyticsPnl: (range: AnalyticsRange) => request<AnalyticsPnlResponse>(`/api/analytics/pnl${query({ range })}`),
-  analyticsLosses: (range: AnalyticsRange) =>
-    request<AnalyticsLossResponse>(`/api/analytics/losses${query({ range })}`),
+  systemStatus: (exchange: ExchangeMode = 'UPBIT') =>
+    request<SystemStatusResponse>(`/api/system/status${query({ exchange: exchangeParam(exchange) })}`),
+  candidates: (exchange: ExchangeMode = 'UPBIT', market?: string) =>
+    request<TradingCandidateResponse[]>(`/api/candidates${query({ exchange: exchangeParam(exchange), market })}`),
+  portfolioStatus: (exchange: ExchangeMode = 'UPBIT') =>
+    request<PortfolioStatusResponse>(`/api/portfolio/status${query({ exchange: exchangeParam(exchange) })}`),
+  positions: (exchange: ExchangeMode = 'UPBIT') =>
+    request<PositionResponse[]>(`/api/portfolio/positions${query({ exchange: exchangeParam(exchange) })}`),
+  portfolioValuation: (exchange: ExchangeMode = 'UPBIT') =>
+    request<PortfolioValuationResponse>(`/api/portfolio/valuation${query({ exchange: exchangeParam(exchange) })}`),
+  history: (exchange: ExchangeMode = 'UPBIT', market?: string, limit = 20) =>
+    request<TradingFlowHistoryResponse[]>(`/api/trading-flow/history${query({ exchange: exchangeParam(exchange), market, limit })}`),
+  analyticsSummary: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') =>
+    request<AnalyticsSummaryResponse>(`/api/analytics/summary${query({ exchange: exchangeParam(exchange), range })}`),
+  analyticsPnl: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') =>
+    request<AnalyticsPnlResponse>(`/api/analytics/pnl${query({ exchange: exchangeParam(exchange), range })}`),
+  analyticsLosses: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') =>
+    request<AnalyticsLossResponse>(`/api/analytics/losses${query({ exchange: exchangeParam(exchange), range })}`),
 };
 
 export const queryKeys = {
-  system: ['system'] as const,
-  candidates: (market?: string) => ['candidates', market ?? 'all'] as const,
-  portfolioStatus: ['portfolioStatus'] as const,
-  positions: ['positions'] as const,
-  portfolioValuation: ['portfolioValuation'] as const,
-  history: (market?: string, limit = 20) => ['history', market ?? 'all', limit] as const,
-  analyticsSummary: (range: AnalyticsRange) => ['analyticsSummary', range] as const,
-  analyticsPnl: (range: AnalyticsRange) => ['analyticsPnl', range] as const,
-  analyticsLosses: (range: AnalyticsRange) => ['analyticsLosses', range] as const,
+  system: (exchange: ExchangeMode = 'UPBIT') => ['system', exchange] as const,
+  candidates: (exchange: ExchangeMode = 'UPBIT', market?: string) => ['candidates', exchange, market ?? 'all'] as const,
+  portfolioStatus: (exchange: ExchangeMode = 'UPBIT') => ['portfolioStatus', exchange] as const,
+  positions: (exchange: ExchangeMode = 'UPBIT') => ['positions', exchange] as const,
+  portfolioValuation: (exchange: ExchangeMode = 'UPBIT') => ['portfolioValuation', exchange] as const,
+  history: (exchange: ExchangeMode = 'UPBIT', market?: string, limit = 20) => ['history', exchange, market ?? 'all', limit] as const,
+  analyticsSummary: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsSummary', exchange, range] as const,
+  analyticsPnl: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsPnl', exchange, range] as const,
+  analyticsLosses: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsLosses', exchange, range] as const,
 };

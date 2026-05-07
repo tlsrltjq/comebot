@@ -26,7 +26,7 @@ describe('TradePage', () => {
   it('shows scheduler state without manual execution controls', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url === '/api/system/status') {
+      if (url === '/api/system/status?exchange=upbit') {
         return new Response(
           JSON.stringify({
             database: { connected: true },

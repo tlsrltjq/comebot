@@ -3,6 +3,7 @@ export type OrderStatus = 'FILLED' | 'REJECTED' | 'FAILED';
 export type CandidateDecision = 'SELECTED' | 'SKIPPED';
 export type MarketTrend = 'UP' | 'DOWN' | 'SIDEWAYS';
 export type AnalyticsRange = '1h' | '24h' | '3d' | '7d';
+export type ExchangeMode = 'UPBIT' | 'BINANCE';
 
 export interface SystemStatusResponse {
   database: { connected: boolean };

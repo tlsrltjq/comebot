@@ -17,7 +17,7 @@
 | --- | --- | --- |
 | 1 | `STAGE_01_CONSTRAINTS_AND_PLAN.md` | 계획 완료 |
 | 2 | `STAGE_02_BACKEND_EXCHANGE_MODE.md` | 구현 완료 |
-| 3 | `STAGE_03_FRONTEND_EXCHANGE_MODE.md` | 계획 완료 |
+| 3 | `STAGE_03_FRONTEND_EXCHANGE_MODE.md` | 구현 완료 |
 | 4 | `STAGE_04_BINANCE_REST_PROVIDER.md` | 계획 완료 |
 | 5 | `STAGE_05_EXCHANGE_PORTFOLIO_HISTORY.md` | 계획 완료 |
 | 6 | `STAGE_06_SELECTED_PAPER_SELL.md` | 계획 완료 |
