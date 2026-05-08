@@ -74,6 +74,8 @@ WebSocket 시세 수신은 REST provider와 분리한다.
 - fallback 성공 가격은 `REST_FALLBACK` source로 snapshot store에 저장한다.
 - WebSocket과 REST가 모두 실패하면 주문 실행은 차단하고 조회 화면에는 실패 또는 stale 상태를 표시한다.
 - 기본 설정은 WebSocket disabled로 유지해서 기존 REST provider 동작을 보존한다.
+- 기존 Upbit 전체 KRW REST polling scheduler는 `market.upbit-krw-ticker-polling.enabled=false`로 끌 수 있다.
+  WebSocket/SNAPSHOT 운영에서 명시 market을 사용하는 경우 불필요한 1초 REST 전체조회는 끈다.
 - `/api/market-provider/status`는 WebSocket 활성 여부와 거래소별 snapshot 개수를 반환한다.
 
 ## Strategy

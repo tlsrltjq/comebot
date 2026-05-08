@@ -24,6 +24,8 @@
 - `SNAPSHOT` provider는 fresh snapshot을 먼저 사용하고, 없거나 stale이면 거래소별 REST provider로 fallback한다.
 - REST fallback도 실패하면 stale snapshot만으로 주문 가격을 만들지 않는다.
 - WebSocket은 기본 disabled이며, `market.websocket.enabled=true`와 거래소별 `market.websocket.<exchange>.enabled=true`가 모두 켜진 경우에만 연결한다.
+- Upbit 전체 KRW REST polling scheduler는 `market.upbit-krw-ticker-polling.enabled`로 제어한다.
+  WebSocket/SNAPSHOT 기반 운영에서 명시 market만 구독하는 경우 polling을 꺼서 1초 전체 REST 호출을 피한다.
 
 ## Strategy 장애
 

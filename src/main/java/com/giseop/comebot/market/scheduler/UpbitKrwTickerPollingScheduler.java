@@ -23,28 +23,51 @@ public class UpbitKrwTickerPollingScheduler {
     private final RestClient restClient;
     private final AtomicBoolean running;
     private final UpbitKrwTickerStore tickerStore;
+    private final UpbitKrwTickerPollingProperties properties;
 
     public UpbitKrwTickerPollingScheduler() {
-        this(RestClient.builder().baseUrl(UPBIT_API_BASE_URL).build(), new AtomicBoolean(false), new UpbitKrwTickerStore());
+        this(
+                RestClient.builder().baseUrl(UPBIT_API_BASE_URL).build(),
+                new AtomicBoolean(false),
+                new UpbitKrwTickerStore(),
+                new UpbitKrwTickerPollingProperties()
+        );
     }
 
     @Autowired
-    public UpbitKrwTickerPollingScheduler(UpbitKrwTickerStore tickerStore) {
-        this(RestClient.builder().baseUrl(UPBIT_API_BASE_URL).build(), new AtomicBoolean(false), tickerStore);
+    public UpbitKrwTickerPollingScheduler(
+            UpbitKrwTickerStore tickerStore,
+            UpbitKrwTickerPollingProperties properties
+    ) {
+        this(RestClient.builder().baseUrl(UPBIT_API_BASE_URL).build(), new AtomicBoolean(false), tickerStore, properties);
     }
 
     UpbitKrwTickerPollingScheduler(RestClient restClient, AtomicBoolean running) {
-        this(restClient, running, new UpbitKrwTickerStore());
+        this(restClient, running, new UpbitKrwTickerStore(), new UpbitKrwTickerPollingProperties());
     }
 
     UpbitKrwTickerPollingScheduler(RestClient restClient, AtomicBoolean running, UpbitKrwTickerStore tickerStore) {
+        this(restClient, running, tickerStore, new UpbitKrwTickerPollingProperties());
+    }
+
+    UpbitKrwTickerPollingScheduler(
+            RestClient restClient,
+            AtomicBoolean running,
+            UpbitKrwTickerStore tickerStore,
+            UpbitKrwTickerPollingProperties properties
+    ) {
         this.restClient = restClient;
         this.running = running;
         this.tickerStore = tickerStore;
+        this.properties = properties;
     }
 
     @Scheduled(fixedDelay = 1000)
     public void poll() {
+        if (!properties.isEnabled()) {
+            log.debug("Upbit KRW ticker polling is disabled");
+            return;
+        }
         if (!running.compareAndSet(false, true)) {
             log.debug("Upbit KRW ticker polling skipped because previous run is still active");
             return;

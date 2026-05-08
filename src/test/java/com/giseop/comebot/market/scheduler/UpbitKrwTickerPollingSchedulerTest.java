@@ -59,4 +59,22 @@ class UpbitKrwTickerPollingSchedulerTest {
 
         server.verify();
     }
+
+    @Test
+    void pollSkipsWhenDisabled() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.upbit.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(never(), requestTo("https://api.upbit.com/v1/ticker/all?quote_currencies=KRW"));
+        UpbitKrwTickerPollingProperties properties = new UpbitKrwTickerPollingProperties();
+        properties.setEnabled(false);
+
+        new UpbitKrwTickerPollingScheduler(
+                builder.build(),
+                new AtomicBoolean(false),
+                new UpbitKrwTickerStore(),
+                properties
+        ).poll();
+
+        server.verify();
+    }
 }
