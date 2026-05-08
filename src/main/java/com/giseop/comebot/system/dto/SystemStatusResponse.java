@@ -49,6 +49,7 @@ public record SystemStatusResponse(
             long candidateFixedDelayMs,
             List<String> candidateMarkets,
             boolean candidateNotifySummary,
+            String candidateExchange,
             boolean exitEnabled,
             long exitFixedDelayMs,
             boolean exitSaveHoldHistory,

@@ -1,5 +1,6 @@
 package com.giseop.comebot.strategy.service;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import java.math.BigDecimal;
@@ -24,6 +25,16 @@ public class PositionEntryGuardService {
             return false;
         }
         return paperPortfolioService.findPositions().stream()
+                .filter(position -> market.equals(position.market()))
+                .map(PaperPosition::quantity)
+                .anyMatch(quantity -> quantity != null && quantity.compareTo(BigDecimal.ZERO) > 0);
+    }
+
+    public boolean shouldBlockEntry(ExchangeMode exchange, String market) {
+        if (!strategyEntryProperties.isPreventReentryWithPosition() || market == null || market.isBlank()) {
+            return false;
+        }
+        return paperPortfolioService.findPositions(exchange).stream()
                 .filter(position -> market.equals(position.market()))
                 .map(PaperPosition::quantity)
                 .anyMatch(quantity -> quantity != null && quantity.compareTo(BigDecimal.ZERO) > 0);

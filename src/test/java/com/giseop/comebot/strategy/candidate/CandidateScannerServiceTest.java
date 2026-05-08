@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.candle.domain.Candle;
 import com.giseop.comebot.market.candle.provider.CandleProvider;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
@@ -47,6 +48,34 @@ class CandidateScannerServiceTest {
         assertThat(candidate.trend()).isEqualTo(MarketTrend.UP);
         assertThat(candidate.priceChangeRate()).isEqualByComparingTo("20.0000");
         assertThat(candidate.reason()).isEqualTo("Volatility long candidate selected");
+    }
+
+    @Test
+    void binanceScanUsesBinanceCandleProvider() {
+        StubCandleProvider upbitProvider = new StubCandleProvider();
+        StubCandleProvider binanceProvider = new StubCandleProvider();
+        binanceProvider.candles = List.of(
+                candle("BTCUSDT", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("BTCUSDT", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        CandidateScannerService exchangeAwareService = new CandidateScannerService(
+                tradingProperties,
+                scannerProperties,
+                upbitProvider,
+                binanceProvider,
+                new VolatilityIndicatorService(),
+                new StrategyMarketSettingsService(strategyProperties, scannerProperties, overrideProperties),
+                new com.giseop.comebot.market.service.MarketSelectionService(
+                        new com.giseop.comebot.market.service.UpbitKrwTickerStore(),
+                        new com.giseop.comebot.market.service.BinanceUsdtTickerStore()
+                )
+        );
+
+        TradingCandidate candidate = exchangeAwareService.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(candidate.market()).isEqualTo("BTCUSDT");
+        assertThat(upbitProvider.requestedMarkets).isEmpty();
+        assertThat(binanceProvider.requestedMarkets).containsExactly("BTCUSDT");
     }
 
     @Test

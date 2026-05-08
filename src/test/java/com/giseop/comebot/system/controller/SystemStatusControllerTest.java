@@ -100,6 +100,7 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.candidateFixedDelayMs").value(60000))
                 .andExpect(jsonPath("$.scheduler.candidateMarkets[1]").value("KRW-ETH"))
                 .andExpect(jsonPath("$.scheduler.candidateNotifySummary").value(false))
+                .andExpect(jsonPath("$.scheduler.candidateExchange").value("UPBIT"))
                 .andExpect(jsonPath("$.scheduler.exitEnabled").value(true))
                 .andExpect(jsonPath("$.scheduler.exitFixedDelayMs").value(5000))
                 .andExpect(jsonPath("$.scheduler.exitPositionMarketCount").value(1))
@@ -192,6 +193,8 @@ class SystemStatusControllerTest {
                 .thenReturn(List.of("KRW-BTC", "KRW-ETH"));
         org.mockito.Mockito.when(candidateSchedulerProperties.isNotifySummary())
                 .thenReturn(false);
+        org.mockito.Mockito.when(candidateSchedulerProperties.getExchange())
+                .thenReturn(ExchangeMode.UPBIT);
         org.mockito.Mockito.when(positionExitSchedulerProperties.isEnabled())
                 .thenReturn(true);
         org.mockito.Mockito.when(positionExitSchedulerProperties.getFixedDelayMs())

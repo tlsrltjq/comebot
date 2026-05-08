@@ -59,6 +59,7 @@ TELEGRAM_CHAT_ID=
 기본 메뉴에는 실행 버튼을 노출하지 않는다.
 자동 실행은 scheduler가 담당한다.
 조회 명령은 자동 실행 상태, 후보, 손익, 포트폴리오, history를 보여준다.
+`/status`와 `/auto`는 candidate scheduler 거래소를 함께 보여준다.
 
 포트폴리오 선택 PAPER SELL은 웹 전용 계획이다. Telegram inline menu에는 선택 매도 버튼을 추가하지 않는다.
 

@@ -1,8 +1,11 @@
 package com.giseop.comebot.strategy.candidate;
 
 import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.candle.domain.Candle;
+import com.giseop.comebot.market.candle.provider.BinanceCandleProvider;
 import com.giseop.comebot.market.candle.provider.CandleProvider;
+import com.giseop.comebot.market.candle.provider.UpbitCandleProvider;
 import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
@@ -22,7 +25,8 @@ public class CandidateScannerService {
 
     private final TradingProperties tradingProperties;
     private final CandidateScannerProperties candidateScannerProperties;
-    private final CandleProvider candleProvider;
+    private final CandleProvider upbitCandleProvider;
+    private final CandleProvider binanceCandleProvider;
     private final VolatilityIndicatorService volatilityIndicatorService;
     private final StrategyMarketSettingsService strategyMarketSettingsService;
     private final MarketSelectionService marketSelectionService;
@@ -31,14 +35,15 @@ public class CandidateScannerService {
     public CandidateScannerService(
             TradingProperties tradingProperties,
             CandidateScannerProperties candidateScannerProperties,
-            CandleProvider candleProvider,
+            UpbitCandleProvider upbitCandleProvider,
             VolatilityIndicatorService volatilityIndicatorService,
             StrategyMarketSettingsService strategyMarketSettingsService,
             MarketSelectionService marketSelectionService
     ) {
         this.tradingProperties = tradingProperties;
         this.candidateScannerProperties = candidateScannerProperties;
-        this.candleProvider = candleProvider;
+        this.upbitCandleProvider = upbitCandleProvider;
+        this.binanceCandleProvider = new BinanceCandleProvider();
         this.volatilityIndicatorService = volatilityIndicatorService;
         this.strategyMarketSettingsService = strategyMarketSettingsService;
         this.marketSelectionService = marketSelectionService;
@@ -55,10 +60,29 @@ public class CandidateScannerService {
                 tradingProperties,
                 candidateScannerProperties,
                 candleProvider,
+                candleProvider,
                 volatilityIndicatorService,
                 strategyMarketSettingsService,
                 new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore())
         );
+    }
+
+    CandidateScannerService(
+            TradingProperties tradingProperties,
+            CandidateScannerProperties candidateScannerProperties,
+            CandleProvider upbitCandleProvider,
+            CandleProvider binanceCandleProvider,
+            VolatilityIndicatorService volatilityIndicatorService,
+            StrategyMarketSettingsService strategyMarketSettingsService,
+            MarketSelectionService marketSelectionService
+    ) {
+        this.tradingProperties = tradingProperties;
+        this.candidateScannerProperties = candidateScannerProperties;
+        this.upbitCandleProvider = upbitCandleProvider;
+        this.binanceCandleProvider = binanceCandleProvider;
+        this.volatilityIndicatorService = volatilityIndicatorService;
+        this.strategyMarketSettingsService = strategyMarketSettingsService;
+        this.marketSelectionService = marketSelectionService;
     }
 
     public List<TradingCandidate> scanAllowedMarkets() {
@@ -68,8 +92,12 @@ public class CandidateScannerService {
     }
 
     public TradingCandidate scan(String market) {
+        return scan(ExchangeMode.UPBIT, market);
+    }
+
+    public TradingCandidate scan(ExchangeMode exchange, String market) {
         try {
-            List<Candle> candles = candleProvider.getRecentCandles(
+            List<Candle> candles = candleProvider(exchange).getRecentCandles(
                     market,
                     candidateScannerProperties.getCandleUnitMinutes(),
                     candidateScannerProperties.getCandleCount()
@@ -90,6 +118,10 @@ public class CandidateScannerService {
                     Instant.now()
             );
         }
+    }
+
+    private CandleProvider candleProvider(ExchangeMode exchange) {
+        return exchange == ExchangeMode.BINANCE ? binanceCandleProvider : upbitCandleProvider;
     }
 
     private String failureReason(RuntimeException exception) {

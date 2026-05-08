@@ -38,6 +38,7 @@ public class SchedulerStatusController {
                 candidateSchedulerProperties.getFixedDelayMs(),
                 candidateSchedulerProperties.getMarkets(),
                 candidateSchedulerProperties.isNotifySummary(),
+                candidateSchedulerProperties.getExchange().name(),
                 positionExitSchedulerProperties.isEnabled(),
                 positionExitSchedulerProperties.getFixedDelayMs(),
                 positionExitSchedulerProperties.isSaveHoldHistory(),

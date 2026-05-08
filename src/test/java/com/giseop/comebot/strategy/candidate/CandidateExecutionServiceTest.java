@@ -2,11 +2,13 @@ package com.giseop.comebot.strategy.candidate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import com.giseop.comebot.execution.domain.OrderRequest;
@@ -74,8 +76,8 @@ class CandidateExecutionServiceTest {
 
     @Test
     void selectedCandidateExecutesPaperBuyOrder() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
-        when(orderExecutionService.execute(any(OrderRequest.class))).thenReturn(new OrderResult(
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
+        when(orderExecutionService.execute(eq(ExchangeMode.UPBIT), any(OrderRequest.class))).thenReturn(new OrderResult(
                 "KRW-BTC",
                 OrderSide.BUY,
                 new BigDecimal("100.00000000"),
@@ -93,43 +95,43 @@ class CandidateExecutionServiceTest {
         assertThat(result.currentPrice()).isEqualByComparingTo("100");
 
         ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
-        verify(orderExecutionService).execute(requestCaptor.capture());
+        verify(orderExecutionService).execute(eq(ExchangeMode.UPBIT), requestCaptor.capture());
         assertThat(requestCaptor.getValue().market()).isEqualTo("KRW-BTC");
         assertThat(requestCaptor.getValue().side()).isEqualTo(OrderSide.BUY);
         assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("100.00000000");
         assertThat(requestCaptor.getValue().price()).isEqualByComparingTo("100");
-        verify(tradingFlowHistoryService).save(result);
+        verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
     }
 
     @Test
     void skippedCandidateDoesNotExecuteOrder() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(skippedCandidate());
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(skippedCandidate());
 
         TradingFlowResult result = service.execute("KRW-BTC");
 
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.message()).isEqualTo("Candidate was not selected");
-        verify(orderExecutionService, never()).execute(any());
-        verify(tradingFlowHistoryService).save(result);
+        verify(orderExecutionService, never()).execute(any(OrderRequest.class));
+        verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
     }
 
     @Test
     void existingPaperPositionBlocksCandidateExecution() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
-        when(positionEntryGuardService.shouldBlockEntry("KRW-BTC")).thenReturn(true);
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
+        when(positionEntryGuardService.shouldBlockEntry(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(true);
 
         TradingFlowResult result = service.execute("KRW-BTC");
 
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.message()).isEqualTo("Candidate entry blocked by existing paper position");
-        verify(orderExecutionService, never()).execute(any());
-        verify(tradingFlowHistoryService).save(result);
+        verify(orderExecutionService, never()).execute(any(OrderRequest.class));
+        verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
     }
 
     @Test
     void selectedCandidateUsesConfiguredOrderAmount() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(selectedCandidate());
-        when(orderExecutionService.execute(any(OrderRequest.class))).thenReturn(new OrderResult(
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
+        when(orderExecutionService.execute(eq(ExchangeMode.UPBIT), any(OrderRequest.class))).thenReturn(new OrderResult(
                 "KRW-BTC",
                 OrderSide.BUY,
                 new BigDecimal("100.00000000"),
@@ -158,7 +160,7 @@ class CandidateExecutionServiceTest {
         service.execute("KRW-BTC");
 
         ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
-        verify(orderExecutionService).execute(requestCaptor.capture());
+        verify(orderExecutionService).execute(eq(ExchangeMode.UPBIT), requestCaptor.capture());
         assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("100.00000000");
     }
 
@@ -171,9 +173,42 @@ class CandidateExecutionServiceTest {
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
         assertThat(result.message()).isEqualTo("Kill switch enabled: candidate execution blocked");
-        verify(candidateScannerService, never()).scan("KRW-BTC");
-        verify(orderExecutionService, never()).execute(any());
-        verify(tradingFlowHistoryService).save(result);
+        verify(candidateScannerService, never()).scan(ExchangeMode.UPBIT, "KRW-BTC");
+        verify(orderExecutionService, never()).execute(any(OrderRequest.class));
+        verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
+    }
+
+    @Test
+    void binanceCandidateUsesBinanceExecutionAndHistory() {
+        when(candidateScannerService.scan(ExchangeMode.BINANCE, "BTCUSDT")).thenReturn(new TradingCandidate(
+                "BTCUSDT",
+                CandidateDecision.SELECTED,
+                "Volatility long candidate selected",
+                new BigDecimal("50000"),
+                new BigDecimal("2.5"),
+                new BigDecimal("5"),
+                new BigDecimal("20"),
+                MarketTrend.UP,
+                Instant.parse("2026-04-30T00:00:00Z")
+        ));
+        when(orderExecutionService.execute(eq(ExchangeMode.BINANCE), any(OrderRequest.class))).thenReturn(new OrderResult(
+                "BTCUSDT",
+                OrderSide.BUY,
+                new BigDecimal("0.20000000"),
+                new BigDecimal("50000"),
+                OrderStatus.FILLED,
+                "Paper trading order filled",
+                Instant.parse("2026-04-30T00:01:00Z")
+        ));
+
+        TradingFlowResult result = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(result.market()).isEqualTo("BTCUSDT");
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
+        verify(orderExecutionService).execute(eq(ExchangeMode.BINANCE), requestCaptor.capture());
+        assertThat(requestCaptor.getValue().market()).isEqualTo("BTCUSDT");
+        verify(tradingFlowHistoryService).save(ExchangeMode.BINANCE, result);
     }
 
     private TradingCandidate selectedCandidate() {

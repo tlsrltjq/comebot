@@ -102,6 +102,7 @@ public class SystemStatusController {
                         candidateSchedulerProperties.getFixedDelayMs(),
                         new ArrayList<>(candidateSchedulerProperties.getMarkets()),
                         candidateSchedulerProperties.isNotifySummary(),
+                        candidateSchedulerProperties.getExchange().name(),
                         positionExitSchedulerProperties.isEnabled(),
                         positionExitSchedulerProperties.getFixedDelayMs(),
                         positionExitSchedulerProperties.isSaveHoldHistory(),

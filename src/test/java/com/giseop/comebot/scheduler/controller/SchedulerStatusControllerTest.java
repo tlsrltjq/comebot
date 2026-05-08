@@ -66,6 +66,7 @@ class SchedulerStatusControllerTest {
                 .andExpect(jsonPath("$.candidateMarkets[0]").value("KRW-BTC"))
                 .andExpect(jsonPath("$.candidateMarkets[1]").value("KRW-ETH"))
                 .andExpect(jsonPath("$.candidateNotifySummary").value(false))
+                .andExpect(jsonPath("$.candidateExchange").value("UPBIT"))
                 .andExpect(jsonPath("$.exitEnabled").value(true))
                 .andExpect(jsonPath("$.exitFixedDelayMs").value(5000))
                 .andExpect(jsonPath("$.exitSaveHoldHistory").value(false))
@@ -112,6 +113,7 @@ class SchedulerStatusControllerTest {
         when(candidateSchedulerProperties.getFixedDelayMs()).thenReturn(fixedDelayMs);
         when(candidateSchedulerProperties.getMarkets()).thenReturn(markets);
         when(candidateSchedulerProperties.isNotifySummary()).thenReturn(false);
+        when(candidateSchedulerProperties.getExchange()).thenReturn(ExchangeMode.UPBIT);
     }
 
     private void exitSchedulerProperties(boolean enabled, long fixedDelayMs, boolean saveHoldHistory, ExchangeMode exchange) {

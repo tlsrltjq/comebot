@@ -2,6 +2,7 @@ package com.giseop.comebot.scheduler;
 
 import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
@@ -85,12 +86,13 @@ public class ScheduledCandidateExecutionRunner {
     }
 
     private CandidateSchedulerRunSummary executeOnce() {
+        ExchangeMode exchange = candidateSchedulerProperties.getExchange();
         List<String> markets = marketSelectionService.resolve(candidateSchedulerProperties.getMarkets());
 
         CandidateSchedulerRunSummary summary = CandidateSchedulerRunSummary.empty();
         for (int index = 0; index < markets.size(); index++) {
             String market = markets.get(index);
-            summary = summary.add(executeMarket(market));
+            summary = summary.add(executeMarket(exchange, market));
             delayBeforeNextMarket(index, markets.size());
         }
         return new CandidateSchedulerRunSummary(
@@ -103,12 +105,17 @@ public class ScheduledCandidateExecutionRunner {
         );
     }
 
-    private CandidateSchedulerRunSummary executeMarket(String market) {
+    private CandidateSchedulerRunSummary executeMarket(ExchangeMode exchange, String market) {
         try {
-            TradingFlowResult result = candidateExecutionService.execute(market);
+            TradingFlowResult result = candidateExecutionService.execute(exchange, market);
             return summarizeResult(result);
         } catch (RuntimeException exception) {
-            log.warn("Scheduled candidate execution failed. market={}, error={}", market, exception.getClass().getSimpleName());
+            log.warn(
+                    "Scheduled candidate execution failed. exchange={}, market={}, error={}",
+                    exchange,
+                    market,
+                    exception.getClass().getSimpleName()
+            );
             return new CandidateSchedulerRunSummary(0, 1, 0, 0, 0, 1);
         }
     }

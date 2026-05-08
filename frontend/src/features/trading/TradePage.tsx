@@ -54,6 +54,8 @@ export function TradePage() {
               </Badge>
             </div>
             <dl className="definition-list">
+              <dt>거래소(Exchange)</dt>
+              <dd>{systemQuery.data.scheduler.candidateExchange}</dd>
               <dt>주기(Delay)</dt>
               <dd>{systemQuery.data.scheduler.candidateFixedDelayMs} ms</dd>
               <dt>마켓(Markets)</dt>

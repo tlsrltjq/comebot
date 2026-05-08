@@ -206,6 +206,7 @@ public class TelegramCommandService {
                 허용 Market: %s
                 스케줄러 활성화: %s
                 후보 스케줄러 활성화: %s
+                후보 거래소: %s
                 수동 PAPER 실행: %s
                 긴급 정지: %s
                 알림 활성화: %s
@@ -224,6 +225,7 @@ public class TelegramCommandService {
                 tradingProperties.getAllowedMarkets(),
                 tradingSchedulerProperties.isEnabled(),
                 candidateSchedulerProperties.isEnabled(),
+                candidateSchedulerProperties.getExchange(),
                 telegramInboundProperties.isManualPaperExecutionEnabled(),
                 safetyProperties.isKillSwitchEnabled(),
                 notificationProperties.isEnabled(),
@@ -240,6 +242,7 @@ public class TelegramCommandService {
                 전략 주기: %s ms
                 전략 대상: %s
                 후보 스케줄러: %s
+                후보 거래소: %s
                 후보 주기: %s ms
                 후보 대상: %s
                 후보 요약 알림: %s
@@ -252,6 +255,7 @@ public class TelegramCommandService {
                 tradingSchedulerProperties.getFixedDelayMs(),
                 tradingSchedulerProperties.getMarkets(),
                 candidateSchedulerProperties.isEnabled(),
+                candidateSchedulerProperties.getExchange(),
                 candidateSchedulerProperties.getFixedDelayMs(),
                 candidateSchedulerProperties.getMarkets(),
                 candidateSchedulerProperties.isNotifySummary(),

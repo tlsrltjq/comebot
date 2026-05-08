@@ -136,6 +136,8 @@ export function DashboardPage() {
             <dd>{data.scheduler.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
             <dt>후보 실행(Candidate)</dt>
             <dd>{data.scheduler.candidateEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
+            <dt>후보 거래소(Candidate exchange)</dt>
+            <dd>{data.scheduler.candidateExchange}</dd>
             <dt>청산 평가(Exit)</dt>
             <dd>{data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
             <dt>청산 대상(Exit positions)</dt>

@@ -36,6 +36,8 @@
 - 전략 판단 실패는 주문 실행으로 이어지면 안 된다.
 - HOLD와 실패를 혼동하지 않는다.
 - 전략 실패가 포트폴리오 상태를 변경하면 안 된다.
+- candidate scheduler는 `trading.candidate-scheduler.exchange`를 사용해 후보 스캔, PAPER 주문, history 저장 거래소를 일치시킨다.
+- Binance candidate 실행 실패는 Binance run summary의 failed count로 남기고 Upbit scheduler/provider 흐름을 중단시키지 않는다.
 
 ## Risk 장애
 

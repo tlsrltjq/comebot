@@ -1,5 +1,6 @@
 package com.giseop.comebot.scheduler;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,6 +14,7 @@ public class CandidateSchedulerProperties {
     private boolean notifySummary = false;
     private long fixedDelayMs = 60000;
     private long perMarketDelayMs = 0;
+    private ExchangeMode exchange = ExchangeMode.UPBIT;
     private List<String> markets = new ArrayList<>(List.of("KRW-BTC", "KRW-ETH"));
 
     public boolean isEnabled() {
@@ -45,6 +47,14 @@ public class CandidateSchedulerProperties {
 
     public void setPerMarketDelayMs(long perMarketDelayMs) {
         this.perMarketDelayMs = Math.max(0, perMarketDelayMs);
+    }
+
+    public ExchangeMode getExchange() {
+        return exchange;
+    }
+
+    public void setExchange(ExchangeMode exchange) {
+        this.exchange = exchange == null ? ExchangeMode.UPBIT : exchange;
     }
 
     public List<String> getMarkets() {

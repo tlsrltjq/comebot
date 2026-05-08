@@ -85,6 +85,9 @@ WebSocket 시세 수신은 REST provider와 분리한다.
 ## Strategy
 
 기본 전략은 `VolatilityBreakoutLongStrategy`다. 후보 스캔 기반 롱 전용 PAPER 전략을 사용한다.
+candidate scheduler는 `trading.candidate-scheduler.exchange`로 실행 거래소를 결정한다.
+`UPBIT`은 Upbit candle/provider와 `ALL_KRW` universe를, `BINANCE`는 Binance candle/provider와 `ALL_USDT` universe를 사용한다.
+주문 실행과 history 저장은 선택된 exchange를 그대로 전달하며, Binance PAPER 결과는 Binance portfolio/history에만 반영한다.
 
 현재 매매 조건과 조건 변경 후 PAPER 운용 결과는 `docs/trading/condition-records/`에 기록한다.
 

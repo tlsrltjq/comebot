@@ -41,6 +41,7 @@ describe('TradePage', () => {
               candidateFixedDelayMs: 60000,
               candidateMarkets: ['KRW-BTC', 'KRW-ETH'],
               candidateNotifySummary: false,
+              candidateExchange: 'UPBIT',
               exitEnabled: true,
               exitFixedDelayMs: 5000,
               exitSaveHoldHistory: false,
