@@ -20,6 +20,10 @@ Upbit PAPER 실행:
 scripts\run-upbit-paper.bat
 ```
 
+Binance PAPER 후보 스모크 테스트 절차:
+
+- `docs/operations/BINANCE_PAPER_SMOKE_TEST.md`
+
 ## 상태 확인
 
 ```http
@@ -31,6 +35,7 @@ GET /api/scheduler/status
 ```
 
 `/api/scheduler/status`는 기존 trading flow scheduler와 candidate scheduler 상태를 함께 보여준다.
+candidate scheduler의 `candidateExchange` 값으로 현재 후보 실행 거래소를 확인한다.
 
 ## 트레이딩 플로우
 
