@@ -4,6 +4,7 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.domain.PriceSource;
 import com.giseop.comebot.market.domain.TickerSnapshot;
 import com.giseop.comebot.market.service.TickerSnapshotStore;
+import com.giseop.comebot.market.service.UpbitKrwTickerStore;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import java.math.BigDecimal;
@@ -18,7 +19,11 @@ import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,6 +34,7 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
 
     private final MarketWebSocketProperties properties;
     private final TickerSnapshotStore tickerSnapshotStore;
+    private final UpbitKrwTickerStore upbitKrwTickerStore;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final HttpClient httpClient;
@@ -39,11 +45,13 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
     public UpbitTickerWebSocketClient(
             MarketWebSocketProperties properties,
             TickerSnapshotStore tickerSnapshotStore,
+            UpbitKrwTickerStore upbitKrwTickerStore,
             TradingSchedulerProperties tradingSchedulerProperties,
             CandidateSchedulerProperties candidateSchedulerProperties
     ) {
         this.properties = properties;
         this.tickerSnapshotStore = tickerSnapshotStore;
+        this.upbitKrwTickerStore = upbitKrwTickerStore;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.httpClient = HttpClient.newHttpClient();
@@ -93,15 +101,32 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
         return running;
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(Ordered.LOWEST_PRECEDENCE)
+    public void startAfterMarketUniverseBootstrap() {
+        if (!running) {
+            start();
+        }
+    }
+
     List<String> subscribedMarkets() {
         Set<String> markets = new LinkedHashSet<>();
-        tradingSchedulerProperties.getMarkets().stream()
-                .filter(market -> market != null && market.startsWith("KRW-"))
-                .forEach(markets::add);
-        candidateSchedulerProperties.getMarkets().stream()
-                .filter(market -> market != null && market.startsWith("KRW-"))
-                .forEach(markets::add);
+        addConfiguredMarkets(markets, tradingSchedulerProperties.getMarkets());
+        addConfiguredMarkets(markets, candidateSchedulerProperties.getMarkets());
         return List.copyOf(markets);
+    }
+
+    private void addConfiguredMarkets(Set<String> target, List<String> configuredMarkets) {
+        if (configuredMarkets == null) {
+            return;
+        }
+        if (configuredMarkets.stream().anyMatch("ALL_KRW"::equalsIgnoreCase)) {
+            target.addAll(upbitKrwTickerStore.topMarkets(50));
+            return;
+        }
+        configuredMarkets.stream()
+                .filter(market -> market != null && market.startsWith("KRW-"))
+                .forEach(target::add);
     }
 
     void handleMessage(String payload) {

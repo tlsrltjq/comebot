@@ -18,7 +18,7 @@ import org.springframework.web.client.RestClient;
 class UpbitKrwTickerPollingSchedulerTest {
 
     @Test
-    void pollFetchesAllKrwTickers() {
+    void bootstrapFetchesAllKrwTickers() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://api.upbit.com");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(once(), requestTo("https://api.upbit.com/v1/ticker/all?quote_currencies=KRW"))
@@ -30,14 +30,14 @@ class UpbitKrwTickerPollingSchedulerTest {
                         """, APPLICATION_JSON));
 
         UpbitKrwTickerStore tickerStore = new UpbitKrwTickerStore();
-        new UpbitKrwTickerPollingScheduler(builder.build(), new AtomicBoolean(false), tickerStore).poll();
+        new UpbitKrwTickerPollingScheduler(builder.build(), new AtomicBoolean(false), tickerStore).bootstrap();
 
         assertThat(tickerStore.latestMarkets()).containsExactly("KRW-BTC", "KRW-ETH");
         server.verify();
     }
 
     @Test
-    void pollDoesNotThrowWhenApiFails() {
+    void scheduledRefreshDoesNotThrowWhenApiFails() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://api.upbit.com");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         server.expect(once(), requestTo("https://api.upbit.com/v1/ticker/all?quote_currencies=KRW"))
@@ -74,6 +74,24 @@ class UpbitKrwTickerPollingSchedulerTest {
                 new UpbitKrwTickerStore(),
                 properties
         ).poll();
+
+        server.verify();
+    }
+
+    @Test
+    void bootstrapSkipsWhenStartupBootstrapIsDisabled() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.upbit.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(never(), requestTo("https://api.upbit.com/v1/ticker/all?quote_currencies=KRW"));
+        UpbitKrwTickerPollingProperties properties = new UpbitKrwTickerPollingProperties();
+        properties.setBootstrapOnStartup(false);
+
+        new UpbitKrwTickerPollingScheduler(
+                builder.build(),
+                new AtomicBoolean(false),
+                new UpbitKrwTickerStore(),
+                properties
+        ).bootstrap();
 
         server.verify();
     }

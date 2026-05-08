@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 public class UpbitKrwTickerPollingProperties {
 
     private boolean enabled = true;
+    private boolean bootstrapOnStartup = true;
+    private long fixedDelayMs = 600000;
 
     public boolean isEnabled() {
         return enabled;
@@ -15,5 +17,21 @@ public class UpbitKrwTickerPollingProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isBootstrapOnStartup() {
+        return bootstrapOnStartup;
+    }
+
+    public void setBootstrapOnStartup(boolean bootstrapOnStartup) {
+        this.bootstrapOnStartup = bootstrapOnStartup;
+    }
+
+    public long getFixedDelayMs() {
+        return fixedDelayMs;
+    }
+
+    public void setFixedDelayMs(long fixedDelayMs) {
+        this.fixedDelayMs = fixedDelayMs <= 0 ? 600000 : fixedDelayMs;
     }
 }

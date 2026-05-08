@@ -7,7 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -62,23 +66,49 @@ public class UpbitKrwTickerPollingScheduler {
         this.properties = properties;
     }
 
-    @Scheduled(fixedDelay = 1000)
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public void bootstrap() {
+        if (!properties.isBootstrapOnStartup()) {
+            return;
+        }
+        refresh("bootstrap");
+    }
+
+    @Scheduled(
+            fixedDelayString = "${market.upbit-krw-ticker-polling.fixed-delay-ms:600000}",
+            initialDelayString = "${market.upbit-krw-ticker-polling.fixed-delay-ms:600000}"
+    )
     public void poll() {
+        refresh("scheduled");
+    }
+
+    private void refresh(String reason) {
         if (!properties.isEnabled()) {
-            log.debug("Upbit KRW ticker polling is disabled");
+            log.debug("Upbit KRW market universe refresh is disabled");
             return;
         }
         if (!running.compareAndSet(false, true)) {
-            log.debug("Upbit KRW ticker polling skipped because previous run is still active");
+            log.debug("Upbit KRW market universe refresh skipped because previous run is still active");
             return;
         }
 
         try {
             List<UpbitKrwTickerResponse> tickers = fetchTickers();
             tickerStore.replace(tickers);
-            log.info("Upbit KRW tickers fetched. count={}, samples={}", tickers.size(), samples(tickers));
+            log.info(
+                    "Upbit KRW market universe refreshed. reason={}, count={}, samples={}",
+                    reason,
+                    tickers.size(),
+                    samples(tickers)
+            );
         } catch (RuntimeException exception) {
-            log.warn("Upbit KRW ticker polling failed. error={}", exception.getClass().getSimpleName(), exception);
+            log.warn(
+                    "Upbit KRW market universe refresh failed. reason={}, error={}",
+                    reason,
+                    exception.getClass().getSimpleName(),
+                    exception
+            );
         } finally {
             running.set(false);
         }
