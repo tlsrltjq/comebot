@@ -78,3 +78,6 @@
 - market 단위 실패가 전체 scheduler를 중단시키면 안 된다.
 - Scheduler에는 전략, 주문, 리스크 로직을 직접 넣지 않는다.
 - candidate scheduler는 `CandidateExecutionService`만 호출하고 결과를 filled, rejected, hold, failed로 요약한다.
+- exit scheduler는 `PositionExitExecutionService`만 호출하고 보유 position market만 평가한다.
+- candidate scheduler, legacy trading scheduler, exit scheduler는 모두 `fixedDelay`와 내부 중복 실행 guard를 유지한다.
+- exit scheduler HOLD는 기본적으로 history에 저장하지 않는다. BUY/SELL/REJECTED/FAILED는 추적 가능하게 저장한다.

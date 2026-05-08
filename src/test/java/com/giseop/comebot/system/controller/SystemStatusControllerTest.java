@@ -15,7 +15,11 @@ import com.giseop.comebot.database.DatabaseHealthService;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.portfolio.domain.PaperPosition;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
+import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -56,6 +60,12 @@ class SystemStatusControllerTest {
     private CandidateSchedulerProperties candidateSchedulerProperties;
 
     @MockitoBean
+    private PositionExitSchedulerProperties positionExitSchedulerProperties;
+
+    @MockitoBean
+    private PaperPortfolioService paperPortfolioService;
+
+    @MockitoBean
     private SafetyProperties safetyProperties;
 
     @MockitoBean
@@ -90,6 +100,9 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.candidateFixedDelayMs").value(60000))
                 .andExpect(jsonPath("$.scheduler.candidateMarkets[1]").value("KRW-ETH"))
                 .andExpect(jsonPath("$.scheduler.candidateNotifySummary").value(false))
+                .andExpect(jsonPath("$.scheduler.exitEnabled").value(true))
+                .andExpect(jsonPath("$.scheduler.exitFixedDelayMs").value(5000))
+                .andExpect(jsonPath("$.scheduler.exitPositionMarketCount").value(1))
                 .andExpect(jsonPath("$.safety.killSwitchEnabled").value(false))
                 .andExpect(jsonPath("$.notification.enabled").value(false))
                 .andExpect(jsonPath("$.notification.sendHold").value(false))
@@ -179,6 +192,16 @@ class SystemStatusControllerTest {
                 .thenReturn(List.of("KRW-BTC", "KRW-ETH"));
         org.mockito.Mockito.when(candidateSchedulerProperties.isNotifySummary())
                 .thenReturn(false);
+        org.mockito.Mockito.when(positionExitSchedulerProperties.isEnabled())
+                .thenReturn(true);
+        org.mockito.Mockito.when(positionExitSchedulerProperties.getFixedDelayMs())
+                .thenReturn(5000L);
+        org.mockito.Mockito.when(positionExitSchedulerProperties.isSaveHoldHistory())
+                .thenReturn(false);
+        org.mockito.Mockito.when(positionExitSchedulerProperties.getExchange())
+                .thenReturn(ExchangeMode.UPBIT);
+        org.mockito.Mockito.when(paperPortfolioService.findPositions(ExchangeMode.UPBIT))
+                .thenReturn(List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.1"), new BigDecimal("90000000"))));
         org.mockito.Mockito.when(safetyProperties.isKillSwitchEnabled())
                 .thenReturn(false);
         org.mockito.Mockito.when(notificationProperties.isEnabled())

@@ -200,3 +200,20 @@ trading.exit-scheduler.save-hold-history=false
 ## 사용자 확인 필요
 
 - 없음. Stage 9 1차 권장안은 exit scheduler HOLD history 저장 안 함, candidate scheduler HOLD history 기존 유지로 진행한다.
+
+## 구현 결과
+
+- `PositionExitSchedulerProperties`를 추가해 `trading.exit-scheduler.*` 설정을 분리했다.
+- `PositionExitExecutionService`를 추가해 보유 PAPER position market만 익절/손절 SELL 평가 대상으로 삼는다.
+- `ScheduledPositionExitRunner`를 추가했고 `@Scheduled(fixedDelayString = "${trading.exit-scheduler.fixed-delay-ms:5000}")`와 `AtomicBoolean` guard를 사용한다.
+- candidate scheduler와 legacy trading scheduler에도 내부 중복 실행 guard를 추가했다.
+- exit scheduler는 HOLD를 기본적으로 history에 저장하지 않고, `save-hold-history=true`일 때만 저장한다.
+- `/api/scheduler/status`와 `/api/system/status`에 exit scheduler 상태, 주기, HOLD 저장 여부, 대상 거래소, 보유 market 수를 추가했다.
+- 웹 자동 실행 화면과 운영 대시보드에 후보/청산 주기를 분리해서 표시했다.
+- 기본 설정은 신규 진입 candidate scheduler 60초, 보유 position exit scheduler 5초, legacy trading scheduler disabled로 정리했다.
+
+검증:
+
+```text
+./gradlew test --tests PositionExitExecutionServiceTest --tests ScheduledPositionExitRunnerTest --tests SchedulerStatusControllerTest --tests SystemStatusControllerTest --tests PositionExitSignalServiceTest --tests ScheduledCandidateExecutionRunnerTest --tests ScheduledTradingFlowRunnerTest
+```

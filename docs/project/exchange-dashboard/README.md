@@ -23,7 +23,7 @@
 | 6 | `STAGE_06_SELECTED_PAPER_SELL.md` | 구현 완료 |
 | 7 | `STAGE_07_PORTFOLIO_PIE_CHART.md` | 구현 완료 |
 | 8 | `STAGE_08_WEBSOCKET_PRICE_FEED.md` | 구현 완료 |
-| 9 | `STAGE_09_SCHEDULER_CADENCE.md` | 계획 완료 |
+| 9 | `STAGE_09_SCHEDULER_CADENCE.md` | 구현 완료 |
 | 10 | `STAGE_10_BTC_CHANGE_CHART.md` | 계획 완료 |
 
 ## 구현 순서

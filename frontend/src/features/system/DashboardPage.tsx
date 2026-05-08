@@ -67,6 +67,7 @@ export function DashboardPage() {
         <StatusPill icon={<Database size={16} />} label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
         <StatusPill icon={<Activity size={16} />} label="자동매매(Auto)" value={data.scheduler.enabled ? `${data.scheduler.fixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.enabled} />
         <StatusPill icon={<Bot size={16} />} label="후보(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.candidateEnabled} />
+        <StatusPill icon={<TrendingDown size={16} />} label="청산(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.exitEnabled} />
         <StatusPill icon={<Bell size={16} />} label="수동실행(Manual)" value={data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'} good={!data.telegram.manualPaperExecutionEnabled} />
       </div>
 
@@ -135,6 +136,10 @@ export function DashboardPage() {
             <dd>{data.scheduler.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
             <dt>후보 실행(Candidate)</dt>
             <dd>{data.scheduler.candidateEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
+            <dt>청산 평가(Exit)</dt>
+            <dd>{data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
+            <dt>청산 대상(Exit positions)</dt>
+            <dd>{data.scheduler.exitPositionMarketCount}</dd>
             <dt>후보 마켓(Candidate markets)</dt>
             <dd>{data.scheduler.candidateMarkets.length ? `전체 KRW(${data.scheduler.candidateMarkets.length})` : '-'}</dd>
           </dl>

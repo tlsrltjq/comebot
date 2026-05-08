@@ -6,7 +6,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
+import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.portfolio.domain.PaperPosition;
+import com.giseop.comebot.portfolio.service.PaperPortfolioService;
+import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +31,17 @@ class SchedulerStatusControllerTest {
     @MockitoBean
     private CandidateSchedulerProperties candidateSchedulerProperties;
 
+    @MockitoBean
+    private PositionExitSchedulerProperties positionExitSchedulerProperties;
+
+    @MockitoBean
+    private PaperPortfolioService paperPortfolioService;
+
     @Test
     void getStatusReturnsOk() throws Exception {
         schedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
         candidateSchedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        exitSchedulerProperties(true, 5000, false, ExchangeMode.UPBIT);
 
         mockMvc.perform(get("/api/scheduler/status"))
                 .andExpect(status().isOk());
@@ -39,6 +51,9 @@ class SchedulerStatusControllerTest {
     void getStatusReturnsSchedulerFields() throws Exception {
         schedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
         candidateSchedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        exitSchedulerProperties(true, 5000, false, ExchangeMode.UPBIT);
+        when(paperPortfolioService.findPositions(ExchangeMode.UPBIT))
+                .thenReturn(List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.1"), new BigDecimal("100"))));
 
         mockMvc.perform(get("/api/scheduler/status"))
                 .andExpect(status().isOk())
@@ -50,13 +65,19 @@ class SchedulerStatusControllerTest {
                 .andExpect(jsonPath("$.candidateFixedDelayMs").value(60000))
                 .andExpect(jsonPath("$.candidateMarkets[0]").value("KRW-BTC"))
                 .andExpect(jsonPath("$.candidateMarkets[1]").value("KRW-ETH"))
-                .andExpect(jsonPath("$.candidateNotifySummary").value(false));
+                .andExpect(jsonPath("$.candidateNotifySummary").value(false))
+                .andExpect(jsonPath("$.exitEnabled").value(true))
+                .andExpect(jsonPath("$.exitFixedDelayMs").value(5000))
+                .andExpect(jsonPath("$.exitSaveHoldHistory").value(false))
+                .andExpect(jsonPath("$.exitExchange").value("UPBIT"))
+                .andExpect(jsonPath("$.exitPositionMarketCount").value(1));
     }
 
     @Test
     void getStatusReturnsDefaultDisabledValue() throws Exception {
         schedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
         candidateSchedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        exitSchedulerProperties(true, 5000, false, ExchangeMode.UPBIT);
 
         mockMvc.perform(get("/api/scheduler/status"))
                 .andExpect(status().isOk())
@@ -68,13 +89,16 @@ class SchedulerStatusControllerTest {
     void getStatusReturnsConfiguredCandidateSchedulerFields() throws Exception {
         schedulerProperties(true, 30000, List.of("KRW-BTC", "KRW-ETH"));
         candidateSchedulerProperties(true, 45000, List.of("KRW-XRP"));
+        exitSchedulerProperties(true, 7000, true, ExchangeMode.UPBIT);
 
         mockMvc.perform(get("/api/scheduler/status"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.markets[0]").value("KRW-BTC"))
                 .andExpect(jsonPath("$.candidateEnabled").value(true))
                 .andExpect(jsonPath("$.candidateFixedDelayMs").value(45000))
-                .andExpect(jsonPath("$.candidateMarkets[0]").value("KRW-XRP"));
+                .andExpect(jsonPath("$.candidateMarkets[0]").value("KRW-XRP"))
+                .andExpect(jsonPath("$.exitFixedDelayMs").value(7000))
+                .andExpect(jsonPath("$.exitSaveHoldHistory").value(true));
     }
 
     private void schedulerProperties(boolean enabled, long fixedDelayMs, List<String> markets) {
@@ -88,5 +112,13 @@ class SchedulerStatusControllerTest {
         when(candidateSchedulerProperties.getFixedDelayMs()).thenReturn(fixedDelayMs);
         when(candidateSchedulerProperties.getMarkets()).thenReturn(markets);
         when(candidateSchedulerProperties.isNotifySummary()).thenReturn(false);
+    }
+
+    private void exitSchedulerProperties(boolean enabled, long fixedDelayMs, boolean saveHoldHistory, ExchangeMode exchange) {
+        when(positionExitSchedulerProperties.isEnabled()).thenReturn(enabled);
+        when(positionExitSchedulerProperties.getFixedDelayMs()).thenReturn(fixedDelayMs);
+        when(positionExitSchedulerProperties.isSaveHoldHistory()).thenReturn(saveHoldHistory);
+        when(positionExitSchedulerProperties.getExchange()).thenReturn(exchange);
+        when(paperPortfolioService.findPositions(exchange)).thenReturn(List.of());
     }
 }

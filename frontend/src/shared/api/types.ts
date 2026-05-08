@@ -24,6 +24,11 @@ export interface SystemStatusResponse {
     candidateFixedDelayMs: number;
     candidateMarkets: string[];
     candidateNotifySummary: boolean;
+    exitEnabled: boolean;
+    exitFixedDelayMs: number;
+    exitSaveHoldHistory: boolean;
+    exitExchange: ExchangeMode;
+    exitPositionMarketCount: number;
   };
   safety: { killSwitchEnabled: boolean };
   notification: {

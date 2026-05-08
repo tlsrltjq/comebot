@@ -3,6 +3,7 @@ package com.giseop.comebot.scheduler;
 import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.trading.service.TradingFlowService;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ public class ScheduledTradingFlowRunner {
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final TradingFlowService tradingFlowService;
     private final MarketSelectionService marketSelectionService;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
     @Autowired
     public ScheduledTradingFlowRunner(
@@ -45,16 +47,23 @@ public class ScheduledTradingFlowRunner {
         if (!tradingSchedulerProperties.isEnabled()) {
             return;
         }
-
-        List<String> markets = marketSelectionService.resolve(tradingSchedulerProperties.getMarkets());
-        if (markets.isEmpty()) {
+        if (!running.compareAndSet(false, true)) {
+            log.info("Scheduled trading flow skipped because previous run is still active");
             return;
         }
 
+        List<String> markets = List.of();
         try {
+            markets = marketSelectionService.resolve(tradingSchedulerProperties.getMarkets());
+            if (markets.isEmpty()) {
+                return;
+            }
+
             tradingFlowService.runAll(markets);
         } catch (RuntimeException exception) {
             log.warn("Scheduled trading flow batch failed. markets={}, error={}", markets.size(), exception.getClass().getSimpleName());
+        } finally {
+            running.set(false);
         }
     }
 }

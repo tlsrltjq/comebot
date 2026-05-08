@@ -6,6 +6,7 @@ import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ public class ScheduledCandidateExecutionRunner {
     private final CandidateExecutionService candidateExecutionService;
     private final CandidateSchedulerNotificationService candidateSchedulerNotificationService;
     private final MarketSelectionService marketSelectionService;
+    private final AtomicBoolean running;
 
     @Autowired
     public ScheduledCandidateExecutionRunner(
@@ -33,6 +35,7 @@ public class ScheduledCandidateExecutionRunner {
         this.candidateExecutionService = candidateExecutionService;
         this.candidateSchedulerNotificationService = candidateSchedulerNotificationService;
         this.marketSelectionService = marketSelectionService;
+        this.running = new AtomicBoolean(false);
     }
 
     ScheduledCandidateExecutionRunner(
@@ -69,7 +72,19 @@ public class ScheduledCandidateExecutionRunner {
         if (!candidateSchedulerProperties.isEnabled()) {
             return CandidateSchedulerRunSummary.empty();
         }
+        if (!running.compareAndSet(false, true)) {
+            log.info("Scheduled candidate execution skipped because previous run is still active");
+            return CandidateSchedulerRunSummary.empty();
+        }
 
+        try {
+            return executeOnce();
+        } finally {
+            running.set(false);
+        }
+    }
+
+    private CandidateSchedulerRunSummary executeOnce() {
         List<String> markets = marketSelectionService.resolve(candidateSchedulerProperties.getMarkets());
 
         CandidateSchedulerRunSummary summary = CandidateSchedulerRunSummary.empty();

@@ -34,7 +34,7 @@ export function TradePage() {
         <div className="section-grid">
           <article className="panel">
             <div className="panel-title-row">
-              <h2>전략 스케줄러(Trading Scheduler)</h2>
+              <h2>전략 스케줄러(Legacy Trading Scheduler)</h2>
               <Badge tone={systemQuery.data.scheduler.enabled ? 'good' : 'warn'}>
                 {systemQuery.data.scheduler.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}
               </Badge>
@@ -58,6 +58,24 @@ export function TradePage() {
               <dd>{systemQuery.data.scheduler.candidateFixedDelayMs} ms</dd>
               <dt>마켓(Markets)</dt>
               <dd>{systemQuery.data.scheduler.candidateMarkets.join(', ')}</dd>
+            </dl>
+          </article>
+          <article className="panel">
+            <div className="panel-title-row">
+              <h2>청산 스케줄러(Exit Scheduler)</h2>
+              <Badge tone={systemQuery.data.scheduler.exitEnabled ? 'good' : 'warn'}>
+                {systemQuery.data.scheduler.exitEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}
+              </Badge>
+            </div>
+            <dl className="definition-list">
+              <dt>주기(Delay)</dt>
+              <dd>{systemQuery.data.scheduler.exitFixedDelayMs} ms</dd>
+              <dt>대상 거래소(Exchange)</dt>
+              <dd>{systemQuery.data.scheduler.exitExchange}</dd>
+              <dt>보유 마켓(Position markets)</dt>
+              <dd>{systemQuery.data.scheduler.exitPositionMarketCount}</dd>
+              <dt>HOLD 기록(HOLD history)</dt>
+              <dd>{systemQuery.data.scheduler.exitSaveHoldHistory ? '저장(Save)' : '저장 안 함(Skip)'}</dd>
             </dl>
           </article>
         </div>

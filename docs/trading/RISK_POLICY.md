@@ -8,7 +8,7 @@
 
 - 기본값은 `safety.kill-switch-enabled=false`다.
 - 켜져 있으면 신규 트레이딩 플로우 실행을 차단한다.
-- 차단 대상은 REST `/run`, scheduler 실행, 수동 PAPER 실행이 허용된 Telegram `/run`이다.
+- 차단 대상은 REST `/run`, candidate scheduler, exit scheduler, 수동 PAPER 실행이 허용된 Telegram `/run`이다.
 - 웹 선택 PAPER SELL도 kill switch가 켜져 있으면 시세 조회 전에 차단한다.
 - history, status, portfolio 조회는 차단하지 않는다.
 - kill switch는 시세 조회와 전략 판단보다 먼저 확인한다.
@@ -45,6 +45,9 @@
 - 미실현 수익률이 `risk.take-profit-rate` 이상이면 익절 SELL 신호를 만든다.
 - 미실현 수익률이 `risk.stop-loss-rate` 이하이면 손절 SELL 신호를 만든다.
 - SELL 수량은 보유 수량을 초과할 수 없다.
+- Stage 9 이후 보유 포지션 익절/손절 평가는 `trading.exit-scheduler`가 전담한다.
+- exit scheduler는 보유 position market만 평가하고, HOLD는 기본적으로 history에 저장하지 않는다.
+- 신규 BUY 후보 탐색은 candidate scheduler가 담당한다.
 
 ## 일일 제한
 

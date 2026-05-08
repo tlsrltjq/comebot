@@ -1,6 +1,7 @@
 package com.giseop.comebot.risk.service;
 
 import com.giseop.comebot.market.domain.MarketPrice;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.PositionExitProperties;
@@ -31,12 +32,21 @@ public class PositionExitSignalService {
     }
 
     public Optional<TradingSignal> evaluate(MarketPrice marketPrice) {
+        return evaluate(paperPortfolioService.findPositions(), marketPrice);
+    }
+
+    public Optional<TradingSignal> evaluate(ExchangeMode exchange, MarketPrice marketPrice) {
+        return evaluate(paperPortfolioService.findPositions(exchange), marketPrice);
+    }
+
+    private Optional<TradingSignal> evaluate(java.util.List<PaperPosition> positions, MarketPrice marketPrice) {
         PositionExitPolicy policy = currentPolicy();
         if (!policy.enabled() || marketPrice == null || marketPrice.market() == null || marketPrice.currentPrice() == null) {
             return Optional.empty();
         }
 
-        Optional<PaperPosition> position = paperPortfolioService.findPositions().stream()
+        java.util.List<PaperPosition> safePositions = positions == null ? java.util.List.of() : positions;
+        Optional<PaperPosition> position = safePositions.stream()
                 .filter(candidate -> marketPrice.market().equals(candidate.market()))
                 .filter(candidate -> candidate.quantity() != null && candidate.quantity().compareTo(BigDecimal.ZERO) > 0)
                 .filter(candidate -> candidate.averageBuyPrice() != null && candidate.averageBuyPrice().compareTo(BigDecimal.ZERO) > 0)

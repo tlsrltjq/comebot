@@ -16,6 +16,7 @@ import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
+import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
@@ -48,6 +49,7 @@ public class TelegramCommandService {
     private final NotificationProperties notificationProperties;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final CandidateSchedulerProperties candidateSchedulerProperties;
+    private final PositionExitSchedulerProperties positionExitSchedulerProperties;
     private final SafetyProperties safetyProperties;
     private final PositionExitProperties positionExitProperties;
     private final DailyRiskProperties dailyRiskProperties;
@@ -73,6 +75,7 @@ public class TelegramCommandService {
             NotificationProperties notificationProperties,
             TradingSchedulerProperties tradingSchedulerProperties,
             CandidateSchedulerProperties candidateSchedulerProperties,
+            PositionExitSchedulerProperties positionExitSchedulerProperties,
             SafetyProperties safetyProperties,
             PositionExitProperties positionExitProperties,
             DailyRiskProperties dailyRiskProperties,
@@ -97,6 +100,7 @@ public class TelegramCommandService {
         this.notificationProperties = notificationProperties;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
+        this.positionExitSchedulerProperties = positionExitSchedulerProperties;
         this.safetyProperties = safetyProperties;
         this.positionExitProperties = positionExitProperties;
         this.dailyRiskProperties = dailyRiskProperties;
@@ -239,6 +243,9 @@ public class TelegramCommandService {
                 후보 주기: %s ms
                 후보 대상: %s
                 후보 요약 알림: %s
+                청산 스케줄러: %s
+                청산 주기: %s ms
+                청산 HOLD 기록: %s
                 수동 PAPER 실행: %s
                 """.formatted(
                 tradingSchedulerProperties.isEnabled(),
@@ -248,6 +255,9 @@ public class TelegramCommandService {
                 candidateSchedulerProperties.getFixedDelayMs(),
                 candidateSchedulerProperties.getMarkets(),
                 candidateSchedulerProperties.isNotifySummary(),
+                positionExitSchedulerProperties.isEnabled(),
+                positionExitSchedulerProperties.getFixedDelayMs(),
+                positionExitSchedulerProperties.isSaveHoldHistory(),
                 telegramInboundProperties.isManualPaperExecutionEnabled()
         ).trim();
     }
@@ -260,8 +270,9 @@ public class TelegramCommandService {
                 대상: %s
                 후보 범위: 전체 KRW 중 24시간 거래대금 상위 50개
                 현재가 수집: 1초 fixedDelay
-                자동 실행 주기: %s ms
+                레거시 전략 실행 주기: %s ms
                 후보 실행 주기: %s ms
+                청산 평가 주기: %s ms
                 1회 BUY 금액: %s KRW
                 BUY 추세: UP만 허용
                 SELL 익절: %s
@@ -272,6 +283,7 @@ public class TelegramCommandService {
                 tradingProperties.getAllowedMarkets(),
                 tradingSchedulerProperties.getFixedDelayMs(),
                 candidateSchedulerProperties.getFixedDelayMs(),
+                positionExitSchedulerProperties.getFixedDelayMs(),
                 strategyProperties.getOrderAmount(),
                 positionExitProperties.getTakeProfitRate(),
                 positionExitProperties.getStopLossRate()

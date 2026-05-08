@@ -41,6 +41,11 @@ describe('TradePage', () => {
               candidateFixedDelayMs: 60000,
               candidateMarkets: ['KRW-BTC', 'KRW-ETH'],
               candidateNotifySummary: false,
+              exitEnabled: true,
+              exitFixedDelayMs: 5000,
+              exitSaveHoldHistory: false,
+              exitExchange: 'UPBIT',
+              exitPositionMarketCount: 1,
             },
             safety: { killSwitchEnabled: false },
             notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
@@ -56,7 +61,8 @@ describe('TradePage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('전략 스케줄러(Trading Scheduler)')).toBeInTheDocument();
+    expect(await screen.findByText('전략 스케줄러(Legacy Trading Scheduler)')).toBeInTheDocument();
+    expect(screen.getByText('청산 스케줄러(Exit Scheduler)')).toBeInTheDocument();
     expect(screen.getAllByText('켜짐(Enabled)').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());

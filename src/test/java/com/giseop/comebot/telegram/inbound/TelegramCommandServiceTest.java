@@ -26,6 +26,7 @@ import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
 import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
+import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
@@ -609,6 +610,7 @@ class TelegramCommandServiceTest {
                 new NotificationProperties(),
                 new TradingSchedulerProperties(),
                 new CandidateSchedulerProperties(),
+                new PositionExitSchedulerProperties(),
                 new SafetyProperties(),
                 positionExitProperties(),
                 dailyRiskProperties(),
