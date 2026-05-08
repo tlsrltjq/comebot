@@ -11,7 +11,10 @@ class MarketPriceProviderSelectionTest {
             .withUserConfiguration(
                     InMemoryMarketPriceProvider.class,
                     UpbitMarketPriceProvider.class,
-                    BinanceMarketPriceProvider.class
+                    BinanceMarketPriceProvider.class,
+                    SnapshotMarketPriceProvider.class,
+                    com.giseop.comebot.market.service.TickerSnapshotStore.class,
+                    com.giseop.comebot.market.websocket.MarketWebSocketProperties.class
             );
 
     @Test
@@ -43,6 +46,18 @@ class MarketPriceProviderSelectionTest {
                     assertThat(context).hasSingleBean(BinanceMarketPriceProvider.class);
                     assertThat(context).doesNotHaveBean(InMemoryMarketPriceProvider.class);
                     assertThat(context).doesNotHaveBean(UpbitMarketPriceProvider.class);
+                });
+    }
+
+    @Test
+    void snapshotProviderIsSelectedWhenConfigured() {
+        contextRunner.withPropertyValues("market.price-provider=SNAPSHOT")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(MarketPriceProvider.class);
+                    assertThat(context).hasSingleBean(SnapshotMarketPriceProvider.class);
+                    assertThat(context).doesNotHaveBean(InMemoryMarketPriceProvider.class);
+                    assertThat(context).doesNotHaveBean(UpbitMarketPriceProvider.class);
+                    assertThat(context).doesNotHaveBean(BinanceMarketPriceProvider.class);
                 });
     }
 }

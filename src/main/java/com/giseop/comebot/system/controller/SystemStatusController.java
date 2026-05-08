@@ -71,7 +71,9 @@ public class SystemStatusController {
                 new SystemStatusResponse.DatabaseStatus(databaseHealthService.check().connected()),
                 new SystemStatusResponse.MarketProviderStatus(
                         provider,
-                        provider == MarketPriceProviderType.UPBIT || provider == MarketPriceProviderType.BINANCE
+                        provider == MarketPriceProviderType.UPBIT
+                                || provider == MarketPriceProviderType.BINANCE
+                                || provider == MarketPriceProviderType.SNAPSHOT
                 ),
                 new SystemStatusResponse.StrategyStatus(
                         strategySelectionProperties.getStrategyName(),

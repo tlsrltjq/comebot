@@ -21,6 +21,9 @@
 - WebSocket reconnect는 backoff를 둔다.
 - WebSocket snapshot이 stale이면 REST fallback을 사용하거나 stale 상태를 명확히 표시한다.
 - WebSocket과 REST가 모두 실패하면 주문 실행을 차단하고 실패를 추적 가능하게 남긴다.
+- `SNAPSHOT` provider는 fresh snapshot을 먼저 사용하고, 없거나 stale이면 거래소별 REST provider로 fallback한다.
+- REST fallback도 실패하면 stale snapshot만으로 주문 가격을 만들지 않는다.
+- WebSocket은 기본 disabled이며, `market.websocket.enabled=true`와 거래소별 `market.websocket.<exchange>.enabled=true`가 모두 켜진 경우에만 연결한다.
 
 ## Strategy 장애
 

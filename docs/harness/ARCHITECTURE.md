@@ -69,9 +69,12 @@ WebSocket 시세 수신은 REST provider와 분리한다.
 
 - Upbit WebSocket client와 Binance WebSocket client를 별도 구현한다.
 - 수신한 ticker는 거래소별 snapshot store에 저장한다.
-- 현재가 조회는 WebSocket snapshot을 우선 사용한다.
-- snapshot이 없거나 stale이면 REST fallback을 사용한다.
+- `MarketPriceProviderType.SNAPSHOT` 설정 시 현재가 조회는 fresh WebSocket snapshot을 우선 사용한다.
+- snapshot이 없거나 주문용 stale 기준을 넘으면 REST fallback을 사용한다.
+- fallback 성공 가격은 `REST_FALLBACK` source로 snapshot store에 저장한다.
 - WebSocket과 REST가 모두 실패하면 주문 실행은 차단하고 조회 화면에는 실패 또는 stale 상태를 표시한다.
+- 기본 설정은 WebSocket disabled로 유지해서 기존 REST provider 동작을 보존한다.
+- `/api/market-provider/status`는 WebSocket 활성 여부와 거래소별 snapshot 개수를 반환한다.
 
 ## Strategy
 

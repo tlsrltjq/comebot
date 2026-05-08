@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
+import com.giseop.comebot.market.service.TickerSnapshotStore;
+import com.giseop.comebot.market.websocket.MarketWebSocketProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -23,6 +25,12 @@ class MarketProviderStatusControllerTest {
 
     @MockitoBean
     private MarketPriceProviderProperties marketPriceProviderProperties;
+
+    @MockitoBean
+    private MarketWebSocketProperties marketWebSocketProperties;
+
+    @MockitoBean
+    private TickerSnapshotStore tickerSnapshotStore;
 
     @Test
     void statusReturnsInMemoryProviderByDefault() throws Exception {
@@ -59,6 +67,24 @@ class MarketProviderStatusControllerTest {
                 .andExpect(jsonPath("$.externalProvider").value(true))
                 .andExpect(jsonPath("$.message").value(containsString("Binance public spot ticker API")));
     }
+
+    @Test
+    void statusReturnsSnapshotProviderWithWebSocketCounts() throws Exception {
+        org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
+                .thenReturn(MarketPriceProviderType.SNAPSHOT);
+        org.mockito.Mockito.when(marketWebSocketProperties.isEnabled())
+                .thenReturn(true);
+        org.mockito.Mockito.when(tickerSnapshotStore.count())
+                .thenReturn(3);
+
+        mockMvc.perform(get("/api/market-provider/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.provider").value("SNAPSHOT"))
+                .andExpect(jsonPath("$.externalProvider").value(true))
+                .andExpect(jsonPath("$.webSocketEnabled").value(true))
+                .andExpect(jsonPath("$.snapshotCount").value(3));
+    }
+
 
     @Test
     void statusDoesNotExposeSensitiveValues() throws Exception {
