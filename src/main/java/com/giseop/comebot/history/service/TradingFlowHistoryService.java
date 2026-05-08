@@ -1,5 +1,6 @@
 package com.giseop.comebot.history.service;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.TradingFlowHistoryRepository;
 import com.giseop.comebot.trading.service.TradingFlowResult;
@@ -19,8 +20,13 @@ public class TradingFlowHistoryService {
     }
 
     public TradingFlowHistory save(TradingFlowResult result) {
+        return save(ExchangeMode.UPBIT, result);
+    }
+
+    public TradingFlowHistory save(ExchangeMode exchange, TradingFlowResult result) {
         TradingFlowHistory history = new TradingFlowHistory(
                 UUID.randomUUID().toString(),
+                exchange,
                 result.market(),
                 result.currentPrice(),
                 result.signalType(),
@@ -34,18 +40,30 @@ public class TradingFlowHistoryService {
     }
 
     public List<TradingFlowHistory> findRecent(int limit) {
-        return tradingFlowHistoryRepository.findRecent(limit);
+        return findRecent(ExchangeMode.UPBIT, limit);
+    }
+
+    public List<TradingFlowHistory> findRecent(ExchangeMode exchange, int limit) {
+        return tradingFlowHistoryRepository.findRecent(exchange, limit);
     }
 
     public List<TradingFlowHistory> findRecent(String market, int limit) {
+        return findRecent(ExchangeMode.UPBIT, market, limit);
+    }
+
+    public List<TradingFlowHistory> findRecent(ExchangeMode exchange, String market, int limit) {
         if (market == null) {
-            return findRecent(limit);
+            return findRecent(exchange, limit);
         }
-        return tradingFlowHistoryRepository.findRecentByMarket(market, limit);
+        return tradingFlowHistoryRepository.findRecentByMarket(exchange, market, limit);
     }
 
     public List<TradingFlowHistory> findSince(Instant from) {
-        return tradingFlowHistoryRepository.findSince(from);
+        return findSince(ExchangeMode.UPBIT, from);
+    }
+
+    public List<TradingFlowHistory> findSince(ExchangeMode exchange, Instant from) {
+        return tradingFlowHistoryRepository.findSince(exchange, from);
     }
 
     public Optional<TradingFlowHistory> findById(String id) {

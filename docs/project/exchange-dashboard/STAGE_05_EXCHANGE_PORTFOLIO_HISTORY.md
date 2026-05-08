@@ -157,5 +157,33 @@ paper.portfolio.binance.initial-cash=1000
 
 ## 사용자 확인 필요
 
-- Binance PAPER 초기 현금은 `1000 USDT`로 시작할지 확인이 필요하다.
-- 통합 손익은 Stage 5에서 만들지 않고 거래소별 손익만 표시하는 것으로 진행한다.
+- Binance PAPER 초기 현금은 기본 `1000 USDT`로 시작한다.
+- 통합 손익은 Stage 5에서 만들지 않고 거래소별 손익만 표시한다.
+
+## 구현 결과
+
+- `PaperPortfolio`, repository, service API를 `ExchangeMode` 기준으로 확장했다.
+- 기존 exchange 없는 포트폴리오 호출은 `UPBIT` wrapper로 유지했다.
+- `InMemoryPaperPortfolioRepository`는 exchange별 cash, position, realized profit, realized profit event를 분리한다.
+- `TradingFlowHistory`에 `exchange` 필드를 추가했다.
+- in-memory/JPA history repository는 exchange별 recent, market, since 조회를 지원한다.
+- `schema.sql`에 `trading_flow_history.exchange` 컬럼과 exchange 조회 index를 추가했다.
+- `GET /api/portfolio/status`, `/positions`, `/valuation`은 `exchange=binance` 요청을 허용하고 Binance PAPER 데이터만 반환한다.
+- `GET /api/trading-flow/history`는 `exchange` 기준으로 history를 필터링한다.
+- `GET /api/system/status?exchange=binance`는 Binance 모드 화면의 공통 상태 조회를 위해 허용한다.
+- 포트폴리오 API 응답과 프론트 포트폴리오 화면은 `currency`를 표시하고, Binance는 `USDT` 기준으로 보여준다.
+- Candidate 조회와 자동매매 전체 Binance 연결은 Stage 5 범위 밖이므로 기존처럼 제한한다.
+
+## 검증 결과
+
+- `PaperPortfolioServiceTest`
+- `PaperPortfolioValuationServiceTest`
+- `PortfolioStatusControllerTest`
+- `TradingFlowHistoryServiceTest`
+- `TradingFlowHistoryControllerTest`
+- `JpaTradingFlowHistoryRepositoryTest`
+- `SystemStatusControllerTest`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `./gradlew test`

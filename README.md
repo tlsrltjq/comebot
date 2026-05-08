@@ -13,7 +13,7 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 - Market price providers: `IN_MEMORY`, `UPBIT`, `BINANCE`
 - Candle providers: Upbit public Candle API, Binance public spot Kline API
 - History storage: `IN_MEMORY` by default, optional `JPA`
-- Portfolio storage: `IN_MEMORY`
+- Portfolio storage: `IN_MEMORY`, separated by exchange mode
 - Scheduler: enabled by default for PAPER_TRADING automation
 - Telegram inbound/outbound: disabled by default
 
@@ -109,6 +109,7 @@ POST /api/candidates/execute?market=KRW-BTC
 GET /api/trading-flow/run?market=KRW-BTC
 GET /api/trading-flow/history
 GET /api/trading-flow/history?market=KRW-BTC
+GET /api/trading-flow/history?exchange=binance
 ```
 
 Portfolio:
@@ -117,6 +118,7 @@ Portfolio:
 GET /api/portfolio/status
 GET /api/portfolio/positions
 GET /api/portfolio/valuation
+GET /api/portfolio/status?exchange=binance
 ```
 
 Analytics:

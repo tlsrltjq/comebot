@@ -28,13 +28,12 @@ public class TradingFlowHistoryController {
             @RequestParam(required = false) String exchange
     ) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
-        ExchangeModeResolver.requireImplemented(exchangeMode);
 
         if (limit <= 0 || (market != null && market.isBlank())) {
             return ResponseEntity.badRequest().build();
         }
 
-        List<TradingFlowHistoryResponse> response = tradingFlowHistoryService.findRecent(market, limit).stream()
+        List<TradingFlowHistoryResponse> response = tradingFlowHistoryService.findRecent(exchangeMode, market, limit).stream()
                 .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(response);
@@ -50,6 +49,7 @@ public class TradingFlowHistoryController {
     private TradingFlowHistoryResponse toResponse(TradingFlowHistory history) {
         return new TradingFlowHistoryResponse(
                 history.id(),
+                history.exchange().name(),
                 history.market(),
                 history.currentPrice(),
                 history.signalType(),

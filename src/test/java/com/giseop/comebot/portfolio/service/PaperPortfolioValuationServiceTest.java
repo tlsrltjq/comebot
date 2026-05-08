@@ -3,6 +3,7 @@ package com.giseop.comebot.portfolio.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderSide;
 import com.giseop.comebot.execution.domain.OrderStatus;
@@ -39,6 +40,8 @@ class PaperPortfolioValuationServiceTest {
     void valuateReturnsEmptyPositionsWhenNoPositionExists() {
         PortfolioValuationResponse response = valuationService.valuate();
 
+        assertThat(response.exchange()).isEqualTo("UPBIT");
+        assertThat(response.currency()).isEqualTo("KRW");
         assertThat(response.cash()).isEqualByComparingTo("1000000");
         assertThat(response.totalPositionValue()).isEqualByComparingTo("0");
         assertThat(response.totalEquity()).isEqualByComparingTo("1000000");
@@ -97,6 +100,21 @@ class PaperPortfolioValuationServiceTest {
         assertThat(response.positions()).hasSize(2);
         assertThat(marketPriceProvider.batchRequests).containsExactly(List.of("KRW-BTC", "KRW-ETH"));
         assertThat(marketPriceProvider.singleRequests).isEmpty();
+    }
+
+    @Test
+    void valuateUsesSelectedExchangePortfolio() {
+        portfolioService.apply(ExchangeMode.BINANCE, filled("BTCUSDT", OrderSide.BUY, "0.01", "50000"));
+        marketPriceProvider.prices = Map.of("BTCUSDT", new BigDecimal("55000"));
+
+        PortfolioValuationResponse response = valuationService.valuate(ExchangeMode.BINANCE);
+
+        assertThat(response.exchange()).isEqualTo("BINANCE");
+        assertThat(response.currency()).isEqualTo("USDT");
+        assertThat(response.cash()).isEqualByComparingTo("500.00");
+        assertThat(response.positions()).hasSize(1);
+        assertThat(response.positions().getFirst().market()).isEqualTo("BTCUSDT");
+        assertThat(marketPriceProvider.batchRequests).containsExactly(List.of("BTCUSDT"));
     }
 
     @Test

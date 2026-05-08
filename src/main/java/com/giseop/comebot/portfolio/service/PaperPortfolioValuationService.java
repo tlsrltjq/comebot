@@ -1,5 +1,6 @@
 package com.giseop.comebot.portfolio.service;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.market.provider.MarketPriceProvider;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
@@ -33,7 +34,11 @@ public class PaperPortfolioValuationService {
     }
 
     public PortfolioValuationResponse valuate() {
-        PaperPortfolio portfolio = paperPortfolioService.getPortfolio();
+        return valuate(ExchangeMode.UPBIT);
+    }
+
+    public PortfolioValuationResponse valuate(ExchangeMode exchange) {
+        PaperPortfolio portfolio = paperPortfolioService.getPortfolio(exchange);
         List<PositionValuationResponse> positionValuations = new ArrayList<>();
         BigDecimal totalPositionValue = BigDecimal.ZERO;
         BigDecimal totalUnrealizedProfit = BigDecimal.ZERO;
@@ -54,6 +59,8 @@ public class PaperPortfolioValuationService {
         BigDecimal totalEquity = portfolio.cash().add(totalPositionValue);
         BigDecimal totalProfit = portfolio.realizedProfit().add(totalUnrealizedProfit);
         return new PortfolioValuationResponse(
+                portfolio.exchange().name(),
+                portfolio.currency(),
                 portfolio.cash(),
                 totalPositionValue,
                 totalEquity,

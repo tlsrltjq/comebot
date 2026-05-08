@@ -65,12 +65,14 @@ public class SystemStatusController {
     @GetMapping("/api/system/status")
     public ResponseEntity<SystemStatusResponse> getStatus(@RequestParam(required = false) String exchange) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
-        ExchangeModeResolver.requireImplemented(exchangeMode);
 
         MarketPriceProviderType provider = marketPriceProviderProperties.getPriceProvider();
         return ResponseEntity.ok(new SystemStatusResponse(
                 new SystemStatusResponse.DatabaseStatus(databaseHealthService.check().connected()),
-                new SystemStatusResponse.MarketProviderStatus(provider, provider == MarketPriceProviderType.UPBIT),
+                new SystemStatusResponse.MarketProviderStatus(
+                        provider,
+                        provider == MarketPriceProviderType.UPBIT || provider == MarketPriceProviderType.BINANCE
+                ),
                 new SystemStatusResponse.StrategyStatus(
                         strategySelectionProperties.getStrategyName(),
                         strategyProperties.getBuyPrice(),

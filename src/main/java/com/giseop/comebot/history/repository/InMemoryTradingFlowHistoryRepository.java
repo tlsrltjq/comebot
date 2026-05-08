@@ -1,5 +1,6 @@
 package com.giseop.comebot.history.repository;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import java.time.Instant;
 import java.util.List;
@@ -27,29 +28,32 @@ public class InMemoryTradingFlowHistoryRepository implements TradingFlowHistoryR
     }
 
     @Override
-    public List<TradingFlowHistory> findRecent(int limit) {
+    public List<TradingFlowHistory> findRecent(ExchangeMode exchange, int limit) {
         return recentIds.stream()
-                .limit(limit)
                 .map(histories::get)
                 .filter(Objects::nonNull)
+                .filter(history -> exchangeOrUpbit(history) == exchange)
+                .limit(limit)
                 .toList();
     }
 
     @Override
-    public List<TradingFlowHistory> findRecentByMarket(String market, int limit) {
+    public List<TradingFlowHistory> findRecentByMarket(ExchangeMode exchange, String market, int limit) {
         return recentIds.stream()
                 .map(histories::get)
                 .filter(Objects::nonNull)
+                .filter(history -> exchangeOrUpbit(history) == exchange)
                 .filter(history -> market.equals(history.market()))
                 .limit(limit)
                 .toList();
     }
 
     @Override
-    public List<TradingFlowHistory> findSince(Instant from) {
+    public List<TradingFlowHistory> findSince(ExchangeMode exchange, Instant from) {
         return recentIds.stream()
                 .map(histories::get)
                 .filter(Objects::nonNull)
+                .filter(history -> exchangeOrUpbit(history) == exchange)
                 .filter(history -> !history.createdAt().isBefore(from))
                 .toList();
     }
@@ -57,5 +61,9 @@ public class InMemoryTradingFlowHistoryRepository implements TradingFlowHistoryR
     @Override
     public Optional<TradingFlowHistory> findById(String id) {
         return Optional.ofNullable(histories.get(id));
+    }
+
+    private ExchangeMode exchangeOrUpbit(TradingFlowHistory history) {
+        return history.exchange() == null ? ExchangeMode.UPBIT : history.exchange();
     }
 }

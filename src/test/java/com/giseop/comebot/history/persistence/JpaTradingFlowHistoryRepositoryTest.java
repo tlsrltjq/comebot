@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.strategy.domain.SignalType;
@@ -51,7 +52,7 @@ class JpaTradingFlowHistoryRepositoryTest {
     void findRecentReturnsStoredHistoryInRepositoryOrder() {
         TradingFlowHistory oldHistory = history("history-1", "KRW-BTC", Instant.parse("2026-04-27T00:00:00Z"));
         TradingFlowHistory newHistory = history("history-2", "KRW-ETH", Instant.parse("2026-04-27T00:01:00Z"));
-        when(springDataRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 20)))
+        when(springDataRepository.findByExchangeOrderByCreatedAtDesc(ExchangeMode.UPBIT, PageRequest.of(0, 20)))
                 .thenReturn(List.of(
                         TradingFlowHistoryEntity.from(newHistory),
                         TradingFlowHistoryEntity.from(oldHistory)
@@ -73,12 +74,12 @@ class JpaTradingFlowHistoryRepositoryTest {
     void findRecentByMarketReturnsOnlyMatchingMarket() {
         TradingFlowHistory btcOld = history("history-1", "KRW-BTC", Instant.parse("2026-04-27T00:00:00Z"));
         TradingFlowHistory btcNew = history("history-3", "KRW-BTC", Instant.parse("2026-04-27T00:02:00Z"));
-        when(springDataRepository.findByMarketOrderByCreatedAtDesc("KRW-BTC", PageRequest.of(0, 20)))
+        when(springDataRepository.findByExchangeAndMarketOrderByCreatedAtDesc(ExchangeMode.UPBIT, "KRW-BTC", PageRequest.of(0, 20)))
                 .thenReturn(List.of(
                         TradingFlowHistoryEntity.from(btcNew),
                         TradingFlowHistoryEntity.from(btcOld)
                 ));
-        when(springDataRepository.findByMarketOrderByCreatedAtDesc("KRW-XRP", PageRequest.of(0, 20)))
+        when(springDataRepository.findByExchangeAndMarketOrderByCreatedAtDesc(ExchangeMode.UPBIT, "KRW-XRP", PageRequest.of(0, 20)))
                 .thenReturn(List.of());
 
         assertThat(repository.findRecentByMarket("KRW-BTC", 20)).containsExactly(btcNew, btcOld);
@@ -89,7 +90,7 @@ class JpaTradingFlowHistoryRepositoryTest {
     void findSinceReturnsHistoriesCreatedAfterStartTime() {
         Instant from = Instant.parse("2026-04-29T00:00:00Z");
         TradingFlowHistory history = history("history-1", "KRW-BTC", from);
-        when(springDataRepository.findByCreatedAtGreaterThanEqualOrderByCreatedAtDesc(from))
+        when(springDataRepository.findByExchangeAndCreatedAtGreaterThanEqualOrderByCreatedAtDesc(ExchangeMode.UPBIT, from))
                 .thenReturn(List.of(TradingFlowHistoryEntity.from(history)));
 
         assertThat(repository.findSince(from)).containsExactly(history);

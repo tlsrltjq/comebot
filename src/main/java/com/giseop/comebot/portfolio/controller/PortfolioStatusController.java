@@ -34,18 +34,21 @@ public class PortfolioStatusController {
     @GetMapping("/api/portfolio/status")
     public ResponseEntity<PortfolioStatusResponse> getStatus(@RequestParam(required = false) String exchange) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
-        ExchangeModeResolver.requireImplemented(exchangeMode);
 
-        PaperPortfolio portfolio = paperPortfolioService.getPortfolio();
-        return ResponseEntity.ok(new PortfolioStatusResponse(portfolio.cash(), portfolio.realizedProfit()));
+        PaperPortfolio portfolio = paperPortfolioService.getPortfolio(exchangeMode);
+        return ResponseEntity.ok(new PortfolioStatusResponse(
+                portfolio.exchange().name(),
+                portfolio.currency(),
+                portfolio.cash(),
+                portfolio.realizedProfit()
+        ));
     }
 
     @GetMapping("/api/portfolio/positions")
     public ResponseEntity<List<PositionResponse>> getPositions(@RequestParam(required = false) String exchange) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
-        ExchangeModeResolver.requireImplemented(exchangeMode);
 
-        return ResponseEntity.ok(paperPortfolioService.findPositions().stream()
+        return ResponseEntity.ok(paperPortfolioService.findPositions(exchangeMode).stream()
                 .map(this::toResponse)
                 .toList());
     }
@@ -53,10 +56,9 @@ public class PortfolioStatusController {
     @GetMapping("/api/portfolio/valuation")
     public ResponseEntity<?> getValuation(@RequestParam(required = false) String exchange) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
-        ExchangeModeResolver.requireImplemented(exchangeMode);
 
         try {
-            PortfolioValuationResponse response = paperPortfolioValuationService.valuate();
+            PortfolioValuationResponse response = paperPortfolioValuationService.valuate(exchangeMode);
             return ResponseEntity.ok(response);
         } catch (RuntimeException exception) {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

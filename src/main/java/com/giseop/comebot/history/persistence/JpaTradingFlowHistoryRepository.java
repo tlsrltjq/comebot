@@ -1,5 +1,6 @@
 package com.giseop.comebot.history.persistence;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.TradingFlowHistoryRepository;
 import java.time.Instant;
@@ -25,22 +26,22 @@ public class JpaTradingFlowHistoryRepository implements TradingFlowHistoryReposi
     }
 
     @Override
-    public List<TradingFlowHistory> findRecent(int limit) {
-        return jpaRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit)).stream()
+    public List<TradingFlowHistory> findRecent(ExchangeMode exchange, int limit) {
+        return jpaRepository.findByExchangeOrderByCreatedAtDesc(exchange, PageRequest.of(0, limit)).stream()
                 .map(TradingFlowHistoryEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public List<TradingFlowHistory> findRecentByMarket(String market, int limit) {
-        return jpaRepository.findByMarketOrderByCreatedAtDesc(market, PageRequest.of(0, limit)).stream()
+    public List<TradingFlowHistory> findRecentByMarket(ExchangeMode exchange, String market, int limit) {
+        return jpaRepository.findByExchangeAndMarketOrderByCreatedAtDesc(exchange, market, PageRequest.of(0, limit)).stream()
                 .map(TradingFlowHistoryEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public List<TradingFlowHistory> findSince(Instant from) {
-        return jpaRepository.findByCreatedAtGreaterThanEqualOrderByCreatedAtDesc(from).stream()
+    public List<TradingFlowHistory> findSince(ExchangeMode exchange, Instant from) {
+        return jpaRepository.findByExchangeAndCreatedAtGreaterThanEqualOrderByCreatedAtDesc(exchange, from).stream()
                 .map(TradingFlowHistoryEntity::toDomain)
                 .toList();
     }

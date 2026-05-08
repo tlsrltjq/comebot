@@ -16,6 +16,15 @@ CREATE INDEX IF NOT EXISTS idx_trading_flow_history_created_at
 CREATE INDEX IF NOT EXISTS idx_trading_flow_history_market_created_at
     ON trading_flow_history (market, created_at DESC);
 
+ALTER TABLE trading_flow_history
+    ADD COLUMN IF NOT EXISTS exchange VARCHAR(20) NOT NULL DEFAULT 'UPBIT';
+
+CREATE INDEX IF NOT EXISTS idx_trading_flow_history_exchange_created_at
+    ON trading_flow_history (exchange, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_trading_flow_history_exchange_market_created_at
+    ON trading_flow_history (exchange, market, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS telegram_update_offset (
     id VARCHAR(50) PRIMARY KEY,
     last_update_offset BIGINT NOT NULL,

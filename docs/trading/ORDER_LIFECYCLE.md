@@ -82,10 +82,15 @@ HOLD는 주문 실행으로 이어지면 안 된다.
 - SELL FILLED: 수량 감소, 실현손익 계산
 - 웹 선택 PAPER SELL FILLED: 선택한 보유 포지션 수량만 감소, 실현손익 계산
 - HOLD, REJECTED, FAILED: 변경 없음
+- 기존 자동매매 흐름은 `UPBIT` PAPER 포트폴리오에 반영한다.
+- exchange-aware PAPER 흐름은 선택한 exchange의 cash, position, realized profit만 변경한다.
 
 ## HISTORY_SAVED
 
 모든 결과를 history에 저장한다.
+
+- 기존 history 저장 wrapper는 `UPBIT`으로 저장한다.
+- exchange-aware 저장은 `TradingFlowHistory.exchange`에 선택한 exchange를 보존한다.
 
 ## OPTIONAL_NOTIFICATION_SENT
 

@@ -2,6 +2,7 @@ package com.giseop.comebot.history.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
@@ -31,6 +32,7 @@ class TradingFlowHistoryServiceTest {
         ));
 
         assertThat(history.id()).isNotBlank();
+        assertThat(history.exchange()).isEqualTo(ExchangeMode.UPBIT);
         assertThat(service.findById(history.id())).contains(history);
         assertThat(service.findRecent(20)).containsExactly(history);
     }
@@ -60,6 +62,21 @@ class TradingFlowHistoryServiceTest {
         TradingFlowHistoryService service = new TradingFlowHistoryService(repository);
 
         assertThat(service.findSince(Instant.parse("2026-04-29T00:00:00Z"))).containsExactly(todayHistory);
+    }
+
+    @Test
+    void historyQueriesAreSeparatedByExchange() {
+        TradingFlowHistoryService service = new TradingFlowHistoryService(
+                new InMemoryTradingFlowHistoryRepository()
+        );
+
+        TradingFlowHistory upbit = service.save(ExchangeMode.UPBIT, result("KRW-BTC"));
+        TradingFlowHistory binance = service.save(ExchangeMode.BINANCE, result("BTCUSDT"));
+
+        assertThat(service.findRecent(ExchangeMode.UPBIT, 20)).containsExactly(upbit);
+        assertThat(service.findRecent(ExchangeMode.BINANCE, 20)).containsExactly(binance);
+        assertThat(service.findRecent(ExchangeMode.BINANCE, "BTCUSDT", 20)).containsExactly(binance);
+        assertThat(service.findRecent(ExchangeMode.BINANCE, "KRW-BTC", 20)).isEmpty();
     }
 
     private TradingFlowResult result(String market) {

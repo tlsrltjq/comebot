@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
@@ -30,12 +31,13 @@ class TradingFlowHistoryControllerTest {
 
     @Test
     void findRecentReturnsHistoryList() throws Exception {
-        when(tradingFlowHistoryService.findRecent(null, 20))
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.UPBIT, null, 20))
                 .thenReturn(List.of(history("history-1")));
 
         mockMvc.perform(get("/api/trading-flow/history"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value("history-1"))
+                .andExpect(jsonPath("$[0].exchange").value("UPBIT"))
                 .andExpect(jsonPath("$[0].market").value("KRW-BTC"))
                 .andExpect(jsonPath("$[0].currentPrice").value(100))
                 .andExpect(jsonPath("$[0].orderStatus").value("FILLED"));
@@ -43,7 +45,7 @@ class TradingFlowHistoryControllerTest {
 
     @Test
     void findRecentReturnsFilteredKrwBtcHistoryList() throws Exception {
-        when(tradingFlowHistoryService.findRecent("KRW-BTC", 20))
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.UPBIT, "KRW-BTC", 20))
                 .thenReturn(List.of(history("history-1", "KRW-BTC")));
 
         mockMvc.perform(get("/api/trading-flow/history").param("market", "KRW-BTC"))
@@ -53,7 +55,7 @@ class TradingFlowHistoryControllerTest {
 
     @Test
     void findRecentAcceptsLowercaseUpbitExchange() throws Exception {
-        when(tradingFlowHistoryService.findRecent(null, 20))
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.UPBIT, null, 20))
                 .thenReturn(List.of(history("history-1")));
 
         mockMvc.perform(get("/api/trading-flow/history").param("exchange", "upbit"))
@@ -62,9 +64,14 @@ class TradingFlowHistoryControllerTest {
     }
 
     @Test
-    void findRecentReturnsNotImplementedForBinanceExchange() throws Exception {
+    void findRecentReturnsBinanceExchangeHistory() throws Exception {
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.BINANCE, null, 20))
+                .thenReturn(List.of(history("history-2", ExchangeMode.BINANCE, "BTCUSDT")));
+
         mockMvc.perform(get("/api/trading-flow/history").param("exchange", "binance"))
-                .andExpect(status().isNotImplemented());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].exchange").value("BINANCE"))
+                .andExpect(jsonPath("$[0].market").value("BTCUSDT"));
     }
 
     @Test
@@ -75,7 +82,7 @@ class TradingFlowHistoryControllerTest {
 
     @Test
     void findRecentReturnsFilteredKrwEthHistoryList() throws Exception {
-        when(tradingFlowHistoryService.findRecent("KRW-ETH", 20))
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.UPBIT, "KRW-ETH", 20))
                 .thenReturn(List.of(history("history-2", "KRW-ETH")));
 
         mockMvc.perform(get("/api/trading-flow/history").param("market", "KRW-ETH"))
@@ -85,7 +92,7 @@ class TradingFlowHistoryControllerTest {
 
     @Test
     void findRecentReturnsEmptyListForUnknownMarket() throws Exception {
-        when(tradingFlowHistoryService.findRecent("KRW-XRP", 20))
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.UPBIT, "KRW-XRP", 20))
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/api/trading-flow/history").param("market", "KRW-XRP"))
@@ -130,8 +137,13 @@ class TradingFlowHistoryControllerTest {
     }
 
     private TradingFlowHistory history(String id, String market) {
+        return history(id, ExchangeMode.UPBIT, market);
+    }
+
+    private TradingFlowHistory history(String id, ExchangeMode exchange, String market) {
         return new TradingFlowHistory(
                 id,
+                exchange,
                 market,
                 new BigDecimal("100"),
                 SignalType.BUY,

@@ -7,7 +7,7 @@ import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { MetricCard } from '../../shared/ui/MetricCard';
-import { formatKrw, formatNumber } from '../../shared/format';
+import { formatCurrency, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 type SortKey = 'value' | 'profitRate' | 'market';
@@ -29,6 +29,8 @@ export function PortfolioPage() {
   );
   const totalEquity = Number(valuationQuery.data?.totalEquity ?? 0);
   const cash = Number(valuationQuery.data?.cash ?? statusQuery.data?.cash ?? 0);
+  const currency = valuationQuery.data?.currency ?? statusQuery.data?.currency ?? (exchange === 'BINANCE' ? 'USDT' : 'KRW');
+  const money = (value: string | number | null | undefined) => formatCurrency(value, currency);
   const positionValue = Number(valuationQuery.data?.totalPositionValue ?? 0);
   const orderAmount = Number(systemQuery.data?.strategy.orderAmount ?? 0);
   const cashRate = totalEquity > 0 ? (cash / totalEquity) * 100 : 0;
@@ -62,10 +64,10 @@ export function PortfolioPage() {
       {systemQuery.error ? <ErrorPanel title="시스템 상태 조회 실패(System status failed)" error={systemQuery.error} /> : null}
 
       <div className="metric-grid">
-        <MetricCard label="현금(Cash)" value={formatKrw(valuationQuery.data?.cash ?? statusQuery.data?.cash)} detail={`${formatNumber(cashRate, 1)}%`} />
-        <MetricCard label="포지션 가치(Position Value)" value={formatKrw(valuationQuery.data?.totalPositionValue)} detail={`${formatNumber(positionRate, 1)}%`} />
+        <MetricCard label="현금(Cash)" value={money(valuationQuery.data?.cash ?? statusQuery.data?.cash)} detail={`${currency} ${formatNumber(cashRate, 1)}%`} />
+        <MetricCard label="포지션 가치(Position Value)" value={money(valuationQuery.data?.totalPositionValue)} detail={`${formatNumber(positionRate, 1)}%`} />
         <MetricCard label="자금 사용률(Capital Used)" value={`${formatNumber(capitalUseRate, 1)}%`} detail={`매수 가능(Buys left) ${formatNumber(remainingBuyCount)}`} />
-        <MetricCard label="총손익(Total Profit)" value={formatKrw(valuationQuery.data?.totalProfit)} detail={`실현(Realized) ${formatKrw(valuationQuery.data?.realizedProfit)}`} />
+        <MetricCard label="총손익(Total Profit)" value={money(valuationQuery.data?.totalProfit)} detail={`실현(Realized) ${money(valuationQuery.data?.realizedProfit)}`} />
       </div>
 
       <div className="portfolio-overview">
@@ -91,11 +93,11 @@ export function PortfolioPage() {
           </div>
           <dl className="definition-list capital-list">
             <dt>1회 매수(Order)</dt>
-            <dd>{formatKrw(orderAmount)}</dd>
+            <dd>{money(orderAmount)}</dd>
             <dt>매수 가능(Buys left)</dt>
             <dd>{formatNumber(remainingBuyCount)}회</dd>
             <dt>단위 미만 현금(Residual cash)</dt>
-            <dd>{formatKrw(reservedCashAfterBuys)}</dd>
+            <dd>{money(reservedCashAfterBuys)}</dd>
           </dl>
         </article>
 
@@ -105,8 +107,8 @@ export function PortfolioPage() {
             <Badge tone={positions.length ? 'info' : 'neutral'}>{positions.length} positions</Badge>
           </div>
           <div className="leader-grid">
-            <LeaderItem title="최고 수익(Best)" position={bestPosition} positive />
-            <LeaderItem title="최대 손실(Worst)" position={worstPosition} />
+            <LeaderItem title="최고 수익(Best)" position={bestPosition} currency={currency} positive />
+            <LeaderItem title="최대 손실(Worst)" position={worstPosition} currency={currency} />
           </div>
         </article>
 
@@ -126,7 +128,7 @@ export function PortfolioPage() {
               <div className="exposure-item" key={row.market}>
                 <div className="exposure-item-main">
                   <strong>{row.market}</strong>
-                  <span>{formatKrw(row.positionValue)}</span>
+                  <span>{money(row.positionValue)}</span>
                   <small className={profitClass(row.unrealizedProfitRate)}>{formatNumber(row.unrealizedProfitRate, 2)}%</small>
                 </div>
                 <div className="allocation-track">
@@ -175,10 +177,10 @@ export function PortfolioPage() {
               <tr key={position.market}>
                 <td><strong>{position.market}</strong></td>
                 <td>{formatNumber(position.quantity, 8)}</td>
-                <td>{formatKrw(position.averageBuyPrice)}</td>
-                <td>{formatKrw(position.currentPrice)}</td>
-                <td>{formatKrw(position.positionValue)}</td>
-                <td className={profitClass(position.unrealizedProfit)}>{formatKrw(position.unrealizedProfit)}</td>
+                <td>{money(position.averageBuyPrice)}</td>
+                <td>{money(position.currentPrice)}</td>
+                <td>{money(position.positionValue)}</td>
+                <td className={profitClass(position.unrealizedProfit)}>{money(position.unrealizedProfit)}</td>
                 <td>
                   <span className={`profit-rate ${profitClass(position.unrealizedProfitRate)}`}>
                     {Number(position.unrealizedProfitRate) >= 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
@@ -252,10 +254,12 @@ function AllocationBar({ icon, label, value }: { icon: ReactNode; label: string;
 function LeaderItem({
   title,
   position,
+  currency,
   positive = false,
 }: {
   title: string;
   position: PositionValuationResponse | null;
+  currency: string;
   positive?: boolean;
 }) {
   if (!position) {
@@ -273,7 +277,7 @@ function LeaderItem({
       <span>{title}</span>
       <strong>{position.market}</strong>
       <small className={positive ? 'tone-positive' : profitClass(position.unrealizedProfitRate)}>
-        {formatNumber(position.unrealizedProfitRate, 2)}% / {formatKrw(position.unrealizedProfit)}
+        {formatNumber(position.unrealizedProfitRate, 2)}% / {formatCurrency(position.unrealizedProfit, currency)}
       </small>
     </div>
   );

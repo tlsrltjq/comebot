@@ -12,6 +12,10 @@ export function formatNumber(value: string | number | null | undefined, fraction
 }
 
 export function formatKrw(value: string | number | null | undefined) {
+  return formatCurrency(value, 'KRW');
+}
+
+export function formatCurrency(value: string | number | null | undefined, currency = 'KRW') {
   if (value === null || value === undefined || value === '') {
     return '-';
   }
@@ -19,10 +23,11 @@ export function formatKrw(value: string | number | null | undefined) {
   if (!Number.isFinite(number)) {
     return String(value);
   }
+  const normalizedCurrency = currency === 'USDT' ? 'USD' : 'KRW';
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
-    currency: 'KRW',
-    maximumFractionDigits: 0,
+    currency: normalizedCurrency,
+    maximumFractionDigits: currency === 'USDT' ? 2 : 0,
   }).format(number);
 }
 

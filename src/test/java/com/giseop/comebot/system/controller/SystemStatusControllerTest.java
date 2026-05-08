@@ -132,9 +132,12 @@ class SystemStatusControllerTest {
     }
 
     @Test
-    void statusReturnsNotImplementedForBinanceExchange() throws Exception {
+    void statusAcceptsBinanceExchange() throws Exception {
+        setUpStatus(true);
+
         mockMvc.perform(get("/api/system/status").param("exchange", "binance"))
-                .andExpect(status().isNotImplemented());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.marketProvider.provider").value("UPBIT"));
     }
 
     @Test

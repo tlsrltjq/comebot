@@ -1,5 +1,6 @@
 package com.giseop.comebot.portfolio.repository;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
@@ -10,23 +11,63 @@ import java.util.Optional;
 
 public interface PaperPortfolioRepository {
 
-    BigDecimal getCash();
+    default BigDecimal getCash() {
+        return getCash(ExchangeMode.UPBIT);
+    }
 
-    void saveCash(BigDecimal cash);
+    BigDecimal getCash(ExchangeMode exchange);
 
-    BigDecimal getRealizedProfit();
+    default void saveCash(BigDecimal cash) {
+        saveCash(ExchangeMode.UPBIT, cash);
+    }
 
-    void saveRealizedProfit(BigDecimal realizedProfit);
+    void saveCash(ExchangeMode exchange, BigDecimal cash);
 
-    void saveRealizedProfitEvent(PaperRealizedProfit realizedProfit);
+    default BigDecimal getRealizedProfit() {
+        return getRealizedProfit(ExchangeMode.UPBIT);
+    }
 
-    List<PaperRealizedProfit> findRealizedProfitsSince(Instant from);
+    BigDecimal getRealizedProfit(ExchangeMode exchange);
 
-    Optional<PaperPosition> findPosition(String market);
+    default void saveRealizedProfit(BigDecimal realizedProfit) {
+        saveRealizedProfit(ExchangeMode.UPBIT, realizedProfit);
+    }
 
-    List<PaperPosition> findPositions();
+    void saveRealizedProfit(ExchangeMode exchange, BigDecimal realizedProfit);
 
-    void savePosition(PaperPosition position);
+    default void saveRealizedProfitEvent(PaperRealizedProfit realizedProfit) {
+        saveRealizedProfitEvent(ExchangeMode.UPBIT, realizedProfit);
+    }
 
-    PaperPortfolio getPortfolio();
+    void saveRealizedProfitEvent(ExchangeMode exchange, PaperRealizedProfit realizedProfit);
+
+    default List<PaperRealizedProfit> findRealizedProfitsSince(Instant from) {
+        return findRealizedProfitsSince(ExchangeMode.UPBIT, from);
+    }
+
+    List<PaperRealizedProfit> findRealizedProfitsSince(ExchangeMode exchange, Instant from);
+
+    default Optional<PaperPosition> findPosition(String market) {
+        return findPosition(ExchangeMode.UPBIT, market);
+    }
+
+    Optional<PaperPosition> findPosition(ExchangeMode exchange, String market);
+
+    default List<PaperPosition> findPositions() {
+        return findPositions(ExchangeMode.UPBIT);
+    }
+
+    List<PaperPosition> findPositions(ExchangeMode exchange);
+
+    default void savePosition(PaperPosition position) {
+        savePosition(ExchangeMode.UPBIT, position);
+    }
+
+    void savePosition(ExchangeMode exchange, PaperPosition position);
+
+    default PaperPortfolio getPortfolio() {
+        return getPortfolio(ExchangeMode.UPBIT);
+    }
+
+    PaperPortfolio getPortfolio(ExchangeMode exchange);
 }

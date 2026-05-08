@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
@@ -33,7 +34,7 @@ class PortfolioStatusControllerTest {
 
     @Test
     void statusReturnsPortfolioStatus() throws Exception {
-        when(paperPortfolioService.getPortfolio()).thenReturn(new PaperPortfolio(
+        when(paperPortfolioService.getPortfolio(ExchangeMode.UPBIT)).thenReturn(new PaperPortfolio(
                 new BigDecimal("999900"),
                 new BigDecimal("20"),
                 List.of()
@@ -41,13 +42,15 @@ class PortfolioStatusControllerTest {
 
         mockMvc.perform(get("/api/portfolio/status"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exchange").value("UPBIT"))
+                .andExpect(jsonPath("$.currency").value("KRW"))
                 .andExpect(jsonPath("$.cash").value(999900))
                 .andExpect(jsonPath("$.realizedProfit").value(20));
     }
 
     @Test
     void statusAcceptsLowercaseUpbitExchange() throws Exception {
-        when(paperPortfolioService.getPortfolio()).thenReturn(new PaperPortfolio(
+        when(paperPortfolioService.getPortfolio(ExchangeMode.UPBIT)).thenReturn(new PaperPortfolio(
                 new BigDecimal("999900"),
                 new BigDecimal("20"),
                 List.of()
@@ -59,9 +62,20 @@ class PortfolioStatusControllerTest {
     }
 
     @Test
-    void statusReturnsNotImplementedForBinanceExchange() throws Exception {
+    void statusReturnsBinancePortfolioStatus() throws Exception {
+        when(paperPortfolioService.getPortfolio(ExchangeMode.BINANCE)).thenReturn(new PaperPortfolio(
+                ExchangeMode.BINANCE,
+                "USDT",
+                new BigDecimal("1000"),
+                BigDecimal.ZERO,
+                List.of()
+        ));
+
         mockMvc.perform(get("/api/portfolio/status").param("exchange", "binance"))
-                .andExpect(status().isNotImplemented());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exchange").value("BINANCE"))
+                .andExpect(jsonPath("$.currency").value("USDT"))
+                .andExpect(jsonPath("$.cash").value(1000));
     }
 
     @Test
@@ -72,7 +86,7 @@ class PortfolioStatusControllerTest {
 
     @Test
     void positionsReturnsPositions() throws Exception {
-        when(paperPortfolioService.findPositions()).thenReturn(List.of(
+        when(paperPortfolioService.findPositions(ExchangeMode.UPBIT)).thenReturn(List.of(
                 new PaperPosition("KRW-BTC", new BigDecimal("1.5"), new BigDecimal("100"))
         ));
 
@@ -84,14 +98,19 @@ class PortfolioStatusControllerTest {
     }
 
     @Test
-    void positionsReturnsNotImplementedForBinanceExchange() throws Exception {
+    void positionsReturnsBinancePositions() throws Exception {
+        when(paperPortfolioService.findPositions(ExchangeMode.BINANCE)).thenReturn(List.of(
+                new PaperPosition("BTCUSDT", new BigDecimal("0.1"), new BigDecimal("60000"))
+        ));
+
         mockMvc.perform(get("/api/portfolio/positions").param("exchange", "binance"))
-                .andExpect(status().isNotImplemented());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("BTCUSDT"));
     }
 
     @Test
     void valuationReturnsPortfolioValuation() throws Exception {
-        when(paperPortfolioValuationService.valuate()).thenReturn(new PortfolioValuationResponse(
+        when(paperPortfolioValuationService.valuate(ExchangeMode.UPBIT)).thenReturn(new PortfolioValuationResponse(
                 new BigDecimal("999900"),
                 new BigDecimal("150"),
                 new BigDecimal("1000050"),
@@ -111,6 +130,8 @@ class PortfolioStatusControllerTest {
 
         mockMvc.perform(get("/api/portfolio/valuation"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exchange").value("UPBIT"))
+                .andExpect(jsonPath("$.currency").value("KRW"))
                 .andExpect(jsonPath("$.cash").value(999900))
                 .andExpect(jsonPath("$.totalPositionValue").value(150))
                 .andExpect(jsonPath("$.totalEquity").value(1000050))
@@ -124,7 +145,7 @@ class PortfolioStatusControllerTest {
 
     @Test
     void valuationReturnsBadGatewayWhenCurrentPriceLookupFails() throws Exception {
-        when(paperPortfolioValuationService.valuate()).thenThrow(new IllegalStateException("failed"));
+        when(paperPortfolioValuationService.valuate(ExchangeMode.UPBIT)).thenThrow(new IllegalStateException("failed"));
 
         mockMvc.perform(get("/api/portfolio/valuation"))
                 .andExpect(status().isBadGateway())

@@ -2,6 +2,7 @@ package com.giseop.comebot.portfolio.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderSide;
@@ -97,9 +98,43 @@ class PaperPortfolioServiceTest {
         assertThat(service.findPositions()).isEmpty();
     }
 
+    @Test
+    void exchangePortfoliosKeepCashAndPositionsSeparated() {
+        service.apply(ExchangeMode.UPBIT, result("KRW-BTC", OrderSide.BUY, "1", "100"));
+        service.apply(ExchangeMode.BINANCE, result("BTCUSDT", OrderSide.BUY, "0.01", "50000"));
+
+        assertThat(service.getPortfolio(ExchangeMode.UPBIT).currency()).isEqualTo("KRW");
+        assertThat(service.getPortfolio(ExchangeMode.UPBIT).cash()).isEqualByComparingTo("999900");
+        assertThat(service.findPositions(ExchangeMode.UPBIT)).extracting("market").containsExactly("KRW-BTC");
+
+        assertThat(service.getPortfolio(ExchangeMode.BINANCE).currency()).isEqualTo("USDT");
+        assertThat(service.getPortfolio(ExchangeMode.BINANCE).cash()).isEqualByComparingTo("500.00");
+        assertThat(service.findPositions(ExchangeMode.BINANCE)).extracting("market").containsExactly("BTCUSDT");
+    }
+
+    @Test
+    void realizedLossIsSeparatedByExchange() {
+        Instant today = Instant.parse("2026-04-29T00:00:00Z");
+        service.apply(ExchangeMode.UPBIT, new OrderResult("KRW-BTC", OrderSide.BUY, new BigDecimal("2"), new BigDecimal("100"),
+                OrderStatus.FILLED, "filled", today));
+        service.apply(ExchangeMode.UPBIT, new OrderResult("KRW-BTC", OrderSide.SELL, new BigDecimal("1"), new BigDecimal("80"),
+                OrderStatus.FILLED, "filled", today));
+        service.apply(ExchangeMode.BINANCE, new OrderResult("BTCUSDT", OrderSide.BUY, new BigDecimal("1"), new BigDecimal("100"),
+                OrderStatus.FILLED, "filled", today));
+        service.apply(ExchangeMode.BINANCE, new OrderResult("BTCUSDT", OrderSide.SELL, new BigDecimal("1"), new BigDecimal("70"),
+                OrderStatus.FILLED, "filled", today));
+
+        assertThat(service.realizedLossSince(ExchangeMode.UPBIT, today)).isEqualByComparingTo("20");
+        assertThat(service.realizedLossSince(ExchangeMode.BINANCE, today)).isEqualByComparingTo("30");
+    }
+
     private OrderResult result(OrderSide side, String quantity, String price) {
+        return result("KRW-BTC", side, quantity, price);
+    }
+
+    private OrderResult result(String market, OrderSide side, String quantity, String price) {
         return new OrderResult(
-                "KRW-BTC",
+                market,
                 side,
                 new BigDecimal(quantity),
                 new BigDecimal(price),

@@ -1,5 +1,6 @@
 package com.giseop.comebot.portfolio.repository;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
@@ -18,63 +19,79 @@ import org.springframework.stereotype.Repository;
 @ConditionalOnProperty(name = "paper.portfolio-storage-type", havingValue = "IN_MEMORY", matchIfMissing = true)
 public class InMemoryPaperPortfolioRepository implements PaperPortfolioRepository {
 
-    private final Map<String, PaperPosition> positions = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedDeque<PaperRealizedProfit> realizedProfitEvents = new ConcurrentLinkedDeque<>();
-    private BigDecimal cash = BigDecimal.ZERO;
-    private BigDecimal realizedProfit = BigDecimal.ZERO;
+    private final Map<ExchangeMode, PortfolioState> portfolios = new ConcurrentHashMap<>();
 
     @Override
-    public synchronized BigDecimal getCash() {
-        return cash;
+    public synchronized BigDecimal getCash(ExchangeMode exchange) {
+        return state(exchange).cash;
     }
 
     @Override
-    public synchronized void saveCash(BigDecimal cash) {
-        this.cash = cash;
+    public synchronized void saveCash(ExchangeMode exchange, BigDecimal cash) {
+        state(exchange).cash = cash;
     }
 
     @Override
-    public synchronized BigDecimal getRealizedProfit() {
-        return realizedProfit;
+    public synchronized BigDecimal getRealizedProfit(ExchangeMode exchange) {
+        return state(exchange).realizedProfit;
     }
 
     @Override
-    public synchronized void saveRealizedProfit(BigDecimal realizedProfit) {
-        this.realizedProfit = realizedProfit;
+    public synchronized void saveRealizedProfit(ExchangeMode exchange, BigDecimal realizedProfit) {
+        state(exchange).realizedProfit = realizedProfit;
     }
 
     @Override
-    public void saveRealizedProfitEvent(PaperRealizedProfit realizedProfit) {
-        realizedProfitEvents.addFirst(realizedProfit);
+    public void saveRealizedProfitEvent(ExchangeMode exchange, PaperRealizedProfit realizedProfit) {
+        state(exchange).realizedProfitEvents.addFirst(realizedProfit);
     }
 
     @Override
-    public List<PaperRealizedProfit> findRealizedProfitsSince(Instant from) {
-        return realizedProfitEvents.stream()
+    public List<PaperRealizedProfit> findRealizedProfitsSince(ExchangeMode exchange, Instant from) {
+        return state(exchange).realizedProfitEvents.stream()
                 .filter(event -> !event.realizedAt().isBefore(from))
                 .toList();
     }
 
     @Override
-    public Optional<PaperPosition> findPosition(String market) {
-        return Optional.ofNullable(positions.get(market));
+    public Optional<PaperPosition> findPosition(ExchangeMode exchange, String market) {
+        return Optional.ofNullable(state(exchange).positions.get(market));
     }
 
     @Override
-    public List<PaperPosition> findPositions() {
-        return positions.values().stream()
+    public List<PaperPosition> findPositions(ExchangeMode exchange) {
+        return state(exchange).positions.values().stream()
                 .filter(position -> position.quantity().compareTo(BigDecimal.ZERO) > 0)
                 .sorted(Comparator.comparing(PaperPosition::market))
                 .toList();
     }
 
     @Override
-    public void savePosition(PaperPosition position) {
-        positions.put(position.market(), position);
+    public void savePosition(ExchangeMode exchange, PaperPosition position) {
+        state(exchange).positions.put(position.market(), position);
     }
 
     @Override
-    public synchronized PaperPortfolio getPortfolio() {
-        return new PaperPortfolio(cash, realizedProfit, findPositions());
+    public synchronized PaperPortfolio getPortfolio(ExchangeMode exchange) {
+        PortfolioState state = state(exchange);
+        return new PaperPortfolio(
+                exchange,
+                PaperPortfolio.currencyFor(exchange),
+                state.cash,
+                state.realizedProfit,
+                findPositions(exchange)
+        );
+    }
+
+    private PortfolioState state(ExchangeMode exchange) {
+        ExchangeMode key = exchange == null ? ExchangeMode.UPBIT : exchange;
+        return portfolios.computeIfAbsent(key, ignored -> new PortfolioState());
+    }
+
+    private static final class PortfolioState {
+        private final Map<String, PaperPosition> positions = new ConcurrentHashMap<>();
+        private final ConcurrentLinkedDeque<PaperRealizedProfit> realizedProfitEvents = new ConcurrentLinkedDeque<>();
+        private BigDecimal cash = BigDecimal.ZERO;
+        private BigDecimal realizedProfit = BigDecimal.ZERO;
     }
 }

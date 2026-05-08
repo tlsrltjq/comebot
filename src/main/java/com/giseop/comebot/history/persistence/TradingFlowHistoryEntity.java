@@ -1,5 +1,6 @@
 package com.giseop.comebot.history.persistence;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.strategy.domain.SignalType;
@@ -22,6 +23,10 @@ public class TradingFlowHistoryEntity {
 
     @Column(nullable = false, length = 50)
     private String market;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ExchangeMode exchange = ExchangeMode.UPBIT;
 
     @Column(name = "current_price", precision = 19, scale = 8)
     private BigDecimal currentPrice;
@@ -51,6 +56,7 @@ public class TradingFlowHistoryEntity {
 
     private TradingFlowHistoryEntity(
             String id,
+            ExchangeMode exchange,
             String market,
             BigDecimal currentPrice,
             SignalType signalType,
@@ -61,6 +67,7 @@ public class TradingFlowHistoryEntity {
             Instant createdAt
     ) {
         this.id = id;
+        this.exchange = exchange == null ? ExchangeMode.UPBIT : exchange;
         this.market = market;
         this.currentPrice = currentPrice;
         this.signalType = signalType;
@@ -74,6 +81,7 @@ public class TradingFlowHistoryEntity {
     public static TradingFlowHistoryEntity from(TradingFlowHistory history) {
         return new TradingFlowHistoryEntity(
                 history.id(),
+                history.exchange(),
                 history.market(),
                 history.currentPrice(),
                 history.signalType(),
@@ -88,6 +96,7 @@ public class TradingFlowHistoryEntity {
     public TradingFlowHistory toDomain() {
         return new TradingFlowHistory(
                 id,
+                exchange == null ? ExchangeMode.UPBIT : exchange,
                 market,
                 currentPrice,
                 signalType,

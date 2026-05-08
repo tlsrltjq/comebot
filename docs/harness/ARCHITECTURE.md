@@ -63,7 +63,7 @@ web
 - `BinanceCandleProvider`: Binance 공개 Spot Kline API provider. `USDT` 현물 symbol과 지원 interval만 사용한다.
 - Access Key, Secret Key는 사용하지 않는다.
 
-거래소 모드는 `UPBIT`과 `BINANCE`를 분리한다. 프론트 사이드바 상단의 mode switch가 선택한 거래소를 API 요청 파라미터로 전달하고, 백엔드는 같은 화면 구조에 필요한 데이터를 거래소별 provider, portfolio, history에서 조회한다. 기본값은 `UPBIT`이다. Stage 4 기준 Binance는 공개 REST provider 기반만 준비됐고, portfolio/history 분리는 Stage 5에서 처리한다.
+거래소 모드는 `UPBIT`과 `BINANCE`를 분리한다. 프론트 사이드바 상단의 mode switch가 선택한 거래소를 API 요청 파라미터로 전달하고, 백엔드는 같은 화면 구조에 필요한 데이터를 거래소별 provider, portfolio, history에서 조회한다. 기본값은 `UPBIT`이다. Stage 5 기준 portfolio와 history는 exchange별로 분리되며, Binance PAPER 포트폴리오는 `USDT` 기준 통화로 표시한다.
 
 WebSocket 시세 수신은 REST provider와 분리한다.
 
@@ -85,11 +85,11 @@ kill switch는 시세 조회와 전략 판단보다 먼저 확인한다. Risk는
 
 ## Execution과 Portfolio
 
-현재 실행 Gateway는 PAPER_TRADING 전용이며 PAPER 체결 결과만 포트폴리오에 반영한다.
+현재 실행 Gateway는 PAPER_TRADING 전용이며 PAPER 체결 결과만 포트폴리오에 반영한다. 기존 자동매매/수동 wrapper는 하위 호환을 위해 `UPBIT` portfolio에 반영하고, exchange-aware service API는 `UPBIT`과 `BINANCE` portfolio를 분리해 조회/저장한다.
 
 ## History와 Notification
 
-HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다. 알림은 history 저장 이후 선택적으로 실행한다.
+HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다. History에는 `exchange`를 저장하며, 기존 exchange 없는 호출과 기존 row는 `UPBIT`으로 취급한다. 알림은 history 저장 이후 선택적으로 실행한다.
 
 ## Analytics
 

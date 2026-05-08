@@ -58,6 +58,8 @@ export interface TradingFlowRunResponse {
 }
 
 export interface PortfolioStatusResponse {
+  exchange: ExchangeMode;
+  currency: string;
   cash: string;
   realizedProfit: string;
 }
@@ -76,6 +78,8 @@ export interface PositionValuationResponse extends PositionResponse {
 }
 
 export interface PortfolioValuationResponse {
+  exchange: ExchangeMode;
+  currency: string;
   cash: string;
   totalPositionValue: string;
   totalEquity: string;
@@ -87,6 +91,7 @@ export interface PortfolioValuationResponse {
 
 export interface TradingFlowHistoryResponse {
   id: string;
+  exchange: ExchangeMode;
   market: string;
   currentPrice: string | null;
   signalType: SignalType | null;
