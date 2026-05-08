@@ -70,6 +70,7 @@
 66. Stage 4 Binance 공개 REST 현재가/캔들 provider 구현
 67. Stage 5 Exchange별 PAPER 포트폴리오와 history 분리 구현
 68. Stage 6 선택 보유 PAPER 포지션 수동 매도 구현
+69. Stage 7 포트폴리오 자산/마켓/거래소 원형 그래프 UI 구현
 
 ## 최근 검증
 

@@ -311,6 +311,58 @@ button:disabled {
   gap: 14px;
 }
 
+.portfolio-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.portfolio-chart-panel {
+  min-height: 330px;
+}
+
+.portfolio-chart-layout {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.9fr) minmax(0, 1.1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.portfolio-pie-wrap {
+  height: 220px;
+  min-width: 0;
+}
+
+.pie-legend {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pie-legend-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 3px 9px;
+  align-items: center;
+}
+
+.pie-legend-item span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.pie-legend-item strong,
+.pie-legend-item small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pie-legend-item small {
+  grid-column: 2;
+  color: #60717f;
+}
+
 .allocation-bars {
   display: grid;
   gap: 14px;
@@ -538,6 +590,12 @@ input {
   padding: 10px 12px;
   color: #172026;
   background: #ffffff;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  padding: 0;
 }
 
 .button,
@@ -824,10 +882,19 @@ td:nth-child(7) {
 
   .metric-grid,
   .section-grid,
+  .portfolio-chart-grid,
   .portfolio-overview,
   .leader-grid,
   .status-strip {
     grid-template-columns: 1fr;
+  }
+
+  .portfolio-chart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-pie-wrap {
+    height: 210px;
   }
 
   .filter-panel {

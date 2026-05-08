@@ -141,3 +141,24 @@ type AllocationSlice = {
 ## 사용자 확인 필요
 
 - 없음. Stage 7은 거래소별 portfolio가 분리된 뒤 선택 거래소 기준으로만 원형 그래프를 표시한다.
+
+## 구현 결과
+
+- 포트폴리오 화면에 원형 그래프 panel 3개를 추가했다.
+  - `자산 비중(Asset Mix)`: 현금과 전체 포지션 비중
+  - `마켓 비중(Market Allocation)`: market별 포지션 평가액 비중
+  - `거래소 비중(Exchange Allocation)`: 현재 선택 거래소 기준 단일 비중
+- 새 backend API 없이 기존 portfolio valuation 응답에서 차트 데이터를 계산한다.
+- 기준 통화는 선택 거래소 portfolio 응답의 `currency`를 사용한다.
+- market slice는 상위 5개를 표시하고 나머지는 `기타(Other)`로 합친다.
+- `totalEquity <= 0`이거나 보유 포지션이 없으면 빈 상태를 표시한다.
+- 기존 metric card, 자산 배분 막대, market exposure 목록은 유지했다.
+- Recharts 기존 의존성을 재사용했다.
+- 체크박스가 전역 input width 영향을 받지 않도록 checkbox 스타일을 고정했다.
+
+## 검증 결과
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `./gradlew test`

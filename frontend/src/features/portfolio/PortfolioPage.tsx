@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart, Radar, ShieldCheck, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart as PieIcon, Radar, ShieldCheck, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import type { PositionValuationResponse, SelectedPaperSellResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
@@ -11,9 +12,20 @@ import { formatCurrency, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 type SortKey = 'value' | 'profitRate' | 'market';
+type AllocationSlice = {
+  id: string;
+  label: string;
+  value: number;
+  rate: number;
+  color: string;
+};
 
 const TAKE_PROFIT_RATE = 1.5;
 const STOP_LOSS_RATE = -0.7;
+const MARKET_COLORS = ['#176b87', '#1f8a70', '#b7791f', '#8c5a2b', '#5d6d7e', '#bd3d2f'];
+const CASH_COLOR = '#1f8a70';
+const POSITION_COLOR = '#176b87';
+const OTHER_COLOR = '#7b8794';
 
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
@@ -42,6 +54,9 @@ export function PortfolioPage() {
   const remainingBuyCount = orderAmount > 0 ? Math.floor(cash / orderAmount) : 0;
   const reservedCashAfterBuys = orderAmount > 0 ? cash - remainingBuyCount * orderAmount : cash;
   const exposureRows = useMemo(() => buildExposureRows(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
+  const assetMixSlices = useMemo(() => buildAssetMixSlices(cash, positionValue, totalEquity), [cash, positionValue, totalEquity]);
+  const marketAllocationSlices = useMemo(() => buildMarketAllocationSlices(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
+  const exchangeAllocationSlices = useMemo(() => buildExchangeAllocationSlices(exchange, totalEquity), [exchange, totalEquity]);
   const largestExposureRate = exposureRows[0]?.exposureRate ?? 0;
   const bestPosition = positions.reduce<PositionValuationResponse | null>(
     (best, position) => (best === null || Number(position.unrealizedProfitRate) > Number(best.unrealizedProfitRate) ? position : best),
@@ -111,11 +126,35 @@ export function PortfolioPage() {
         <MetricCard label="총손익(Total Profit)" value={money(valuationQuery.data?.totalProfit)} detail={`실현(Realized) ${money(valuationQuery.data?.realizedProfit)}`} />
       </div>
 
+      <div className="portfolio-chart-grid">
+        <AllocationPiePanel
+          currency={currency}
+          emptyDescription="평가 가능한 자산이 생기면 현금과 포지션 비중이 표시됩니다."
+          emptyTitle="자산 비중 없음(No asset mix)"
+          slices={assetMixSlices}
+          title="자산 비중(Asset Mix)"
+        />
+        <AllocationPiePanel
+          currency={currency}
+          emptyDescription="보유 포지션이 생기면 market별 비중이 표시됩니다."
+          emptyTitle="마켓 비중 없음(No market allocation)"
+          slices={marketAllocationSlices}
+          title="마켓 비중(Market Allocation)"
+        />
+        <AllocationPiePanel
+          currency={currency}
+          emptyDescription="선택 거래소의 평가 자산이 생기면 거래소 비중이 표시됩니다."
+          emptyTitle="거래소 비중 없음(No exchange allocation)"
+          slices={exchangeAllocationSlices}
+          title="거래소 비중(Exchange Allocation)"
+        />
+      </div>
+
       <div className="portfolio-overview">
         <article className="panel">
           <div className="panel-title-row">
             <h2>자산 배분(Allocation)</h2>
-            <PieChart size={20} />
+            <PieIcon size={20} />
           </div>
           <div className="allocation-bars">
             <AllocationBar icon={<Wallet size={17} />} label="현금(Cash)" value={cashRate} />
@@ -286,6 +325,104 @@ export function PortfolioPage() {
         </article>
       ) : null}
     </section>
+  );
+}
+
+function buildAssetMixSlices(cash: number, positionValue: number, totalEquity: number): AllocationSlice[] {
+  if (totalEquity <= 0) {
+    return [];
+  }
+  return [
+    { id: 'cash', label: '현금(Cash)', value: Math.max(0, cash), rate: (Math.max(0, cash) / totalEquity) * 100, color: CASH_COLOR },
+    { id: 'positions', label: '포지션(Positions)', value: Math.max(0, positionValue), rate: (Math.max(0, positionValue) / totalEquity) * 100, color: POSITION_COLOR },
+  ].filter((slice) => slice.value > 0);
+}
+
+function buildMarketAllocationSlices(positions: PositionValuationResponse[], totalEquity: number): AllocationSlice[] {
+  if (totalEquity <= 0 || positions.length === 0) {
+    return [];
+  }
+  const sorted = positions
+    .map((position) => ({
+      id: position.market,
+      label: position.market,
+      value: Math.max(0, Number(position.positionValue)),
+    }))
+    .filter((slice) => slice.value > 0)
+    .sort((left, right) => right.value - left.value);
+  const top = sorted.slice(0, 5);
+  const otherValue = sorted.slice(5).reduce((sum, slice) => sum + slice.value, 0);
+  const slices = otherValue > 0
+    ? [...top, { id: 'other', label: '기타(Other)', value: otherValue }]
+    : top;
+
+  return slices.map((slice, index) => ({
+    ...slice,
+    rate: (slice.value / totalEquity) * 100,
+    color: slice.id === 'other' ? OTHER_COLOR : MARKET_COLORS[index % MARKET_COLORS.length],
+  }));
+}
+
+function buildExchangeAllocationSlices(exchange: string, totalEquity: number): AllocationSlice[] {
+  if (totalEquity <= 0) {
+    return [];
+  }
+  return [{
+    id: exchange,
+    label: `${exchange} 선택 거래소(Selected exchange)`,
+    value: totalEquity,
+    rate: 100,
+    color: exchange === 'BINANCE' ? '#b7791f' : '#176b87',
+  }];
+}
+
+function AllocationPiePanel({
+  currency,
+  emptyDescription,
+  emptyTitle,
+  slices,
+  title,
+}: {
+  currency: string;
+  emptyDescription: string;
+  emptyTitle: string;
+  slices: AllocationSlice[];
+  title: string;
+}) {
+  return (
+    <article className="panel portfolio-chart-panel">
+      <div className="panel-title-row">
+        <h2>{title}</h2>
+        <PieIcon size={20} />
+      </div>
+      {slices.length === 0 ? (
+        <EmptyState title={emptyTitle} description={emptyDescription} />
+      ) : (
+        <div className="portfolio-chart-layout">
+          <div className="portfolio-pie-wrap" aria-label={title}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={slices} dataKey="value" nameKey="label" innerRadius="54%" outerRadius="82%" paddingAngle={2}>
+                  {slices.map((slice) => (
+                    <Cell key={slice.id} fill={slice.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(typeof value === 'number' || typeof value === 'string' ? value : null, currency)} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="pie-legend">
+            {slices.map((slice) => (
+              <div className="pie-legend-item" key={slice.id}>
+                <span style={{ background: slice.color }} />
+                <strong>{slice.label}</strong>
+                <small>{formatCurrency(slice.value, currency)} · {formatNumber(slice.rate, 1)}%</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </article>
   );
 }
 
