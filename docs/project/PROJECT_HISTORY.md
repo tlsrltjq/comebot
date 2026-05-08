@@ -69,6 +69,7 @@
 65. Stage 3 프론트 ExchangeMode 버튼과 API 파라미터 구현
 66. Stage 4 Binance 공개 REST 현재가/캔들 provider 구현
 67. Stage 5 Exchange별 PAPER 포트폴리오와 history 분리 구현
+68. Stage 6 선택 보유 PAPER 포지션 수동 매도 구현
 
 ## 최근 검증
 

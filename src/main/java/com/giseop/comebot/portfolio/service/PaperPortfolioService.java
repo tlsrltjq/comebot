@@ -97,6 +97,10 @@ public class PaperPortfolioService {
         return paperPortfolioRepository.findPositions(exchange);
     }
 
+    public Optional<PaperPosition> findPosition(ExchangeMode exchange, String market) {
+        return paperPortfolioRepository.findPosition(exchange, market);
+    }
+
     public BigDecimal realizedLossSince(Instant from) {
         return realizedLossSince(ExchangeMode.UPBIT, from);
     }

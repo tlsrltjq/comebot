@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderResult;
@@ -95,7 +96,7 @@ class OrderExecutionServiceTest {
         tradingProperties.setMaxOrderAmount(new BigDecimal("100000"));
         tradingProperties.setAllowedMarkets(List.of("KRW-BTC", "KRW-ETH"));
         DailyRiskValidationService dailyRiskValidationService = mock(DailyRiskValidationService.class);
-        when(dailyRiskValidationService.validate()).thenReturn(new RiskCheckResult(
+        when(dailyRiskValidationService.validate(ExchangeMode.UPBIT)).thenReturn(new RiskCheckResult(
                 RiskDecision.REJECTED,
                 "Daily order limit exceeded",
                 Instant.now()

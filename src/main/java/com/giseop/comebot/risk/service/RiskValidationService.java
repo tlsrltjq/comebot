@@ -1,6 +1,7 @@
 package com.giseop.comebot.risk.service;
 
 import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.risk.domain.RiskCheckResult;
@@ -27,6 +28,10 @@ public class RiskValidationService {
     }
 
     public RiskCheckResult validate(OrderRequest request) {
+        return validate(ExchangeMode.UPBIT, request);
+    }
+
+    public RiskCheckResult validate(ExchangeMode exchange, OrderRequest request) {
         if (request == null) {
             return rejected("Order request must not be null");
         }
@@ -42,7 +47,10 @@ public class RiskValidationService {
         if (request.price() == null || request.price().compareTo(BigDecimal.ZERO) <= 0) {
             return rejected("Price must be greater than zero");
         }
-        if (!marketSelectionService.isAllowed(request.market(), tradingProperties.getAllowedMarkets())) {
+        if (exchange == ExchangeMode.BINANCE && !request.market().endsWith("USDT")) {
+            return rejected("Binance PAPER orders only support USDT spot symbols");
+        }
+        if (exchange != ExchangeMode.BINANCE && !marketSelectionService.isAllowed(request.market(), tradingProperties.getAllowedMarkets())) {
             return rejected("Market is not allowed");
         }
 

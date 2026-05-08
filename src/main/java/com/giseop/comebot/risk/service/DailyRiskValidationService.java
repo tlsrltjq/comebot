@@ -1,5 +1,6 @@
 package com.giseop.comebot.risk.service;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
@@ -44,20 +45,24 @@ public class DailyRiskValidationService {
     }
 
     public RiskCheckResult validate() {
+        return validate(ExchangeMode.UPBIT);
+    }
+
+    public RiskCheckResult validate(ExchangeMode exchange) {
         Instant checkedAt = Instant.now(clock);
         if (!dailyRiskProperties.isDailyRiskEnabled()) {
             return new RiskCheckResult(RiskDecision.APPROVED, "Daily risk disabled", checkedAt);
         }
 
         Instant todayStart = todayStart();
-        long filledOrderCount = tradingFlowHistoryService.findSince(todayStart).stream()
+        long filledOrderCount = tradingFlowHistoryService.findSince(exchange, todayStart).stream()
                 .filter(history -> history.orderCreated() && history.orderStatus() == OrderStatus.FILLED)
                 .count();
         if (filledOrderCount >= dailyRiskProperties.getDailyOrderLimit()) {
             return new RiskCheckResult(RiskDecision.REJECTED, "Daily order limit exceeded", checkedAt);
         }
 
-        BigDecimal realizedLoss = paperPortfolioService.realizedLossSince(todayStart);
+        BigDecimal realizedLoss = paperPortfolioService.realizedLossSince(exchange, todayStart);
         if (realizedLoss.compareTo(dailyRiskProperties.getDailyLossLimit()) >= 0) {
             return new RiskCheckResult(RiskDecision.REJECTED, "Daily loss limit exceeded", checkedAt);
         }

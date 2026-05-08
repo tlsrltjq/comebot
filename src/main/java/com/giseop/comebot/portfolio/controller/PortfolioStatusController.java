@@ -8,12 +8,17 @@ import com.giseop.comebot.portfolio.dto.PortfolioStatusResponse;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationFailureResponse;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.dto.PositionResponse;
+import com.giseop.comebot.portfolio.dto.SelectedPaperSellRequest;
+import com.giseop.comebot.portfolio.dto.SelectedPaperSellResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
+import com.giseop.comebot.portfolio.service.SelectedPaperSellService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,13 +27,16 @@ public class PortfolioStatusController {
 
     private final PaperPortfolioService paperPortfolioService;
     private final PaperPortfolioValuationService paperPortfolioValuationService;
+    private final SelectedPaperSellService selectedPaperSellService;
 
     public PortfolioStatusController(
             PaperPortfolioService paperPortfolioService,
-            PaperPortfolioValuationService paperPortfolioValuationService
+            PaperPortfolioValuationService paperPortfolioValuationService,
+            SelectedPaperSellService selectedPaperSellService
     ) {
         this.paperPortfolioService = paperPortfolioService;
         this.paperPortfolioValuationService = paperPortfolioValuationService;
+        this.selectedPaperSellService = selectedPaperSellService;
     }
 
     @GetMapping("/api/portfolio/status")
@@ -68,5 +76,18 @@ public class PortfolioStatusController {
 
     private PositionResponse toResponse(PaperPosition position) {
         return new PositionResponse(position.market(), position.quantity(), position.averageBuyPrice());
+    }
+
+    @PostMapping("/api/portfolio/positions/sell-selected")
+    public ResponseEntity<SelectedPaperSellResponse> sellSelected(
+            @RequestParam(required = false) String exchange,
+            @RequestBody SelectedPaperSellRequest request
+    ) {
+        ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
+        if (request == null || request.markets() == null || request.markets().stream().noneMatch(market -> market != null && !market.isBlank())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.ok(selectedPaperSellService.sellSelected(exchangeMode, request.markets()));
     }
 }

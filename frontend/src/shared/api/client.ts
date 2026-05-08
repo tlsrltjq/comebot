@@ -7,6 +7,8 @@ import type {
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
+  SelectedPaperSellRequest,
+  SelectedPaperSellResponse,
   SystemStatusResponse,
   TradingCandidateResponse,
   TradingFlowHistoryResponse,
@@ -50,6 +52,12 @@ export const api = {
     request<PositionResponse[]>(`/api/portfolio/positions${query({ exchange: exchangeParam(exchange) })}`),
   portfolioValuation: (exchange: ExchangeMode = 'UPBIT') =>
     request<PortfolioValuationResponse>(`/api/portfolio/valuation${query({ exchange: exchangeParam(exchange) })}`),
+  sellSelectedPositions: (exchange: ExchangeMode = 'UPBIT', body: SelectedPaperSellRequest) =>
+    request<SelectedPaperSellResponse>(`/api/portfolio/positions/sell-selected${query({ exchange: exchangeParam(exchange) })}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
   history: (exchange: ExchangeMode = 'UPBIT', market?: string, limit = 20) =>
     request<TradingFlowHistoryResponse[]>(`/api/trading-flow/history${query({ exchange: exchangeParam(exchange), market, limit })}`),
   analyticsSummary: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') =>

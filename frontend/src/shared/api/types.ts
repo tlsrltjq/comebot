@@ -89,6 +89,27 @@ export interface PortfolioValuationResponse {
   positions: PositionValuationResponse[];
 }
 
+export interface SelectedPaperSellRequest {
+  markets: string[];
+}
+
+export interface SelectedPaperSellResultResponse {
+  market: string;
+  signalType: SignalType;
+  orderCreated: boolean;
+  orderStatus: OrderStatus;
+  message: string;
+  executedAt: string;
+}
+
+export interface SelectedPaperSellResponse {
+  exchange: ExchangeMode;
+  requestedCount: number;
+  succeededCount: number;
+  failedCount: number;
+  results: SelectedPaperSellResultResponse[];
+}
+
 export interface TradingFlowHistoryResponse {
   id: string;
   exchange: ExchangeMode;

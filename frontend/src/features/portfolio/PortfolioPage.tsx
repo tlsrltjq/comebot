@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart, Radar, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart, Radar, ShieldCheck, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
-import type { PositionValuationResponse } from '../../shared/api/types';
+import type { PositionValuationResponse, SelectedPaperSellResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
@@ -17,7 +17,10 @@ const STOP_LOSS_RATE = -0.7;
 
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
+  const [selectedMarkets, setSelectedMarkets] = useState<Set<string>>(() => new Set());
+  const [sellSummary, setSellSummary] = useState<SelectedPaperSellResponse | null>(null);
   const { exchange } = useExchangeMode();
+  const queryClient = useQueryClient();
   const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: 5_000 });
   const positionsQuery = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: 5_000 });
   const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: 5_000 });
@@ -48,6 +51,43 @@ export function PortfolioPage() {
     (worst, position) => (worst === null || Number(position.unrealizedProfitRate) < Number(worst.unrealizedProfitRate) ? position : worst),
     null,
   );
+  const selectedVisibleMarkets = positions.map((position) => position.market).filter((market) => selectedMarkets.has(market));
+  const selectedCount = selectedVisibleMarkets.length;
+  const displayedSellSummary = sellSummary?.exchange === exchange ? sellSummary : null;
+  const sellSelectedMutation = useMutation({
+    mutationFn: (markets: string[]) => api.sellSelectedPositions(exchange, { markets }),
+    onSuccess: (response) => {
+      setSellSummary(response);
+      setSelectedMarkets(new Set());
+      void queryClient.invalidateQueries({ queryKey: queryKeys.portfolioStatus(exchange) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.positions(exchange) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.portfolioValuation(exchange) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.history(exchange) });
+    },
+  });
+
+  const toggleMarket = (market: string) => {
+    setSelectedMarkets((current) => {
+      const next = new Set(current);
+      if (next.has(market)) {
+        next.delete(market);
+      } else {
+        next.add(market);
+      }
+      return next;
+    });
+  };
+
+  const sellSelected = () => {
+    const markets = selectedVisibleMarkets;
+    if (markets.length === 0) {
+      return;
+    }
+    if (!window.confirm('선택한 PAPER 포지션을 전량 매도할까요?')) {
+      return;
+    }
+    sellSelectedMutation.mutate(markets);
+  };
 
   return (
     <section className="page">
@@ -62,6 +102,7 @@ export function PortfolioPage() {
       {statusQuery.error ? <ErrorPanel title="포트폴리오 상태 조회 실패(Portfolio status failed)" error={statusQuery.error} /> : null}
       {valuationQuery.error ? <ErrorPanel title="포트폴리오 평가 조회 실패(Portfolio valuation failed)" error={valuationQuery.error} /> : null}
       {systemQuery.error ? <ErrorPanel title="시스템 상태 조회 실패(System status failed)" error={systemQuery.error} /> : null}
+      {sellSelectedMutation.error ? <ErrorPanel title="선택 매도 실패(Selected sell failed)" error={sellSelectedMutation.error} /> : null}
 
       <div className="metric-grid">
         <MetricCard label="현금(Cash)" value={money(valuationQuery.data?.cash ?? statusQuery.data?.cash)} detail={`${currency} ${formatNumber(cashRate, 1)}%`} />
@@ -158,10 +199,40 @@ export function PortfolioPage() {
         </button>
       </div>
 
+      {selectedCount > 0 ? (
+        <div className="toolbar portfolio-toolbar" aria-label="선택 PAPER 매도(Selected PAPER sell)">
+          <span>선택됨(Selected) {selectedCount}</span>
+          <button className="button button-primary" type="button" onClick={sellSelected} disabled={sellSelectedMutation.isPending}>
+            <ShieldCheck size={16} />
+            선택 매도(Sell selected)
+          </button>
+        </div>
+      ) : null}
+
+      {displayedSellSummary ? (
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>선택 매도 결과(Selected Sell Result)</h2>
+            <Badge tone={displayedSellSummary.failedCount > 0 ? 'warn' : 'good'}>
+              {displayedSellSummary.succeededCount}/{displayedSellSummary.requestedCount}
+            </Badge>
+          </div>
+          <div className="definition-list">
+            {displayedSellSummary.results.map((result) => (
+              <div key={result.market}>
+                <dt>{result.market}</dt>
+                <dd>{result.orderStatus} · {result.message}</dd>
+              </div>
+            ))}
+          </div>
+        </article>
+      ) : null}
+
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
+              <th>선택(Select)</th>
               <th>마켓(Market)</th>
               <th>수량(Quantity)</th>
               <th>평균매수가(Avg Buy)</th>
@@ -175,6 +246,15 @@ export function PortfolioPage() {
           <tbody>
             {positions.map((position) => (
               <tr key={position.market}>
+                <td>
+                  <input
+                    aria-label={`${position.market} 선택`}
+                    checked={selectedMarkets.has(position.market)}
+                    disabled={sellSelectedMutation.isPending}
+                    type="checkbox"
+                    onChange={() => toggleMarket(position.market)}
+                  />
+                </td>
                 <td><strong>{position.market}</strong></td>
                 <td>{formatNumber(position.quantity, 8)}</td>
                 <td>{money(position.averageBuyPrice)}</td>

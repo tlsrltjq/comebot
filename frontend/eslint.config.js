@@ -88,6 +88,14 @@ export default tseslint.config(
           selector: 'TemplateElement[value.raw=/\\/api\\/trading-flow\\/run/]',
           message: 'The web UI is monitoring-only; do not add trading execution endpoints.',
         },
+        {
+          selector: 'Literal[value=/\\/api\\/portfolio\\/positions\\/(buy|buy-selected|manual-buy)/]',
+          message: 'The web UI must not add manual BUY endpoints.',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/\\/api\\/portfolio\\/positions\\/(buy|buy-selected|manual-buy)/]',
+          message: 'The web UI must not add manual BUY endpoints.',
+        },
       ],
     },
   },

@@ -9,9 +9,9 @@
 - 기본값은 `safety.kill-switch-enabled=false`다.
 - 켜져 있으면 신규 트레이딩 플로우 실행을 차단한다.
 - 차단 대상은 REST `/run`, scheduler 실행, 수동 PAPER 실행이 허용된 Telegram `/run`이다.
+- 웹 선택 PAPER SELL도 kill switch가 켜져 있으면 시세 조회 전에 차단한다.
 - history, status, portfolio 조회는 차단하지 않는다.
 - kill switch는 시세 조회와 전략 판단보다 먼저 확인한다.
-- 계획 중인 웹 선택 PAPER SELL도 kill switch가 켜져 있으면 차단한다.
 
 ## 주문 요청 검증
 
@@ -22,6 +22,7 @@
 - price가 0보다 큼
 - 주문 금액이 `trading.max-order-amount` 이하
 - market이 `trading.allowed-markets`에 포함됨
+- Binance PAPER SELL은 `USDT` 현물 symbol만 허용한다.
 
 실패 시 `REJECTED`로 처리한다.
 
@@ -32,6 +33,7 @@
 - 웹 선택 PAPER SELL은 사용자가 체크한 보유 포지션에 대해서만 허용한다.
 - 웹 선택 PAPER SELL 1차 범위는 선택 market 전량 매도다.
 - 웹 선택 PAPER SELL 가격은 프론트가 결정하지 않고 서버가 현재가 provider에서 캡처한다.
+- 웹 선택 PAPER SELL 요청에서 중복 market은 한 번만 처리하고, 일부 실패는 market별 결과로 반환한다.
 - HOLD는 포트폴리오를 변경하지 않는다.
 - REJECTED, FAILED 주문은 포트폴리오를 변경하지 않는다.
 

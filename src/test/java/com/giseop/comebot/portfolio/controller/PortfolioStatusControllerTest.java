@@ -2,6 +2,8 @@ package com.giseop.comebot.portfolio.controller;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,9 +12,15 @@ import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
 import com.giseop.comebot.portfolio.dto.PositionValuationResponse;
+import com.giseop.comebot.portfolio.dto.SelectedPaperSellResponse;
+import com.giseop.comebot.portfolio.dto.SelectedPaperSellResultResponse;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.portfolio.service.PaperPortfolioValuationService;
+import com.giseop.comebot.portfolio.service.SelectedPaperSellService;
+import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.strategy.domain.SignalType;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +39,9 @@ class PortfolioStatusControllerTest {
 
     @MockitoBean
     private PaperPortfolioValuationService paperPortfolioValuationService;
+
+    @MockitoBean
+    private SelectedPaperSellService selectedPaperSellService;
 
     @Test
     void statusReturnsPortfolioStatus() throws Exception {
@@ -150,5 +161,39 @@ class PortfolioStatusControllerTest {
         mockMvc.perform(get("/api/portfolio/valuation"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.message").value("Portfolio valuation failed"));
+    }
+
+    @Test
+    void sellSelectedRunsSelectedPaperSellService() throws Exception {
+        when(selectedPaperSellService.sellSelected(ExchangeMode.UPBIT, List.of("KRW-BTC"))).thenReturn(new SelectedPaperSellResponse(
+                "UPBIT",
+                1,
+                1,
+                0,
+                List.of(new SelectedPaperSellResultResponse(
+                        "KRW-BTC",
+                        SignalType.SELL,
+                        true,
+                        OrderStatus.FILLED,
+                        "Selected PAPER position sold",
+                        Instant.parse("2026-05-07T00:00:00Z")
+                ))
+        ));
+
+        mockMvc.perform(post("/api/portfolio/positions/sell-selected")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"markets\":[\"KRW-BTC\"]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exchange").value("UPBIT"))
+                .andExpect(jsonPath("$.succeededCount").value(1))
+                .andExpect(jsonPath("$.results[0].signalType").value("SELL"));
+    }
+
+    @Test
+    void sellSelectedRejectsEmptyMarkets() throws Exception {
+        mockMvc.perform(post("/api/portfolio/positions/sell-selected")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"markets\":[]}"))
+                .andExpect(status().isBadRequest());
     }
 }

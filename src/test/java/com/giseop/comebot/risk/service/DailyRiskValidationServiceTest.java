@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
@@ -84,9 +85,9 @@ class DailyRiskValidationServiceTest {
             BigDecimal realizedLoss
     ) {
         TradingFlowHistoryService historyService = mock(TradingFlowHistoryService.class);
-        when(historyService.findSince(Instant.parse("2026-04-28T15:00:00Z"))).thenReturn(histories);
+        when(historyService.findSince(ExchangeMode.UPBIT, Instant.parse("2026-04-28T15:00:00Z"))).thenReturn(histories);
         PaperPortfolioService portfolioService = mock(PaperPortfolioService.class);
-        when(portfolioService.realizedLossSince(Instant.parse("2026-04-28T15:00:00Z"))).thenReturn(realizedLoss);
+        when(portfolioService.realizedLossSince(ExchangeMode.UPBIT, Instant.parse("2026-04-28T15:00:00Z"))).thenReturn(realizedLoss);
         return new DailyRiskValidationService(properties, historyService, portfolioService, CLOCK);
     }
 

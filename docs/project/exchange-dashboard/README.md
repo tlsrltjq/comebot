@@ -20,7 +20,7 @@
 | 3 | `STAGE_03_FRONTEND_EXCHANGE_MODE.md` | 구현 완료 |
 | 4 | `STAGE_04_BINANCE_REST_PROVIDER.md` | 구현 완료 |
 | 5 | `STAGE_05_EXCHANGE_PORTFOLIO_HISTORY.md` | 구현 완료 |
-| 6 | `STAGE_06_SELECTED_PAPER_SELL.md` | 계획 완료 |
+| 6 | `STAGE_06_SELECTED_PAPER_SELL.md` | 구현 완료 |
 | 7 | `STAGE_07_PORTFOLIO_PIE_CHART.md` | 계획 완료 |
 | 8 | `STAGE_08_WEBSOCKET_PRICE_FEED.md` | 계획 완료 |
 | 9 | `STAGE_09_SCHEDULER_CADENCE.md` | 계획 완료 |

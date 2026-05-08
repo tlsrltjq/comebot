@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PortfolioPage } from './PortfolioPage';
 
@@ -23,11 +24,11 @@ afterEach(() => {
 });
 
 describe('PortfolioPage', () => {
-  it('shows allocation and position exit status without manual trading controls', async () => {
+  it('shows allocation and position exit status without buy or trading-flow controls', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url === '/api/portfolio/status?exchange=upbit') {
-        return json({ cash: '985000', realizedProfit: '1200' });
+        return json({ exchange: 'UPBIT', currency: 'KRW', cash: '985000', realizedProfit: '1200' });
       }
       if (url === '/api/system/status?exchange=upbit') {
         return json({
@@ -54,6 +55,8 @@ describe('PortfolioPage', () => {
       }
       if (url === '/api/portfolio/valuation?exchange=upbit') {
         return json({
+          exchange: 'UPBIT',
+          currency: 'KRW',
           cash: '985000',
           totalPositionValue: '15000',
           totalEquity: '1000000',
@@ -102,6 +105,102 @@ describe('PortfolioPage', () => {
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
+  });
+
+  it('sells only selected paper positions after confirmation', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url === '/api/portfolio/status?exchange=upbit') {
+        return json({ exchange: 'UPBIT', currency: 'KRW', cash: '985000', realizedProfit: '1200' });
+      }
+      if (url === '/api/system/status?exchange=upbit') {
+        return json({
+          database: { connected: true },
+          marketProvider: { provider: 'UPBIT', externalProvider: true },
+          strategy: { strategyName: 'VolatilityBreakoutLongStrategy', buyPrice: '90000000', sellPrice: '110000000', orderQuantity: '0.01', orderAmount: '10000' },
+          risk: { maxOrderAmount: '100000', allowedMarkets: ['ALL_KRW'] },
+          scheduler: {
+            enabled: true,
+            fixedDelayMs: 30000,
+            markets: ['ALL_KRW'],
+            candidateEnabled: true,
+            candidateFixedDelayMs: 30000,
+            candidateMarkets: ['ALL_KRW'],
+            candidateNotifySummary: false,
+          },
+          safety: { killSwitchEnabled: false },
+          notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
+          telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
+        });
+      }
+      if (url === '/api/portfolio/positions?exchange=upbit') {
+        return json([]);
+      }
+      if (url === '/api/portfolio/valuation?exchange=upbit') {
+        return json({
+          exchange: 'UPBIT',
+          currency: 'KRW',
+          cash: '985000',
+          totalPositionValue: '15000',
+          totalEquity: '1000000',
+          realizedProfit: '1200',
+          unrealizedProfit: '-100',
+          totalProfit: '1100',
+          positions: [
+            {
+              market: 'KRW-BTC',
+              quantity: '0.0001',
+              averageBuyPrice: '100000000',
+              currentPrice: '100900000',
+              positionValue: '10090',
+              unrealizedProfit: '90',
+              unrealizedProfitRate: '0.9',
+            },
+          ],
+        });
+      }
+      if (url === '/api/portfolio/positions/sell-selected?exchange=upbit') {
+        expect(init?.method).toBe('POST');
+        expect(init?.body).toBe(JSON.stringify({ markets: ['KRW-BTC'] }));
+        return json({
+          exchange: 'UPBIT',
+          requestedCount: 1,
+          succeededCount: 1,
+          failedCount: 0,
+          results: [
+            {
+              market: 'KRW-BTC',
+              signalType: 'SELL',
+              orderCreated: true,
+              orderStatus: 'FILLED',
+              message: 'Selected PAPER position sold',
+              executedAt: '2026-05-07T00:00:00Z',
+            },
+          ],
+        });
+      }
+      if (url === '/api/trading-flow/history?exchange=upbit&limit=20') {
+        return json([]);
+      }
+
+      return json([]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithClient();
+
+    await user.click(await screen.findByLabelText('KRW-BTC 선택'));
+    await user.click(screen.getByRole('button', { name: /선택 매도/ }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      '/api/portfolio/positions/sell-selected?exchange=upbit',
+      expect.objectContaining({ method: 'POST' }),
+    ));
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(await screen.findByText('선택 매도 결과(Selected Sell Result)')).toBeInTheDocument();
+    expect(screen.getByText('FILLED · Selected PAPER position sold')).toBeInTheDocument();
   });
 });
 

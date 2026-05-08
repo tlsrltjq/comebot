@@ -195,3 +195,26 @@ kill switch가 켜져 있으면 시세 조회 전에 차단한다.
 ## 사용자 확인 필요
 
 - 없음. 중복 market 요청은 서버에서 중복 제거하고, 여러 market 중 일부 실패는 허용한다.
+
+## 구현 결과
+
+- `POST /api/portfolio/positions/sell-selected?exchange=...` endpoint를 추가했다.
+- request body는 `markets` 목록만 받는다. 가격, 수량, 체결 상태는 프론트에서 받지 않는다.
+- `SelectedPaperSellService`가 market별로 보유 포지션 확인, kill switch 확인, 서버 현재가 캡처, SELL 주문 요청 생성, PAPER execution, portfolio 반영, history 저장을 수행한다.
+- 중복 market 요청은 서버에서 중복 제거한다.
+- 미보유 market, kill switch, 현재가 조회 실패는 market별 `REJECTED` 또는 `FAILED` 결과로 반환하고 history에 저장한다.
+- `OrderExecutionService`, `RiskValidationService`, `DailyRiskValidationService`에 exchange-aware overload를 추가해 Binance PAPER SELL이 Binance 포트폴리오와 history에만 반영되게 했다.
+- 포트폴리오 화면에 보유 포지션 체크박스, 선택 매도 toolbar, 확인 dialog, 결과 요약을 추가했다.
+- 프론트 API client에는 선택 PAPER SELL 함수만 추가했고 수동 BUY endpoint는 추가하지 않았다.
+- ESLint 금지 규칙에 수동 BUY 성격의 portfolio endpoint 금지를 추가했다.
+
+## 검증 결과
+
+- `SelectedPaperSellServiceTest`
+- `PortfolioStatusControllerTest`
+- `OrderExecutionServiceTest`
+- `DailyRiskValidationServiceTest`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `./gradlew test`

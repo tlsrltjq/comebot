@@ -1,5 +1,6 @@
 package com.giseop.comebot.execution.service;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderStatus;
@@ -32,17 +33,21 @@ public class OrderExecutionService {
     }
 
     public OrderResult execute(OrderRequest request) {
-        RiskCheckResult riskCheckResult = riskValidationService.validate(request);
+        return execute(ExchangeMode.UPBIT, request);
+    }
+
+    public OrderResult execute(ExchangeMode exchange, OrderRequest request) {
+        RiskCheckResult riskCheckResult = riskValidationService.validate(exchange, request);
         if (riskCheckResult.decision() == RiskDecision.REJECTED) {
             return rejected(request, riskCheckResult);
         }
-        RiskCheckResult dailyRiskCheckResult = dailyRiskValidationService.validate();
+        RiskCheckResult dailyRiskCheckResult = dailyRiskValidationService.validate(exchange);
         if (dailyRiskCheckResult.decision() == RiskDecision.REJECTED) {
             return rejected(request, dailyRiskCheckResult);
         }
-        return paperPortfolioService.validate(request)
+        return paperPortfolioService.validate(exchange, request)
                 .map(reason -> rejected(request, reason))
-                .orElseGet(() -> executeAndApply(request));
+                .orElseGet(() -> executeAndApply(exchange, request));
     }
 
     private OrderResult rejected(OrderRequest request, RiskCheckResult riskCheckResult) {
@@ -65,9 +70,9 @@ public class OrderExecutionService {
         );
     }
 
-    private OrderResult executeAndApply(OrderRequest request) {
+    private OrderResult executeAndApply(ExchangeMode exchange, OrderRequest request) {
         OrderResult result = executionGateway.execute(request);
-        paperPortfolioService.apply(result);
+        paperPortfolioService.apply(exchange, result);
         return result;
     }
 }
