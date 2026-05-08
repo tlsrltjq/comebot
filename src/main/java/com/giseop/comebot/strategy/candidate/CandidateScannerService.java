@@ -11,6 +11,7 @@ import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
 import com.giseop.comebot.strategy.indicator.VolatilitySnapshot;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
@@ -102,7 +103,23 @@ public class CandidateScannerService {
                     candidateScannerProperties.getCandleUnitMinutes(),
                     candidateScannerProperties.getCandleCount()
             );
-            VolatilitySnapshot snapshot = volatilityIndicatorService.calculate(candles);
+            List<Candle> validCandles = candles.stream()
+                    .filter(this::hasPositiveTradeAmount)
+                    .toList();
+            if (validCandles.size() < 2) {
+                return new TradingCandidate(
+                        market,
+                        CandidateDecision.SKIPPED,
+                        "Not enough valid trade amount candles",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Instant.now()
+                );
+            }
+            VolatilitySnapshot snapshot = volatilityIndicatorService.calculate(validCandles);
             return toCandidate(snapshot);
         } catch (RuntimeException exception) {
             log.warn("Candidate scan failed. market={}, reason={}", market, failureReason(exception));
@@ -122,6 +139,12 @@ public class CandidateScannerService {
 
     private CandleProvider candleProvider(ExchangeMode exchange) {
         return exchange == ExchangeMode.BINANCE ? binanceCandleProvider : upbitCandleProvider;
+    }
+
+    private boolean hasPositiveTradeAmount(Candle candle) {
+        return candle != null
+                && candle.accumulatedTradePrice() != null
+                && candle.accumulatedTradePrice().compareTo(BigDecimal.ZERO) > 0;
     }
 
     private String failureReason(RuntimeException exception) {

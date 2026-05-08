@@ -79,6 +79,37 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void zeroTradeAmountCandlesAreSkippedBeforeIndicatorCalculation() {
+        scannerProperties.setMinPriceChangeRate(BigDecimal.ZERO);
+        scannerProperties.setMinTradeAmountChangeRate(BigDecimal.ZERO);
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        candleProvider.candles = List.of(
+                candle("BTCUSDT", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "0"),
+                candle("BTCUSDT", "2026-04-30T00:01:00Z", "105", "120", "100", "115", "1000"),
+                candle("BTCUSDT", "2026-04-30T00:02:00Z", "115", "130", "110", "125", "1500")
+        );
+
+        TradingCandidate candidate = service.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+        assertThat(candidate.market()).isEqualTo("BTCUSDT");
+    }
+
+    @Test
+    void returnsHoldWhenNotEnoughPositiveTradeAmountCandlesRemain() {
+        candleProvider.candles = List.of(
+                candle("BTCUSDT", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "0"),
+                candle("BTCUSDT", "2026-04-30T00:01:00Z", "105", "120", "100", "115", "0")
+        );
+
+        TradingCandidate candidate = service.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Not enough valid trade amount candles");
+    }
+
+    @Test
     void downTrendIsSkipped() {
         candleProvider.candles = List.of(
                 candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "95", "1000"),
