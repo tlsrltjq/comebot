@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { App } from './app/App';
 import { CandidatesPage } from './features/candidates/CandidatesPage';
 import { HistoryPage } from './features/history/HistoryPage';
+import { MarketOverviewPage } from './features/market/MarketOverviewPage';
 import { PortfolioPage } from './features/portfolio/PortfolioPage';
 import { DashboardPage } from './features/system/DashboardPage';
 import { TradePage } from './features/trading/TradePage';
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: 'market', element: <MarketOverviewPage /> },
       { path: 'candidates', element: <CandidatesPage /> },
       { path: 'trade', element: <TradePage /> },
       { path: 'portfolio', element: <PortfolioPage /> },

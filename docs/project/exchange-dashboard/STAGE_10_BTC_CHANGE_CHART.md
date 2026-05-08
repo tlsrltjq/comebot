@@ -179,3 +179,21 @@ Upbit는 기존 `UpbitCandleProvider`의 minute candle unit을 사용한다. Bin
 ## 사용자 확인 필요
 
 - 없음. Stage 10은 조회 전용 Market Overview 페이지로 진행한다.
+
+## 구현 결과
+
+- `GET /api/market/btc-change?exchange=upbit&range=24h` API를 추가했다.
+- Upbit 모드는 `KRW-BTC`, Binance 모드는 `BTCUSDT` candle source를 사용한다.
+- `1h`, `24h`, `3d`, `7d` 범위를 지원하며 잘못된 range는 `400 Bad Request`로 응답한다.
+- candle을 시간 오름차순으로 정렬하고 시작가 기준 등락률, 최신가, 고가, 저가, point별 등락률을 계산한다.
+- 프론트에 `시장(Market)` nav와 Market Overview 페이지를 추가했다.
+- 페이지는 조회 전용이며 매수/매도/실행 버튼을 제공하지 않는다.
+
+검증:
+
+```text
+./gradlew test --tests BtcChangeChartServiceTest --tests MarketOverviewControllerTest
+npm run lint
+npm test
+npm run build
+```

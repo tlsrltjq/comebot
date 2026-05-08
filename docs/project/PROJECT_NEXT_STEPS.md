@@ -20,6 +20,7 @@
 - 완료: Stage 7 포트폴리오 원형 그래프 UI
 - 완료: Stage 8 WebSocket 시세 수신 snapshot store와 REST fallback provider
 - 완료: Stage 9 자동매매 주기 분리와 설정 정리
+- 완료: Stage 10 BTC 등락률 그래프 페이지
 - 준비 완료: Stage 2 ExchangeMode 백엔드 도메인/API 골격 상세 계획
 - 준비 완료: Stage 3 사이드바 ExchangeMode 버튼과 프론트 API 파라미터 상세 계획
 - 준비 완료: Stage 4 Binance REST market/candle provider 상세 계획
@@ -30,7 +31,7 @@
 - 준비 완료: Stage 9 자동매매 주기 분리와 설정 정리 상세 계획
 - 준비 완료: Stage 10 BTC 등락률 그래프 페이지 상세 계획
 - 계획 완료: Stage 1-10 거래소 대시보드 확장 계획
-- 다음 구현: Stage 10 BTC 등락률 그래프 페이지
+- 다음 구현: MVP2 계획 후속 정리 또는 운영 안정화 항목 선정
 
 완료 기준:
 

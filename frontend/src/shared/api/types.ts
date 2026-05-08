@@ -3,6 +3,7 @@ export type OrderStatus = 'FILLED' | 'REJECTED' | 'FAILED';
 export type CandidateDecision = 'SELECTED' | 'SKIPPED';
 export type MarketTrend = 'UP' | 'DOWN' | 'SIDEWAYS';
 export type AnalyticsRange = '1h' | '24h' | '3d' | '7d';
+export type BtcChangeRange = '1h' | '24h' | '3d' | '7d';
 export type ExchangeMode = 'UPBIT' | 'BINANCE';
 
 export interface SystemStatusResponse {
@@ -182,4 +183,22 @@ export interface AnalyticsLossResponse {
   range: AnalyticsRange;
   worstTrades: LossTradeResponse[];
   repeatedStopLossMarkets: MarketCountResponse[];
+}
+
+export interface BtcChangePointResponse {
+  time: string;
+  price: string;
+  changeRate: string;
+}
+
+export interface BtcChangeChartResponse {
+  exchange: ExchangeMode;
+  market: string;
+  range: BtcChangeRange;
+  basePrice: string;
+  latestPrice: string;
+  changeRate: string;
+  highPrice: string;
+  lowPrice: string;
+  points: BtcChangePointResponse[];
 }

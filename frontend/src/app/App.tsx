@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
-import { Activity, BarChart3, Clock3, LineChart, PieChart, Radar } from 'lucide-react';
+import { Activity, BarChart3, Clock3, LineChart, PieChart, Radar, TrendingUp } from 'lucide-react';
 import type { ExchangeMode } from '../shared/api/types';
 import { ExchangeModeContext, exchangeParam } from '../shared/exchange/ExchangeModeContext';
 
 const navItems = [
   { to: '/', label: '대시보드(Dashboard)', icon: Activity },
+  { to: '/market', label: '시장(Market)', icon: TrendingUp },
   { to: '/candidates', label: '후보(Candidates)', icon: Radar },
   { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
   { to: '/portfolio', label: '포트폴리오(Portfolio)', icon: PieChart },

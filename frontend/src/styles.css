@@ -282,6 +282,10 @@ button:disabled {
   min-width: 0;
 }
 
+.market-chart-wrap {
+  height: 320px;
+}
+
 .loss-list {
   display: grid;
   gap: 10px;

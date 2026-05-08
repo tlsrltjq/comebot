@@ -3,6 +3,8 @@ import type {
   AnalyticsPnlResponse,
   AnalyticsRange,
   AnalyticsSummaryResponse,
+  BtcChangeChartResponse,
+  BtcChangeRange,
   ExchangeMode,
   PortfolioStatusResponse,
   PortfolioValuationResponse,
@@ -66,6 +68,8 @@ export const api = {
     request<AnalyticsPnlResponse>(`/api/analytics/pnl${query({ exchange: exchangeParam(exchange), range })}`),
   analyticsLosses: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') =>
     request<AnalyticsLossResponse>(`/api/analytics/losses${query({ exchange: exchangeParam(exchange), range })}`),
+  btcChange: (range: BtcChangeRange, exchange: ExchangeMode = 'UPBIT') =>
+    request<BtcChangeChartResponse>(`/api/market/btc-change${query({ exchange: exchangeParam(exchange), range })}`),
 };
 
 export const queryKeys = {
@@ -78,4 +82,5 @@ export const queryKeys = {
   analyticsSummary: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsSummary', exchange, range] as const,
   analyticsPnl: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsPnl', exchange, range] as const,
   analyticsLosses: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsLosses', exchange, range] as const,
+  btcChange: (range: BtcChangeRange, exchange: ExchangeMode = 'UPBIT') => ['btcChange', exchange, range] as const,
 };
