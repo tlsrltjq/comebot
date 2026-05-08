@@ -3,6 +3,7 @@ package com.giseop.comebot.market.websocket;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.domain.PriceSource;
 import com.giseop.comebot.market.domain.TickerSnapshot;
+import com.giseop.comebot.market.service.BinanceUsdtTickerStore;
 import com.giseop.comebot.market.service.TickerSnapshotStore;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
@@ -18,7 +19,11 @@ import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,6 +33,7 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
 
     private final MarketWebSocketProperties properties;
     private final TickerSnapshotStore tickerSnapshotStore;
+    private final BinanceUsdtTickerStore binanceUsdtTickerStore;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final HttpClient httpClient;
@@ -38,11 +44,13 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
     public BinanceTickerWebSocketClient(
             MarketWebSocketProperties properties,
             TickerSnapshotStore tickerSnapshotStore,
+            BinanceUsdtTickerStore binanceUsdtTickerStore,
             TradingSchedulerProperties tradingSchedulerProperties,
             CandidateSchedulerProperties candidateSchedulerProperties
     ) {
         this.properties = properties;
         this.tickerSnapshotStore = tickerSnapshotStore;
+        this.binanceUsdtTickerStore = binanceUsdtTickerStore;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.httpClient = HttpClient.newHttpClient();
@@ -91,17 +99,33 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
         return running;
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(Ordered.LOWEST_PRECEDENCE)
+    public void startAfterMarketUniverseBootstrap() {
+        if (!running) {
+            start();
+        }
+    }
+
     List<String> subscribedMarkets() {
         Set<String> markets = new LinkedHashSet<>();
-        tradingSchedulerProperties.getMarkets().stream()
-                .map(this::normalizeSymbol)
-                .filter(symbol -> symbol.endsWith("USDT"))
-                .forEach(markets::add);
-        candidateSchedulerProperties.getMarkets().stream()
-                .map(this::normalizeSymbol)
-                .filter(symbol -> symbol.endsWith("USDT"))
-                .forEach(markets::add);
+        addConfiguredSymbols(markets, tradingSchedulerProperties.getMarkets());
+        addConfiguredSymbols(markets, candidateSchedulerProperties.getMarkets());
         return List.copyOf(markets);
+    }
+
+    private void addConfiguredSymbols(Set<String> target, List<String> configuredMarkets) {
+        if (configuredMarkets == null) {
+            return;
+        }
+        if (configuredMarkets.stream().anyMatch("ALL_USDT"::equalsIgnoreCase)) {
+            target.addAll(binanceUsdtTickerStore.topSymbols(50));
+            return;
+        }
+        configuredMarkets.stream()
+                .map(this::normalizeSymbol)
+                .filter(symbol -> symbol.endsWith("USDT"))
+                .forEach(target::add);
     }
 
     void handleMessage(String payload) {

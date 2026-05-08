@@ -77,6 +77,9 @@ WebSocket 시세 수신은 REST provider와 분리한다.
 - 기존 Upbit 전체 KRW REST polling scheduler는 가격 수집용이 아니라 `ALL_KRW` 후보 universe bootstrap/refresh 용도로만 사용한다.
   기본 동작은 부팅 시 1회와 `market.upbit-krw-ticker-polling.fixed-delay-ms` 간격 refresh이며, 기본값은 10분이다.
   WebSocket/SNAPSHOT 운영에서 명시 market만 사용하는 경우 `market.upbit-krw-ticker-polling.enabled=false`로 끌 수 있다.
+- Binance 전체 USDT REST polling scheduler는 `ALL_USDT` 후보 universe bootstrap/refresh 용도로만 사용한다.
+  기본값은 disabled이며, `market.binance-usdt-ticker-polling.enabled=true`일 때 부팅 시 1회와 10분 간격으로 24h ticker를 갱신한다.
+  Binance WebSocket client는 `ALL_USDT`를 Binance USDT 거래대금 상위 50개 symbol로 확장해 구독한다.
 - `/api/market-provider/status`는 WebSocket 활성 여부와 거래소별 snapshot 개수를 반환한다.
 
 ## Strategy

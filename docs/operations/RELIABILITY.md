@@ -27,6 +27,9 @@
 - Upbit 전체 KRW REST polling scheduler는 `ALL_KRW` 후보 universe bootstrap/refresh 용도이며 가격 수집 경로가 아니다.
   기본값은 부팅 시 1회와 10분 간격 refresh다.
   WebSocket/SNAPSHOT 기반 운영에서 명시 market만 구독하는 경우 `market.upbit-krw-ticker-polling.enabled=false`로 끌 수 있다.
+- Binance 전체 USDT REST polling scheduler는 `ALL_USDT` 후보 universe bootstrap/refresh 용도이며 가격 수집 경로가 아니다.
+  기본값은 disabled다.
+  Binance 전체 후보 테스트가 필요할 때만 `market.binance-usdt-ticker-polling.enabled=true`로 켜고, 실패해도 Upbit 흐름을 중단시키지 않는다.
 
 ## Strategy 장애
 
