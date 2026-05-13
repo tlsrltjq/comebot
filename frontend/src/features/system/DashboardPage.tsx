@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { Activity, Bell, Bot, Database, Radio, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
+import { Bot, CheckCircle2, Database, Radio, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
@@ -63,27 +63,62 @@ export function DashboardPage() {
   const marketCoverage = data.scheduler.candidateMarkets.some((market) => market === 'ALL_KRW' || market === 'ALL_USDT')
     ? marketSummary(data.scheduler.candidateMarkets, exchange)
     : `${snapshotCount ?? 0}`;
+  const priceReady = Boolean(providerQuery.data?.externalProvider && ((snapshotCount ?? 0) > 0 || marketCoverage.startsWith('전체')));
+  const schedulerReady = data.scheduler.candidateEnabled && data.scheduler.exitEnabled;
+  const autoReady = data.database.connected && priceReady && schedulerReady && !data.safety.killSwitchEnabled;
+  const readinessTone = data.safety.killSwitchEnabled ? 'bad' : autoReady ? 'good' : 'warn';
+  const readinessTitle = data.safety.killSwitchEnabled
+    ? '거래 흐름 차단(Blocked)'
+    : autoReady
+      ? '자동 PAPER 운영 가능(Ready)'
+      : '운영 조건 점검 필요(Review)';
+  const readinessDetail = autoReady
+    ? `${exchange} 기준 후보 BUY와 보유 PAPER SELL 평가가 실행 가능한 상태입니다.`
+    : readinessMessage({
+        databaseConnected: data.database.connected,
+        priceReady,
+        candidateEnabled: data.scheduler.candidateEnabled,
+        exitEnabled: data.scheduler.exitEnabled,
+        killSwitchEnabled: data.safety.killSwitchEnabled,
+      });
 
   return (
     <section className="page">
       <header className="page-header">
         <div>
           <h1>운영 대시보드(Dashboard)</h1>
-          <p>자동 PAPER 거래 상태(Auto paper trading status)를 확인합니다.</p>
+          <p>자동 PAPER 운영 상태와 손익 리스크를 확인합니다.</p>
         </div>
-        <Badge tone={data.safety.killSwitchEnabled ? 'bad' : 'good'}>
-          {data.safety.killSwitchEnabled ? '중지됨(Kill switch ON)' : '자동 실행 가능(Auto ready)'}
+        <Badge tone={readinessTone}>
+          {readinessTitle}
         </Badge>
         <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching || providerQuery.isFetching} intervalMs={LIVE_REFRESH_MS} />
       </header>
 
-      <div className="status-strip" aria-label="운영 상태(Operation status)">
+      <article className={`operations-overview operations-overview-${readinessTone}`}>
+        <div className="operations-summary">
+          <div>
+            <span>운영 준비 상태(Operational Readiness)</span>
+            <strong>{readinessTitle}</strong>
+            <p>{readinessDetail}</p>
+          </div>
+          {readinessTone === 'bad' ? <ShieldX size={34} /> : <ShieldCheck size={34} />}
+        </div>
+        <div className="readiness-list" aria-label="운영 준비 조건(Readiness checks)">
+          <OperationCheck label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
+          <OperationCheck label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
+          <OperationCheck label="후보 스케줄러(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.candidateEnabled} />
+          <OperationCheck label="청산 스케줄러(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.exitEnabled} />
+          <OperationCheck label="긴급 정지(Kill switch)" value={data.safety.killSwitchEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'} good={!data.safety.killSwitchEnabled} />
+        </div>
+      </article>
+
+      <div className="status-strip dashboard-status-strip" aria-label="운영 상태(Operation status)">
         <StatusPill icon={<Database size={16} />} label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
-        <StatusPill icon={<Radio size={16} />} label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={Boolean(providerQuery.data?.externalProvider && ((snapshotCount ?? 0) > 0 || marketCoverage.startsWith('전체')))} />
-        <StatusPill icon={<Activity size={16} />} label="전략(Trading)" value={data.scheduler.enabled ? `${data.scheduler.fixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.enabled} />
+        <StatusPill icon={<Radio size={16} />} label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
         <StatusPill icon={<Bot size={16} />} label="후보(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.candidateEnabled} />
         <StatusPill icon={<TrendingDown size={16} />} label="청산(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.exitEnabled} />
-        <StatusPill icon={<Bell size={16} />} label="수동 PAPER(Manual)" value={data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'} good={!data.telegram.manualPaperExecutionEnabled} />
+        <StatusPill icon={data.safety.killSwitchEnabled ? <ShieldX size={16} /> : <ShieldCheck size={16} />} label="긴급 정지(Kill)" value={data.safety.killSwitchEnabled ? '켜짐(On)' : '꺼짐(Off)'} good={!data.safety.killSwitchEnabled} />
       </div>
 
       <div className="metric-grid">
@@ -101,6 +136,41 @@ export function DashboardPage() {
       </div>
 
       <div className="section-grid">
+        <article className="panel">
+          <h2>스케줄러(Schedulers)</h2>
+          <dl className="definition-list">
+            <dt>전략 스케줄러(Trading Scheduler)</dt>
+            <dd>{data.scheduler.enabled ? `${data.scheduler.fixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
+            <dt>후보 스케줄러(Candidate Scheduler)</dt>
+            <dd>{data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
+            <dt>후보 거래소(Candidate exchange)</dt>
+            <dd>{exchangeList(data.scheduler.candidateExchanges, data.scheduler.candidateExchange)}</dd>
+            <dt>후보 마켓(Candidate markets)</dt>
+            <dd>{marketSummary(data.scheduler.candidateMarkets, exchange)}</dd>
+            <dt>청산 스케줄러(Exit Scheduler)</dt>
+            <dd>{data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
+            <dt>청산 대상(Exit positions)</dt>
+            <dd>{data.scheduler.exitPositionMarketCount}</dd>
+          </dl>
+        </article>
+
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>손익 요약(PnL Summary)</h2>
+            {totalProfit >= 0 ? <TrendingUp className="tone-positive" size={22} /> : <TrendingDown className="tone-negative" size={22} />}
+          </div>
+          <dl className="definition-list">
+            <dt>총 손익(Total)</dt>
+            <dd className={totalProfitTone}>{money(pnl?.totalProfit)}</dd>
+            <dt>평균 익절률(Avg TP)</dt>
+            <dd>{`${formatNumber(summary?.averageTakeProfitRate, 3)}%`}</dd>
+            <dt>평균 손절률(Avg SL)</dt>
+            <dd className="tone-negative">{`${formatNumber(summary?.averageStopLossRate, 3)}%`}</dd>
+            <dt>최근 범위(Range)</dt>
+            <dd>{summary ? `${formatDateTime(summary.from)} - ${formatDateTime(summary.to)}` : '-'}</dd>
+          </dl>
+        </article>
+
         <article className="panel chart-panel">
           <div className="panel-title-row">
             <h2>24시간 신호 분포(24h Signals)</h2>
@@ -121,19 +191,24 @@ export function DashboardPage() {
 
         <article className="panel">
           <div className="panel-title-row">
-            <h2>손익 요약(PnL Summary)</h2>
-            {totalProfit >= 0 ? <TrendingUp className="tone-positive" size={22} /> : <TrendingDown className="tone-negative" size={22} />}
+            <h2>손실 점검(Loss Review)</h2>
+            <Badge tone={losses?.worstTrades.length ? 'warn' : 'good'}>
+              {losses?.worstTrades.length ? '점검 필요(Review)' : '손실 없음(No losses)'}
+            </Badge>
           </div>
-          <dl className="definition-list">
-            <dt>총 손익(Total)</dt>
-            <dd className={totalProfitTone}>{money(pnl?.totalProfit)}</dd>
-            <dt>평균 익절률(Avg TP)</dt>
-            <dd>{`${formatNumber(summary?.averageTakeProfitRate, 3)}%`}</dd>
-            <dt>평균 손절률(Avg SL)</dt>
-            <dd className="tone-negative">{`${formatNumber(summary?.averageStopLossRate, 3)}%`}</dd>
-            <dt>최근 범위(Range)</dt>
-            <dd>{summary ? `${formatDateTime(summary.from)} - ${formatDateTime(summary.to)}` : '-'}</dd>
-          </dl>
+          {losses?.worstTrades.length ? (
+            <div className="loss-list">
+              {losses.worstTrades.slice(0, 4).map((trade) => (
+                <div key={`${trade.market}-${trade.createdAt}`} className="loss-item">
+                  <strong>{trade.market}</strong>
+                  <span className="tone-negative">{formatNumber(trade.rate, 3)}%</span>
+                  <small>{formatDateTime(trade.createdAt)}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>최근 24시간 손실 매도 기록이 없습니다(No recent loss sells).</p>
+          )}
         </article>
 
         <article className="panel">
@@ -145,22 +220,18 @@ export function DashboardPage() {
         </article>
 
         <article className="panel">
-          <h2>스케줄러(Schedulers)</h2>
+          <h2>운영 제약(Controls)</h2>
           <dl className="definition-list">
-            <dt>전략 스케줄러(Trading Scheduler)</dt>
-            <dd>{data.scheduler.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
-            <dt>후보 스케줄러(Candidate Scheduler)</dt>
-            <dd>{data.scheduler.candidateEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
-            <dt>후보 거래소(Candidate exchange)</dt>
-            <dd>{exchangeList(data.scheduler.candidateExchanges, data.scheduler.candidateExchange)}</dd>
-            <dt>청산 스케줄러(Exit Scheduler)</dt>
-            <dd>{data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
-            <dt>청산 거래소(Exit exchange)</dt>
-            <dd>{exchangeList(data.scheduler.exitExchanges, data.scheduler.exitExchange)}</dd>
-            <dt>청산 대상(Exit positions)</dt>
-            <dd>{data.scheduler.exitPositionMarketCount}</dd>
-            <dt>후보 마켓(Candidate markets)</dt>
-            <dd>{marketSummary(data.scheduler.candidateMarkets, exchange)}</dd>
+            <dt>전략(Strategy)</dt>
+            <dd>{data.strategy.strategyName}</dd>
+            <dt>1회 거래(Order)</dt>
+            <dd>{`${formatNumber(data.strategy.orderAmount, currency === 'USDT' ? 2 : 0)} ${currency}`}</dd>
+            <dt>최대 주문(Max order)</dt>
+            <dd>{money(data.risk.maxOrderAmount)}</dd>
+            <dt>허용 마켓(Allowed)</dt>
+            <dd>{marketSummary(data.risk.allowedMarkets, exchange)}</dd>
+            <dt>수동 PAPER(Manual)</dt>
+            <dd>{data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'}</dd>
           </dl>
         </article>
 
@@ -190,29 +261,26 @@ export function DashboardPage() {
           </dl>
         </article>
 
-        <article className="panel">
-          <div className="panel-title-row">
-            <h2>손실 점검(Loss Review)</h2>
-            <Badge tone={losses?.worstTrades.length ? 'warn' : 'good'}>
-              {losses?.worstTrades.length ? '점검 필요(Review)' : '손실 없음(No losses)'}
-            </Badge>
-          </div>
-          {losses?.worstTrades.length ? (
-            <div className="loss-list">
-              {losses.worstTrades.slice(0, 4).map((trade) => (
-                <div key={`${trade.market}-${trade.createdAt}`} className="loss-item">
-                  <strong>{trade.market}</strong>
-                  <span className="tone-negative">{formatNumber(trade.rate, 3)}%</span>
-                  <small>{formatDateTime(trade.createdAt)}</small>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>최근 24시간 손실 매도 기록이 없습니다(No recent loss sells).</p>
-          )}
-        </article>
       </div>
     </section>
+  );
+}
+
+function OperationCheck({
+  label,
+  value,
+  good,
+}: {
+  label: string;
+  value: string;
+  good: boolean;
+}) {
+  return (
+    <div className={`operation-check ${good ? 'operation-check-good' : 'operation-check-bad'}`}>
+      {good ? <CheckCircle2 size={17} /> : <ShieldX size={17} />}
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
@@ -252,4 +320,29 @@ function marketSummary(markets: string[], exchange: string) {
 
 function exchangeList(exchanges: string[] | undefined, fallback: string) {
   return exchanges && exchanges.length > 0 ? exchanges.join(', ') : fallback;
+}
+
+function readinessMessage({
+  databaseConnected,
+  priceReady,
+  candidateEnabled,
+  exitEnabled,
+  killSwitchEnabled,
+}: {
+  databaseConnected: boolean;
+  priceReady: boolean;
+  candidateEnabled: boolean;
+  exitEnabled: boolean;
+  killSwitchEnabled: boolean;
+}) {
+  if (killSwitchEnabled) {
+    return 'Kill switch가 켜져 있어 자동 PAPER 흐름이 차단됩니다.';
+  }
+  const missing = [
+    !databaseConnected ? 'DB' : null,
+    !priceReady ? '시세' : null,
+    !candidateEnabled ? '후보 스케줄러' : null,
+    !exitEnabled ? '청산 스케줄러' : null,
+  ].filter(Boolean);
+  return `${missing.join(', ')} 상태를 확인해야 합니다.`;
 }

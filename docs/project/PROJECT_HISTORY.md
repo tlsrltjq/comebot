@@ -78,6 +78,7 @@
 74. 후보 화면 SELECTED/SKIPPED 요약과 제외 사유 TOP 5 UX 구현
 75. 미사용 거래 모드 코드와 중복 계획 문서 정리
 76. 운영 상태 화면과 Telegram 용어 정리
+77. Dashboard 운영 준비 상태 중심 UX 개선
 
 ## 최근 검증
 

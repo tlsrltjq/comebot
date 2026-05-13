@@ -155,6 +155,10 @@ button:disabled {
   gap: 10px;
 }
 
+.dashboard-status-strip {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .status-pill {
   min-height: 54px;
   border: 1px solid #dbe3ea;
@@ -191,6 +195,103 @@ button:disabled {
 
 .status-pill-bad {
   border-color: #f2c7be;
+}
+
+.operations-overview {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.4fr);
+  gap: 18px;
+  align-items: stretch;
+  padding: 18px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.operations-overview-good {
+  border-color: #bfe8d7;
+}
+
+.operations-overview-warn {
+  border-color: #f5d782;
+}
+
+.operations-overview-bad {
+  border-color: #f2c7be;
+}
+
+.operations-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  color: #25333d;
+}
+
+.operations-summary div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.operations-summary span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.operations-summary strong {
+  font-size: 26px;
+  overflow-wrap: anywhere;
+}
+
+.operations-summary p {
+  margin: 0;
+  color: #60717f;
+}
+
+.operations-summary svg {
+  flex: 0 0 auto;
+}
+
+.readiness-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.operation-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.operation-check svg {
+  grid-row: 1 / span 2;
+  margin-top: 2px;
+}
+
+.operation-check span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.operation-check strong {
+  color: #25333d;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.operation-check-good svg {
+  color: #116149;
+}
+
+.operation-check-bad svg {
+  color: #bd3d2f;
 }
 
 .metric-card,
@@ -1034,7 +1135,9 @@ td:nth-child(7) {
   .portfolio-chart-grid,
   .portfolio-overview,
   .leader-grid,
-  .status-strip {
+  .status-strip,
+  .operations-overview,
+  .readiness-list {
     grid-template-columns: 1fr;
   }
 
