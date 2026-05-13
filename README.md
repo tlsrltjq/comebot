@@ -285,6 +285,7 @@ gradlew.bat test
 
 The test suite includes security lint checks.
 If tests or security lint fail, do not commit.
+Security lint scans backend, frontend source, docs, scripts, env examples, and compose files for hardcoded secrets, exchange auth config, sensitive logs, and `REAL_TRADING` implementation.
 
 Frontend:
 

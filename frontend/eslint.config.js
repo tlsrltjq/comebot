@@ -7,12 +7,20 @@ const restrictedSecretNames = [
   'accessKey',
   'accessToken',
   'apiKey',
+  'apiSecret',
+  'authToken',
+  'binanceApiKey',
+  'binanceSecretKey',
   'botToken',
   'chatId',
+  'clientSecret',
   'password',
+  'privateKey',
   'secret',
   'secretKey',
   'token',
+  'upbitAccessKey',
+  'upbitSecretKey',
 ];
 
 export default tseslint.config(
@@ -95,6 +103,14 @@ export default tseslint.config(
         {
           selector: 'TemplateElement[value.raw=/\\/api\\/portfolio\\/positions\\/(buy|buy-selected|manual-buy)/]',
           message: 'The web UI must not add manual BUY endpoints.',
+        },
+        {
+          selector: 'Literal[value=/\\/api\\/(orders|exchange-orders|real-orders|upbit\\/orders|binance\\/orders)/]',
+          message: 'The web UI must not add real order endpoints.',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/\\/api\\/(orders|exchange-orders|real-orders|upbit\\/orders|binance\\/orders)/]',
+          message: 'The web UI must not add real order endpoints.',
         },
       ],
     },

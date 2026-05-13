@@ -21,8 +21,20 @@
 - Telegram Bot Token 형식 문자열이 추적 파일에 없는지
 - private key, access key 형태 문자열이 없는지
 - 로그에 token, chatId, password, secret, accessKey를 직접 출력하지 않는지
-- Upbit 인증키 설정이 추가되지 않았는지
+- Upbit/Binance 인증키 설정이 추가되지 않았는지
 - `REAL_TRADING` 구현체가 추가되지 않았는지
+
+스캔 범위에는 backend main source/resources, frontend source, scripts, docs, README, AGENTS, `.env.example`, `docker-compose.yml`이 포함된다.
+
+프론트 ESLint는 다음을 막는다:
+
+- API client 외부 직접 `fetch`
+- `localStorage`, `sessionStorage` 저장
+- `REAL_TRADING` 노출
+- candidate/trading-flow 실행 endpoint 호출
+- 수동 BUY endpoint 추가
+- real order endpoint 추가
+- access key, secret, token, password, chat id 계열 identifier 추가
 
 ## 실패 처리
 

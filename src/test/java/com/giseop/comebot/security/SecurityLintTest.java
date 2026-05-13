@@ -19,6 +19,8 @@ class SecurityLintTest {
     private static final List<Path> SCAN_ROOTS = List.of(
             ROOT.resolve("src/main/java"),
             ROOT.resolve("src/main/resources"),
+            ROOT.resolve("frontend/src"),
+            ROOT.resolve("frontend/eslint.config.js"),
             ROOT.resolve("scripts"),
             ROOT.resolve("docs"),
             ROOT.resolve("README.md"),
@@ -30,7 +32,7 @@ class SecurityLintTest {
     private static final Pattern TELEGRAM_BOT_TOKEN = Pattern.compile("\\b\\d{6,}:[A-Za-z0-9_-]{20,}\\b");
     private static final Pattern AWS_ACCESS_KEY = Pattern.compile("\\bAKIA[0-9A-Z]{16}\\b");
     private static final Pattern PRIVATE_KEY_HEADER = Pattern.compile("-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----");
-    private static final Pattern UPBIT_ACCESS_KEY_ASSIGNMENT = Pattern.compile("(?i)(upbit|access)[._-]?(key|token)[ \\t]*=[ \\t]*[^$\\s][^\\r\\n]*");
+    private static final Pattern EXCHANGE_ACCESS_KEY_ASSIGNMENT = Pattern.compile("(?i)(upbit|binance|access|api)[._-]?(key|token)[ \\t]*=[ \\t]*[^$\\s][^\\r\\n]*");
     private static final Pattern SECRET_ASSIGNMENT = Pattern.compile("(?i)(secret|password|bot[-_]?token|chat[-_]?id)[ \\t]*=[ \\t]*[^$\\s][^\\r\\n]*");
 
     @Test
@@ -63,7 +65,7 @@ class SecurityLintTest {
 
             if (!normalizedPath.endsWith(".env.example") && !normalizedPath.endsWith(".java")) {
                 addIfMatches(violations, normalizedPath, "hardcoded sensitive assignment", SECRET_ASSIGNMENT, content);
-                addIfMatches(violations, normalizedPath, "hardcoded Upbit key assignment", UPBIT_ACCESS_KEY_ASSIGNMENT, content);
+                addIfMatches(violations, normalizedPath, "hardcoded exchange key assignment", EXCHANGE_ACCESS_KEY_ASSIGNMENT, content);
             }
         }
 
@@ -158,7 +160,7 @@ class SecurityLintTest {
     }
 
     @Test
-    void upbitAuthenticationConfigurationMustNotBeAdded() throws IOException {
+    void exchangeAuthenticationConfigurationMustNotBeAdded() throws IOException {
         List<String> violations = new ArrayList<>();
 
         for (Path file : trackedTextFiles()) {
@@ -168,7 +170,14 @@ class SecurityLintTest {
             if (content.contains("upbit_access_key")
                     || content.contains("upbit_secret_key")
                     || content.contains("upbit.access-key")
-                    || content.contains("upbit.secret-key")) {
+                    || content.contains("upbit.secret-key")
+                    || content.contains("upbit.api-key")
+                    || content.contains("binance_access_key")
+                    || content.contains("binance_secret_key")
+                    || content.contains("binance_api_key")
+                    || content.contains("binance.access-key")
+                    || content.contains("binance.secret-key")
+                    || content.contains("binance.api-key")) {
                 violations.add(normalizedPath);
             }
         }
@@ -214,6 +223,9 @@ class SecurityLintTest {
                 || fileName.endsWith(".md")
                 || fileName.endsWith(".yml")
                 || fileName.endsWith(".yaml")
+                || fileName.endsWith(".js")
+                || fileName.endsWith(".ts")
+                || fileName.endsWith(".tsx")
                 || fileName.endsWith(".bat")
                 || fileName.equals(".env.example")
                 || fileName.equals("docker-compose.yml")
