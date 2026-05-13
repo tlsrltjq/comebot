@@ -78,6 +78,12 @@ Run with Upbit public ticker data and PAPER_TRADING:
 scripts\run-upbit-paper.bat
 ```
 
+Run with Upbit public ticker data, PAPER_TRADING, and JPA history/portfolio storage:
+
+```bash
+scripts/run-upbit-paper-jpa.sh
+```
+
 Run the web UI:
 
 ```bat
@@ -163,6 +169,7 @@ Use `.env` or environment variables.
 ```properties
 MARKET_PRICE_PROVIDER=UPBIT
 HISTORY_STORAGE_TYPE=IN_MEMORY
+PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY
 PAPER_INITIAL_CASH=1000000
 TRADING_ALLOWED_MARKETS=ALL_KRW
 TRADING_MAX_ORDER_AMOUNT=100000
@@ -188,6 +195,14 @@ TRADING_SCHEDULER_FIXED_DELAY_MS=30000
 TRADING_SCHEDULER_MARKETS=ALL_KRW
 TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=30000
 TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW
+```
+
+For long-running PAPER data accumulation, use:
+
+```properties
+HISTORY_STORAGE_TYPE=JPA
+PAPER_PORTFOLIO_STORAGE_TYPE=JPA
+TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE=JPA
 ```
 
 Telegram:

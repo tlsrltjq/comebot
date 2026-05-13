@@ -17,44 +17,31 @@
 - 운영 상태 화면과 Telegram 용어 정리 완료
 - Dashboard 운영 준비 상태 중심 UX 개선 완료
 - Trade 자동매매 제어 UX 정리 완료
+- JPA PAPER 누적 실행 스크립트와 확인 절차 정리 완료
+- JPA PAPER 누적 데이터 스냅샷 기록 완료
 
-## 다음 우선순위: JPA PAPER 데이터 누적 운영
+## 다음 우선순위: market별 쏠림 리스크 기준 문서화
 
 목표:
 
-- JPA history/portfolio 저장소로 며칠 이상 PAPER 운용 데이터를 쌓는다.
-- market별 쏠림 리스크 기준을 확정하기 전에 원자료를 확보한다.
+- JPA PAPER 데이터 스냅샷을 기준으로 market별 쏠림 리스크 기준을 문서화한다.
+- 단일 market 비중 경고/차단 기준과 반복 손절 market 제한 기준을 분리한다.
 - 기본 거래 모드는 계속 `PAPER_TRADING`으로 유지한다.
 - 실제 주문 API와 `REAL_TRADING`은 추가하지 않는다.
 
 작업:
 
-- 로컬/운영 `.env`에서 `HISTORY_STORAGE_TYPE=JPA`, `PAPER_PORTFOLIO_STORAGE_TYPE=JPA` 사용 여부를 확인한다.
-- JPA 저장소로 실행한 PAPER history, portfolio valuation, position exposure를 점검한다.
-- 충분한 데이터가 쌓이면 condition-records에 기준 산정 문서를 추가한다.
-- 기준 확정 전까지 market별 쏠림 제한 로직은 보류한다.
+- `docs/trading/condition-records/2026-05-13-jpa-paper-data-snapshot.md`의 노출/손절 데이터를 기준으로 초기 threshold를 정한다.
+- UPBIT과 BINANCE의 초기 현금과 market universe 차이를 반영한다.
+- 기준은 먼저 `docs/trading/RISK_POLICY.md`에 문서화한다.
+- 구현은 문서 기준 확정 후 별도 작업으로 진행한다.
 
 완료 기준:
 
-- JPA 저장소에 PAPER 실행 이력과 포트폴리오 상태가 누적된다.
-- 하루 이상 데이터가 유지되는지 재시작 후 확인한다.
-- market별 exposure와 반복 손절 후보를 확인할 수 있다.
-- 다음 기준 문서화 작업에 사용할 원자료 위치가 명확하다.
-
-## 보류: market별 쏠림 리스크 기준
-
-현재 문서화된 PAPER 기록만으로 초기 기준은 잡을 수 있지만, 장기 기준은 JPA history/portfolio 데이터를 더 쌓은 뒤 확정한다.
-
-보류 사유:
-
-- 현재 `.env` 기본값은 `HISTORY_STORAGE_TYPE=IN_MEMORY`, `PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY`라 장기 원자료가 충분하지 않다.
-- 2026-05-06 기록 기준 단일 market TOP exposure는 7.06%로, 10% 초과 쏠림 사례가 아직 없다.
-
-재개 조건:
-
-- JPA history/portfolio로 며칠 이상 PAPER 운용 데이터를 누적한다.
-- 단일 market 10% 초과 또는 반복 손절 market이 관찰된다.
-- 기준 확정 시 `docs/trading/RISK_POLICY.md`와 `docs/trading/condition-records/`를 함께 갱신한다.
+- 단일 market 비중 경고/차단 기준이 명확하다.
+- 반복 손절 market 제한 기준이 명확하다.
+- `RISK_POLICY.md`와 condition record가 같은 기준을 설명한다.
+- 아직 코드 제한을 추가하지 않는다는 범위가 명확하다.
 
 ## 보류: 실제 주문 API
 

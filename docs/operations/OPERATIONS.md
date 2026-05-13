@@ -20,6 +20,15 @@ Upbit PAPER 실행:
 scripts\run-upbit-paper.bat
 ```
 
+Upbit PAPER JPA 누적 실행:
+
+```bash
+scripts/run-upbit-paper-jpa.sh
+```
+
+이 스크립트는 PostgreSQL을 시작하고 `schema.sql`을 적용한 뒤 `HISTORY_STORAGE_TYPE=JPA`, `PAPER_PORTFOLIO_STORAGE_TYPE=JPA`로 앱을 실행한다.
+실제 주문 API와 `REAL_TRADING`은 사용하지 않는다.
+
 Binance PAPER 후보 스모크 테스트 절차:
 
 - `docs/operations/BINANCE_PAPER_SMOKE_TEST.md`
@@ -121,6 +130,12 @@ JPA 저장소 사용 전:
 scripts\apply-schema.bat
 ```
 
+macOS/Linux:
+
+```bash
+scripts/apply-schema.sh
+```
+
 `schema.sql`은 다음 PAPER 저장 테이블도 생성한다.
 
 - `trading_flow_history`: 거래소별 자동 실행 이력
@@ -128,3 +143,38 @@ scripts\apply-schema.bat
 - `paper_position`: 거래소별 PAPER 보유 포지션
 - `paper_realized_profit_event`: 거래소별 실현손익 이벤트
 - `scheduler_control_setting`: 자동매매 켜기/끄기와 후보 조회 주기
+
+## JPA PAPER 누적 확인
+
+장기 PAPER 운용 전 현재 `.env`에서 storage type을 확인한다. 민감 정보는 출력하지 않는다.
+
+```bash
+awk -F= '/^(HISTORY_STORAGE_TYPE|PAPER_PORTFOLIO_STORAGE_TYPE|TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE)=/ {print $1"="$2}' .env
+```
+
+권장 누적값:
+
+```properties
+HISTORY_STORAGE_TYPE=JPA
+PAPER_PORTFOLIO_STORAGE_TYPE=JPA
+TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE=JPA
+```
+
+운용 중 확인 API:
+
+```http
+GET /api/trading-flow/history?exchange=upbit&limit=20
+GET /api/portfolio/valuation?exchange=upbit
+GET /api/analytics/pnl?exchange=upbit&range=24h
+GET /api/analytics/losses?exchange=upbit&range=24h
+```
+
+DB 누적 확인:
+
+```sql
+SELECT exchange, COUNT(*) FROM trading_flow_history GROUP BY exchange;
+SELECT exchange, COUNT(*) FROM paper_position WHERE quantity > 0 GROUP BY exchange;
+SELECT exchange, cash, realized_profit FROM paper_portfolio_state ORDER BY exchange;
+```
+
+재시작 후 같은 API와 SQL 결과가 유지되면 JPA 누적 조건을 만족한다.

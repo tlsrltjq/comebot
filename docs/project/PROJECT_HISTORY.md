@@ -80,6 +80,8 @@
 76. 운영 상태 화면과 Telegram 용어 정리
 77. Dashboard 운영 준비 상태 중심 UX 개선
 78. Trade 자동매매 제어 UX 정리
+79. JPA PAPER 누적 실행 스크립트와 확인 절차 정리
+80. JPA PAPER 누적 데이터 스냅샷 기록
 
 ## 최근 검증
 
