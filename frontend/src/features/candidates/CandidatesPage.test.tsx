@@ -39,6 +39,8 @@ describe('CandidatesPage', () => {
               market: 'KRW-BTC',
               decision: 'SELECTED',
               reason: 'Volatility long candidate selected',
+              reasonType: 'SELECTED',
+              riskReasonType: 'NONE',
               currentPrice: '90000000',
               priceChangeRate: '2.1',
               highLowRangeRate: '4.2',
@@ -50,6 +52,8 @@ describe('CandidatesPage', () => {
               market: 'KRW-ETH',
               decision: 'SKIPPED',
               reason: 'Trend is not UP',
+              reasonType: 'TREND_NOT_UP',
+              riskReasonType: 'NONE',
               currentPrice: '2500000',
               priceChangeRate: '-0.4',
               highLowRangeRate: '2.2',
@@ -61,6 +65,8 @@ describe('CandidatesPage', () => {
               market: 'KRW-XRP',
               decision: 'SKIPPED',
               reason: 'Market concentration exceeds block exposure rate: market=KRW-XRP exposure=10% limit=10%',
+              reasonType: 'CONCENTRATION_RISK',
+              riskReasonType: 'CONCENTRATION',
               currentPrice: '800',
               priceChangeRate: '0.1',
               highLowRangeRate: '1.2',
@@ -110,13 +116,13 @@ describe('CandidatesPage', () => {
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
   });
 
-  it('shows the backend not implemented response for Binance mode', async () => {
-    const fetchMock = vi.fn(async () => new Response('Binance exchange mode is not implemented yet', { status: 501 }));
+  it('shows backend errors for Binance mode', async () => {
+    const fetchMock = vi.fn(async () => new Response('Binance candidate scan failed', { status: 500 }));
     vi.stubGlobal('fetch', fetchMock);
 
     renderWithClient('BINANCE');
 
-    expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent('Binance exchange mode is not implemented yet');
+    expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent('Binance candidate scan failed');
     expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=binance', expect.anything());
   });
 });

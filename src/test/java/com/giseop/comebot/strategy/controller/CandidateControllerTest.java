@@ -51,9 +51,13 @@ class CandidateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].market").value("KRW-BTC"))
                 .andExpect(jsonPath("$[0].decision").value("SELECTED"))
+                .andExpect(jsonPath("$[0].reasonType").value("SELECTED"))
+                .andExpect(jsonPath("$[0].riskReasonType").value("NONE"))
                 .andExpect(jsonPath("$[0].trend").value("UP"))
                 .andExpect(jsonPath("$[1].market").value("KRW-ETH"))
-                .andExpect(jsonPath("$[1].decision").value("SKIPPED"));
+                .andExpect(jsonPath("$[1].decision").value("SKIPPED"))
+                .andExpect(jsonPath("$[1].reasonType").value("TREND_NOT_UP"))
+                .andExpect(jsonPath("$[1].riskReasonType").value("NONE"));
     }
 
     @Test
@@ -158,11 +162,40 @@ class CandidateControllerTest {
                 .andExpect(content().string(not(containsString("secret"))));
     }
 
+    @Test
+    void responseClassifiesRiskReasonWithoutParsingOnClient() throws Exception {
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
+                riskCandidate("KRW-XRP", "Market concentration exceeds block exposure rate: market=KRW-XRP exposure=10% limit=10%"),
+                riskCandidate("KRW-ETH", "Stop loss cooldown active: market=KRW-ETH stopLossCount=2 cooldownUntil=2026-05-13T00:00:00Z")
+        ));
+
+        mockMvc.perform(get("/api/candidates"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].reasonType").value("CONCENTRATION_RISK"))
+                .andExpect(jsonPath("$[0].riskReasonType").value("CONCENTRATION"))
+                .andExpect(jsonPath("$[1].reasonType").value("STOP_LOSS_COOLDOWN"))
+                .andExpect(jsonPath("$[1].riskReasonType").value("STOP_LOSS_COOLDOWN"));
+    }
+
     private TradingCandidate candidate(String market, CandidateDecision decision) {
         return new TradingCandidate(
                 market,
                 decision,
                 decision == CandidateDecision.SELECTED ? "Volatility long candidate selected" : "Trend is not UP",
+                new BigDecimal("100"),
+                new BigDecimal("2.5"),
+                new BigDecimal("5.0"),
+                new BigDecimal("10.0"),
+                MarketTrend.UP,
+                Instant.parse("2026-04-30T00:00:00Z")
+        );
+    }
+
+    private TradingCandidate riskCandidate(String market, String reason) {
+        return new TradingCandidate(
+                market,
+                CandidateDecision.SKIPPED,
+                reason,
                 new BigDecimal("100"),
                 new BigDecimal("2.5"),
                 new BigDecimal("5.0"),

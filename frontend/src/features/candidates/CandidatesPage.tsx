@@ -148,7 +148,7 @@ export function CandidatesPage() {
                     <Badge tone={positionMarkets.has(candidate.market) ? 'info' : 'neutral'}>
                       {positionMarkets.has(candidate.market) ? '보유(Held)' : '없음(None)'}
                     </Badge>
-                    <RiskReasonBadge reason={candidate.reason} />
+                    <RiskReasonBadge reasonType={candidate.riskReasonType} />
                   </div>
                 </td>
                 <td>{candidate.reason}</td>
@@ -192,11 +192,11 @@ function summarizeSkippedReasons(candidates: TradingCandidateResponse[]) {
 function summarizeRiskReasons(candidates: TradingCandidateResponse[]) {
   return candidates.reduce(
     (summary, candidate) => {
-      const type = riskReasonType(candidate.reason);
-      if (type === 'concentration') {
+      const type = candidate.riskReasonType ?? 'NONE';
+      if (type === 'CONCENTRATION') {
         return { ...summary, total: summary.total + 1, concentration: summary.concentration + 1 };
       }
-      if (type === 'cooldown') {
+      if (type === 'STOP_LOSS_COOLDOWN') {
         return { ...summary, total: summary.total + 1, cooldown: summary.cooldown + 1 };
       }
       return summary;
@@ -205,23 +205,11 @@ function summarizeRiskReasons(candidates: TradingCandidateResponse[]) {
   );
 }
 
-function riskReasonType(reason: string) {
-  const normalized = reason.toLowerCase();
-  if (normalized.includes('concentration')) {
-    return 'concentration';
-  }
-  if (normalized.includes('cooldown')) {
-    return 'cooldown';
-  }
-  return 'none';
-}
-
-function RiskReasonBadge({ reason }: { reason: string }) {
-  const type = riskReasonType(reason);
-  if (type === 'concentration') {
+function RiskReasonBadge({ reasonType }: { reasonType?: TradingCandidateResponse['riskReasonType'] }) {
+  if (reasonType === 'CONCENTRATION') {
     return <Badge tone="warn">쏠림(Concentration)</Badge>;
   }
-  if (type === 'cooldown') {
+  if (reasonType === 'STOP_LOSS_COOLDOWN') {
     return <Badge tone="warn">Cooldown</Badge>;
   }
   return null;

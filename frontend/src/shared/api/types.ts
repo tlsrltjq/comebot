@@ -1,6 +1,19 @@
 export type SignalType = 'BUY' | 'SELL' | 'HOLD';
 export type OrderStatus = 'FILLED' | 'REJECTED' | 'FAILED';
 export type CandidateDecision = 'SELECTED' | 'SKIPPED';
+export type CandidateReasonType =
+  | 'SELECTED'
+  | 'TREND_NOT_UP'
+  | 'PRICE_CHANGE_BELOW_THRESHOLD'
+  | 'TRADE_AMOUNT_CHANGE_BELOW_THRESHOLD'
+  | 'PRICE_CHANGE_OVERHEATED'
+  | 'HIGH_LOW_RANGE_OVERHEATED'
+  | 'NOT_ENOUGH_VALID_TRADE_AMOUNT'
+  | 'SCAN_FAILED'
+  | 'CONCENTRATION_RISK'
+  | 'STOP_LOSS_COOLDOWN'
+  | 'OTHER';
+export type CandidateRiskReasonType = 'NONE' | 'CONCENTRATION' | 'STOP_LOSS_COOLDOWN';
 export type MarketTrend = 'UP' | 'DOWN' | 'SIDEWAYS';
 export type AnalyticsRange = '1h' | '24h' | '3d' | '7d';
 export type BtcChangeRange = '1h' | '24h' | '3d' | '7d';
@@ -69,6 +82,8 @@ export interface TradingCandidateResponse {
   tradeAmountChangeRate: string | null;
   trend: MarketTrend | null;
   scannedAt: string;
+  reasonType?: CandidateReasonType;
+  riskReasonType?: CandidateRiskReasonType;
 }
 
 export interface PortfolioStatusResponse {
