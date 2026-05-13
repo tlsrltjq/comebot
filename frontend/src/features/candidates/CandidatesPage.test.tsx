@@ -60,7 +60,7 @@ describe('CandidatesPage', () => {
             {
               market: 'KRW-XRP',
               decision: 'SKIPPED',
-              reason: 'Trend is not UP',
+              reason: 'Market concentration exceeds block exposure rate: market=KRW-XRP exposure=10% limit=10%',
               currentPrice: '800',
               priceChangeRate: '0.1',
               highLowRangeRate: '1.2',
@@ -90,8 +90,12 @@ describe('CandidatesPage', () => {
     expect(screen.getByText('선택됨(Selected)')).toBeInTheDocument();
     expect(screen.getByText('제외됨(Skipped)')).toBeInTheDocument();
     expect(screen.getByText('보유 포지션(Held)')).toBeInTheDocument();
+    expect(screen.getByText('리스크 경고(Risk)')).toBeInTheDocument();
+    expect(screen.getByText('쏠림 1 / cooldown 0')).toBeInTheDocument();
     expect(screen.getByText('제외 사유 TOP 5(Skipped Reasons)')).toBeInTheDocument();
     expect(screen.getAllByText('Trend is not UP').length).toBeGreaterThan(0);
+    expect(screen.getByText('쏠림(Concentration)')).toBeInTheDocument();
+    expect(screen.getByText('RISK 1')).toBeInTheDocument();
     expect(screen.getByText('보유(Held)')).toBeInTheDocument();
     expect(screen.getAllByText('없음(None)').length).toBeGreaterThan(0);
     expect(screen.getByText('SELECTED')).toBeInTheDocument();

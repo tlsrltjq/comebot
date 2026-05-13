@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { Bot, CheckCircle2, Database, MonitorCog, Radio, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
+import { Bot, CheckCircle2, Database, MonitorCog, Radio, ShieldAlert, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
@@ -40,6 +40,11 @@ export function DashboardPage() {
     queryKey: queryKeys.analyticsLosses(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsLosses(DASHBOARD_RANGE, exchange),
     refetchInterval: LIVE_REFRESH_MS,
+  });
+  const riskQuery = useQuery({
+    queryKey: queryKeys.riskStatus(exchange),
+    queryFn: () => api.riskStatus(exchange),
+    refetchInterval: 5_000,
   });
   const { data, error, isLoading, isFetching, dataUpdatedAt } = systemQuery;
 
@@ -83,6 +88,8 @@ export function DashboardPage() {
         killSwitchEnabled: data.safety.killSwitchEnabled,
       });
   const osGuide = operatingSystemGuide(detectOperatingSystem());
+  const concentration = riskQuery.data?.concentration;
+  const stopLossCooldown = riskQuery.data?.stopLossCooldown;
 
   return (
     <section className="page">
@@ -234,6 +241,23 @@ export function DashboardPage() {
             <dd>{marketSummary(data.risk.allowedMarkets, exchange)}</dd>
             <dt>수동 PAPER(Manual)</dt>
             <dd>{data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'}</dd>
+          </dl>
+        </article>
+
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>리스크 경고(Risk Warnings)</h2>
+            <ShieldAlert size={20} />
+          </div>
+          <dl className="definition-list">
+            <dt>쏠림 차단(Concentration)</dt>
+            <dd>{concentration ? `${concentration.exchange} ${formatNumber(concentration.warningExposureRate, 0)}% / ${formatNumber(concentration.blockExposureRate, 0)}%` : '-'}</dd>
+            <dt>쏠림 적용(Guard)</dt>
+            <dd>{concentration?.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
+            <dt>손절 cooldown</dt>
+            <dd>{stopLossCooldown?.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
+            <dt>cooldown 기준</dt>
+            <dd>{stopLossCooldown ? `${stopLossCooldown.window} / ${stopLossCooldown.triggerCount}회 / ${stopLossCooldown.duration}` : '-'}</dd>
           </dl>
         </article>
 

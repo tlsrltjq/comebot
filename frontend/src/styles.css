@@ -666,6 +666,12 @@ button:disabled {
   gap: 8px;
 }
 
+.candidate-badge-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .segmented-row {
   display: flex;
   flex-wrap: wrap;

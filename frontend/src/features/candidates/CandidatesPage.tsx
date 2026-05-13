@@ -41,6 +41,7 @@ export function CandidatesPage() {
     [positionsQuery.data],
   );
   const candidateSummary = useMemo(() => summarizeCandidates(candidates, positionMarkets), [candidates, positionMarkets]);
+  const riskSummary = useMemo(() => summarizeRiskReasons(candidates), [candidates]);
   const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
 
   return (
@@ -58,6 +59,7 @@ export function CandidatesPage() {
         <MetricCard label="선택됨(Selected)" value={formatNumber(candidateSummary.selected)} detail={`${formatNumber(candidateSummary.selectedRate, 1)}%`} />
         <MetricCard label="제외됨(Skipped)" value={formatNumber(candidateSummary.skipped)} detail={`${formatNumber(candidateSummary.skippedRate, 1)}%`} />
         <MetricCard label="보유 포지션(Held)" value={formatNumber(candidateSummary.held)} detail="후보 market 기준" />
+        <MetricCard label="리스크 경고(Risk)" value={formatNumber(riskSummary.total)} detail={`쏠림 ${formatNumber(riskSummary.concentration)} / cooldown ${formatNumber(riskSummary.cooldown)}`} />
       </div>
 
       <div className="section-grid">
@@ -70,6 +72,7 @@ export function CandidatesPage() {
             <Badge tone="good">SELECTED {candidateSummary.selected}</Badge>
             <Badge tone="neutral">SKIPPED {candidateSummary.skipped}</Badge>
             <Badge tone={candidateSummary.held > 0 ? 'info' : 'neutral'}>HELD {candidateSummary.held}</Badge>
+            <Badge tone={riskSummary.total > 0 ? 'warn' : 'good'}>RISK {riskSummary.total}</Badge>
           </div>
         </article>
         <article className="panel">
@@ -141,9 +144,12 @@ export function CandidatesPage() {
                 <td>{formatNumber(candidate.highLowRangeRate, 2)}%</td>
                 <td>{formatNumber(candidate.tradeAmountChangeRate, 2)}%</td>
                 <td>
-                  <Badge tone={positionMarkets.has(candidate.market) ? 'info' : 'neutral'}>
-                    {positionMarkets.has(candidate.market) ? '보유(Held)' : '없음(None)'}
-                  </Badge>
+                  <div className="candidate-badge-stack">
+                    <Badge tone={positionMarkets.has(candidate.market) ? 'info' : 'neutral'}>
+                      {positionMarkets.has(candidate.market) ? '보유(Held)' : '없음(None)'}
+                    </Badge>
+                    <RiskReasonBadge reason={candidate.reason} />
+                  </div>
                 </td>
                 <td>{candidate.reason}</td>
                 <td>{formatDateTime(candidate.scannedAt)}</td>
@@ -181,4 +187,42 @@ function summarizeSkippedReasons(candidates: TradingCandidateResponse[]) {
     .map(([reason, count]) => ({ reason, count }))
     .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason))
     .slice(0, 5);
+}
+
+function summarizeRiskReasons(candidates: TradingCandidateResponse[]) {
+  return candidates.reduce(
+    (summary, candidate) => {
+      const type = riskReasonType(candidate.reason);
+      if (type === 'concentration') {
+        return { ...summary, total: summary.total + 1, concentration: summary.concentration + 1 };
+      }
+      if (type === 'cooldown') {
+        return { ...summary, total: summary.total + 1, cooldown: summary.cooldown + 1 };
+      }
+      return summary;
+    },
+    { total: 0, concentration: 0, cooldown: 0 },
+  );
+}
+
+function riskReasonType(reason: string) {
+  const normalized = reason.toLowerCase();
+  if (normalized.includes('concentration')) {
+    return 'concentration';
+  }
+  if (normalized.includes('cooldown')) {
+    return 'cooldown';
+  }
+  return 'none';
+}
+
+function RiskReasonBadge({ reason }: { reason: string }) {
+  const type = riskReasonType(reason);
+  if (type === 'concentration') {
+    return <Badge tone="warn">쏠림(Concentration)</Badge>;
+  }
+  if (type === 'cooldown') {
+    return <Badge tone="warn">Cooldown</Badge>;
+  }
+  return null;
 }

@@ -105,6 +105,30 @@ describe('DashboardPage', () => {
           repeatedStopLossMarkets: [],
         });
       }
+      if (url === '/api/risk/status?exchange=upbit') {
+        return json({
+          maxOrderAmount: '100000',
+          allowedMarkets: ['ALL_KRW'],
+          takeProfitRate: '1.5',
+          stopLossRate: '-0.7',
+          positionExitEnabled: true,
+          dailyRiskEnabled: false,
+          dailyOrderLimit: 10,
+          dailyLossLimit: '50000',
+          concentration: {
+            exchange: 'UPBIT',
+            enabled: false,
+            warningExposureRate: '7',
+            blockExposureRate: '10',
+          },
+          stopLossCooldown: {
+            enabled: true,
+            window: 'PT168H',
+            triggerCount: 2,
+            duration: 'PT24H',
+          },
+        });
+      }
       return json({});
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -117,6 +141,9 @@ describe('DashboardPage', () => {
     expect(screen.getByText('후보 스케줄러(Candidate)')).toBeInTheDocument();
     expect(screen.getByText('청산 스케줄러(Exit)')).toBeInTheDocument();
     expect(screen.getByText('운영 제약(Controls)')).toBeInTheDocument();
+    expect(screen.getByText('리스크 경고(Risk Warnings)')).toBeInTheDocument();
+    expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
+    expect(screen.getByText('PT168H / 2회 / PT24H')).toBeInTheDocument();
     expect(screen.getByText('운영 환경(OS Guide)')).toBeInTheDocument();
     expect(screen.getByText('Windows')).toBeInTheDocument();
     expect(screen.getByText('scripts\\run-upbit-paper.bat')).toBeInTheDocument();
