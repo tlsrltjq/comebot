@@ -39,7 +39,7 @@ Binance PAPER 후보 스모크 테스트 절차:
 GET /api/system/status
 GET /api/database/status
 GET /api/market-provider/status
-GET /api/risk/status
+GET /api/risk/status?exchange=upbit
 GET /api/scheduler/status
 ```
 

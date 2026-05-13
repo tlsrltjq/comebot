@@ -103,7 +103,7 @@ GET /api/system/status
 GET /api/database/status
 GET /api/market-provider/status
 GET /api/strategy/status
-GET /api/risk/status
+GET /api/risk/status?exchange=upbit
 ```
 
 Trading flow:

@@ -10,6 +10,7 @@ import type {
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
+  RiskStatusResponse,
   SelectedPaperSellRequest,
   SelectedPaperSellResponse,
   SchedulerControlRequest,
@@ -63,6 +64,8 @@ export const api = {
     request<PositionResponse[]>(`/api/portfolio/positions${query({ exchange: exchangeParam(exchange) })}`),
   portfolioValuation: (exchange: ExchangeMode = 'UPBIT') =>
     request<PortfolioValuationResponse>(`/api/portfolio/valuation${query({ exchange: exchangeParam(exchange) })}`),
+  riskStatus: (exchange: ExchangeMode = 'UPBIT') =>
+    request<RiskStatusResponse>(`/api/risk/status${query({ exchange: exchangeParam(exchange) })}`),
   sellSelectedPositions: (exchange: ExchangeMode = 'UPBIT', body: SelectedPaperSellRequest) =>
     request<SelectedPaperSellResponse>(`/api/portfolio/positions/sell-selected${query({ exchange: exchangeParam(exchange) })}`, {
       method: 'POST',
@@ -88,6 +91,7 @@ export const queryKeys = {
   portfolioStatus: (exchange: ExchangeMode = 'UPBIT') => ['portfolioStatus', exchange] as const,
   positions: (exchange: ExchangeMode = 'UPBIT') => ['positions', exchange] as const,
   portfolioValuation: (exchange: ExchangeMode = 'UPBIT') => ['portfolioValuation', exchange] as const,
+  riskStatus: (exchange: ExchangeMode = 'UPBIT') => ['riskStatus', exchange] as const,
   history: (exchange: ExchangeMode = 'UPBIT', market?: string, limit = 20) => ['history', exchange, market ?? 'all', limit] as const,
   analyticsSummary: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsSummary', exchange, range] as const,
   analyticsPnl: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsPnl', exchange, range] as const,

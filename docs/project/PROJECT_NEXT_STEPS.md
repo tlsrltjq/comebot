@@ -70,7 +70,7 @@
 
 - `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md`
 
-## 다음 우선순위: 쏠림 경고 UI 1차 구현
+## 완료: 쏠림 경고 UI 1차 구현
 
 목표:
 
@@ -89,6 +89,26 @@
 - UPBIT과 BINANCE 기준이 같은 화면에서 섞이지 않는다.
 - `risk.concentration.enabled=false`여도 UI 경고 기준은 운영 참고로 표시된다.
 - SELL, 익절, 손절 흐름은 변경하지 않는다.
+
+## 다음 우선순위: 반복 손절 cooldown 구현
+
+목표:
+
+- 최근 7일 같은 `exchange + market`에서 FILLED Stop loss SELL이 2회 이상 발생한 market의 신규 BUY를 제한한다.
+- 기본값은 비활성화로 두고, SELL/익절/손절/선택 PAPER SELL은 막지 않는다.
+
+작업:
+
+- `risk.stop-loss-cooldown.*` properties를 추가한다.
+- JPA history 기반 cooldown 산정 service를 추가한다.
+- 신규 BUY risk guard에 cooldown 검증을 연결한다.
+- backend 테스트로 BUY 차단, SELL 미차단, 실패/거절 손절 제외를 검증한다.
+
+완료 기준:
+
+- cooldown이 꺼져 있으면 기존 BUY 흐름이 유지된다.
+- cooldown이 켜져 있으면 대상 market 신규 BUY만 거절된다.
+- 문서와 테스트가 7일/2회/24시간 기준을 동일하게 말한다.
 
 ## 보류: 실제 주문 API
 

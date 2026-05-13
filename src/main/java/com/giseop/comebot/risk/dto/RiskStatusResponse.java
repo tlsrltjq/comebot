@@ -11,6 +11,14 @@ public record RiskStatusResponse(
         boolean positionExitEnabled,
         boolean dailyRiskEnabled,
         int dailyOrderLimit,
-        BigDecimal dailyLossLimit
+        BigDecimal dailyLossLimit,
+        ConcentrationStatus concentration
 ) {
+    public record ConcentrationStatus(
+            String exchange,
+            boolean enabled,
+            BigDecimal warningExposureRate,
+            BigDecimal blockExposureRate
+    ) {
+    }
 }

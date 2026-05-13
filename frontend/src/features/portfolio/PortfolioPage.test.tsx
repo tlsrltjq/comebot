@@ -2,9 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ExchangeModeContext } from '../../shared/exchange/ExchangeModeContext';
+import type { ExchangeMode } from '../../shared/api/types';
 import { PortfolioPage } from './PortfolioPage';
 
-function renderWithClient() {
+function renderWithClient(exchange: ExchangeMode = 'UPBIT') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -14,7 +16,9 @@ function renderWithClient() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <PortfolioPage />
+      <ExchangeModeContext.Provider value={{ exchange, setExchange: () => {} }}>
+        <PortfolioPage />
+      </ExchangeModeContext.Provider>
     </QueryClientProvider>,
   );
 }
@@ -92,6 +96,9 @@ describe('PortfolioPage', () => {
           ],
         });
       }
+      if (url === '/api/risk/status?exchange=upbit') {
+        return json(riskStatus('UPBIT', '7', '10'));
+      }
 
       return json([]);
     });
@@ -109,10 +116,12 @@ describe('PortfolioPage', () => {
     expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
     expect(screen.getByText('손익 리더(Profit Leaders)')).toBeInTheDocument();
     expect(screen.getByText('market별 비중(Market Exposure)')).toBeInTheDocument();
+    expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
     expect(screen.getAllByText('현금(Cash)').length).toBeGreaterThan(0);
     expect(screen.getAllByText('포지션(Positions)').length).toBeGreaterThan(0);
     expect(screen.getByText('UPBIT 선택 거래소(Selected exchange)')).toBeInTheDocument();
     expect(screen.getByText('분산 양호(Diversified)')).toBeInTheDocument();
+    expect(screen.getAllByText('OK').length).toBeGreaterThan(0);
     expect(screen.getAllByText('손절권(Stop loss)').length).toBeGreaterThan(0);
     expect(screen.getAllByText('보유(Hold)').length).toBeGreaterThan(0);
     expect(screen.getByLabelText('모바일 포지션 카드(Mobile position cards)')).toBeInTheDocument();
@@ -123,6 +132,106 @@ describe('PortfolioPage', () => {
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
+  });
+
+  it('marks concentrated markets with exchange-specific warning thresholds', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === '/api/portfolio/status?exchange=upbit') {
+        return json({ exchange: 'UPBIT', currency: 'KRW', cash: '890000', realizedProfit: '0' });
+      }
+      if (url === '/api/system/status?exchange=upbit') {
+        return json(systemStatus());
+      }
+      if (url === '/api/portfolio/positions?exchange=upbit') {
+        return json([]);
+      }
+      if (url === '/api/portfolio/valuation?exchange=upbit') {
+        return json({
+          exchange: 'UPBIT',
+          currency: 'KRW',
+          cash: '890000',
+          totalPositionValue: '110000',
+          totalEquity: '1000000',
+          realizedProfit: '0',
+          unrealizedProfit: '0',
+          totalProfit: '0',
+          positions: [
+            {
+              market: 'KRW-BTC',
+              quantity: '0.0011',
+              averageBuyPrice: '100000000',
+              currentPrice: '100000000',
+              positionValue: '110000',
+              unrealizedProfit: '0',
+              unrealizedProfitRate: '0',
+            },
+          ],
+        });
+      }
+      if (url === '/api/risk/status?exchange=upbit') {
+        return json(riskStatus('UPBIT', '7', '10'));
+      }
+
+      return json([]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithClient();
+
+    expect(await screen.findByText('차단 기준(Block)')).toBeInTheDocument();
+    expect(screen.getByText('BLOCK')).toBeInTheDocument();
+    expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
+  });
+
+  it('uses binance concentration thresholds on the portfolio exposure panel', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === '/api/portfolio/status?exchange=binance') {
+        return json({ exchange: 'BINANCE', currency: 'USDT', cash: '700', realizedProfit: '0' });
+      }
+      if (url === '/api/system/status?exchange=binance') {
+        return json(systemStatus());
+      }
+      if (url === '/api/portfolio/positions?exchange=binance') {
+        return json([]);
+      }
+      if (url === '/api/portfolio/valuation?exchange=binance') {
+        return json({
+          exchange: 'BINANCE',
+          currency: 'USDT',
+          cash: '700',
+          totalPositionValue: '300',
+          totalEquity: '1000',
+          realizedProfit: '0',
+          unrealizedProfit: '0',
+          totalProfit: '0',
+          positions: [
+            {
+              market: 'BTCUSDT',
+              quantity: '0.003',
+              averageBuyPrice: '100000',
+              currentPrice: '100000',
+              positionValue: '300',
+              unrealizedProfit: '0',
+              unrealizedProfitRate: '0',
+            },
+          ],
+        });
+      }
+      if (url === '/api/risk/status?exchange=binance') {
+        return json(riskStatus('BINANCE', '25', '40'));
+      }
+
+      return json([]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderWithClient('BINANCE');
+
+    expect(await screen.findByText('쏠림 경고(Warning)')).toBeInTheDocument();
+    expect(screen.getByText('WARN')).toBeInTheDocument();
+    expect(screen.getByText('BINANCE 25% / 40%')).toBeInTheDocument();
   });
 
   it('groups small market allocation slices into other', async () => {
@@ -355,4 +464,50 @@ describe('PortfolioPage', () => {
 
 function json(body: unknown) {
   return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+}
+
+function systemStatus() {
+  return {
+    database: { connected: true },
+    marketProvider: { provider: 'UPBIT', externalProvider: true },
+    strategy: { strategyName: 'VolatilityBreakoutLongStrategy', buyPrice: '90000000', sellPrice: '110000000', orderQuantity: '0.01', orderAmount: '10000' },
+    risk: { maxOrderAmount: '100000', allowedMarkets: ['ALL_KRW'] },
+    scheduler: {
+      enabled: true,
+      fixedDelayMs: 30000,
+      markets: ['ALL_KRW'],
+      candidateEnabled: true,
+      candidateFixedDelayMs: 30000,
+      candidateMarkets: ['ALL_KRW'],
+      candidateNotifySummary: false,
+      candidateExchange: 'UPBIT',
+      exitEnabled: true,
+      exitFixedDelayMs: 5000,
+      exitSaveHoldHistory: false,
+      exitExchange: 'UPBIT',
+      exitPositionMarketCount: 0,
+    },
+    safety: { killSwitchEnabled: false },
+    notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
+    telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
+  };
+}
+
+function riskStatus(exchange: ExchangeMode, warningExposureRate: string, blockExposureRate: string) {
+  return {
+    maxOrderAmount: '100000',
+    allowedMarkets: ['ALL_KRW'],
+    takeProfitRate: '1.5',
+    stopLossRate: '-0.7',
+    positionExitEnabled: true,
+    dailyRiskEnabled: false,
+    dailyOrderLimit: 50,
+    dailyLossLimit: '50000',
+    concentration: {
+      exchange,
+      enabled: false,
+      warningExposureRate,
+      blockExposureRate,
+    },
+  };
 }

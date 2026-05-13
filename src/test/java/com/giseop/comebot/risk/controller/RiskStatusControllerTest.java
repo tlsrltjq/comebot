@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.giseop.comebot.config.TradingProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.risk.ConcentrationRiskProperties;
 import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
 import java.math.BigDecimal;
@@ -33,6 +35,9 @@ class RiskStatusControllerTest {
     @MockitoBean
     private DailyRiskProperties dailyRiskProperties;
 
+    @MockitoBean
+    private ConcentrationRiskProperties concentrationRiskProperties;
+
     @Test
     void statusReturnsRiskPolicyProperties() throws Exception {
         org.mockito.Mockito.when(tradingProperties.getMaxOrderAmount())
@@ -51,8 +56,14 @@ class RiskStatusControllerTest {
                 .thenReturn(10);
         org.mockito.Mockito.when(dailyRiskProperties.getDailyLossLimit())
                 .thenReturn(new BigDecimal("50000"));
+        org.mockito.Mockito.when(concentrationRiskProperties.isEnabled())
+                .thenReturn(false);
+        org.mockito.Mockito.when(concentrationRiskProperties.warningExposureRate(ExchangeMode.UPBIT))
+                .thenReturn(new BigDecimal("7"));
+        org.mockito.Mockito.when(concentrationRiskProperties.blockExposureRate(ExchangeMode.UPBIT))
+                .thenReturn(new BigDecimal("10"));
 
-        mockMvc.perform(get("/api/risk/status"))
+        mockMvc.perform(get("/api/risk/status?exchange=upbit"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.maxOrderAmount").value(100000))
                 .andExpect(jsonPath("$.allowedMarkets[0]").value("KRW-BTC"))
@@ -62,7 +73,40 @@ class RiskStatusControllerTest {
                 .andExpect(jsonPath("$.positionExitEnabled").value(false))
                 .andExpect(jsonPath("$.dailyRiskEnabled").value(false))
                 .andExpect(jsonPath("$.dailyOrderLimit").value(10))
-                .andExpect(jsonPath("$.dailyLossLimit").value(50000));
+                .andExpect(jsonPath("$.dailyLossLimit").value(50000))
+                .andExpect(jsonPath("$.concentration.exchange").value("UPBIT"))
+                .andExpect(jsonPath("$.concentration.enabled").value(false))
+                .andExpect(jsonPath("$.concentration.warningExposureRate").value(7))
+                .andExpect(jsonPath("$.concentration.blockExposureRate").value(10));
+    }
+
+    @Test
+    void statusReturnsExchangeSpecificConcentrationThresholds() throws Exception {
+        org.mockito.Mockito.when(tradingProperties.getMaxOrderAmount())
+                .thenReturn(new BigDecimal("100000"));
+        org.mockito.Mockito.when(tradingProperties.getAllowedMarkets())
+                .thenReturn(List.of("ALL_USDT"));
+        org.mockito.Mockito.when(positionExitProperties.getTakeProfitRate())
+                .thenReturn(new BigDecimal("1.5"));
+        org.mockito.Mockito.when(positionExitProperties.getStopLossRate())
+                .thenReturn(new BigDecimal("-0.7"));
+        org.mockito.Mockito.when(positionExitProperties.isPositionExitEnabled())
+                .thenReturn(true);
+        org.mockito.Mockito.when(dailyRiskProperties.getDailyLossLimit())
+                .thenReturn(new BigDecimal("50000"));
+        org.mockito.Mockito.when(concentrationRiskProperties.isEnabled())
+                .thenReturn(true);
+        org.mockito.Mockito.when(concentrationRiskProperties.warningExposureRate(ExchangeMode.BINANCE))
+                .thenReturn(new BigDecimal("25"));
+        org.mockito.Mockito.when(concentrationRiskProperties.blockExposureRate(ExchangeMode.BINANCE))
+                .thenReturn(new BigDecimal("40"));
+
+        mockMvc.perform(get("/api/risk/status?exchange=binance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.concentration.exchange").value("BINANCE"))
+                .andExpect(jsonPath("$.concentration.enabled").value(true))
+                .andExpect(jsonPath("$.concentration.warningExposureRate").value(25))
+                .andExpect(jsonPath("$.concentration.blockExposureRate").value(40));
     }
 
     @Test
@@ -83,6 +127,10 @@ class RiskStatusControllerTest {
                 .thenReturn(10);
         org.mockito.Mockito.when(dailyRiskProperties.getDailyLossLimit())
                 .thenReturn(new BigDecimal("50000"));
+        org.mockito.Mockito.when(concentrationRiskProperties.warningExposureRate(ExchangeMode.UPBIT))
+                .thenReturn(new BigDecimal("7"));
+        org.mockito.Mockito.when(concentrationRiskProperties.blockExposureRate(ExchangeMode.UPBIT))
+                .thenReturn(new BigDecimal("10"));
 
         mockMvc.perform(get("/api/risk/status"))
                 .andExpect(status().isOk())

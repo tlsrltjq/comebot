@@ -30,7 +30,7 @@ Dashboard는 요약만 표시한다.
 
 ### API 범위
 
-다음 구현에서는 `GET /api/risk/status`에 concentration 설정을 추가한다.
+구현된 `GET /api/risk/status?exchange={exchange}`는 선택 exchange의 concentration 설정을 반환한다.
 
 - `concentration.enabled`
 - `concentration.warningExposureRate`
@@ -82,15 +82,15 @@ Portfolio 화면은 기존 `GET /api/portfolio/valuation`의 포지션 평가값
 
 Backend:
 
-- `RiskStatusResponse`: concentration threshold 표시 필드 추가
-- `RiskStatusController`: `ConcentrationRiskProperties` 주입
+- `RiskStatusResponse`: concentration threshold 표시 필드 추가 완료
+- `RiskStatusController`: `ConcentrationRiskProperties` 주입 완료
 - 신규 cooldown properties/service: JPA history에서 반복 손절 market 산출
 - 신규 BUY guard: cooldown이 켜져 있으면 해당 market BUY 거절
 
 Frontend:
 
-- `shared/api/types.ts`: risk status concentration 타입 추가
-- `PortfolioPage.tsx`: exchange별 경고/차단 threshold 기반 exposure 뱃지 표시
+- `shared/api/types.ts`: risk status concentration 타입 추가 완료
+- `PortfolioPage.tsx`: exchange별 경고/차단 threshold 기반 exposure 뱃지 표시 완료
 - `CandidatesPage.tsx`: 보유/쏠림/cooldown 후보 warning 표시 범위 검토
 - `DashboardPage.tsx`: 위험 market 수 요약 표시
 

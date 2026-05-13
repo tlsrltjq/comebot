@@ -39,6 +39,7 @@ export function PortfolioPage() {
   const positionsQuery = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: PORTFOLIO_REFRESH_MS });
   const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: PORTFOLIO_REFRESH_MS });
   const systemQuery = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: 5_000 });
+  const riskQuery = useQuery({ queryKey: queryKeys.riskStatus(exchange), queryFn: () => api.riskStatus(exchange), refetchInterval: 5_000 });
 
   const positions = useMemo(
     () => sortPositions(valuationQuery.data?.positions ?? [], sortKey),
@@ -56,6 +57,9 @@ export function PortfolioPage() {
   const remainingBuyCount = orderAmount > 0 ? Math.floor(cash / orderAmount) : 0;
   const reservedCashAfterBuys = orderAmount > 0 ? cash - remainingBuyCount * orderAmount : cash;
   const exposureRows = useMemo(() => buildExposureRows(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
+  const concentration = riskQuery.data?.concentration;
+  const warningExposureRate = Number(concentration?.warningExposureRate ?? (exchange === 'BINANCE' ? 25 : 7));
+  const blockExposureRate = Number(concentration?.blockExposureRate ?? (exchange === 'BINANCE' ? 40 : 10));
   const assetMixSlices = useMemo(() => buildAssetMixSlices(cash, positionValue, totalEquity), [cash, positionValue, totalEquity]);
   const marketAllocationSlices = useMemo(() => buildMarketAllocationSlices(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
   const exchangeAllocationSlices = useMemo(() => buildExchangeAllocationSlices(exchange, totalEquity), [exchange, totalEquity]);
@@ -119,6 +123,7 @@ export function PortfolioPage() {
       {statusQuery.error ? <ErrorPanel title="포트폴리오 상태 조회 실패(Portfolio status failed)" error={statusQuery.error} /> : null}
       {valuationQuery.error ? <ErrorPanel title="포트폴리오 평가 조회 실패(Portfolio valuation failed)" error={valuationQuery.error} /> : null}
       {systemQuery.error ? <ErrorPanel title="시스템 상태 조회 실패(System status failed)" error={systemQuery.error} /> : null}
+      {riskQuery.error ? <ErrorPanel title="리스크 상태 조회 실패(Risk status failed)" error={riskQuery.error} /> : null}
       {sellSelectedMutation.error ? <ErrorPanel title="선택 매도 실패(Selected sell failed)" error={sellSelectedMutation.error} /> : null}
 
       <div className="metric-grid">
@@ -200,10 +205,10 @@ export function PortfolioPage() {
             <Radar size={20} />
           </div>
           <div className="exposure-summary">
-            <Badge tone={largestExposureRate >= 10 ? 'warn' : 'good'}>
-              {largestExposureRate >= 10 ? '쏠림 점검(Review)' : '분산 양호(Diversified)'}
+            <Badge tone={exposureTone(largestExposureRate, warningExposureRate, blockExposureRate)}>
+              {exposureLabel(largestExposureRate, warningExposureRate, blockExposureRate)}
             </Badge>
-            <span>TOP {Math.min(5, exposureRows.length)}</span>
+            <span>{exchange} {formatNumber(warningExposureRate, 0)}% / {formatNumber(blockExposureRate, 0)}%</span>
           </div>
           <div className="exposure-list">
             {exposureRows.slice(0, 5).map((row) => (
@@ -211,6 +216,9 @@ export function PortfolioPage() {
                 <div className="exposure-item-main">
                   <strong>{row.market}</strong>
                   <span>{money(row.positionValue)}</span>
+                  <Badge tone={exposureTone(row.exposureRate, warningExposureRate, blockExposureRate)}>
+                    {exposureShortLabel(row.exposureRate, warningExposureRate, blockExposureRate)}
+                  </Badge>
                   <small className={profitClass(row.unrealizedProfitRate)}>{formatNumber(row.unrealizedProfitRate, 2)}%</small>
                 </div>
                 <div className="allocation-track">
@@ -498,6 +506,36 @@ function buildExposureRows(positions: PositionValuationResponse[], totalEquity: 
       exposureRate: totalEquity > 0 ? (Number(position.positionValue) / totalEquity) * 100 : 0,
     }))
     .sort((left, right) => right.positionValue - left.positionValue);
+}
+
+function exposureTone(exposureRate: number, warningRate: number, blockRate: number) {
+  if (exposureRate >= blockRate) {
+    return 'bad';
+  }
+  if (exposureRate >= warningRate) {
+    return 'warn';
+  }
+  return 'good';
+}
+
+function exposureLabel(exposureRate: number, warningRate: number, blockRate: number) {
+  if (exposureRate >= blockRate) {
+    return '차단 기준(Block)';
+  }
+  if (exposureRate >= warningRate) {
+    return '쏠림 경고(Warning)';
+  }
+  return '분산 양호(Diversified)';
+}
+
+function exposureShortLabel(exposureRate: number, warningRate: number, blockRate: number) {
+  if (exposureRate >= blockRate) {
+    return 'BLOCK';
+  }
+  if (exposureRate >= warningRate) {
+    return 'WARN';
+  }
+  return 'OK';
 }
 
 function profitClass(value: string | number) {

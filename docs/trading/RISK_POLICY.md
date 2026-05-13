@@ -101,7 +101,8 @@
 
 - 현재 구현은 신규 BUY 주문 차단만 적용한다.
 - 쏠림 기준은 SELL, 익절, 손절 흐름을 막지 않는다.
-- 반복 손절 cooldown과 dashboard/portfolio/candidates 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 별도 구현한다.
+- Portfolio 쏠림 경고 UI 1차 구현은 완료됐다.
+- 반복 손절 cooldown과 dashboard/candidates 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 별도 구현한다.
 - 기준을 추가로 바꾸면 이 문서와 condition record를 함께 갱신한다.
 
 ## 시세 기준
@@ -119,5 +120,5 @@
 GET /api/risk/status
 ```
 
-응답에는 maxOrderAmount, allowedMarkets, 익절/손절, 일일 제한 설정이 포함된다.
-다음 구현에서는 concentration threshold와 반복 손절 cooldown 요약을 추가한다.
+응답에는 maxOrderAmount, allowedMarkets, 익절/손절, 일일 제한 설정, 선택 exchange의 concentration threshold가 포함된다.
+반복 손절 cooldown 요약은 후속 구현에서 추가한다.

@@ -77,7 +77,8 @@ UPBIT 반복 손절 상위:
 - 보유 PAPER SELL, 익절, 손절은 쏠림 기준으로 막지 않는다.
 - 실패한 주문을 성공으로 처리하지 않는다.
 - 실제 주문 API와 `REAL_TRADING`은 추가하지 않는다.
-- 반복 손절 cooldown과 UI 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 후속 구현한다.
+- Portfolio 쏠림 경고 UI 1차 구현은 완료됐다.
+- 반복 손절 cooldown과 Dashboard/Candidate 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 후속 구현한다.
 
 ## 다음 구현 후보
 

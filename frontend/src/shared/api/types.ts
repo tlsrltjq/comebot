@@ -103,6 +103,23 @@ export interface PortfolioValuationResponse {
   positions: PositionValuationResponse[];
 }
 
+export interface RiskStatusResponse {
+  maxOrderAmount: string;
+  allowedMarkets: string[];
+  takeProfitRate: string;
+  stopLossRate: string;
+  positionExitEnabled: boolean;
+  dailyRiskEnabled: boolean;
+  dailyOrderLimit: number;
+  dailyLossLimit: string;
+  concentration: {
+    exchange: ExchangeMode;
+    enabled: boolean;
+    warningExposureRate: string;
+    blockExposureRate: string;
+  };
+}
+
 export interface SelectedPaperSellRequest {
   markets: string[];
 }
