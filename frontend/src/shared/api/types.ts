@@ -71,16 +71,6 @@ export interface TradingCandidateResponse {
   scannedAt: string;
 }
 
-export interface TradingFlowRunResponse {
-  market: string;
-  signalType: SignalType | null;
-  signalReason: string;
-  orderCreated: boolean;
-  orderStatus: OrderStatus | null;
-  message: string;
-  executedAt: string;
-}
-
 export interface PortfolioStatusResponse {
   exchange: ExchangeMode;
   currency: string;

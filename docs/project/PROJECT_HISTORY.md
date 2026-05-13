@@ -76,10 +76,9 @@
 72. Stage 10 BTC 등락률 Market Overview 페이지 구현
 73. 포트폴리오 모바일 카드형 포지션 UX 구현
 74. 후보 화면 SELECTED/SKIPPED 요약과 제외 사유 TOP 5 UX 구현
+75. 미사용 거래 모드 코드와 중복 계획 문서 정리
 
 ## 최근 검증
 
-- `./gradlew test --tests BtcChangeChartServiceTest --tests MarketOverviewControllerTest` 통과
+- Java 21 기준 `./gradlew test` 통과
 - `npm run lint`, `npm test`, `npm run build` 통과
-- Java 21
-- 최신 커밋은 작업 완료 후 갱신한다.
