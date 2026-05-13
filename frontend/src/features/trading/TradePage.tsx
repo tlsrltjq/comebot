@@ -35,13 +35,13 @@ export function TradePage() {
     <section className="page">
       <header className="page-header">
         <div>
-          <h1>자동 실행 모니터링(Auto Run Monitoring)</h1>
-          <p>매수와 매도는 스케줄러가 자동으로 실행하고, 웹은 상태만 표시합니다.</p>
+          <h1>자동매매 운영(Auto Trading Operations)</h1>
+          <p>후보 스케줄러와 청산 스케줄러를 제어하고 자동 PAPER 실행 이력을 확인합니다.</p>
         </div>
         <LiveStatus updatedAt={historyQuery.dataUpdatedAt || systemQuery.dataUpdatedAt} isFetching={systemQuery.isFetching || historyQuery.isFetching} intervalMs={AUTO_RUN_REFRESH_MS} />
       </header>
 
-      {systemQuery.error ? <ErrorPanel title="자동 실행 상태 조회 실패(Auto status failed)" error={systemQuery.error} /> : null}
+      {systemQuery.error ? <ErrorPanel title="자동매매 상태 조회 실패(Auto trading status failed)" error={systemQuery.error} /> : null}
       {historyQuery.error ? <ErrorPanel title="실행 이력 조회 실패(History failed)" error={historyQuery.error} /> : null}
       {schedulerMutation.error ? <ErrorPanel title="자동매매 설정 실패(Auto control failed)" error={schedulerMutation.error} /> : null}
       {systemQuery.data ? (

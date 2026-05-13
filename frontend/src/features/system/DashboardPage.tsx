@@ -80,10 +80,10 @@ export function DashboardPage() {
       <div className="status-strip" aria-label="운영 상태(Operation status)">
         <StatusPill icon={<Database size={16} />} label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
         <StatusPill icon={<Radio size={16} />} label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={Boolean(providerQuery.data?.externalProvider && ((snapshotCount ?? 0) > 0 || marketCoverage.startsWith('전체')))} />
-        <StatusPill icon={<Activity size={16} />} label="자동매매(Auto)" value={data.scheduler.enabled ? `${data.scheduler.fixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.enabled} />
+        <StatusPill icon={<Activity size={16} />} label="전략(Trading)" value={data.scheduler.enabled ? `${data.scheduler.fixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.enabled} />
         <StatusPill icon={<Bot size={16} />} label="후보(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.candidateEnabled} />
         <StatusPill icon={<TrendingDown size={16} />} label="청산(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.exitEnabled} />
-        <StatusPill icon={<Bell size={16} />} label="수동실행(Manual)" value={data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'} good={!data.telegram.manualPaperExecutionEnabled} />
+        <StatusPill icon={<Bell size={16} />} label="수동 PAPER(Manual)" value={data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'} good={!data.telegram.manualPaperExecutionEnabled} />
       </div>
 
       <div className="metric-grid">
@@ -145,15 +145,15 @@ export function DashboardPage() {
         </article>
 
         <article className="panel">
-          <h2>자동 실행(Schedulers)</h2>
+          <h2>스케줄러(Schedulers)</h2>
           <dl className="definition-list">
-            <dt>전략 실행(Trading)</dt>
+            <dt>전략 스케줄러(Trading Scheduler)</dt>
             <dd>{data.scheduler.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
-            <dt>후보 실행(Candidate)</dt>
+            <dt>후보 스케줄러(Candidate Scheduler)</dt>
             <dd>{data.scheduler.candidateEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
             <dt>후보 거래소(Candidate exchange)</dt>
             <dd>{exchangeList(data.scheduler.candidateExchanges, data.scheduler.candidateExchange)}</dd>
-            <dt>청산 평가(Exit)</dt>
+            <dt>청산 스케줄러(Exit Scheduler)</dt>
             <dd>{data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
             <dt>청산 거래소(Exit exchange)</dt>
             <dd>{exchangeList(data.scheduler.exitExchanges, data.scheduler.exitExchange)}</dd>

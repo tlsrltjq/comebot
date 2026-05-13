@@ -165,7 +165,7 @@ public class TelegramCommandService {
         telegramApiClient.sendMessage(
                 telegramProperties.getBotToken(),
                 telegramProperties.getChatId(),
-                "메뉴에서 실행할 기능을 선택하세요.",
+                "메뉴에서 조회할 항목을 선택하세요.",
                 TelegramInlineKeyboard.mainMenu()
         );
     }
@@ -180,7 +180,7 @@ public class TelegramCommandService {
                 /help - 도움말
                 /menu - 버튼 메뉴
                 /status - 시스템 상태
-                /auto - 자동 실행 상태
+                /auto - 자동매매 상태
                 /conditions - 현재 매매 조건
                 /pnl - 손익 요약
                 /candidates - 롱 후보 조회
@@ -197,91 +197,91 @@ public class TelegramCommandService {
                 시스템 상태
                 DB 연결: %s
                 시세 Provider: %s
-                전략: %s
-                매수 기준가: %s
-                매도 기준가: %s
-                주문 금액: %s KRW
-                주문 수량: %s
-                최대 주문 금액: %s
-                허용 Market: %s
-                스케줄러 활성화: %s
-                후보 스케줄러 활성화: %s
-                후보 거래소: %s
-                수동 PAPER 실행: %s
-                긴급 정지: %s
-                알림 활성화: %s
-                후보 요약 알림: %s
-                텔레그램 활성화: %s
-                텔레그램 수신 활성화: %s
+                전략(Strategy): %s
+                1회 거래(Order): %s KRW
+                최대 주문 금액(Max order amount): %s
+                허용 마켓(Allowed markets): %s
+                전략 스케줄러(Trading Scheduler): %s
+                후보 스케줄러(Candidate Scheduler): %s
+                후보 거래소(Candidate exchange): %s
+                청산 스케줄러(Exit Scheduler): %s
+                청산 거래소(Exit exchange): %s
+                수동 PAPER 실행(Manual paper run): %s
+                긴급 정지(Kill switch): %s
+                알림(Notifications): %s
+                후보 요약 알림(Candidate summary): %s
+                텔레그램(Telegram): %s
+                텔레그램 수신(Inbound): %s
                 """.formatted(
                 databaseHealthService.check().connected(),
                 marketPriceProviderProperties.getPriceProvider(),
                 strategySelectionProperties.getStrategyName(),
-                strategyProperties.getBuyPrice(),
-                strategyProperties.getSellPrice(),
                 strategyProperties.getOrderAmount(),
-                strategyProperties.getOrderQuantity(),
                 tradingProperties.getMaxOrderAmount(),
                 tradingProperties.getAllowedMarkets(),
-                tradingSchedulerProperties.isEnabled(),
-                candidateSchedulerProperties.isEnabled(),
+                enabled(tradingSchedulerProperties.isEnabled()),
+                enabled(candidateSchedulerProperties.isEnabled()),
                 candidateSchedulerProperties.getExchange(),
-                telegramInboundProperties.isManualPaperExecutionEnabled(),
-                safetyProperties.isKillSwitchEnabled(),
-                notificationProperties.isEnabled(),
-                candidateSchedulerProperties.isNotifySummary(),
-                telegramProperties.isEnabled(),
-                telegramInboundProperties.isEnabled()
+                enabled(positionExitSchedulerProperties.isEnabled()),
+                positionExitSchedulerProperties.getExchange(),
+                allowed(telegramInboundProperties.isManualPaperExecutionEnabled()),
+                enabled(safetyProperties.isKillSwitchEnabled()),
+                enabled(notificationProperties.isEnabled()),
+                enabled(candidateSchedulerProperties.isNotifySummary()),
+                enabled(telegramProperties.isEnabled()),
+                enabled(telegramInboundProperties.isEnabled())
         ).trim();
     }
 
     private String autoMessage() {
         return """
-                자동 실행 상태
-                전략 스케줄러: %s
-                전략 주기: %s ms
-                전략 대상: %s
-                후보 스케줄러: %s
-                후보 거래소: %s
-                후보 주기: %s ms
-                후보 대상: %s
-                후보 요약 알림: %s
-                청산 스케줄러: %s
-                청산 주기: %s ms
-                청산 HOLD 기록: %s
-                수동 PAPER 실행: %s
+                자동매매 상태
+                전략 스케줄러(Trading Scheduler): %s
+                전략 주기(Trading interval): %s ms
+                전략 대상(Trading markets): %s
+                후보 스케줄러(Candidate Scheduler): %s
+                후보 거래소(Candidate exchange): %s
+                후보 주기(Candidate interval): %s ms
+                후보 대상(Candidate markets): %s
+                후보 요약 알림(Candidate summary): %s
+                청산 스케줄러(Exit Scheduler): %s
+                청산 거래소(Exit exchange): %s
+                청산 주기(Exit interval): %s ms
+                청산 HOLD 기록(Exit HOLD history): %s
+                수동 PAPER 실행(Manual paper run): %s
                 """.formatted(
-                tradingSchedulerProperties.isEnabled(),
+                enabled(tradingSchedulerProperties.isEnabled()),
                 tradingSchedulerProperties.getFixedDelayMs(),
                 tradingSchedulerProperties.getMarkets(),
-                candidateSchedulerProperties.isEnabled(),
+                enabled(candidateSchedulerProperties.isEnabled()),
                 candidateSchedulerProperties.getExchange(),
                 candidateSchedulerProperties.getFixedDelayMs(),
                 candidateSchedulerProperties.getMarkets(),
-                candidateSchedulerProperties.isNotifySummary(),
-                positionExitSchedulerProperties.isEnabled(),
+                enabled(candidateSchedulerProperties.isNotifySummary()),
+                enabled(positionExitSchedulerProperties.isEnabled()),
+                positionExitSchedulerProperties.getExchange(),
                 positionExitSchedulerProperties.getFixedDelayMs(),
-                positionExitSchedulerProperties.isSaveHoldHistory(),
-                telegramInboundProperties.isManualPaperExecutionEnabled()
+                positionExitSchedulerProperties.isSaveHoldHistory() ? "저장(Save)" : "저장 안 함(Skip)",
+                allowed(telegramInboundProperties.isManualPaperExecutionEnabled())
         ).trim();
     }
 
     private String conditionsMessage() {
         return """
-                현재 매매 조건
-                거래 모드: PAPER_TRADING
-                전략: %s
-                대상: %s
-                후보 범위: 전체 KRW 중 24시간 거래대금 상위 50개
-                현재가 수집: 1초 fixedDelay
-                레거시 전략 실행 주기: %s ms
-                후보 실행 주기: %s ms
-                청산 평가 주기: %s ms
-                1회 BUY 금액: %s KRW
+                매매 조건(Trading Conditions)
+                거래 모드(Trading mode): PAPER_TRADING
+                전략(Strategy): %s
+                허용 마켓(Allowed markets): %s
+                후보 범위(Candidate universe): 전체 KRW 중 24시간 거래대금 상위 50개
+                현재가 수집(Price polling): 1초 fixedDelay
+                전략 스케줄러 주기(Trading interval): %s ms
+                후보 스케줄러 주기(Candidate interval): %s ms
+                청산 스케줄러 주기(Exit interval): %s ms
+                1회 거래(Order amount): %s KRW
                 BUY 추세: UP만 허용
-                SELL 익절: %s
-                SELL 손절: %s
-                실제 주문 API: 없음
+                익절(Take profit): %s
+                손절(Stop loss): %s
+                실제 주문 API(Real order API): 없음
                 """.formatted(
                 strategySelectionProperties.getStrategyName(),
                 tradingProperties.getAllowedMarkets(),
@@ -298,12 +298,12 @@ public class TelegramCommandService {
         try {
             PortfolioValuationResponse valuation = paperPortfolioValuationService.valuate();
             return """
-                    손익 요약
-                    현금: %s
-                    총 평가 자산: %s
-                    실현 손익: %s
-                    미실현 손익: %s
-                    총 손익: %s
+                    손익 요약(PnL Summary)
+                    현금(Cash): %s
+                    총 평가금(Total Equity): %s
+                    실현 손익(Realized): %s
+                    미실현 손익(Unrealized): %s
+                    총 손익(Total PnL): %s
                     """.formatted(
                     valuation.cash(),
                     valuation.totalEquity(),
@@ -427,12 +427,12 @@ public class TelegramCommandService {
         try {
             PortfolioValuationResponse valuation = paperPortfolioValuationService.valuate();
             return """
-                    PAPER 포트폴리오
-                    cash=%s
-                    totalEquity=%s
-                    realizedProfit=%s
-                    unrealizedProfit=%s
-                    totalProfit=%s
+                    PAPER 포트폴리오(Portfolio)
+                    현금(Cash): %s
+                    총 평가금(Total Equity): %s
+                    실현 손익(Realized): %s
+                    미실현 손익(Unrealized): %s
+                    총 손익(Total PnL): %s
                     """.formatted(
                     valuation.cash(),
                     valuation.totalEquity(),
@@ -451,14 +451,14 @@ public class TelegramCommandService {
             return "보유 포지션이 없습니다.";
         }
 
-        StringBuilder builder = new StringBuilder("보유 포지션");
+        StringBuilder builder = new StringBuilder("보유 포지션(Positions)");
         for (PaperPosition position : positions) {
             builder.append(System.lineSeparator())
-                    .append("- market=")
+                    .append("- 마켓(Market): ")
                     .append(position.market())
-                    .append(", quantity=")
+                    .append(" | 수량(Quantity): ")
                     .append(position.quantity())
-                    .append(", averageBuyPrice=")
+                    .append(" | 평균매수가(Avg Buy): ")
                     .append(position.averageBuyPrice());
         }
         return builder.toString();
@@ -466,22 +466,22 @@ public class TelegramCommandService {
 
     private String riskMessage() {
         return """
-                리스크 정책
-                maxOrderAmount=%s
-                allowedMarkets=%s
-                takeProfitRate=%s
-                stopLossRate=%s
-                positionExitEnabled=%s
-                dailyRiskEnabled=%s
-                dailyOrderLimit=%s
-                dailyLossLimit=%s
+                리스크 정책(Risk Policy)
+                최대 주문 금액(Max order amount): %s
+                허용 마켓(Allowed markets): %s
+                익절(Take profit): %s
+                손절(Stop loss): %s
+                청산 평가(Position exit): %s
+                일일 리스크(Daily risk): %s
+                일일 주문 한도(Daily order limit): %s
+                일일 손실 한도(Daily loss limit): %s
                 """.formatted(
                 tradingProperties.getMaxOrderAmount(),
                 tradingProperties.getAllowedMarkets(),
                 positionExitProperties.getTakeProfitRate(),
                 positionExitProperties.getStopLossRate(),
-                positionExitProperties.isPositionExitEnabled(),
-                dailyRiskProperties.isDailyRiskEnabled(),
+                enabled(positionExitProperties.isPositionExitEnabled()),
+                enabled(dailyRiskProperties.isDailyRiskEnabled()),
                 dailyRiskProperties.getDailyOrderLimit(),
                 dailyRiskProperties.getDailyLossLimit()
         ).trim();
@@ -489,9 +489,9 @@ public class TelegramCommandService {
 
     private String safetyMessage() {
         return """
-                안전장치 상태
-                killSwitchEnabled=%s
-                """.formatted(safetyProperties.isKillSwitchEnabled()).trim();
+                안전장치(Safety)
+                긴급 정지(Kill switch): %s
+                """.formatted(enabled(safetyProperties.isKillSwitchEnabled())).trim();
     }
 
     private String toKoreanDecision(TradingCandidate candidate) {
@@ -503,5 +503,13 @@ public class TelegramCommandService {
 
     private String valueOrDash(Object value) {
         return value == null ? "-" : value.toString();
+    }
+
+    private String enabled(boolean value) {
+        return value ? "켜짐(Enabled)" : "꺼짐(Disabled)";
+    }
+
+    private String allowed(boolean value) {
+        return value ? "허용(Allowed)" : "차단(Blocked)";
     }
 }

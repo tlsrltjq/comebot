@@ -28,13 +28,12 @@
 - 포트폴리오 자금 사용률과 남은 매수 가능 횟수 표시
 - 포트폴리오 market별 비중 TOP과 쏠림 경고 표시
 - 2026-05-06 PAPER 매매기록 기준 마이너스 손익 원인 분석 문서화
+- 운영 상태 화면과 Telegram 용어 정리
 
 ## 다음 작업
 
-1. market별 쏠림 최소 리스크 기준 문서화
-2. 포트폴리오 모바일 카드형 UX
-3. 후보 화면 개선
-4. 운영 상태 화면과 Telegram 용어 정리
+1. JPA history/portfolio 저장소로 PAPER 운용 데이터 누적
+2. market별 쏠림 최소 리스크 기준 문서화
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

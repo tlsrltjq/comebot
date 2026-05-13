@@ -7,7 +7,7 @@
 - configured chatId와 일치하는 요청만 처리한다.
 - 기본 명령과 버튼은 조회 전용이다.
 - 수동 PAPER 실행은 별도 설정이 켜진 경우에만 허용한다.
-- 웹 선택 PAPER SELL 계획은 Telegram으로 확장하지 않는다.
+- 웹 선택 PAPER SELL은 Telegram으로 확장하지 않는다.
 - 실제 주문 API, `REAL_TRADING`, 거래소 인증키는 연결하지 않는다.
 
 ## 활성 조건
@@ -27,7 +27,7 @@ TELEGRAM_CHAT_ID=
 - `/help`: 사용 가능한 명령 목록
 - `/menu`: inline button 메뉴
 - `/status`: 시스템 상태 요약
-- `/auto`: 자동 실행 상태
+- `/auto`: 자동매매 상태
 - `/conditions`: 현재 매매 조건
 - `/pnl`: 손익 요약
 - `/candidates`: 롱 후보 목록 조회
@@ -54,14 +54,22 @@ TELEGRAM_CHAT_ID=
 - 안전장치
 - 도움말
 
+## 용어 기준
+
+- 자동매매 상태는 전략 스케줄러, 후보 스케줄러, 청산 스케줄러를 분리해서 표시한다.
+- 매매 조건은 거래 모드, 전략, 허용 마켓, 후보 범위, 스케줄러 주기, 1회 거래 금액, 익절/손절, 실제 주문 API 여부를 표시한다.
+- 손익은 현금, 총 평가금, 실현 손익, 미실현 손익, 총 손익을 웹과 같은 이름으로 표시한다.
+- 포트폴리오와 보유 포지션은 camelCase 필드명 대신 한글 라벨과 괄호 영문 라벨을 함께 사용한다.
+- 리스크와 안전장치는 최대 주문 금액, 허용 마켓, 익절/손절, 청산 평가, 일일 리스크, 긴급 정지 라벨을 사용한다.
+
 ## 실행 흐름
 
 기본 메뉴에는 실행 버튼을 노출하지 않는다.
 자동 실행은 scheduler가 담당한다.
-조회 명령은 자동 실행 상태, 후보, 손익, 포트폴리오, history를 보여준다.
-`/status`와 `/auto`는 candidate scheduler 거래소를 함께 보여준다.
+조회 명령은 자동매매 상태, 후보, 손익, 포트폴리오, history를 보여준다.
+`/status`와 `/auto`는 candidate scheduler와 exit scheduler 거래소를 함께 보여준다.
 
-포트폴리오 선택 PAPER SELL은 웹 전용 계획이다. Telegram inline menu에는 선택 매도 버튼을 추가하지 않는다.
+포트폴리오 선택 PAPER SELL은 웹 전용 기능이다. Telegram inline menu에는 선택 매도 버튼을 추가하지 않는다.
 
 수동 PAPER 실행 설정이 켜진 경우에만 `/run`은 `TradingFlowService`를 호출하고, `/candidate-run`은 `CandidateExecutionService`를 호출한다.
 후보 실행은 선택된 후보에 대해서만 PAPER BUY 주문을 만든다.

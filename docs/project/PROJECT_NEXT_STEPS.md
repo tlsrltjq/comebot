@@ -14,32 +14,30 @@
   - BTC 등락률 Market Overview 페이지
 - 포트폴리오 모바일 카드형 UX 완료
 - 후보 화면 SELECTED/SKIPPED 요약, 제외 사유 TOP 5, 선택 후보 필터, 보유 포지션 표시 완료
+- 운영 상태 화면과 Telegram 용어 정리 완료
 
-## 다음 우선순위: 운영 상태 화면과 Telegram 용어 정리
+## 다음 우선순위: JPA PAPER 데이터 누적 운영
 
 목표:
 
-- status API, 웹, Telegram 상태 메시지의 항목 이름을 맞춘다.
-- 웹과 Telegram 모두 자동 실행 상태, 매매 조건, 손익을 같은 용어로 보여준다.
-- Telegram은 기본 조회 전용으로 유지한다.
-- Telegram 수동 PAPER 실행은 `TELEGRAM_MANUAL_PAPER_EXECUTION_ENABLED=true`일 때만 허용한다.
+- JPA history/portfolio 저장소로 며칠 이상 PAPER 운용 데이터를 쌓는다.
+- market별 쏠림 리스크 기준을 확정하기 전에 원자료를 확보한다.
+- 기본 거래 모드는 계속 `PAPER_TRADING`으로 유지한다.
+- 실제 주문 API와 `REAL_TRADING`은 추가하지 않는다.
 
 작업:
 
-- System, Trade, Dashboard 화면의 scheduler/strategy/risk 용어를 Telegram `/auto`, `/conditions`, `/pnl` 표현과 대조한다.
-- 용어 차이가 있으면 UI 문구 또는 Telegram 메시지를 한쪽 기준으로 맞춘다.
-- 웹 API client에 후보 실행/trading-flow 실행 함수가 없는 상태를 유지한다.
-- 웹 lint의 실행 endpoint 차단 규칙을 유지한다.
-- Telegram 기본 menu에 실행 버튼이 없는 상태를 유지한다.
+- 로컬/운영 `.env`에서 `HISTORY_STORAGE_TYPE=JPA`, `PAPER_PORTFOLIO_STORAGE_TYPE=JPA` 사용 여부를 확인한다.
+- JPA 저장소로 실행한 PAPER history, portfolio valuation, position exposure를 점검한다.
+- 충분한 데이터가 쌓이면 condition-records에 기준 산정 문서를 추가한다.
+- 기준 확정 전까지 market별 쏠림 제한 로직은 보류한다.
 
 완료 기준:
 
-- 웹과 Telegram에서 자동 실행 상태, 매매 조건, 손익 용어가 일치한다.
-- 웹 API client에 수동 실행 함수가 없다.
-- 웹 lint가 실행 endpoint 추가를 차단한다.
-- Telegram menu에 실행 버튼이 없다.
-- `/auto`, `/conditions`, `/pnl`로 자동 실행 상태와 손익을 확인할 수 있다.
-- `./gradlew test`, `npm run lint`, `npm run build`, `npm test`가 성공한다.
+- JPA 저장소에 PAPER 실행 이력과 포트폴리오 상태가 누적된다.
+- 하루 이상 데이터가 유지되는지 재시작 후 확인한다.
+- market별 exposure와 반복 손절 후보를 확인할 수 있다.
+- 다음 기준 문서화 작업에 사용할 원자료 위치가 명확하다.
 
 ## 보류: market별 쏠림 리스크 기준
 

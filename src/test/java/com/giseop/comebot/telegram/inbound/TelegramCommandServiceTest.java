@@ -97,15 +97,15 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains(
-                "리스크 정책",
-                "maxOrderAmount=100000",
-                "allowedMarkets=[KRW-BTC, KRW-ETH]",
-                "takeProfitRate=5",
-                "stopLossRate=-3",
-                "positionExitEnabled=false",
-                "dailyRiskEnabled=false",
-                "dailyOrderLimit=10",
-                "dailyLossLimit=50000"
+                "리스크 정책(Risk Policy)",
+                "최대 주문 금액(Max order amount): 100000",
+                "허용 마켓(Allowed markets): [KRW-BTC, KRW-ETH]",
+                "익절(Take profit): 5",
+                "손절(Stop loss): -3",
+                "청산 평가(Position exit): 꺼짐(Disabled)",
+                "일일 리스크(Daily risk): 꺼짐(Disabled)",
+                "일일 주문 한도(Daily order limit): 10",
+                "일일 손실 한도(Daily loss limit): 50000"
         );
     }
 
@@ -117,7 +117,7 @@ class TelegramCommandServiceTest {
         service(sender, mock(TradingFlowService.class)).handle("/safety");
 
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("안전장치 상태", "killSwitchEnabled=false");
+        assertThat(messageCaptor.getValue().body()).contains("안전장치(Safety)", "긴급 정지(Kill switch): 꺼짐(Disabled)");
     }
 
     @Test
@@ -147,21 +147,21 @@ class TelegramCommandServiceTest {
                 "시스템 상태",
                 "DB 연결: true",
                 "시세 Provider: IN_MEMORY",
-                "전략: SimpleThresholdStrategy",
-                "매수 기준가: 90000000",
-                "매도 기준가: 110000000",
-                "주문 금액: 10000 KRW",
-                "주문 수량: 0.001",
-                "최대 주문 금액: 100000",
-                "허용 Market: [KRW-BTC, KRW-ETH]",
-                "스케줄러 활성화: false",
-                "후보 스케줄러 활성화: false",
-                "수동 PAPER 실행: false",
-                "긴급 정지: false",
-                "알림 활성화: false",
-                "후보 요약 알림: false",
-                "텔레그램 활성화: true",
-                "텔레그램 수신 활성화: false"
+                "전략(Strategy): SimpleThresholdStrategy",
+                "1회 거래(Order): 10000 KRW",
+                "최대 주문 금액(Max order amount): 100000",
+                "허용 마켓(Allowed markets): [KRW-BTC, KRW-ETH]",
+                "전략 스케줄러(Trading Scheduler): 꺼짐(Disabled)",
+                "후보 스케줄러(Candidate Scheduler): 꺼짐(Disabled)",
+                "후보 거래소(Candidate exchange): UPBIT",
+                "청산 스케줄러(Exit Scheduler): 켜짐(Enabled)",
+                "청산 거래소(Exit exchange): UPBIT",
+                "수동 PAPER 실행(Manual paper run): 차단(Blocked)",
+                "긴급 정지(Kill switch): 꺼짐(Disabled)",
+                "알림(Notifications): 꺼짐(Disabled)",
+                "후보 요약 알림(Candidate summary): 꺼짐(Disabled)",
+                "텔레그램(Telegram): 켜짐(Enabled)",
+                "텔레그램 수신(Inbound): 꺼짐(Disabled)"
         );
     }
 
@@ -186,10 +186,11 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains(
-                "자동 실행 상태",
-                "전략 스케줄러:",
-                "후보 스케줄러:",
-                "수동 PAPER 실행: false"
+                "자동매매 상태",
+                "전략 스케줄러(Trading Scheduler):",
+                "후보 스케줄러(Candidate Scheduler):",
+                "청산 스케줄러(Exit Scheduler):",
+                "수동 PAPER 실행(Manual paper run): 차단(Blocked)"
         );
     }
 
@@ -202,11 +203,11 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains(
-                "현재 매매 조건",
+                "매매 조건(Trading Conditions)",
                 "PAPER_TRADING",
-                "전체 KRW 중 24시간 거래대금 상위 50개",
-                "1회 BUY 금액: 10000 KRW",
-                "실제 주문 API: 없음"
+                "후보 범위(Candidate universe): 전체 KRW 중 24시간 거래대금 상위 50개",
+                "1회 거래(Order amount): 10000 KRW",
+                "실제 주문 API(Real order API): 없음"
         );
     }
 
@@ -219,11 +220,11 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains(
-                "손익 요약",
-                "총 평가 자산: 1100000",
-                "실현 손익: 50000",
-                "미실현 손익: 50000",
-                "총 손익: 100000"
+                "손익 요약(PnL Summary)",
+                "총 평가금(Total Equity): 1100000",
+                "실현 손익(Realized): 50000",
+                "미실현 손익(Unrealized): 50000",
+                "총 손익(Total PnL): 100000"
         );
     }
 
@@ -382,12 +383,12 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains(
-                "PAPER 포트폴리오",
-                "cash=1000000",
-                "totalEquity=1100000",
-                "realizedProfit=50000",
-                "unrealizedProfit=50000",
-                "totalProfit=100000"
+                "PAPER 포트폴리오(Portfolio)",
+                "현금(Cash): 1000000",
+                "총 평가금(Total Equity): 1100000",
+                "실현 손익(Realized): 50000",
+                "미실현 손익(Unrealized): 50000",
+                "총 손익(Total PnL): 100000"
         );
     }
 
@@ -405,10 +406,10 @@ class TelegramCommandServiceTest {
 
         verify(sender).sendMessage(messageCaptor.capture());
         assertThat(messageCaptor.getValue().body()).contains(
-                "보유 포지션",
-                "market=KRW-BTC",
-                "quantity=0.01",
-                "averageBuyPrice=90000000"
+                "보유 포지션(Positions)",
+                "마켓(Market): KRW-BTC",
+                "수량(Quantity): 0.01",
+                "평균매수가(Avg Buy): 90000000"
         );
     }
 
