@@ -57,6 +57,48 @@
 - 오늘 실현 손실이 `risk.daily-loss-limit` 이상이면 신규 주문을 거절한다.
 - HOLD, REJECTED, FAILED는 일일 주문 횟수에 포함하지 않는다.
 
+## Market별 쏠림 기준
+
+현재 기준은 문서 정책이며, 신규 BUY 차단 구현은 별도 작업으로 진행한다.
+기준 산정 원자료는 `docs/trading/condition-records/2026-05-13-jpa-paper-data-snapshot.md`다.
+
+### 노출 비중 계산
+
+- 기본 계산식은 `market cost basis / estimated equity * 100`이다.
+- `market cost basis`는 `paper_position.quantity * paper_position.average_buy_price`로 계산한다.
+- `estimated equity`는 `paper_portfolio_state.cash + SUM(market cost basis)`로 계산한다.
+- 현재가 평가가 가능한 화면에서는 `positionValue / totalEquity * 100`을 보조 지표로 함께 본다.
+- exchange별 현금 규모와 market universe가 다르므로 UPBIT과 BINANCE 기준을 분리한다.
+
+### UPBIT 기준
+
+- 경고: 단일 market 추정 비중이 7% 이상이면 쏠림 경고 대상으로 본다.
+- 신규 BUY 차단 후보: 단일 market 추정 비중이 10% 이상이면 해당 market 신규 BUY 차단 후보로 본다.
+- 반복 손절 주의: JPA history 기준 손절 count 상위 10개 market은 노출 비중과 무관하게 cooldown 또는 후보 제외 검토 대상으로 본다.
+- 2026-05-13 스냅샷 기준 `KRW-BLEND`는 9.0104%, `KRW-XPL`은 8.0092%로 경고 대상이다.
+- 같은 스냅샷 기준 `KRW-DEEP`, `KRW-ICP`, `KRW-CHIP`, `KRW-SPK`, `KRW-XPL`은 반복 손절 상위권이다.
+
+### BINANCE 기준
+
+- 경고: 단일 symbol 추정 비중이 25% 이상이면 쏠림 경고 대상으로 본다.
+- 신규 BUY 차단 후보: 단일 symbol 추정 비중이 40% 이상이면 해당 symbol 신규 BUY 차단 후보로 본다.
+- 2026-05-13 스냅샷 기준 `UTKUSDT`는 94.1687%로 차단 후보 수준이다.
+- Binance는 초기 PAPER 현금과 universe가 UPBIT과 달라 UPBIT의 7%/10% 기준을 그대로 적용하지 않는다.
+
+### 반복 손절 기준
+
+- 기준 기간은 우선 최근 JPA 누적 구간 전체로 잡고, 추후 `24h`, `3d`, `7d` window를 분리한다.
+- 손절 count 상위 10개 market은 신규 BUY 후보에서 cooldown 검토 대상으로 본다.
+- 손절 count 상위 10개이면서 단일 market 추정 비중이 경고 기준 이상이면 우선 제한 대상으로 본다.
+- 이 기준은 실제 주문 API가 아니라 PAPER 신규 BUY 후보 제한에만 적용한다.
+
+### 구현 범위
+
+- 이번 문서는 기준 확정용이다.
+- 코드 구현 전까지 기존 매수/매도 판단 흐름은 바꾸지 않는다.
+- 구현 시 `RiskValidator`, candidate execution, dashboard/portfolio risk 표시, 관련 테스트를 함께 수정한다.
+- 기준을 코드에 적용하면 이 문서와 condition record를 함께 갱신한다.
+
 ## 시세 기준
 
 - InMemory 시세는 테스트용이다.
