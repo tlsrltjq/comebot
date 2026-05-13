@@ -2,7 +2,10 @@ package com.giseop.comebot.strategy.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
+import com.giseop.comebot.strategy.candidate.CandidateScanCache;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
 import com.giseop.comebot.strategy.candidate.TradingCandidate;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
@@ -21,14 +25,17 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 
 @WebMvcTest(CandidateController.class)
+@Import(CandidateScanCache.class)
 class CandidateControllerTest {
 
     @Autowired
@@ -40,9 +47,17 @@ class CandidateControllerTest {
     @MockitoBean
     private CandidateExecutionService candidateExecutionService;
 
+    @Autowired
+    private CandidateScanCache candidateScanCache;
+
+    @BeforeEach
+    void clearCache() {
+        candidateScanCache.clear();
+    }
+
     @Test
     void getCandidatesReturnsAllowedMarketScanResults() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 20)).thenReturn(List.of(
                 candidate("KRW-BTC", CandidateDecision.SELECTED),
                 candidate("KRW-ETH", CandidateDecision.SKIPPED)
         ));
@@ -71,12 +86,12 @@ class CandidateControllerTest {
                 .andExpect(jsonPath("$[0].decision").value("SELECTED"));
 
         verify(candidateScannerService).scan(ExchangeMode.UPBIT, "KRW-BTC");
-        verify(candidateScannerService, never()).scanAllowedMarkets();
+        verify(candidateScannerService, never()).scanAllowedMarkets(any(), anyInt());
     }
 
     @Test
     void getCandidatesAcceptsLowercaseUpbitExchange() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 20)).thenReturn(List.of(
                 candidate("KRW-BTC", CandidateDecision.SELECTED)
         ));
 
@@ -87,7 +102,7 @@ class CandidateControllerTest {
 
     @Test
     void getCandidatesAcceptsBinanceExchange() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.BINANCE)).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.BINANCE, 20)).thenReturn(List.of(
                 candidate("BTCUSDT", CandidateDecision.SELECTED)
         ));
 
@@ -95,7 +110,7 @@ class CandidateControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].market").value("BTCUSDT"));
 
-        verify(candidateScannerService).scanAllowedMarkets(ExchangeMode.BINANCE);
+        verify(candidateScannerService).scanAllowedMarkets(ExchangeMode.BINANCE, 20);
     }
 
     @Test
@@ -103,7 +118,7 @@ class CandidateControllerTest {
         mockMvc.perform(get("/api/candidates").param("exchange", "coinbase"))
                 .andExpect(status().isBadRequest());
 
-        verify(candidateScannerService, never()).scanAllowedMarkets();
+        verify(candidateScannerService, never()).scanAllowedMarkets(any(), anyInt());
     }
 
     @Test
@@ -112,7 +127,7 @@ class CandidateControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(candidateScannerService, never()).scan(" ");
-        verify(candidateScannerService, never()).scanAllowedMarkets();
+        verify(candidateScannerService, never()).scanAllowedMarkets(any(), anyInt());
     }
 
     @Test
@@ -150,7 +165,7 @@ class CandidateControllerTest {
 
     @Test
     void responseDoesNotExposeSensitiveValues() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 20)).thenReturn(List.of(
                 candidate("KRW-BTC", CandidateDecision.SELECTED)
         ));
 
@@ -164,7 +179,7 @@ class CandidateControllerTest {
 
     @Test
     void responseClassifiesRiskReasonWithoutParsingOnClient() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 20)).thenReturn(List.of(
                 riskCandidate("KRW-XRP", "Market concentration exceeds block exposure rate: market=KRW-XRP exposure=10% limit=10%"),
                 riskCandidate("KRW-ETH", "Stop loss cooldown active: market=KRW-ETH stopLossCount=2 cooldownUntil=2026-05-13T00:00:00Z")
         ));
@@ -175,6 +190,51 @@ class CandidateControllerTest {
                 .andExpect(jsonPath("$[0].riskReasonType").value("CONCENTRATION"))
                 .andExpect(jsonPath("$[1].reasonType").value("STOP_LOSS_COOLDOWN"))
                 .andExpect(jsonPath("$[1].riskReasonType").value("STOP_LOSS_COOLDOWN"));
+    }
+
+    @Test
+    void fullCandidateScanUsesShortLivedCache() throws Exception {
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 20)).thenReturn(List.of(
+                candidate("KRW-BTC", CandidateDecision.SELECTED)
+        ));
+
+        mockMvc.perform(get("/api/candidates"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+        mockMvc.perform(get("/api/candidates"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+
+        verify(candidateScannerService, times(1)).scanAllowedMarkets(ExchangeMode.UPBIT, 20);
+    }
+
+    @Test
+    void refreshBypassesFullCandidateScanCache() throws Exception {
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 20))
+                .thenReturn(List.of(candidate("KRW-BTC", CandidateDecision.SELECTED)))
+                .thenReturn(List.of(candidate("KRW-ETH", CandidateDecision.SKIPPED)));
+
+        mockMvc.perform(get("/api/candidates"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+        mockMvc.perform(get("/api/candidates").param("refresh", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-ETH"));
+
+        verify(candidateScannerService, times(2)).scanAllowedMarkets(ExchangeMode.UPBIT, 20);
+    }
+
+    @Test
+    void fullCandidateScanAcceptsLimitParameter() throws Exception {
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT, 5)).thenReturn(List.of(
+                candidate("KRW-BTC", CandidateDecision.SELECTED)
+        ));
+
+        mockMvc.perform(get("/api/candidates").param("limit", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("KRW-BTC"));
+
+        verify(candidateScannerService).scanAllowedMarkets(ExchangeMode.UPBIT, 5);
     }
 
     private TradingCandidate candidate(String market, CandidateDecision decision) {

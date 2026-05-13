@@ -56,8 +56,8 @@ export const api = {
       body: JSON.stringify(body),
     }),
   marketProviderStatus: () => request<MarketProviderStatusResponse>('/api/market-provider/status'),
-  candidates: (exchange: ExchangeMode = 'UPBIT', market?: string) =>
-    request<TradingCandidateResponse[]>(`/api/candidates${query({ exchange: exchangeParam(exchange), market })}`),
+  candidates: (exchange: ExchangeMode = 'UPBIT', market?: string, limit = 20) =>
+    request<TradingCandidateResponse[]>(`/api/candidates${query({ exchange: exchangeParam(exchange), market, limit: market ? undefined : limit })}`),
   portfolioStatus: (exchange: ExchangeMode = 'UPBIT') =>
     request<PortfolioStatusResponse>(`/api/portfolio/status${query({ exchange: exchangeParam(exchange) })}`),
   positions: (exchange: ExchangeMode = 'UPBIT') =>
@@ -87,7 +87,7 @@ export const api = {
 export const queryKeys = {
   system: (exchange: ExchangeMode = 'UPBIT') => ['system', exchange] as const,
   marketProviderStatus: () => ['marketProviderStatus'] as const,
-  candidates: (exchange: ExchangeMode = 'UPBIT', market?: string) => ['candidates', exchange, market ?? 'all'] as const,
+  candidates: (exchange: ExchangeMode = 'UPBIT', market?: string, limit = 20) => ['candidates', exchange, market ?? 'all', limit] as const,
   portfolioStatus: (exchange: ExchangeMode = 'UPBIT') => ['portfolioStatus', exchange] as const,
   positions: (exchange: ExchangeMode = 'UPBIT') => ['positions', exchange] as const,
   portfolioValuation: (exchange: ExchangeMode = 'UPBIT') => ['portfolioValuation', exchange] as const,

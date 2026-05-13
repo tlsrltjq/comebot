@@ -32,7 +32,7 @@ describe('CandidatesPage', () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url === '/api/candidates?exchange=upbit') {
+      if (url === '/api/candidates?exchange=upbit&limit=20') {
         return new Response(
           JSON.stringify([
             {
@@ -92,7 +92,7 @@ describe('CandidatesPage', () => {
     renderWithClient();
 
     expect(await screen.findByText('KRW-BTC')).toBeInTheDocument();
-    expect(screen.getByText('전체 후보(Total)')).toBeInTheDocument();
+    expect(screen.getByText('조회 후보(Scanned)')).toBeInTheDocument();
     expect(screen.getByText('선택됨(Selected)')).toBeInTheDocument();
     expect(screen.getByText('제외됨(Skipped)')).toBeInTheDocument();
     expect(screen.getByText('보유 포지션(Held)')).toBeInTheDocument();
@@ -123,6 +123,6 @@ describe('CandidatesPage', () => {
     renderWithClient('BINANCE');
 
     expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent('Binance candidate scan failed');
-    expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=binance', expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=binance&limit=20', expect.anything());
   });
 });

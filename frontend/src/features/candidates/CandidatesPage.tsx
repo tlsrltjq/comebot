@@ -12,6 +12,7 @@ import { formatCurrency, formatDateTime, formatNumber } from '../../shared/forma
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 const LIVE_REFRESH_MS = 5_000;
+const FULL_SCAN_LIMIT = 20;
 
 export function CandidatesPage() {
   const [market, setMarket] = useState('');
@@ -20,8 +21,8 @@ export function CandidatesPage() {
   const { exchange } = useExchangeMode();
 
   const candidatesQuery = useQuery({
-    queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined),
-    queryFn: () => api.candidates(exchange, normalizedMarket || undefined),
+    queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined, FULL_SCAN_LIMIT),
+    queryFn: () => api.candidates(exchange, normalizedMarket || undefined, FULL_SCAN_LIMIT),
     refetchInterval: LIVE_REFRESH_MS,
   });
   const positionsQuery = useQuery({
@@ -55,7 +56,7 @@ export function CandidatesPage() {
       </header>
 
       <div className="metric-grid">
-        <MetricCard label="전체 후보(Total)" value={formatNumber(candidateSummary.total)} detail={`갱신 주기 ${LIVE_REFRESH_MS / 1000}s`} />
+        <MetricCard label="조회 후보(Scanned)" value={formatNumber(candidateSummary.total)} detail={`상위 ${FULL_SCAN_LIMIT} / ${LIVE_REFRESH_MS / 1000}s`} />
         <MetricCard label="선택됨(Selected)" value={formatNumber(candidateSummary.selected)} detail={`${formatNumber(candidateSummary.selectedRate, 1)}%`} />
         <MetricCard label="제외됨(Skipped)" value={formatNumber(candidateSummary.skipped)} detail={`${formatNumber(candidateSummary.skippedRate, 1)}%`} />
         <MetricCard label="보유 포지션(Held)" value={formatNumber(candidateSummary.held)} detail="후보 market 기준" />

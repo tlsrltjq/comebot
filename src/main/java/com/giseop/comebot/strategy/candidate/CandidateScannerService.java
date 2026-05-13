@@ -14,6 +14,10 @@ import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,12 +95,62 @@ public class CandidateScannerService {
     }
 
     public List<TradingCandidate> scanAllowedMarkets(ExchangeMode exchange) {
+        return scanAllowedMarkets(exchange, Integer.MAX_VALUE);
+    }
+
+    public List<TradingCandidate> scanAllowedMarkets(ExchangeMode exchange, int limit) {
         List<String> configuredMarkets = exchange == ExchangeMode.BINANCE
                 ? binanceCandidateMarkets()
                 : tradingProperties.getAllowedMarkets();
-        return marketSelectionService.resolve(configuredMarkets).stream()
-                .map(market -> scan(exchange, market))
+        List<String> markets = marketSelectionService.resolve(configuredMarkets);
+        return scanMarkets(exchange, limitMarkets(markets, limit));
+    }
+
+    private List<String> limitMarkets(List<String> markets, int limit) {
+        if (limit <= 0 || markets.size() <= limit) {
+            return markets;
+        }
+        return markets.subList(0, limit);
+    }
+
+    private List<TradingCandidate> scanMarkets(ExchangeMode exchange, List<String> markets) {
+        if (markets.size() <= 1) {
+            return markets.stream()
+                    .map(market -> scan(exchange, market))
+                    .toList();
+        }
+
+        int workerCount = Math.min(6, markets.size());
+        List<Callable<TradingCandidate>> tasks = markets.stream()
+                .<Callable<TradingCandidate>>map(market -> () -> scan(exchange, market))
                 .toList();
+        try (ExecutorService executorService = Executors.newFixedThreadPool(workerCount)) {
+            return executorService.invokeAll(tasks).stream()
+                    .map(future -> candidateFromFuture(exchange, future))
+                    .toList();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            log.warn("Candidate scan interrupted. exchange={}", exchange);
+            return markets.stream()
+                    .map(market -> skippedCandidate(market, "Candidate scan interrupted"))
+                    .toList();
+        }
+    }
+
+    private TradingCandidate candidateFromFuture(
+            ExchangeMode exchange,
+            java.util.concurrent.Future<TradingCandidate> future
+    ) {
+        try {
+            return future.get();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            log.warn("Candidate scan future interrupted. exchange={}", exchange);
+            return skippedCandidate(null, "Candidate scan interrupted");
+        } catch (ExecutionException exception) {
+            log.warn("Candidate scan future failed. exchange={}, error={}", exchange, exception.getClass().getSimpleName());
+            return skippedCandidate(null, "Candidate scan failed: " + failureReason(exception));
+        }
     }
 
     private List<String> binanceCandidateMarkets() {
@@ -155,6 +209,20 @@ public class CandidateScannerService {
         }
     }
 
+    private TradingCandidate skippedCandidate(String market, String reason) {
+        return new TradingCandidate(
+                market,
+                CandidateDecision.SKIPPED,
+                reason,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Instant.now()
+        );
+    }
+
     private CandleProvider candleProvider(ExchangeMode exchange) {
         return exchange == ExchangeMode.BINANCE ? binanceCandleProvider : upbitCandleProvider;
     }
@@ -165,7 +233,7 @@ public class CandidateScannerService {
                 && candle.accumulatedTradePrice().compareTo(BigDecimal.ZERO) > 0;
     }
 
-    private String failureReason(RuntimeException exception) {
+    private String failureReason(Throwable exception) {
         if (exception.getMessage() == null || exception.getMessage().isBlank()) {
             return exception.getClass().getSimpleName();
         }

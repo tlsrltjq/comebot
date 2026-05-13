@@ -231,7 +231,21 @@ class CandidateScannerServiceTest {
         List<TradingCandidate> candidates = service.scanAllowedMarkets();
 
         assertThat(candidates).hasSize(2);
-        assertThat(candleProvider.requestedMarkets).containsExactly("KRW-BTC", "KRW-ETH");
+        assertThat(candleProvider.requestedMarkets).containsExactlyInAnyOrder("KRW-BTC", "KRW-ETH");
+    }
+
+    @Test
+    void scansAllowedMarketsWithLimit() {
+        tradingProperties.setAllowedMarkets(List.of("KRW-BTC", "KRW-ETH", "KRW-XRP"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+
+        List<TradingCandidate> candidates = service.scanAllowedMarkets(ExchangeMode.UPBIT, 1);
+
+        assertThat(candidates).hasSize(1);
+        assertThat(candleProvider.requestedMarkets).containsExactly("KRW-BTC");
     }
 
     @Test
@@ -269,7 +283,7 @@ class CandidateScannerServiceTest {
 
         private List<Candle> candles = List.of();
         private boolean failure = false;
-        private final java.util.ArrayList<String> requestedMarkets = new java.util.ArrayList<>();
+        private final List<String> requestedMarkets = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
 
         @Override
         public List<Candle> getRecentCandles(String market, int unitMinutes, int count) {
