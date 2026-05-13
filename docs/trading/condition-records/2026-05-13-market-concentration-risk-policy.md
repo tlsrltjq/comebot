@@ -68,7 +68,8 @@ UPBIT 반복 손절 상위:
 
 - `KRW-XPL`, `KRW-ARB`, `KRW-ENA`는 노출 비중과 반복 손절 측면을 함께 봐야 한다.
 - 반복 손절 상위 10개 market은 곧바로 영구 제외하지 않는다.
-- 먼저 cooldown 또는 신규 BUY 제한 후보로 문서화하고, 코드 구현 시 기간 window를 둔다.
+- cooldown 1차 기준은 최근 7일 같은 `exchange + market`에서 FILLED Stop loss SELL 2회 이상으로 둔다.
+- cooldown 기본 기간은 마지막 손절 체결 시각부터 24시간이다.
 
 ## 구현 전제
 
@@ -76,7 +77,7 @@ UPBIT 반복 손절 상위:
 - 보유 PAPER SELL, 익절, 손절은 쏠림 기준으로 막지 않는다.
 - 실패한 주문을 성공으로 처리하지 않는다.
 - 실제 주문 API와 `REAL_TRADING`은 추가하지 않는다.
-- 반복 손절 cooldown과 UI 경고 표시는 후속 작업으로 분리한다.
+- 반복 손절 cooldown과 UI 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 후속 구현한다.
 
 ## 다음 구현 후보
 
@@ -84,4 +85,4 @@ UPBIT 반복 손절 상위:
 - Candidate 화면에서 쏠림 차단/반복 손절 cooldown 사유 표시
 - 관련 테스트:
   - UPBIT 7% 이상 경고 표시
-  - 반복 손절 상위 market cooldown 후보 표시
+  - 반복 손절 cooldown 후보 표시

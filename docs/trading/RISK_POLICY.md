@@ -75,7 +75,7 @@
 
 - 경고: 단일 market 추정 비중이 7% 이상이면 쏠림 경고 대상으로 본다.
 - 신규 BUY 차단: 단일 market 추정 비중이 10% 이상이면 해당 market 신규 BUY를 거절한다.
-- 반복 손절 주의: JPA history 기준 손절 count 상위 10개 market은 노출 비중과 무관하게 cooldown 또는 후보 제외 검토 대상으로 본다.
+- 반복 손절 주의: 최근 7일 같은 market 손절 2회 이상이면 노출 비중과 무관하게 cooldown 검토 대상으로 본다.
 - 2026-05-13 스냅샷 기준 `KRW-BLEND`는 9.0104%, `KRW-XPL`은 8.0092%로 경고 대상이다.
 - 같은 스냅샷 기준 `KRW-DEEP`, `KRW-ICP`, `KRW-CHIP`, `KRW-SPK`, `KRW-XPL`은 반복 손절 상위권이다.
 
@@ -88,16 +88,20 @@
 
 ### 반복 손절 기준
 
-- 기준 기간은 우선 최근 JPA 누적 구간 전체로 잡고, 추후 `24h`, `3d`, `7d` window를 분리한다.
-- 손절 count 상위 10개 market은 신규 BUY 후보에서 cooldown 검토 대상으로 본다.
-- 손절 count 상위 10개이면서 단일 market 추정 비중이 경고 기준 이상이면 우선 제한 대상으로 본다.
-- 이 기준은 실제 주문 API가 아니라 PAPER 신규 BUY 후보 제한에만 적용한다.
+- 기준 기간은 최근 7일 rolling window를 1차 기준으로 둔다.
+- 같은 `exchange + market`에서 FILLED SELL history의 `signalReason`에 `Stop loss`가 2회 이상 있으면 cooldown 대상으로 본다.
+- cooldown 기본 기간은 마지막 손절 체결 시각부터 24시간이다.
+- cooldown은 신규 BUY 후보 또는 신규 BUY 주문에만 적용한다.
+- SELL, 익절, 손절, 선택 PAPER SELL은 cooldown으로 막지 않는다.
+- 실패 또는 거절된 손절 주문은 cooldown count에 포함하지 않는다.
+- rolling window 안 손절 count가 2회 미만으로 내려가거나 마지막 손절 후 24시간이 지나면 cooldown 대상에서 빠진다.
+- 최초 구현 기본값은 비활성화로 둔다.
 
 ### 구현 범위
 
 - 현재 구현은 신규 BUY 주문 차단만 적용한다.
 - 쏠림 기준은 SELL, 익절, 손절 흐름을 막지 않는다.
-- 반복 손절 cooldown과 dashboard/portfolio 경고 표시는 별도 작업으로 진행한다.
+- 반복 손절 cooldown과 dashboard/portfolio/candidates 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 별도 구현한다.
 - 기준을 추가로 바꾸면 이 문서와 condition record를 함께 갱신한다.
 
 ## 시세 기준
@@ -116,3 +120,4 @@ GET /api/risk/status
 ```
 
 응답에는 maxOrderAmount, allowedMarkets, 익절/손절, 일일 제한 설정이 포함된다.
+다음 구현에서는 concentration threshold와 반복 손절 cooldown 요약을 추가한다.

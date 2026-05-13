@@ -45,7 +45,7 @@
 - OS 감지는 안내 표시 용도에만 사용하고, 거래/리스크 판단 로직에는 영향을 주지 않는다.
 - macOS와 Windows 모두에서 텍스트 overflow, 버튼 폭, 표 스크롤이 깨지지 않는다.
 
-## 다음 우선순위: 쏠림 경고 UI와 반복 손절 cooldown 설계
+## 완료: 쏠림 경고 UI와 반복 손절 cooldown 설계
 
 목표:
 
@@ -65,6 +65,30 @@
 - 구현 대상 파일과 테스트 범위가 명확하다.
 - 정책 문서와 코드 적용 범위가 충돌하지 않는다.
 - SELL, 익절, 손절 흐름이 쏠림 기준으로 막히지 않는다는 점이 명확하다.
+
+설계 문서:
+
+- `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md`
+
+## 다음 우선순위: 쏠림 경고 UI 1차 구현
+
+목표:
+
+- Portfolio 화면에서 exchange별 쏠림 경고/차단 기준을 혼동 없이 표시한다.
+- React가 리스크 판단을 재구현하지 않도록 서버 risk status에 concentration threshold를 포함한다.
+- BUY 차단 설정과 UI 경고 표시의 차이를 명확히 유지한다.
+
+작업:
+
+- `GET /api/risk/status`에 concentration 설정 응답을 추가한다.
+- Portfolio의 `market별 비중(Market Exposure)` 패널이 UPBIT 7%/10%, BINANCE 25%/40% 기준으로 뱃지를 표시하게 한다.
+- 관련 backend/frontend 테스트를 추가한다.
+
+완료 기준:
+
+- UPBIT과 BINANCE 기준이 같은 화면에서 섞이지 않는다.
+- `risk.concentration.enabled=false`여도 UI 경고 기준은 운영 참고로 표시된다.
+- SELL, 익절, 손절 흐름은 변경하지 않는다.
 
 ## 보류: 실제 주문 API
 
