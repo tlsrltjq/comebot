@@ -20,6 +20,7 @@ function renderWithClient() {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('DashboardPage', () => {
@@ -107,6 +108,7 @@ describe('DashboardPage', () => {
       return json({});
     });
     vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('navigator', { userAgentData: { platform: 'Windows' }, userAgent: '' });
 
     renderWithClient();
 
@@ -115,6 +117,10 @@ describe('DashboardPage', () => {
     expect(screen.getByText('후보 스케줄러(Candidate)')).toBeInTheDocument();
     expect(screen.getByText('청산 스케줄러(Exit)')).toBeInTheDocument();
     expect(screen.getByText('운영 제약(Controls)')).toBeInTheDocument();
+    expect(screen.getByText('운영 환경(OS Guide)')).toBeInTheDocument();
+    expect(screen.getByText('Windows')).toBeInTheDocument();
+    expect(screen.getByText('scripts\\run-upbit-paper.bat')).toBeInTheDocument();
+    expect(screen.getByText('%USERPROFILE%\\workspace\\comebot')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /실행|매수|BUY|매도|SELL/ })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());

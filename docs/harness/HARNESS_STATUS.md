@@ -39,10 +39,11 @@
 - 쏠림 경고 UI와 반복 손절 cooldown 설계
 - 쏠림 경고 UI 1차 구현
 - 반복 손절 cooldown 구현
+- OS별 운영 화면/가이드 대응 구현
 
 ## 다음 작업
 
-1. OS별 운영 화면/가이드 대응 계획 구현
+1. Dashboard/Candidates 리스크 경고 요약
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

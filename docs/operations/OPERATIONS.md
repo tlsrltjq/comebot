@@ -144,6 +144,15 @@ scripts/apply-schema.sh
 - `paper_realized_profit_event`: 거래소별 실현손익 이벤트
 - `scheduler_control_setting`: 자동매매 켜기/끄기와 후보 조회 주기
 
+## OS별 운영 안내
+
+웹 Dashboard의 `운영 환경(OS Guide)` 패널은 브라우저의 OS 정보를 안내 표시 용도로만 사용한다.
+거래소 선택, 전략 판단, 리스크 검증, 주문 실행에는 OS 감지 결과를 사용하지 않는다.
+
+- macOS: `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `/Users/<user>/workspace/comebot`
+- Windows: `scripts\run-upbit-paper.bat`, `scripts\apply-schema.bat`, `%USERPROFILE%\workspace\comebot`
+- 민감 정보는 OS와 무관하게 `.env` 또는 환경 변수로만 관리한다.
+
 ## JPA PAPER 누적 확인
 
 장기 PAPER 운용 전 현재 `.env`에서 storage type을 확인한다. 민감 정보는 출력하지 않는다.

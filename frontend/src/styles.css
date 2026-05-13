@@ -374,6 +374,10 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+.definition-list code {
+  overflow-wrap: anywhere;
+}
+
 .chart-panel {
   min-height: 330px;
 }

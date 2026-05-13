@@ -20,10 +20,11 @@
 - JPA PAPER 누적 실행 스크립트와 확인 절차 정리 완료
 - JPA PAPER 누적 데이터 스냅샷 기록 완료
 - OS별 운영 화면/가이드 대응 계획 문서화 완료
+- OS별 운영 화면/가이드 대응 구현 완료
 - market별 쏠림 리스크 기준 문서화 완료
 - market별 쏠림 신규 BUY 차단 구현 완료
 
-## 향후 개선 후보: OS별 운영 화면/가이드 대응
+## 완료: OS별 운영 화면/가이드 대응
 
 목표:
 
@@ -110,18 +111,24 @@
 - cooldown이 켜져 있으면 대상 market 신규 BUY만 거절된다.
 - 문서와 테스트가 7일/2회/24시간 기준을 동일하게 말한다.
 
-## 다음 우선순위: OS별 운영 화면/가이드 대응 계획 구현
+## 다음 우선순위: Dashboard/Candidates 리스크 경고 요약
 
 목표:
 
-- 사용자 운영체제(macOS/Windows)를 화면 안내와 운영 가이드에서 구분해 보여준다.
-- OS 감지는 안내 표시 용도에만 사용하고, 거래/리스크 판단에는 영향을 주지 않는다.
+- Dashboard와 Candidates에서 쏠림/cooldown 상태를 운영자가 더 빨리 확인하게 한다.
+- 서버 기준을 React에서 재구현하지 않고 risk/analytics API 응답을 표시한다.
 
 작업:
 
-- 웹에서 OS 안내 표시 위치를 정한다.
-- macOS/Windows 실행 명령과 경로 표기 차이를 운영 문서에 맞춘다.
-- 텍스트 overflow, 버튼 폭, 표 스크롤이 양쪽 OS에서 깨지지 않게 확인한다.
+- Dashboard에 concentration threshold와 stop-loss cooldown 설정 요약을 표시한다.
+- Candidates에서 현재 보유/쏠림/cooldown 관련 warning 표시 범위를 확정한다.
+- 필요한 경우 서버 API 응답을 확장하고 테스트를 추가한다.
+
+완료 기준:
+
+- UI 경고가 BUY 실행 버튼처럼 보이지 않는다.
+- SELL, 익절, 손절 흐름은 변경하지 않는다.
+- UPBIT/BINANCE 기준이 섞이지 않는다.
 
 ## 보류: 실제 주문 API
 

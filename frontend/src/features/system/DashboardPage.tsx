@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { Bot, CheckCircle2, Database, Radio, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
+import { Bot, CheckCircle2, Database, MonitorCog, Radio, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
@@ -9,6 +9,7 @@ import { LiveStatus } from '../../shared/ui/LiveStatus';
 import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
+import { detectOperatingSystem, operatingSystemGuide } from '../../shared/os/operatingSystem';
 
 const DASHBOARD_RANGE = '24h' as const;
 const LIVE_REFRESH_MS = 2_000;
@@ -81,6 +82,7 @@ export function DashboardPage() {
         exitEnabled: data.scheduler.exitEnabled,
         killSwitchEnabled: data.safety.killSwitchEnabled,
       });
+  const osGuide = operatingSystemGuide(detectOperatingSystem());
 
   return (
     <section className="page">
@@ -232,6 +234,27 @@ export function DashboardPage() {
             <dd>{marketSummary(data.risk.allowedMarkets, exchange)}</dd>
             <dt>수동 PAPER(Manual)</dt>
             <dd>{data.telegram.manualPaperExecutionEnabled ? '허용(Allowed)' : '차단(Blocked)'}</dd>
+          </dl>
+        </article>
+
+        <article className="panel">
+          <div className="panel-title-row">
+            <h2>운영 환경(OS Guide)</h2>
+            <MonitorCog size={20} />
+          </div>
+          <dl className="definition-list">
+            <dt>감지(OS)</dt>
+            <dd>{osGuide.label}</dd>
+            <dt>Shell</dt>
+            <dd>{osGuide.shell}</dd>
+            <dt>실행(Run)</dt>
+            <dd><code>{osGuide.runScript}</code></dd>
+            <dt>스키마(Schema)</dt>
+            <dd><code>{osGuide.schemaScript}</code></dd>
+            <dt>작업 경로(Path)</dt>
+            <dd><code>{osGuide.workspacePath}</code></dd>
+            <dt>단축키(Shortcut)</dt>
+            <dd>{osGuide.shortcutModifier}</dd>
           </dl>
         </article>
 
