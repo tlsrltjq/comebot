@@ -30,12 +30,12 @@
 - 2026-05-06 PAPER 매매기록 기준 마이너스 손익 원인 분석 문서화
 - 운영 상태 화면과 Telegram 용어 정리
 - Dashboard 운영 준비 상태 중심 UX 개선
+- Trade 자동매매 제어 UX 정리
 
 ## 다음 작업
 
-1. Trade 자동매매 제어 UX 정리
-2. JPA history/portfolio 저장소로 PAPER 운용 데이터 누적
-3. market별 쏠림 최소 리스크 기준 문서화
+1. JPA history/portfolio 저장소로 PAPER 운용 데이터 누적
+2. market별 쏠림 최소 리스크 기준 문서화
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

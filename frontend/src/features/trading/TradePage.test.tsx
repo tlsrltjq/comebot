@@ -42,10 +42,12 @@ describe('TradePage', () => {
               candidateMarkets: ['KRW-BTC', 'KRW-ETH'],
               candidateNotifySummary: false,
               candidateExchange: 'UPBIT',
+              candidateExchanges: ['UPBIT'],
               exitEnabled: true,
               exitFixedDelayMs: 5000,
               exitSaveHoldHistory: false,
               exitExchange: 'UPBIT',
+              exitExchanges: ['UPBIT'],
               exitPositionMarketCount: 1,
             },
             safety: { killSwitchEnabled: false },
@@ -56,16 +58,42 @@ describe('TradePage', () => {
         );
       }
 
+      if (url === '/api/trading-flow/history?exchange=upbit&limit=10') {
+        return new Response(
+          JSON.stringify([
+            {
+              id: 'history-1',
+              exchange: 'UPBIT',
+              market: 'KRW-BTC',
+              currentPrice: '100000000',
+              signalType: 'BUY',
+              signalReason: 'Long candidate selected',
+              orderCreated: true,
+              orderStatus: 'FILLED',
+              message: 'Paper buy filled',
+              createdAt: '2026-05-13T00:00:00Z',
+            },
+          ]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+
       return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
     });
     vi.stubGlobal('fetch', fetchMock);
 
     renderWithClient();
 
-    expect(await screen.findByText('전략 스케줄러(Legacy Trading Scheduler)')).toBeInTheDocument();
+    expect(await screen.findByText('제어 범위(Control scope)')).toBeInTheDocument();
+    expect(screen.getByText('후보 BUY와 보유 PAPER SELL 평가 중')).toBeInTheDocument();
+    expect(screen.getByText('PAPER 전용(Paper only)')).toBeInTheDocument();
+    expect(screen.getByText('전략 스케줄러(Legacy Trading Scheduler)')).toBeInTheDocument();
     expect(screen.getByText('청산 스케줄러(Exit Scheduler)')).toBeInTheDocument();
+    expect(screen.getByText('최근 결과(Latest)')).toBeInTheDocument();
+    expect(screen.getByText('KRW-BTC / FILLED')).toBeInTheDocument();
     expect(screen.getAllByText('켜짐(Enabled)').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
+    expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
   });
 });

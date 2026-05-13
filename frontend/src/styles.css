@@ -691,6 +691,125 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.auto-control-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.auto-control-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.auto-control-action {
+  display: grid;
+  gap: 14px;
+  align-content: space-between;
+  min-width: 0;
+}
+
+.auto-control-action span,
+.run-summary-grid span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.auto-control-action strong {
+  display: block;
+  margin-top: 6px;
+  color: #25333d;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.auto-control-action p {
+  margin-top: 8px;
+}
+
+.auto-control-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scheduler-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #edf1f4;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.scheduler-step svg {
+  margin-top: 2px;
+}
+
+.scheduler-step span,
+.scheduler-step small {
+  color: #60717f;
+}
+
+.scheduler-step span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.scheduler-step strong {
+  display: block;
+  margin-top: 4px;
+  color: #25333d;
+  overflow-wrap: anywhere;
+}
+
+.scheduler-step small {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.scheduler-step-good svg {
+  color: #116149;
+}
+
+.scheduler-step-warn svg {
+  color: #bd3d2f;
+}
+
+.run-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.run-summary-grid div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #edf1f4;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.run-summary-grid strong {
+  color: #25333d;
+  overflow-wrap: anywhere;
+}
+
 .filter-panel {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1128,6 +1247,12 @@ td:nth-child(7) {
   .page-header,
   .trade-panel {
     display: grid;
+  }
+
+  .auto-control-layout,
+  .scheduler-flow,
+  .run-summary-grid {
+    grid-template-columns: 1fr;
   }
 
   .metric-grid,
