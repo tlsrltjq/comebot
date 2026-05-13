@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CandidatesPage } from './CandidatesPage';
 import { ExchangeModeContext } from '../../shared/exchange/ExchangeModeContext';
@@ -28,6 +29,7 @@ afterEach(() => {
 
 describe('CandidatesPage', () => {
   it('shows candidates without exposing manual execution controls', async () => {
+    const user = userEvent.setup();
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url === '/api/candidates?exchange=upbit') {
@@ -44,7 +46,35 @@ describe('CandidatesPage', () => {
               trend: 'UP',
               scannedAt: '2026-04-30T00:00:00Z',
             },
+            {
+              market: 'KRW-ETH',
+              decision: 'SKIPPED',
+              reason: 'Trend is not UP',
+              currentPrice: '2500000',
+              priceChangeRate: '-0.4',
+              highLowRangeRate: '2.2',
+              tradeAmountChangeRate: '4.1',
+              trend: 'DOWN',
+              scannedAt: '2026-04-30T00:00:01Z',
+            },
+            {
+              market: 'KRW-XRP',
+              decision: 'SKIPPED',
+              reason: 'Trend is not UP',
+              currentPrice: '800',
+              priceChangeRate: '0.1',
+              highLowRangeRate: '1.2',
+              tradeAmountChangeRate: '2.1',
+              trend: 'SIDEWAYS',
+              scannedAt: '2026-04-30T00:00:02Z',
+            },
           ]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+      if (url === '/api/portfolio/positions?exchange=upbit') {
+        return new Response(
+          JSON.stringify([{ market: 'KRW-BTC', quantity: '0.001', averageBuyPrice: '89000000' }]),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         );
       }
@@ -56,7 +86,22 @@ describe('CandidatesPage', () => {
     renderWithClient();
 
     expect(await screen.findByText('KRW-BTC')).toBeInTheDocument();
+    expect(screen.getByText('전체 후보(Total)')).toBeInTheDocument();
+    expect(screen.getByText('선택됨(Selected)')).toBeInTheDocument();
+    expect(screen.getByText('제외됨(Skipped)')).toBeInTheDocument();
+    expect(screen.getByText('보유 포지션(Held)')).toBeInTheDocument();
+    expect(screen.getByText('제외 사유 TOP 5(Skipped Reasons)')).toBeInTheDocument();
+    expect(screen.getAllByText('Trend is not UP').length).toBeGreaterThan(0);
+    expect(screen.getByText('보유(Held)')).toBeInTheDocument();
+    expect(screen.getAllByText('없음(None)').length).toBeGreaterThan(0);
     expect(screen.getByText('SELECTED')).toBeInTheDocument();
+    expect(screen.getAllByText('SKIPPED').length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole('button', { name: /선택 후보만/ }));
+    expect(screen.queryByText('KRW-ETH')).not.toBeInTheDocument();
+    expect(screen.queryByText('KRW-XRP')).not.toBeInTheDocument();
+    expect(screen.getByText('KRW-BTC')).toBeInTheDocument();
+
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
   });
@@ -67,7 +112,7 @@ describe('CandidatesPage', () => {
 
     renderWithClient('BINANCE');
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Binance exchange mode is not implemented yet');
+    expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent('Binance exchange mode is not implemented yet');
     expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=binance', expect.anything());
   });
 });
