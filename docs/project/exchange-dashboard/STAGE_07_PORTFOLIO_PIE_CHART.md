@@ -1,5 +1,7 @@
 # Stage 7: Portfolio Pie Chart
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 포트폴리오/자산 화면에서 현금, market별 포지션, 거래소별 비중을 원형 그래프로 확인할 수 있게 한다.

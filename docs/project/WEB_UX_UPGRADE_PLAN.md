@@ -1,5 +1,7 @@
 # Web UX Upgrade Plan
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 현재 웹은 자동 PAPER_TRADING 상태를 확인하는 기본 모니터링 화면이다. 다음 단계에서는 수동 매매 기능을 추가하지 않고, 자동 실행을 오래 켜두면서 판단하기 쉬운 운영 대시보드로 발전시킨다.

@@ -1,5 +1,7 @@
 # Stage 2: Backend ExchangeMode Skeleton
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 백엔드가 거래소 모드를 이해할 수 있는 최소 골격을 만든다. 기존 Upbit 기반 API는 `exchange` 파라미터가 없어도 지금처럼 동작해야 한다.

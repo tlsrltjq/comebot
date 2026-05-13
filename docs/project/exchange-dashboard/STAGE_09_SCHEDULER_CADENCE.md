@@ -1,5 +1,7 @@
 # Stage 9: Scheduler Cadence Separation
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 후보 탐색 주기와 보유 포지션 exit 평가 주기를 분리하고, 너무 잦은 실행으로 인한 중복 주문과 history 과다 적재를 줄인다.

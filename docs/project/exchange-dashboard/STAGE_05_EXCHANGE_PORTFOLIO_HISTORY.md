@@ -1,5 +1,7 @@
 # Stage 5: Exchange Portfolio and History Separation
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 `UPBIT`과 `BINANCE`의 PAPER 포트폴리오, 포지션, 실현손익, 거래 이력을 분리한다. 같은 화면 구조를 유지하되 선택한 거래소의 PAPER 데이터만 조회되도록 한다.

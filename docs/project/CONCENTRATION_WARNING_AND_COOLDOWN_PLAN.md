@@ -1,5 +1,7 @@
 # Concentration Warning And Cooldown Plan
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 market별 쏠림 경고와 반복 손절 cooldown은 신규 BUY 판단을 더 보수적으로 만들기 위한 운영 보조 장치다.

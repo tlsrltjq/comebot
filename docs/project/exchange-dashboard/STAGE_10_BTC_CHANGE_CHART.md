@@ -1,5 +1,7 @@
 # Stage 10: BTC Change Chart
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 Market Overview 성격의 페이지에서 비트코인 등락률 그래프를 제공한다.

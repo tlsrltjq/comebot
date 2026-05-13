@@ -1,5 +1,7 @@
 # Stage 6: Selected PAPER Position Sell
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 포트폴리오 화면에서 사용자가 체크박스로 선택한 보유 PAPER 포지션만 수동 매도할 수 있게 한다.

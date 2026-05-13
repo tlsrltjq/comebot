@@ -1,5 +1,7 @@
 # Stage 8: WebSocket Price Feed
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 REST 반복 호출 중심 시세 조회를 거래소별 WebSocket 수신 구조로 개선한다.

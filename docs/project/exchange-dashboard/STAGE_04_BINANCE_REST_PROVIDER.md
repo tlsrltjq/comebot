@@ -1,5 +1,7 @@
 # Stage 4: Binance REST Provider
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 Binance 공개 REST API로 현재가와 캔들 데이터를 가져오는 provider를 추가한다. 기존 Upbit provider 구조를 유지하면서 `ExchangeMode=BINANCE`일 때 Binance 데이터를 사용할 수 있는 백엔드 기반을 만든다.

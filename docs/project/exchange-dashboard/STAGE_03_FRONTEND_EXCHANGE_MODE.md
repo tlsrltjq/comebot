@@ -1,5 +1,7 @@
 # Stage 3: Frontend Exchange Mode
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 웹 화면 구조는 그대로 유지하고, 사이드바 상단에서 `UPBIT / BINANCE` 모드를 선택할 수 있게 한다. 선택한 거래소 모드는 프론트 상태, React Query cache key, API 요청 파라미터에 일관되게 반영한다.

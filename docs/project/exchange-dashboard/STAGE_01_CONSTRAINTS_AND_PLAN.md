@@ -1,5 +1,7 @@
 # Stage 1: Constraints and Plan
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 거래소 모드 확장, 선택 PAPER 매도, WebSocket 시세 수신, 자산 차트, BTC 등락률 그래프의 전체 방향을 문서화한다.

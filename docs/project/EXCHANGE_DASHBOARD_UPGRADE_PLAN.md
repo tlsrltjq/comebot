@@ -1,5 +1,7 @@
 # Exchange Dashboard Upgrade Plan
 
+> Historical plan. Current behavior is defined by code, tests, Git history, and active policy documents.
+
 ## 목표
 
 Comebot 웹 대시보드를 `PAPER_TRADING` 범위 안에서 확장한다. Upbit 중심 구조를 유지하되, 거래소 모드, 선택 포지션 PAPER 매도, WebSocket 시세 수신, 자산 비중 차트, BTC 등락률 그래프를 단계적으로 추가한다.
