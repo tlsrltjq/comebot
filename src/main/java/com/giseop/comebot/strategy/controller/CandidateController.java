@@ -34,17 +34,16 @@ public class CandidateController {
             @RequestParam(required = false) String exchange
     ) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
-        ExchangeModeResolver.requireImplemented(exchangeMode);
 
         if (market != null && market.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
 
         if (market != null) {
-            return ResponseEntity.ok(List.of(TradingCandidateResponse.from(candidateScannerService.scan(market))));
+            return ResponseEntity.ok(List.of(TradingCandidateResponse.from(candidateScannerService.scan(exchangeMode, market))));
         }
 
-        List<TradingCandidateResponse> response = candidateScannerService.scanAllowedMarkets().stream()
+        List<TradingCandidateResponse> response = candidateScannerService.scanAllowedMarkets(exchangeMode).stream()
                 .map(TradingCandidateResponse::from)
                 .toList();
         return ResponseEntity.ok(response);

@@ -7,8 +7,11 @@ import com.giseop.comebot.market.domain.TickerSnapshot;
 import com.giseop.comebot.market.service.TickerSnapshotStore;
 import com.giseop.comebot.market.websocket.MarketWebSocketProperties;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -67,11 +70,40 @@ public class SnapshotMarketPriceProvider implements MarketPriceProvider {
         if (markets == null) {
             return List.of();
         }
-        return markets.stream()
+        List<String> requestedMarkets = markets.stream()
                 .filter(market -> market != null && !market.isBlank())
                 .map(this::normalize)
                 .distinct()
-                .map(this::getCurrentPrice)
+                .toList();
+        if (requestedMarkets.isEmpty()) {
+            return List.of();
+        }
+
+        Instant now = Instant.now();
+        Map<String, MarketPrice> prices = new LinkedHashMap<>();
+        Map<ExchangeMode, List<String>> fallbackMarkets = new LinkedHashMap<>();
+
+        for (String market : requestedMarkets) {
+            ExchangeMode exchange = resolveExchange(market);
+            tickerSnapshotStore.findFresh(
+                            exchange,
+                            market,
+                            marketWebSocketProperties.orderStaleDuration(),
+                            now
+                    )
+                    .map(TickerSnapshot::toMarketPrice)
+                    .ifPresentOrElse(
+                            price -> prices.put(market, price),
+                            () -> fallbackMarkets.computeIfAbsent(exchange, ignored -> new ArrayList<>()).add(market)
+                    );
+        }
+
+        fallbackMarkets.forEach((exchange, exchangeMarkets) -> fetchFallbackBatch(exchange, exchangeMarkets)
+                .forEach(price -> prices.put(price.market(), price)));
+
+        return requestedMarkets.stream()
+                .map(prices::get)
+                .filter(price -> price != null)
                 .toList();
     }
 
@@ -100,6 +132,29 @@ public class SnapshotMarketPriceProvider implements MarketPriceProvider {
             return binanceFallbackProvider;
         }
         return upbitFallbackProvider;
+    }
+
+    private List<MarketPrice> fetchFallbackBatch(ExchangeMode exchange, List<String> markets) {
+        if (markets == null || markets.isEmpty()) {
+            return List.of();
+        }
+        try {
+            List<MarketPrice> fallbackPrices = fallbackProvider(exchange).getCurrentPrices(markets);
+            fallbackPrices.forEach(price -> tickerSnapshotStore.save(new TickerSnapshot(
+                    exchange,
+                    price.market(),
+                    price.currentPrice(),
+                    null,
+                    price.capturedAt(),
+                    PriceSource.REST_FALLBACK
+            )));
+            return fallbackPrices;
+        } catch (RuntimeException exception) {
+            throw new IllegalStateException(
+                    "Fresh ticker snapshots are not available and REST fallback failed for " + markets,
+                    exception
+            );
+        }
     }
 
     private ExchangeMode resolveExchange(String market) {

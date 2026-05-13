@@ -6,7 +6,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.trading.service.PositionExitExecutionService;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +37,25 @@ class ScheduledPositionExitRunnerTest {
 
         assertThat(summary.soldCount()).isEqualTo(1);
         verify(service).execute(properties.getExchange());
+    }
+
+    @Test
+    void runOnceCanExecuteUpbitAndBinanceInSameRun() {
+        PositionExitSchedulerProperties properties = new PositionExitSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setExchanges(List.of(ExchangeMode.UPBIT, ExchangeMode.BINANCE));
+        PositionExitExecutionService service = mock(PositionExitExecutionService.class);
+        when(service.execute(ExchangeMode.UPBIT)).thenReturn(new PositionExitRunSummary(1, 1, 0, 0, 1, 0));
+        when(service.execute(ExchangeMode.BINANCE)).thenReturn(new PositionExitRunSummary(2, 2, 1, 0, 1, 0));
+
+        PositionExitRunSummary summary = new ScheduledPositionExitRunner(properties, service).runOnce();
+
+        assertThat(summary.positionMarkets()).isEqualTo(3);
+        assertThat(summary.evaluatedMarkets()).isEqualTo(3);
+        assertThat(summary.soldCount()).isEqualTo(1);
+        assertThat(summary.holdCount()).isEqualTo(2);
+        verify(service).execute(ExchangeMode.UPBIT);
+        verify(service).execute(ExchangeMode.BINANCE);
     }
 
     @Test

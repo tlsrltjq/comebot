@@ -101,8 +101,10 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.candidateMarkets[1]").value("KRW-ETH"))
                 .andExpect(jsonPath("$.scheduler.candidateNotifySummary").value(false))
                 .andExpect(jsonPath("$.scheduler.candidateExchange").value("UPBIT"))
+                .andExpect(jsonPath("$.scheduler.candidateExchanges[0]").value("UPBIT"))
                 .andExpect(jsonPath("$.scheduler.exitEnabled").value(true))
                 .andExpect(jsonPath("$.scheduler.exitFixedDelayMs").value(5000))
+                .andExpect(jsonPath("$.scheduler.exitExchanges[0]").value("UPBIT"))
                 .andExpect(jsonPath("$.scheduler.exitPositionMarketCount").value(1))
                 .andExpect(jsonPath("$.safety.killSwitchEnabled").value(false))
                 .andExpect(jsonPath("$.notification.enabled").value(false))
@@ -195,6 +197,8 @@ class SystemStatusControllerTest {
                 .thenReturn(false);
         org.mockito.Mockito.when(candidateSchedulerProperties.getExchange())
                 .thenReturn(ExchangeMode.UPBIT);
+        org.mockito.Mockito.when(candidateSchedulerProperties.getExchanges())
+                .thenReturn(List.of(ExchangeMode.UPBIT));
         org.mockito.Mockito.when(positionExitSchedulerProperties.isEnabled())
                 .thenReturn(true);
         org.mockito.Mockito.when(positionExitSchedulerProperties.getFixedDelayMs())
@@ -203,6 +207,8 @@ class SystemStatusControllerTest {
                 .thenReturn(false);
         org.mockito.Mockito.when(positionExitSchedulerProperties.getExchange())
                 .thenReturn(ExchangeMode.UPBIT);
+        org.mockito.Mockito.when(positionExitSchedulerProperties.getExchanges())
+                .thenReturn(List.of(ExchangeMode.UPBIT));
         org.mockito.Mockito.when(paperPortfolioService.findPositions(ExchangeMode.UPBIT))
                 .thenReturn(List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.1"), new BigDecimal("90000000"))));
         org.mockito.Mockito.when(safetyProperties.isKillSwitchEnabled())

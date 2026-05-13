@@ -87,9 +87,27 @@ public class CandidateScannerService {
     }
 
     public List<TradingCandidate> scanAllowedMarkets() {
-        return marketSelectionService.resolve(tradingProperties.getAllowedMarkets()).stream()
-                .map(this::scan)
+        return scanAllowedMarkets(ExchangeMode.UPBIT);
+    }
+
+    public List<TradingCandidate> scanAllowedMarkets(ExchangeMode exchange) {
+        List<String> configuredMarkets = exchange == ExchangeMode.BINANCE
+                ? binanceCandidateMarkets()
+                : tradingProperties.getAllowedMarkets();
+        return marketSelectionService.resolve(configuredMarkets).stream()
+                .map(market -> scan(exchange, market))
                 .toList();
+    }
+
+    private List<String> binanceCandidateMarkets() {
+        List<String> configuredMarkets = tradingProperties.getAllowedMarkets();
+        boolean hasBinanceMarket = configuredMarkets.stream()
+                .anyMatch(market -> MarketSelectionService.ALL_USDT.equalsIgnoreCase(market)
+                        || (market != null && market.trim().toUpperCase().endsWith("USDT")));
+        if (hasBinanceMarket) {
+            return configuredMarkets;
+        }
+        return List.of(MarketSelectionService.ALL_USDT);
     }
 
     public TradingCandidate scan(String market) {

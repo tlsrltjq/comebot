@@ -65,6 +65,28 @@ class ScheduledCandidateExecutionRunnerTest {
     }
 
     @Test
+    void runScheduledCanExecuteUpbitAndBinanceInSameRun() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setExchanges(List.of(ExchangeMode.UPBIT, ExchangeMode.BINANCE));
+        properties.setMarkets(List.of("KRW-BTC", "BTCUSDT"));
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        when(candidateExecutionService.execute(ExchangeMode.UPBIT, "KRW-BTC"))
+                .thenReturn(result("KRW-BTC", SignalType.HOLD, null));
+        when(candidateExecutionService.execute(ExchangeMode.BINANCE, "BTCUSDT"))
+                .thenReturn(result("BTCUSDT", SignalType.HOLD, null));
+
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
+
+        verify(candidateExecutionService).execute(ExchangeMode.UPBIT, "KRW-BTC");
+        verify(candidateExecutionService).execute(ExchangeMode.BINANCE, "BTCUSDT");
+        verify(candidateExecutionService, never()).execute(ExchangeMode.UPBIT, "BTCUSDT");
+        verify(candidateExecutionService, never()).execute(ExchangeMode.BINANCE, "KRW-BTC");
+        org.assertj.core.api.Assertions.assertThat(summary.requestedMarkets()).isEqualTo(2);
+        org.assertj.core.api.Assertions.assertThat(summary.executedMarkets()).isEqualTo(2);
+    }
+
+    @Test
     void runScheduledDoesNotExecuteWhenMarketsAreEmpty() {
         CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
         properties.setEnabled(true);

@@ -8,6 +8,7 @@ import com.giseop.comebot.analytics.dto.LossTradeResponse;
 import com.giseop.comebot.analytics.dto.MarketCountResponse;
 import com.giseop.comebot.analytics.dto.ReasonCountResponse;
 import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
@@ -56,9 +57,13 @@ public class AnalyticsService {
     }
 
     public AnalyticsSummaryResponse summary(AnalyticsRange range) {
+        return summary(range, ExchangeMode.UPBIT);
+    }
+
+    public AnalyticsSummaryResponse summary(AnalyticsRange range, ExchangeMode exchange) {
         Instant to = Instant.now(clock);
         Instant from = to.minus(range.duration());
-        List<TradingFlowHistory> histories = tradingFlowHistoryService.findSince(from);
+        List<TradingFlowHistory> histories = tradingFlowHistoryService.findSince(exchange, from);
         List<TradingFlowHistory> stopLosses = stopLosses(histories);
         List<TradingFlowHistory> takeProfits = takeProfits(histories);
 
@@ -83,9 +88,13 @@ public class AnalyticsService {
     }
 
     public AnalyticsPnlResponse pnl(AnalyticsRange range) {
+        return pnl(range, ExchangeMode.UPBIT);
+    }
+
+    public AnalyticsPnlResponse pnl(AnalyticsRange range, ExchangeMode exchange) {
         Instant to = Instant.now(clock);
         Instant from = to.minus(range.duration());
-        PortfolioValuationResponse valuation = paperPortfolioValuationService.valuate();
+        PortfolioValuationResponse valuation = paperPortfolioValuationService.valuate(exchange);
         return new AnalyticsPnlResponse(
                 range.value(),
                 from,
@@ -101,8 +110,12 @@ public class AnalyticsService {
     }
 
     public AnalyticsLossResponse losses(AnalyticsRange range) {
+        return losses(range, ExchangeMode.UPBIT);
+    }
+
+    public AnalyticsLossResponse losses(AnalyticsRange range, ExchangeMode exchange) {
         Instant from = Instant.now(clock).minus(range.duration());
-        List<TradingFlowHistory> stopLosses = stopLosses(tradingFlowHistoryService.findSince(from));
+        List<TradingFlowHistory> stopLosses = stopLosses(tradingFlowHistoryService.findSince(exchange, from));
         List<LossTradeResponse> worstTrades = stopLosses.stream()
                 .map(this::toLossTrade)
                 .filter(loss -> loss.rate() != null)

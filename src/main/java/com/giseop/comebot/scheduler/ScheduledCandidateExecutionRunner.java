@@ -7,6 +7,7 @@ import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class ScheduledCandidateExecutionRunner {
     private final CandidateSchedulerNotificationService candidateSchedulerNotificationService;
     private final MarketSelectionService marketSelectionService;
     private final AtomicBoolean running;
+    private final AtomicLong lastRunStartedAt;
 
     @Autowired
     public ScheduledCandidateExecutionRunner(
@@ -37,6 +39,7 @@ public class ScheduledCandidateExecutionRunner {
         this.candidateSchedulerNotificationService = candidateSchedulerNotificationService;
         this.marketSelectionService = marketSelectionService;
         this.running = new AtomicBoolean(false);
+        this.lastRunStartedAt = new AtomicLong(0);
     }
 
     ScheduledCandidateExecutionRunner(
@@ -52,9 +55,9 @@ public class ScheduledCandidateExecutionRunner {
         );
     }
 
-    @Scheduled(fixedDelayString = "${trading.candidate-scheduler.fixed-delay-ms:60000}")
+    @Scheduled(fixedDelay = 30000)
     public void runScheduled() {
-        CandidateSchedulerRunSummary summary = runOnce();
+        CandidateSchedulerRunSummary summary = runScheduledIfDue();
         if (summary.requestedMarkets() > 0) {
             log.info(
                     "Scheduled candidate execution summary. requested={}, executed={}, filled={}, rejected={}, hold={}, failed={}",
@@ -69,6 +72,13 @@ public class ScheduledCandidateExecutionRunner {
         }
     }
 
+    public CandidateSchedulerRunSummary runScheduledIfDue() {
+        if (!isDue()) {
+            return CandidateSchedulerRunSummary.empty();
+        }
+        return runOnce();
+    }
+
     public CandidateSchedulerRunSummary runOnce() {
         if (!candidateSchedulerProperties.isEnabled()) {
             return CandidateSchedulerRunSummary.empty();
@@ -79,24 +89,34 @@ public class ScheduledCandidateExecutionRunner {
         }
 
         try {
+            lastRunStartedAt.set(System.currentTimeMillis());
             return executeOnce();
         } finally {
             running.set(false);
         }
     }
 
-    private CandidateSchedulerRunSummary executeOnce() {
-        ExchangeMode exchange = candidateSchedulerProperties.getExchange();
-        List<String> markets = marketSelectionService.resolve(candidateSchedulerProperties.getMarkets());
+    private boolean isDue() {
+        long fixedDelayMs = Math.max(30000, candidateSchedulerProperties.getFixedDelayMs());
+        long now = System.currentTimeMillis();
+        long previous = lastRunStartedAt.get();
+        return previous == 0 || now - previous >= fixedDelayMs;
+    }
 
+    private CandidateSchedulerRunSummary executeOnce() {
         CandidateSchedulerRunSummary summary = CandidateSchedulerRunSummary.empty();
-        for (int index = 0; index < markets.size(); index++) {
-            String market = markets.get(index);
-            summary = summary.add(executeMarket(exchange, market));
-            delayBeforeNextMarket(index, markets.size());
+        int requestedMarkets = 0;
+        for (ExchangeMode exchange : candidateSchedulerProperties.getExchanges()) {
+            List<String> markets = marketSelectionService.resolve(exchange, candidateSchedulerProperties.getMarkets());
+            requestedMarkets += markets.size();
+            for (int index = 0; index < markets.size(); index++) {
+                String market = markets.get(index);
+                summary = summary.add(executeMarket(exchange, market));
+                delayBeforeNextMarket(index, markets.size());
+            }
         }
         return new CandidateSchedulerRunSummary(
-                markets.size(),
+                requestedMarkets,
                 summary.executedMarkets(),
                 summary.filledCount(),
                 summary.rejectedCount(),

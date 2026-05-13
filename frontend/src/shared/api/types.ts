@@ -26,10 +26,12 @@ export interface SystemStatusResponse {
     candidateMarkets: string[];
     candidateNotifySummary: boolean;
     candidateExchange: ExchangeMode;
+    candidateExchanges?: ExchangeMode[];
     exitEnabled: boolean;
     exitFixedDelayMs: number;
     exitSaveHoldHistory: boolean;
     exitExchange: ExchangeMode;
+    exitExchanges?: ExchangeMode[];
     exitPositionMarketCount: number;
   };
   safety: { killSwitchEnabled: boolean };
@@ -40,6 +42,21 @@ export interface SystemStatusResponse {
     sendRejected: boolean;
   };
   telegram: { enabled: boolean; configured: boolean; inboundEnabled: boolean; manualPaperExecutionEnabled: boolean };
+}
+
+export interface MarketProviderStatusResponse {
+  provider: string;
+  externalProvider: boolean;
+  message: string;
+  webSocketEnabled: boolean;
+  snapshotCount: number;
+  upbitSnapshotCount: number;
+  binanceSnapshotCount: number;
+}
+
+export interface SchedulerControlRequest {
+  autoTradingEnabled?: boolean;
+  candidateFixedDelayMs?: 30000 | 60000;
 }
 
 export interface TradingCandidateResponse {

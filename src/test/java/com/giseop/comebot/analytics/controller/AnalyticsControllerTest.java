@@ -1,6 +1,7 @@
 package com.giseop.comebot.analytics.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +12,7 @@ import com.giseop.comebot.analytics.dto.AnalyticsPnlResponse;
 import com.giseop.comebot.analytics.dto.AnalyticsRange;
 import com.giseop.comebot.analytics.dto.AnalyticsSummaryResponse;
 import com.giseop.comebot.analytics.service.AnalyticsService;
+import com.giseop.comebot.exchange.ExchangeMode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -31,7 +33,7 @@ class AnalyticsControllerTest {
 
     @Test
     void summaryReturnsAnalyticsSummary() throws Exception {
-        when(analyticsService.summary(any(AnalyticsRange.class))).thenReturn(new AnalyticsSummaryResponse(
+        when(analyticsService.summary(any(AnalyticsRange.class), any(ExchangeMode.class))).thenReturn(new AnalyticsSummaryResponse(
                 "24h",
                 Instant.parse("2026-05-03T00:00:00Z"),
                 Instant.parse("2026-05-04T00:00:00Z"),
@@ -58,8 +60,36 @@ class AnalyticsControllerTest {
     }
 
     @Test
+    void summaryPassesExchangeMode() throws Exception {
+        when(analyticsService.summary(any(AnalyticsRange.class), any(ExchangeMode.class))).thenReturn(new AnalyticsSummaryResponse(
+                "1h",
+                Instant.parse("2026-05-03T23:00:00Z"),
+                Instant.parse("2026-05-04T00:00:00Z"),
+                1,
+                1,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                List.of(),
+                List.of()
+        ));
+
+        mockMvc.perform(get("/api/analytics/summary").param("range", "1h").param("exchange", "binance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.buyCount").value(1));
+
+        verify(analyticsService).summary(AnalyticsRange.ONE_HOUR, ExchangeMode.BINANCE);
+    }
+
+    @Test
     void pnlReturnsPortfolioProfitSummary() throws Exception {
-        when(analyticsService.pnl(any(AnalyticsRange.class))).thenReturn(new AnalyticsPnlResponse(
+        when(analyticsService.pnl(any(AnalyticsRange.class), any(ExchangeMode.class))).thenReturn(new AnalyticsPnlResponse(
                 "1h",
                 Instant.parse("2026-05-03T23:00:00Z"),
                 Instant.parse("2026-05-04T00:00:00Z"),
@@ -80,7 +110,7 @@ class AnalyticsControllerTest {
 
     @Test
     void lossesReturnsLossSummary() throws Exception {
-        when(analyticsService.losses(any(AnalyticsRange.class))).thenReturn(new AnalyticsLossResponse("24h", List.of(), List.of()));
+        when(analyticsService.losses(any(AnalyticsRange.class), any(ExchangeMode.class))).thenReturn(new AnalyticsLossResponse("24h", List.of(), List.of()));
 
         mockMvc.perform(get("/api/analytics/losses"))
                 .andExpect(status().isOk())

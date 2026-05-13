@@ -8,6 +8,7 @@ import com.giseop.comebot.analytics.dto.AnalyticsLossResponse;
 import com.giseop.comebot.analytics.dto.AnalyticsRange;
 import com.giseop.comebot.analytics.dto.AnalyticsSummaryResponse;
 import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.portfolio.dto.PortfolioValuationResponse;
@@ -33,7 +34,7 @@ class AnalyticsServiceTest {
 
     @Test
     void summaryCountsSignalsAndExitReasons() {
-        when(historyService.findSince(now.minus(AnalyticsRange.TWENTY_FOUR_HOURS.duration()))).thenReturn(List.of(
+        when(historyService.findSince(ExchangeMode.UPBIT, now.minus(AnalyticsRange.TWENTY_FOUR_HOURS.duration()))).thenReturn(List.of(
                 history("KRW-BTC", SignalType.BUY, OrderStatus.FILLED, "Volatility long candidate selected"),
                 history("KRW-BTC", SignalType.SELL, OrderStatus.FILLED, "Stop loss rate reached: -1.25000000"),
                 history("KRW-ETH", SignalType.SELL, OrderStatus.FILLED, "Take profit rate reached: 2.50000000"),
@@ -58,7 +59,7 @@ class AnalyticsServiceTest {
 
     @Test
     void pnlUsesPortfolioValuation() {
-        when(valuationService.valuate()).thenReturn(new PortfolioValuationResponse(
+        when(valuationService.valuate(ExchangeMode.UPBIT)).thenReturn(new PortfolioValuationResponse(
                 new BigDecimal("900000"),
                 new BigDecimal("120000"),
                 new BigDecimal("1020000"),
@@ -72,8 +73,20 @@ class AnalyticsServiceTest {
     }
 
     @Test
+    void summaryUsesRequestedExchange() {
+        when(historyService.findSince(ExchangeMode.BINANCE, now.minus(AnalyticsRange.ONE_HOUR.duration()))).thenReturn(List.of(
+                history(ExchangeMode.BINANCE, "BTCUSDT", SignalType.BUY, OrderStatus.FILLED, "Volatility long candidate selected")
+        ));
+
+        AnalyticsSummaryResponse response = service.summary(AnalyticsRange.ONE_HOUR, ExchangeMode.BINANCE);
+
+        assertThat(response.total()).isEqualTo(1);
+        assertThat(response.buyCount()).isEqualTo(1);
+    }
+
+    @Test
     void lossesReturnWorstStopLossTrades() {
-        when(historyService.findSince(now.minus(AnalyticsRange.ONE_HOUR.duration()))).thenReturn(List.of(
+        when(historyService.findSince(ExchangeMode.UPBIT, now.minus(AnalyticsRange.ONE_HOUR.duration()))).thenReturn(List.of(
                 history("KRW-BTC", SignalType.SELL, OrderStatus.FILLED, "Stop loss rate reached: -0.80000000"),
                 history("KRW-ETH", SignalType.SELL, OrderStatus.FILLED, "Stop loss rate reached: -2.00000000"),
                 history("KRW-XRP", SignalType.SELL, OrderStatus.FILLED, "Take profit rate reached: 1.80000000")
@@ -87,8 +100,13 @@ class AnalyticsServiceTest {
     }
 
     private TradingFlowHistory history(String market, SignalType signalType, OrderStatus orderStatus, String reason) {
+        return history(ExchangeMode.UPBIT, market, signalType, orderStatus, reason);
+    }
+
+    private TradingFlowHistory history(ExchangeMode exchange, String market, SignalType signalType, OrderStatus orderStatus, String reason) {
         return new TradingFlowHistory(
                 java.util.UUID.randomUUID().toString(),
+                exchange,
                 market,
                 new BigDecimal("100"),
                 signalType,

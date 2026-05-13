@@ -2,11 +2,13 @@ package com.giseop.comebot.strategy.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.StrategyProperties;
-import com.giseop.comebot.strategy.candidate.CandidateScannerProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.domain.MarketPrice;
+import com.giseop.comebot.strategy.candidate.CandidateScannerProperties;
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
 import com.giseop.comebot.strategy.candidate.TradingCandidate;
@@ -42,7 +44,7 @@ class VolatilityBreakoutLongStrategyTest {
 
     @Test
     void selectedCandidateCreatesBuySignal() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(candidate(CandidateDecision.SELECTED));
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(candidate("KRW-BTC", CandidateDecision.SELECTED));
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 
@@ -55,7 +57,7 @@ class VolatilityBreakoutLongStrategyTest {
 
     @Test
     void skippedCandidateCreatesHoldSignal() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(candidate(CandidateDecision.SKIPPED));
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(candidate("KRW-BTC", CandidateDecision.SKIPPED));
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 
@@ -74,7 +76,7 @@ class VolatilityBreakoutLongStrategyTest {
 
     @Test
     void scannerFailureCreatesHoldSignal() {
-        when(candidateScannerService.scan("KRW-BTC")).thenThrow(new IllegalStateException("failed"));
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenThrow(new IllegalStateException("failed"));
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 
@@ -84,8 +86,8 @@ class VolatilityBreakoutLongStrategyTest {
 
     @Test
     void existingPaperPositionCreatesHoldSignal() {
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(candidate(CandidateDecision.SELECTED));
-        when(positionEntryGuardService.shouldBlockEntry("KRW-BTC")).thenReturn(true);
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(candidate("KRW-BTC", CandidateDecision.SELECTED));
+        when(positionEntryGuardService.shouldBlockEntry(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(true);
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 
@@ -98,20 +100,30 @@ class VolatilityBreakoutLongStrategyTest {
         StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
         override.setOrderQuantity(new BigDecimal("0.003"));
         overrideProperties.setMarkets(java.util.Map.of("KRW-BTC", override));
-        when(candidateScannerService.scan("KRW-BTC")).thenReturn(candidate(CandidateDecision.SELECTED));
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(candidate("KRW-BTC", CandidateDecision.SELECTED));
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 
         assertThat(signal.quantity()).isEqualByComparingTo("100.00000000");
     }
 
+    @Test
+    void binanceUsdtMarketUsesBinanceCandidateScan() {
+        when(candidateScannerService.scan(ExchangeMode.BINANCE, "BTCUSDT")).thenReturn(candidate("BTCUSDT", CandidateDecision.SKIPPED));
+
+        TradingSignal signal = strategy.evaluate(marketPrice("BTCUSDT", "80000"));
+
+        assertThat(signal.signalType()).isEqualTo(SignalType.HOLD);
+        verify(candidateScannerService).scan(ExchangeMode.BINANCE, "BTCUSDT");
+    }
+
     private MarketPrice marketPrice(String market, String currentPrice) {
         return new MarketPrice(market, new BigDecimal(currentPrice), Instant.now());
     }
 
-    private TradingCandidate candidate(CandidateDecision decision) {
+    private TradingCandidate candidate(String market, CandidateDecision decision) {
         return new TradingCandidate(
-                "KRW-BTC",
+                market,
                 decision,
                 decision == CandidateDecision.SELECTED ? "Volatility long candidate selected" : "Trend is not UP",
                 new BigDecimal("100"),

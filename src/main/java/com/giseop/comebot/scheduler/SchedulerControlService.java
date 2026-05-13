@@ -1,0 +1,86 @@
+package com.giseop.comebot.scheduler;
+
+import com.giseop.comebot.scheduler.persistence.SchedulerControlSettingEntity;
+import com.giseop.comebot.scheduler.persistence.SpringDataSchedulerControlSettingJpaRepository;
+import jakarta.annotation.PostConstruct;
+import java.time.Instant;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+
+@Service
+public class SchedulerControlService {
+
+    private static final long THIRTY_SECONDS = 30000;
+    private static final long SIXTY_SECONDS = 60000;
+
+    private final CandidateSchedulerProperties candidateSchedulerProperties;
+    private final PositionExitSchedulerProperties positionExitSchedulerProperties;
+    private final SpringDataSchedulerControlSettingJpaRepository settingRepository;
+
+    @Autowired
+    public SchedulerControlService(
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            PositionExitSchedulerProperties positionExitSchedulerProperties,
+            ObjectProvider<SpringDataSchedulerControlSettingJpaRepository> settingRepository
+    ) {
+        this.candidateSchedulerProperties = candidateSchedulerProperties;
+        this.positionExitSchedulerProperties = positionExitSchedulerProperties;
+        this.settingRepository = settingRepository.getIfAvailable();
+    }
+
+    SchedulerControlService(
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            PositionExitSchedulerProperties positionExitSchedulerProperties,
+            SpringDataSchedulerControlSettingJpaRepository settingRepository
+    ) {
+        this.candidateSchedulerProperties = candidateSchedulerProperties;
+        this.positionExitSchedulerProperties = positionExitSchedulerProperties;
+        this.settingRepository = settingRepository;
+    }
+
+    @PostConstruct
+    public void restorePersistedSetting() {
+        if (settingRepository == null) {
+            return;
+        }
+        settingRepository.findById(SchedulerControlSettingEntity.DEFAULT_ID)
+                .ifPresent(setting -> apply(setting.isAutoTradingEnabled(), setting.getCandidateFixedDelayMs()));
+    }
+
+    public void update(Boolean autoTradingEnabled, Long candidateFixedDelayMs) {
+        boolean nextAutoTradingEnabled = autoTradingEnabled == null
+                ? isAutoTradingEnabled()
+                : autoTradingEnabled;
+        long nextCandidateFixedDelayMs = candidateFixedDelayMs == null
+                ? candidateSchedulerProperties.getFixedDelayMs()
+                : candidateFixedDelayMs;
+
+        validateCandidateFixedDelayMs(nextCandidateFixedDelayMs);
+        apply(nextAutoTradingEnabled, nextCandidateFixedDelayMs);
+        if (settingRepository != null) {
+            settingRepository.save(new SchedulerControlSettingEntity(
+                    nextAutoTradingEnabled,
+                    nextCandidateFixedDelayMs,
+                    Instant.now()
+            ));
+        }
+    }
+
+    public void validateCandidateFixedDelayMs(long candidateFixedDelayMs) {
+        if (candidateFixedDelayMs != THIRTY_SECONDS && candidateFixedDelayMs != SIXTY_SECONDS) {
+            throw new IllegalArgumentException("candidateFixedDelayMs must be 30000 or 60000");
+        }
+    }
+
+    private void apply(boolean autoTradingEnabled, long candidateFixedDelayMs) {
+        validateCandidateFixedDelayMs(candidateFixedDelayMs);
+        candidateSchedulerProperties.setEnabled(autoTradingEnabled);
+        positionExitSchedulerProperties.setEnabled(autoTradingEnabled);
+        candidateSchedulerProperties.setFixedDelayMs(candidateFixedDelayMs);
+    }
+
+    private boolean isAutoTradingEnabled() {
+        return candidateSchedulerProperties.isEnabled() && positionExitSchedulerProperties.isEnabled();
+    }
+}

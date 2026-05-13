@@ -15,6 +15,7 @@ import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
 import com.giseop.comebot.strategy.candidate.TradingCandidate;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,7 +42,7 @@ class CandidateControllerTest {
 
     @Test
     void getCandidatesReturnsAllowedMarketScanResults() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets()).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
                 candidate("KRW-BTC", CandidateDecision.SELECTED),
                 candidate("KRW-ETH", CandidateDecision.SKIPPED)
         ));
@@ -57,7 +58,7 @@ class CandidateControllerTest {
 
     @Test
     void getCandidatesWithMarketScansSingleMarket() throws Exception {
-        when(candidateScannerService.scan("KRW-BTC"))
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC"))
                 .thenReturn(candidate("KRW-BTC", CandidateDecision.SELECTED));
 
         mockMvc.perform(get("/api/candidates").param("market", "KRW-BTC"))
@@ -65,13 +66,13 @@ class CandidateControllerTest {
                 .andExpect(jsonPath("$[0].market").value("KRW-BTC"))
                 .andExpect(jsonPath("$[0].decision").value("SELECTED"));
 
-        verify(candidateScannerService).scan("KRW-BTC");
+        verify(candidateScannerService).scan(ExchangeMode.UPBIT, "KRW-BTC");
         verify(candidateScannerService, never()).scanAllowedMarkets();
     }
 
     @Test
     void getCandidatesAcceptsLowercaseUpbitExchange() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets()).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
                 candidate("KRW-BTC", CandidateDecision.SELECTED)
         ));
 
@@ -81,11 +82,16 @@ class CandidateControllerTest {
     }
 
     @Test
-    void getCandidatesReturnsNotImplementedForBinanceExchange() throws Exception {
-        mockMvc.perform(get("/api/candidates").param("exchange", "binance"))
-                .andExpect(status().isNotImplemented());
+    void getCandidatesAcceptsBinanceExchange() throws Exception {
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.BINANCE)).thenReturn(List.of(
+                candidate("BTCUSDT", CandidateDecision.SELECTED)
+        ));
 
-        verify(candidateScannerService, never()).scanAllowedMarkets();
+        mockMvc.perform(get("/api/candidates").param("exchange", "binance"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].market").value("BTCUSDT"));
+
+        verify(candidateScannerService).scanAllowedMarkets(ExchangeMode.BINANCE);
     }
 
     @Test
@@ -140,7 +146,7 @@ class CandidateControllerTest {
 
     @Test
     void responseDoesNotExposeSensitiveValues() throws Exception {
-        when(candidateScannerService.scanAllowedMarkets()).thenReturn(List.of(
+        when(candidateScannerService.scanAllowedMarkets(ExchangeMode.UPBIT)).thenReturn(List.of(
                 candidate("KRW-BTC", CandidateDecision.SELECTED)
         ));
 

@@ -2,6 +2,7 @@ package com.giseop.comebot.market.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.dto.BinanceUsdtTickerResponse;
 import com.giseop.comebot.market.dto.UpbitKrwTickerResponse;
 import java.math.BigDecimal;
@@ -68,6 +69,31 @@ class MarketSelectionServiceTest {
     void allUsdtAllowsAnyUsdtSymbolForRiskValidation() {
         assertThat(service.isAllowed("BTCUSDT", List.of("ALL_USDT"))).isTrue();
         assertThat(service.isAllowed("ETHBTC", List.of("ALL_USDT"))).isFalse();
+    }
+
+    @Test
+    void exchangeAwareResolveKeepsOnlyMarketsForThatExchange() {
+        assertThat(service.resolve(ExchangeMode.UPBIT, List.of("KRW-BTC", "BTCUSDT", "ALL_USDT")))
+                .containsExactly("KRW-BTC");
+        assertThat(service.resolve(ExchangeMode.BINANCE, List.of("KRW-BTC", "BTCUSDT", "ALL_KRW")))
+                .containsExactly("BTCUSDT");
+    }
+
+    @Test
+    void exchangeAwareResolveSupportsBothAllTokensInOneConfig() {
+        tickerStore.replace(List.of(
+                ticker("KRW-ETH", "100"),
+                ticker("KRW-BTC", "300")
+        ));
+        binanceTickerStore.replace(List.of(
+                binanceTicker("ETHUSDT", "200"),
+                binanceTicker("BTCUSDT", "300")
+        ));
+
+        assertThat(service.resolve(ExchangeMode.UPBIT, List.of("ALL_KRW", "ALL_USDT")))
+                .containsExactly("KRW-BTC", "KRW-ETH");
+        assertThat(service.resolve(ExchangeMode.BINANCE, List.of("ALL_KRW", "ALL_USDT")))
+                .containsExactly("BTCUSDT", "ETHUSDT");
     }
 
     private UpbitKrwTickerResponse ticker(String market) {

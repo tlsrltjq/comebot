@@ -21,11 +21,27 @@ class StrategyMarketSettingsServiceTest {
         );
 
         assertThat(service.orderQuantity("KRW-BTC")).isEqualByComparingTo("0.001");
+        assertThat(service.orderAmount("KRW-BTC")).isEqualByComparingTo("10000");
         assertThat(service.buyQuantity("KRW-BTC", new BigDecimal("100"))).isEqualByComparingTo("100.00000000");
         assertThat(service.minPriceChangeRate("KRW-BTC")).isEqualByComparingTo("0.3");
         assertThat(service.minTradeAmountChangeRate("KRW-BTC")).isEqualByComparingTo("20");
         assertThat(service.maxPriceChangeRate("KRW-BTC")).isEqualByComparingTo("10");
         assertThat(service.maxHighLowRangeRate("KRW-BTC")).isEqualByComparingTo("20");
+    }
+
+    @Test
+    void binanceMarketsUseBinanceOrderAmount() {
+        StrategyProperties strategyProperties = new StrategyProperties();
+        strategyProperties.setOrderAmount(new BigDecimal("10000"));
+        strategyProperties.setBinanceOrderAmount(new BigDecimal("10"));
+        StrategyMarketSettingsService service = new StrategyMarketSettingsService(
+                strategyProperties,
+                new CandidateScannerProperties(),
+                new StrategyMarketOverrideProperties()
+        );
+
+        assertThat(service.orderAmount("BTCUSDT")).isEqualByComparingTo("10");
+        assertThat(service.buyQuantity("BTCUSDT", new BigDecimal("2"))).isEqualByComparingTo("5.00000000");
     }
 
     @Test

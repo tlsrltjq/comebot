@@ -8,18 +8,20 @@ import { formatCurrency, formatDateTime, formatNumber } from '../../shared/forma
 import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
+import { LiveStatus } from '../../shared/ui/LiveStatus';
 import { MetricCard } from '../../shared/ui/MetricCard';
 
 const ranges: BtcChangeRange[] = ['1h', '24h', '3d', '7d'];
+const MARKET_REFRESH_MS = 10_000;
 
 export function MarketOverviewPage() {
   const { exchange } = useExchangeMode();
   const [range, setRange] = useState<BtcChangeRange>('24h');
   const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, isFetching, dataUpdatedAt } = useQuery({
     queryKey: queryKeys.btcChange(range, exchange),
     queryFn: () => api.btcChange(range, exchange),
-    refetchInterval: 30_000,
+    refetchInterval: MARKET_REFRESH_MS,
   });
   const chartData = (data?.points ?? []).map((point) => ({
     time: point.time,
@@ -37,7 +39,7 @@ export function MarketOverviewPage() {
           <p>선택 거래소 기준 비트코인 등락률을 조회 전용 그래프로 확인합니다.</p>
         </div>
         <Badge tone="info">{exchange}</Badge>
-        <span className="live-indicator">자동 갱신(Live)</span>
+        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching} intervalMs={MARKET_REFRESH_MS} />
       </header>
 
       <div className="segmented-row" aria-label="BTC 등락률 범위(BTC change range)">

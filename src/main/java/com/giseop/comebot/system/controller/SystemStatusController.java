@@ -18,6 +18,7 @@ import com.giseop.comebot.system.dto.SystemStatusResponse;
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.inbound.TelegramInboundProperties;
 import java.util.ArrayList;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -103,10 +104,12 @@ public class SystemStatusController {
                         new ArrayList<>(candidateSchedulerProperties.getMarkets()),
                         candidateSchedulerProperties.isNotifySummary(),
                         candidateSchedulerProperties.getExchange().name(),
+                        names(candidateSchedulerProperties.getExchanges()),
                         positionExitSchedulerProperties.isEnabled(),
                         positionExitSchedulerProperties.getFixedDelayMs(),
                         positionExitSchedulerProperties.isSaveHoldHistory(),
                         positionExitSchedulerProperties.getExchange().name(),
+                        names(positionExitSchedulerProperties.getExchanges()),
                         exitPositionMarketCount()
                 ),
                 new SystemStatusResponse.SafetyStatus(
@@ -128,11 +131,19 @@ public class SystemStatusController {
     }
 
     private int exitPositionMarketCount() {
-        return (int) paperPortfolioService.findPositions(positionExitSchedulerProperties.getExchange()).stream()
-                .filter(position -> position.quantity() != null && position.quantity().signum() > 0)
-                .map(position -> position.market())
-                .filter(market -> market != null && !market.isBlank())
-                .distinct()
-                .count();
+        return positionExitSchedulerProperties.getExchanges().stream()
+                .mapToInt(exchange -> (int) paperPortfolioService.findPositions(exchange).stream()
+                        .filter(position -> position.quantity() != null && position.quantity().signum() > 0)
+                        .map(position -> position.market())
+                        .filter(market -> market != null && !market.isBlank())
+                        .distinct()
+                        .count())
+                .sum();
+    }
+
+    private List<String> names(List<ExchangeMode> exchanges) {
+        return exchanges.stream()
+                .map(ExchangeMode::name)
+                .toList();
     }
 }

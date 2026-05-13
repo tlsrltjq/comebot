@@ -14,8 +14,11 @@ import './styles.css';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10_000,
+      staleTime: 2_000,
       retry: 1,
+      refetchIntervalInBackground: true,
+      refetchOnReconnect: 'always',
+      refetchOnWindowFocus: 'always',
     },
   },
 });

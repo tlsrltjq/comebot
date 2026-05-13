@@ -35,7 +35,51 @@ GET /api/scheduler/status
 ```
 
 `/api/scheduler/status`는 기존 trading flow scheduler와 candidate scheduler 상태를 함께 보여준다.
-candidate scheduler의 `candidateExchange` 값으로 현재 후보 실행 거래소를 확인한다.
+candidate scheduler의 `candidateExchanges` 값으로 현재 후보 실행 거래소 목록을 확인한다.
+
+자동 PAPER 매매 런타임 제어:
+
+```http
+PUT /api/scheduler/control
+Content-Type: application/json
+
+{
+  "autoTradingEnabled": true,
+  "candidateFixedDelayMs": 30000
+}
+```
+
+- `autoTradingEnabled`는 candidate scheduler와 exit scheduler를 함께 켜거나 끈다.
+- `candidateFixedDelayMs`는 `30000` 또는 `60000`만 허용한다.
+- 후보 스케줄러는 30초마다 상태를 확인하고, 설정값이 60초이면 내부에서 다음 실행을 건너뛰어 런타임 변경을 반영한다.
+- 변경된 자동매매 설정은 `scheduler_control_setting` 테이블에 저장되고, 백엔드 재시작 시 환경변수 기본값보다 우선 적용된다.
+
+## 웹 운영 화면
+
+프론트엔드는 React Query 기본값으로 백그라운드 탭, 네트워크 재연결, 브라우저 포커스 복귀 시 자동 재조회한다.
+각 주요 화면은 `실시간 운영(Live)` 배지에 최근 갱신 시각과 갱신 중 상태를 표시한다.
+
+운영형 PAPER 확인 시에는 실제 공개 시세와 스케줄러를 켜고, 주문/자산만 PAPER로 유지한다.
+실제 주문 API와 REAL_TRADING은 계속 금지한다.
+장시간 손익 확인 시에는 히스토리와 PAPER 포트폴리오를 모두 JPA로 저장한다.
+
+권장 로컬 확인값:
+
+```properties
+MARKET_PRICE_PROVIDER=SNAPSHOT
+HISTORY_STORAGE_TYPE=JPA
+PAPER_PORTFOLIO_STORAGE_TYPE=JPA
+MARKET_WEBSOCKET_ENABLED=true
+MARKET_WEBSOCKET_UPBIT_ENABLED=true
+MARKET_UPBIT_KRW_TICKER_POLLING_ENABLED=true
+TRADING_SCHEDULER_ENABLED=true
+TRADING_SCHEDULER_MARKETS=KRW-BTC,KRW-ETH
+TRADING_CANDIDATE_SCHEDULER_ENABLED=true
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW,ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_EXCHANGES=UPBIT,BINANCE
+TRADING_EXIT_SCHEDULER_ENABLED=true
+TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE
+```
 
 ## 트레이딩 플로우
 
@@ -76,3 +120,11 @@ JPA 저장소 사용 전:
 ```bat
 scripts\apply-schema.bat
 ```
+
+`schema.sql`은 다음 PAPER 저장 테이블도 생성한다.
+
+- `trading_flow_history`: 거래소별 자동 실행 이력
+- `paper_portfolio_state`: 거래소별 PAPER 현금과 누적 실현손익
+- `paper_position`: 거래소별 PAPER 보유 포지션
+- `paper_realized_profit_event`: 거래소별 실현손익 이벤트
+- `scheduler_control_setting`: 자동매매 켜기/끄기와 후보 조회 주기

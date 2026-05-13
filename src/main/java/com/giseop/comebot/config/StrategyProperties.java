@@ -1,5 +1,6 @@
 package com.giseop.comebot.config;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import java.math.BigDecimal;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ public class StrategyProperties {
     private BigDecimal sellPrice = new BigDecimal("110000000");
     private BigDecimal orderQuantity = new BigDecimal("0.001");
     private BigDecimal orderAmount = new BigDecimal("10000");
+    private BigDecimal binanceOrderAmount = new BigDecimal("10");
 
     public BigDecimal getBuyPrice() {
         return buyPrice;
@@ -43,5 +45,17 @@ public class StrategyProperties {
 
     public void setOrderAmount(BigDecimal orderAmount) {
         this.orderAmount = orderAmount == null ? new BigDecimal("10000") : orderAmount;
+    }
+
+    public BigDecimal getOrderAmount(ExchangeMode exchange) {
+        return exchange == ExchangeMode.BINANCE ? binanceOrderAmount : orderAmount;
+    }
+
+    public BigDecimal getBinanceOrderAmount() {
+        return binanceOrderAmount;
+    }
+
+    public void setBinanceOrderAmount(BigDecimal binanceOrderAmount) {
+        this.binanceOrderAmount = binanceOrderAmount == null ? new BigDecimal("10") : binanceOrderAmount;
     }
 }

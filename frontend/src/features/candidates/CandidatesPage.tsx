@@ -4,8 +4,11 @@ import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
-import { formatDateTime, formatKrw, formatNumber } from '../../shared/format';
+import { LiveStatus } from '../../shared/ui/LiveStatus';
+import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
+
+const LIVE_REFRESH_MS = 5_000;
 
 export function CandidatesPage() {
   const [market, setMarket] = useState('');
@@ -15,10 +18,11 @@ export function CandidatesPage() {
   const candidatesQuery = useQuery({
     queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined),
     queryFn: () => api.candidates(exchange, normalizedMarket || undefined),
-    refetchInterval: 5_000,
+    refetchInterval: LIVE_REFRESH_MS,
   });
 
   const candidates = useMemo(() => candidatesQuery.data ?? [], [candidatesQuery.data]);
+  const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
 
   return (
     <section className="page">
@@ -27,13 +31,13 @@ export function CandidatesPage() {
           <h1>후보 모니터링(Candidate Monitoring)</h1>
           <p>자동 실행 스케줄러(Auto scheduler)가 판단하는 롱 후보를 확인합니다.</p>
         </div>
-        <span className="live-indicator">자동 갱신(Live)</span>
+        <LiveStatus updatedAt={candidatesQuery.dataUpdatedAt} isFetching={candidatesQuery.isFetching} intervalMs={LIVE_REFRESH_MS} />
       </header>
 
       <div className="toolbar">
         <label>
           마켓(Market)
-          <input value={market} onChange={(event) => setMarket(event.target.value)} placeholder="전체 또는 KRW-BTC" />
+          <input value={market} onChange={(event) => setMarket(event.target.value)} placeholder={exchange === 'BINANCE' ? '전체 또는 BTCUSDT' : '전체 또는 KRW-BTC'} />
         </label>
       </div>
 
@@ -62,7 +66,7 @@ export function CandidatesPage() {
                   <Badge tone={candidate.decision === 'SELECTED' ? 'good' : 'neutral'}>{candidate.decision}</Badge>
                 </td>
                 <td>{candidate.trend ?? '-'}</td>
-                <td>{formatKrw(candidate.currentPrice)}</td>
+                <td>{formatCurrency(candidate.currentPrice, currency)}</td>
                 <td>{formatNumber(candidate.priceChangeRate, 2)}%</td>
                 <td>{formatNumber(candidate.highLowRangeRate, 2)}%</td>
                 <td>{formatNumber(candidate.tradeAmountChangeRate, 2)}%</td>

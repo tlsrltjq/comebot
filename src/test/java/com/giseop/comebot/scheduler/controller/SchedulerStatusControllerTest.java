@@ -2,11 +2,13 @@ package com.giseop.comebot.scheduler.controller;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
+import com.giseop.comebot.scheduler.SchedulerControlService;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
@@ -33,6 +35,9 @@ class SchedulerStatusControllerTest {
 
     @MockitoBean
     private PositionExitSchedulerProperties positionExitSchedulerProperties;
+
+    @MockitoBean
+    private SchedulerControlService schedulerControlService;
 
     @MockitoBean
     private PaperPortfolioService paperPortfolioService;
@@ -67,10 +72,12 @@ class SchedulerStatusControllerTest {
                 .andExpect(jsonPath("$.candidateMarkets[1]").value("KRW-ETH"))
                 .andExpect(jsonPath("$.candidateNotifySummary").value(false))
                 .andExpect(jsonPath("$.candidateExchange").value("UPBIT"))
+                .andExpect(jsonPath("$.candidateExchanges[0]").value("UPBIT"))
                 .andExpect(jsonPath("$.exitEnabled").value(true))
                 .andExpect(jsonPath("$.exitFixedDelayMs").value(5000))
                 .andExpect(jsonPath("$.exitSaveHoldHistory").value(false))
                 .andExpect(jsonPath("$.exitExchange").value("UPBIT"))
+                .andExpect(jsonPath("$.exitExchanges[0]").value("UPBIT"))
                 .andExpect(jsonPath("$.exitPositionMarketCount").value(1));
     }
 
@@ -102,6 +109,35 @@ class SchedulerStatusControllerTest {
                 .andExpect(jsonPath("$.exitSaveHoldHistory").value(true));
     }
 
+    @Test
+    void updateControlTurnsAutoTradingOnAndSetsCandidateDelay() throws Exception {
+        schedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        candidateSchedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        exitSchedulerProperties(false, 5000, false, ExchangeMode.UPBIT);
+
+        mockMvc.perform(put("/api/scheduler/control")
+                        .contentType("application/json")
+                        .content("{\"autoTradingEnabled\":true,\"candidateFixedDelayMs\":30000}"))
+                .andExpect(status().isOk());
+
+        org.mockito.Mockito.verify(schedulerControlService).update(true, 30000L);
+    }
+
+    @Test
+    void updateControlRejectsUnsupportedCandidateDelay() throws Exception {
+        schedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        candidateSchedulerProperties(false, 60000, List.of("KRW-BTC", "KRW-ETH"));
+        exitSchedulerProperties(false, 5000, false, ExchangeMode.UPBIT);
+
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("bad delay"))
+                .when(schedulerControlService).update(null, 45000L);
+
+        mockMvc.perform(put("/api/scheduler/control")
+                        .contentType("application/json")
+                        .content("{\"candidateFixedDelayMs\":45000}"))
+                .andExpect(status().isBadRequest());
+    }
+
     private void schedulerProperties(boolean enabled, long fixedDelayMs, List<String> markets) {
         when(tradingSchedulerProperties.isEnabled()).thenReturn(enabled);
         when(tradingSchedulerProperties.getFixedDelayMs()).thenReturn(fixedDelayMs);
@@ -114,6 +150,7 @@ class SchedulerStatusControllerTest {
         when(candidateSchedulerProperties.getMarkets()).thenReturn(markets);
         when(candidateSchedulerProperties.isNotifySummary()).thenReturn(false);
         when(candidateSchedulerProperties.getExchange()).thenReturn(ExchangeMode.UPBIT);
+        when(candidateSchedulerProperties.getExchanges()).thenReturn(List.of(ExchangeMode.UPBIT));
     }
 
     private void exitSchedulerProperties(boolean enabled, long fixedDelayMs, boolean saveHoldHistory, ExchangeMode exchange) {
@@ -121,6 +158,7 @@ class SchedulerStatusControllerTest {
         when(positionExitSchedulerProperties.getFixedDelayMs()).thenReturn(fixedDelayMs);
         when(positionExitSchedulerProperties.isSaveHoldHistory()).thenReturn(saveHoldHistory);
         when(positionExitSchedulerProperties.getExchange()).thenReturn(exchange);
+        when(positionExitSchedulerProperties.getExchanges()).thenReturn(List.of(exchange));
         when(paperPortfolioService.findPositions(exchange)).thenReturn(List.of());
     }
 }

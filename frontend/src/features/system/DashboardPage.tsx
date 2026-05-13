@@ -1,38 +1,46 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { Activity, Bell, Bot, Database, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
+import { Activity, Bell, Bot, Database, Radio, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
+import { LiveStatus } from '../../shared/ui/LiveStatus';
 import { MetricCard } from '../../shared/ui/MetricCard';
-import { formatDateTime, formatKrw, formatNumber } from '../../shared/format';
+import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 const DASHBOARD_RANGE = '24h' as const;
+const LIVE_REFRESH_MS = 2_000;
 
 export function DashboardPage() {
   const { exchange } = useExchangeMode();
-  const { data, error, isLoading } = useQuery({
+  const systemQuery = useQuery({
     queryKey: queryKeys.system(exchange),
     queryFn: () => api.systemStatus(exchange),
-    refetchInterval: 5_000,
+    refetchInterval: LIVE_REFRESH_MS,
+  });
+  const providerQuery = useQuery({
+    queryKey: queryKeys.marketProviderStatus(),
+    queryFn: api.marketProviderStatus,
+    refetchInterval: LIVE_REFRESH_MS,
   });
   const { data: summary } = useQuery({
     queryKey: queryKeys.analyticsSummary(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsSummary(DASHBOARD_RANGE, exchange),
-    refetchInterval: 5_000,
+    refetchInterval: LIVE_REFRESH_MS,
   });
   const { data: pnl } = useQuery({
     queryKey: queryKeys.analyticsPnl(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsPnl(DASHBOARD_RANGE, exchange),
-    refetchInterval: 5_000,
+    refetchInterval: LIVE_REFRESH_MS,
   });
   const { data: losses } = useQuery({
     queryKey: queryKeys.analyticsLosses(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsLosses(DASHBOARD_RANGE, exchange),
-    refetchInterval: 5_000,
+    refetchInterval: LIVE_REFRESH_MS,
   });
+  const { data, error, isLoading, isFetching, dataUpdatedAt } = systemQuery;
 
   if (isLoading) {
     return <div className="page-state">상태를 불러오는 중</div>;
@@ -49,6 +57,12 @@ export function DashboardPage() {
   ];
   const totalProfit = Number(pnl?.totalProfit ?? 0);
   const totalProfitTone = totalProfit >= 0 ? 'tone-positive' : 'tone-negative';
+  const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
+  const money = (value: string | number | null | undefined) => formatCurrency(value, currency);
+  const snapshotCount = exchange === 'BINANCE' ? providerQuery.data?.binanceSnapshotCount : providerQuery.data?.upbitSnapshotCount;
+  const marketCoverage = data.scheduler.candidateMarkets.some((market) => market === 'ALL_KRW' || market === 'ALL_USDT')
+    ? marketSummary(data.scheduler.candidateMarkets, exchange)
+    : `${snapshotCount ?? 0}`;
 
   return (
     <section className="page">
@@ -60,11 +74,12 @@ export function DashboardPage() {
         <Badge tone={data.safety.killSwitchEnabled ? 'bad' : 'good'}>
           {data.safety.killSwitchEnabled ? '중지됨(Kill switch ON)' : '자동 실행 가능(Auto ready)'}
         </Badge>
-        <span className="live-indicator">자동 갱신(Live)</span>
+        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching || providerQuery.isFetching} intervalMs={LIVE_REFRESH_MS} />
       </header>
 
       <div className="status-strip" aria-label="운영 상태(Operation status)">
         <StatusPill icon={<Database size={16} />} label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
+        <StatusPill icon={<Radio size={16} />} label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={Boolean(providerQuery.data?.externalProvider && ((snapshotCount ?? 0) > 0 || marketCoverage.startsWith('전체')))} />
         <StatusPill icon={<Activity size={16} />} label="자동매매(Auto)" value={data.scheduler.enabled ? `${data.scheduler.fixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.enabled} />
         <StatusPill icon={<Bot size={16} />} label="후보(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.candidateEnabled} />
         <StatusPill icon={<TrendingDown size={16} />} label="청산(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.exitEnabled} />
@@ -72,10 +87,10 @@ export function DashboardPage() {
       </div>
 
       <div className="metric-grid">
-        <MetricCard label="총 평가금(Total Equity)" value={formatKrw(pnl?.totalEquity)} detail={`현금(Cash) ${formatKrw(pnl?.cash)}`} />
-        <MetricCard label="총 손익(Total PnL)" value={formatKrw(pnl?.totalProfit)} detail={`실현(Realized) ${formatKrw(pnl?.realizedProfit)}`} />
-        <MetricCard label="보유 평가(Position Value)" value={formatKrw(pnl?.totalPositionValue)} detail={`미실현(Unrealized) ${formatKrw(pnl?.unrealizedProfit)}`} />
-        <MetricCard label="전략(Strategy)" value={data.strategy.strategyName} detail={`1회 거래(Order) ${formatNumber(data.strategy.orderAmount, 0)} KRW`} />
+        <MetricCard label="총 평가금(Total Equity)" value={money(pnl?.totalEquity)} detail={`현금(Cash) ${money(pnl?.cash)}`} />
+        <MetricCard label="총 손익(Total PnL)" value={money(pnl?.totalProfit)} detail={`실현(Realized) ${money(pnl?.realizedProfit)}`} />
+        <MetricCard label="보유 평가(Position Value)" value={money(pnl?.totalPositionValue)} detail={`미실현(Unrealized) ${money(pnl?.unrealizedProfit)}`} />
+        <MetricCard label="전략(Strategy)" value={data.strategy.strategyName} detail={`1회 거래(Order) ${formatNumber(data.strategy.orderAmount, currency === 'USDT' ? 2 : 0)} ${currency}`} />
       </div>
 
       <div className="metric-grid">
@@ -111,7 +126,7 @@ export function DashboardPage() {
           </div>
           <dl className="definition-list">
             <dt>총 손익(Total)</dt>
-            <dd className={totalProfitTone}>{formatKrw(pnl?.totalProfit)}</dd>
+            <dd className={totalProfitTone}>{money(pnl?.totalProfit)}</dd>
             <dt>평균 익절률(Avg TP)</dt>
             <dd>{`${formatNumber(summary?.averageTakeProfitRate, 3)}%`}</dd>
             <dt>평균 손절률(Avg SL)</dt>
@@ -137,13 +152,15 @@ export function DashboardPage() {
             <dt>후보 실행(Candidate)</dt>
             <dd>{data.scheduler.candidateEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
             <dt>후보 거래소(Candidate exchange)</dt>
-            <dd>{data.scheduler.candidateExchange}</dd>
+            <dd>{exchangeList(data.scheduler.candidateExchanges, data.scheduler.candidateExchange)}</dd>
             <dt>청산 평가(Exit)</dt>
             <dd>{data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'}</dd>
+            <dt>청산 거래소(Exit exchange)</dt>
+            <dd>{exchangeList(data.scheduler.exitExchanges, data.scheduler.exitExchange)}</dd>
             <dt>청산 대상(Exit positions)</dt>
             <dd>{data.scheduler.exitPositionMarketCount}</dd>
             <dt>후보 마켓(Candidate markets)</dt>
-            <dd>{data.scheduler.candidateMarkets.length ? `전체 KRW(${data.scheduler.candidateMarkets.length})` : '-'}</dd>
+            <dd>{marketSummary(data.scheduler.candidateMarkets, exchange)}</dd>
           </dl>
         </article>
 
@@ -217,4 +234,22 @@ function StatusPill({
       <strong>{value}</strong>
     </div>
   );
+}
+
+function marketSummary(markets: string[], exchange: string) {
+  if (markets.length === 0) {
+    return '-';
+  }
+  if (markets.includes('ALL_KRW')) {
+    return '전체 KRW(ALL_KRW)';
+  }
+  if (markets.includes('ALL_USDT')) {
+    return '전체 USDT(ALL_USDT)';
+  }
+  const preview = markets.slice(0, 3).join(', ');
+  return markets.length > 3 ? `${preview} 외 ${markets.length - 3}개` : preview || exchange;
+}
+
+function exchangeList(exchanges: string[] | undefined, fallback: string) {
+  return exchanges && exchanges.length > 0 ? exchanges.join(', ') : fallback;
 }

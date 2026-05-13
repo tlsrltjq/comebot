@@ -49,7 +49,10 @@ public class ScheduledPositionExitRunner {
             return PositionExitRunSummary.empty();
         }
         try {
-            PositionExitRunSummary summary = positionExitExecutionService.execute(positionExitSchedulerProperties.getExchange());
+            PositionExitRunSummary summary = PositionExitRunSummary.empty();
+            for (var exchange : positionExitSchedulerProperties.getExchanges()) {
+                summary = summary.add(positionExitExecutionService.execute(exchange));
+            }
             if (summary.positionMarkets() > 0) {
                 log.info(
                         "Scheduled position exit summary. positions={}, evaluated={}, sold={}, rejected={}, hold={}, failed={}",

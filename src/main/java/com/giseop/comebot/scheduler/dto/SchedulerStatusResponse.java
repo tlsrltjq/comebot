@@ -11,10 +11,12 @@ public record SchedulerStatusResponse(
         List<String> candidateMarkets,
         boolean candidateNotifySummary,
         String candidateExchange,
+        List<String> candidateExchanges,
         boolean exitEnabled,
         long exitFixedDelayMs,
         boolean exitSaveHoldHistory,
         String exitExchange,
+        List<String> exitExchanges,
         int exitPositionMarketCount
 ) {
 }

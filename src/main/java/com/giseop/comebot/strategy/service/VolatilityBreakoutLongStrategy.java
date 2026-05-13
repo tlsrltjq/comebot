@@ -1,5 +1,6 @@
 package com.giseop.comebot.strategy.service;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.strategy.candidate.CandidateDecision;
 import com.giseop.comebot.strategy.candidate.CandidateScannerService;
@@ -33,11 +34,12 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
         }
 
         try {
-            TradingCandidate candidate = candidateScannerService.scan(marketPrice.market());
+            ExchangeMode exchange = exchangeOf(marketPrice.market());
+            TradingCandidate candidate = candidateScannerService.scan(exchange, marketPrice.market());
             if (candidate.decision() != CandidateDecision.SELECTED) {
                 return hold(marketPrice.market(), marketPrice.currentPrice(), "No volatility breakout long signal: " + candidate.reason());
             }
-            if (positionEntryGuardService.shouldBlockEntry(marketPrice.market())) {
+            if (positionEntryGuardService.shouldBlockEntry(exchange, marketPrice.market())) {
                 return hold(marketPrice.market(), marketPrice.currentPrice(), "Paper position already exists");
             }
 
@@ -53,6 +55,13 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
         } catch (RuntimeException exception) {
             return hold(marketPrice.market(), marketPrice.currentPrice(), "Volatility breakout evaluation failed");
         }
+    }
+
+    private ExchangeMode exchangeOf(String market) {
+        if (market != null && market.endsWith("USDT") && !market.startsWith("KRW-")) {
+            return ExchangeMode.BINANCE;
+        }
+        return ExchangeMode.UPBIT;
     }
 
     private TradingSignal hold(String market, BigDecimal price, String reason) {

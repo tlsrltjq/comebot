@@ -6,11 +6,13 @@ import type {
   BtcChangeChartResponse,
   BtcChangeRange,
   ExchangeMode,
+  MarketProviderStatusResponse,
   PortfolioStatusResponse,
   PortfolioValuationResponse,
   PositionResponse,
   SelectedPaperSellRequest,
   SelectedPaperSellResponse,
+  SchedulerControlRequest,
   SystemStatusResponse,
   TradingCandidateResponse,
   TradingFlowHistoryResponse,
@@ -46,6 +48,13 @@ const query = (params: Record<string, string | number | undefined>) => {
 export const api = {
   systemStatus: (exchange: ExchangeMode = 'UPBIT') =>
     request<SystemStatusResponse>(`/api/system/status${query({ exchange: exchangeParam(exchange) })}`),
+  schedulerControl: (body: SchedulerControlRequest) =>
+    request<SystemStatusResponse>('/api/scheduler/control', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  marketProviderStatus: () => request<MarketProviderStatusResponse>('/api/market-provider/status'),
   candidates: (exchange: ExchangeMode = 'UPBIT', market?: string) =>
     request<TradingCandidateResponse[]>(`/api/candidates${query({ exchange: exchangeParam(exchange), market })}`),
   portfolioStatus: (exchange: ExchangeMode = 'UPBIT') =>
@@ -74,6 +83,7 @@ export const api = {
 
 export const queryKeys = {
   system: (exchange: ExchangeMode = 'UPBIT') => ['system', exchange] as const,
+  marketProviderStatus: () => ['marketProviderStatus'] as const,
   candidates: (exchange: ExchangeMode = 'UPBIT', market?: string) => ['candidates', exchange, market ?? 'all'] as const,
   portfolioStatus: (exchange: ExchangeMode = 'UPBIT') => ['portfolioStatus', exchange] as const,
   positions: (exchange: ExchangeMode = 'UPBIT') => ['positions', exchange] as const,

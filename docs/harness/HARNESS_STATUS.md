@@ -5,6 +5,7 @@
 - Java: 21
 - 거래 모드: `PAPER_TRADING`
 - 실제 주문 API: 없음
+- Git 관리: 작업 전 상태 확인, 사용자 변경 보호, 파괴적 정리 명령 금지
 - 웹: React 모니터링 전용
 - Telegram: 기본 조회 전용
 - 자동 실행 대상: `ALL_KRW`

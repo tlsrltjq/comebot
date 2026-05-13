@@ -6,8 +6,9 @@ import type { AnalyticsRange, OrderStatus, SignalType, TradingFlowHistoryRespons
 import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
+import { LiveStatus } from '../../shared/ui/LiveStatus';
 import { MetricCard } from '../../shared/ui/MetricCard';
-import { formatDateTime, formatKrw, formatNumber } from '../../shared/format';
+import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
 type SignalFilter = 'ALL' | SignalType;
@@ -18,6 +19,8 @@ const ranges: AnalyticsRange[] = ['1h', '24h', '3d', '7d'];
 const signals: SignalFilter[] = ['ALL', 'BUY', 'SELL', 'HOLD'];
 const orders: OrderFilter[] = ['ALL', 'FILLED', 'REJECTED', 'FAILED', 'NO_ORDER'];
 const reasons: ReasonFilter[] = ['ALL', 'TAKE_PROFIT', 'STOP_LOSS', 'HOLD'];
+const HISTORY_REFRESH_MS = 2_000;
+const ANALYTICS_REFRESH_MS = 3_000;
 
 export function HistoryPage() {
   const [market, setMarket] = useState('');
@@ -31,22 +34,23 @@ export function HistoryPage() {
   const historyQuery = useQuery({
     queryKey: queryKeys.history(exchange, normalizedMarket || undefined, limit),
     queryFn: () => api.history(exchange, normalizedMarket || undefined, limit),
-    refetchInterval: 3_000,
+    refetchInterval: HISTORY_REFRESH_MS,
   });
   const summaryQuery = useQuery({
     queryKey: queryKeys.analyticsSummary(range, exchange),
     queryFn: () => api.analyticsSummary(range, exchange),
-    refetchInterval: 5_000,
+    refetchInterval: ANALYTICS_REFRESH_MS,
   });
   const lossesQuery = useQuery({
     queryKey: queryKeys.analyticsLosses(range, exchange),
     queryFn: () => api.analyticsLosses(range, exchange),
-    refetchInterval: 5_000,
+    refetchInterval: ANALYTICS_REFRESH_MS,
   });
 
   const rows = filterRows(historyQuery.data ?? [], signalFilter, orderFilter, reasonFilter);
   const summary = summaryQuery.data;
   const losses = lossesQuery.data;
+  const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
 
   return (
     <section className="page">
@@ -55,7 +59,7 @@ export function HistoryPage() {
           <h1>실행 이력(History)</h1>
           <p>자동 실행 결과를 HOLD, REJECTED, FILLED, FAILED 상태로 확인합니다.</p>
         </div>
-        <span className="live-indicator">자동 갱신(Live)</span>
+        <LiveStatus updatedAt={historyQuery.dataUpdatedAt} isFetching={historyQuery.isFetching || summaryQuery.isFetching || lossesQuery.isFetching} intervalMs={HISTORY_REFRESH_MS} />
       </header>
 
       <div className="segmented-row" aria-label="분석 범위(Analytics range)">
@@ -123,7 +127,7 @@ export function HistoryPage() {
       <div className="toolbar history-toolbar">
         <label>
           마켓(Market)
-          <input value={market} onChange={(event) => setMarket(event.target.value)} placeholder="전체 또는 KRW-BTC" />
+          <input value={market} onChange={(event) => setMarket(event.target.value)} placeholder={exchange === 'BINANCE' ? '전체 또는 BTCUSDT' : '전체 또는 KRW-BTC'} />
         </label>
         <label>
           개수(Limit)
@@ -182,7 +186,7 @@ export function HistoryPage() {
               <tr key={row.id}>
                 <td>{formatDateTime(row.createdAt)}</td>
                 <td><strong>{row.market}</strong></td>
-                <td>{formatKrw(row.currentPrice)}</td>
+                <td>{formatCurrency(row.currentPrice, currency)}</td>
                 <td><SignalBadge signal={row.signalType} /></td>
                 <td>
                   <Badge tone={orderTone(row.orderStatus)}>

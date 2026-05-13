@@ -1,6 +1,7 @@
 package com.giseop.comebot.strategy.service;
 
 import com.giseop.comebot.config.StrategyProperties;
+import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.strategy.candidate.CandidateScannerProperties;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,7 +37,11 @@ public class StrategyMarketSettingsService {
         if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
             return orderQuantity(market);
         }
-        return strategyProperties.getOrderAmount().divide(price, QUANTITY_SCALE, RoundingMode.DOWN);
+        return orderAmount(market).divide(price, QUANTITY_SCALE, RoundingMode.DOWN);
+    }
+
+    public BigDecimal orderAmount(String market) {
+        return strategyProperties.getOrderAmount(exchangeOf(market));
     }
 
     public BigDecimal minPriceChangeRate(String market) {
@@ -65,5 +70,12 @@ public class StrategyMarketSettingsService {
         return override != null && override.getMaxHighLowRangeRate() != null
                 ? override.getMaxHighLowRangeRate()
                 : candidateScannerProperties.getMaxHighLowRangeRate();
+    }
+
+    private ExchangeMode exchangeOf(String market) {
+        if (market != null && market.endsWith("USDT") && !market.startsWith("KRW-")) {
+            return ExchangeMode.BINANCE;
+        }
+        return ExchangeMode.UPBIT;
     }
 }
