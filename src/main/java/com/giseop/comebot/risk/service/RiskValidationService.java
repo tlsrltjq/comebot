@@ -17,22 +17,26 @@ public class RiskValidationService {
     private final TradingProperties tradingProperties;
     private final MarketSelectionService marketSelectionService;
     private final ConcentrationRiskValidationService concentrationRiskValidationService;
+    private final StopLossCooldownValidationService stopLossCooldownValidationService;
 
     @Autowired
     public RiskValidationService(
             TradingProperties tradingProperties,
             MarketSelectionService marketSelectionService,
-            ConcentrationRiskValidationService concentrationRiskValidationService
+            ConcentrationRiskValidationService concentrationRiskValidationService,
+            StopLossCooldownValidationService stopLossCooldownValidationService
     ) {
         this.tradingProperties = tradingProperties;
         this.marketSelectionService = marketSelectionService;
         this.concentrationRiskValidationService = concentrationRiskValidationService;
+        this.stopLossCooldownValidationService = stopLossCooldownValidationService;
     }
 
     public RiskValidationService(TradingProperties tradingProperties) {
         this(
                 tradingProperties,
                 new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null,
                 null
         );
     }
@@ -72,6 +76,12 @@ public class RiskValidationService {
             RiskCheckResult concentrationRiskResult = concentrationRiskValidationService.validate(exchange, request);
             if (concentrationRiskResult.decision() == RiskDecision.REJECTED) {
                 return concentrationRiskResult;
+            }
+        }
+        if (stopLossCooldownValidationService != null) {
+            RiskCheckResult stopLossCooldownResult = stopLossCooldownValidationService.validate(exchange, request);
+            if (stopLossCooldownResult.decision() == RiskDecision.REJECTED) {
+                return stopLossCooldownResult;
             }
         }
 

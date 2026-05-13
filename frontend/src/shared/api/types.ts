@@ -118,6 +118,12 @@ export interface RiskStatusResponse {
     warningExposureRate: string;
     blockExposureRate: string;
   };
+  stopLossCooldown: {
+    enabled: boolean;
+    window: string;
+    triggerCount: number;
+    duration: string;
+  };
 }
 
 export interface SelectedPaperSellRequest {

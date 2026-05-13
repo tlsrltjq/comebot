@@ -509,5 +509,11 @@ function riskStatus(exchange: ExchangeMode, warningExposureRate: string, blockEx
       warningExposureRate,
       blockExposureRate,
     },
+    stopLossCooldown: {
+      enabled: false,
+      window: 'PT168H',
+      triggerCount: 2,
+      duration: 'PT24H',
+    },
   };
 }

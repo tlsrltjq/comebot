@@ -38,11 +38,11 @@
 - market별 쏠림 신규 BUY 차단 구현
 - 쏠림 경고 UI와 반복 손절 cooldown 설계
 - 쏠림 경고 UI 1차 구현
+- 반복 손절 cooldown 구현
 
 ## 다음 작업
 
-1. 반복 손절 cooldown 구현
-2. OS별 운영 화면/가이드 대응 계획 구현
+1. OS별 운영 화면/가이드 대응 계획 구현
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

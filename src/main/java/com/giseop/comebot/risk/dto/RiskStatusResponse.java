@@ -12,13 +12,22 @@ public record RiskStatusResponse(
         boolean dailyRiskEnabled,
         int dailyOrderLimit,
         BigDecimal dailyLossLimit,
-        ConcentrationStatus concentration
+        ConcentrationStatus concentration,
+        StopLossCooldownStatus stopLossCooldown
 ) {
     public record ConcentrationStatus(
             String exchange,
             boolean enabled,
             BigDecimal warningExposureRate,
             BigDecimal blockExposureRate
+    ) {
+    }
+
+    public record StopLossCooldownStatus(
+            boolean enabled,
+            String window,
+            int triggerCount,
+            String duration
     ) {
     }
 }

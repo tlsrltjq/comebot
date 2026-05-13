@@ -12,7 +12,9 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.risk.ConcentrationRiskProperties;
 import com.giseop.comebot.risk.DailyRiskProperties;
 import com.giseop.comebot.risk.PositionExitProperties;
+import com.giseop.comebot.risk.StopLossCooldownProperties;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,9 @@ class RiskStatusControllerTest {
     @MockitoBean
     private ConcentrationRiskProperties concentrationRiskProperties;
 
+    @MockitoBean
+    private StopLossCooldownProperties stopLossCooldownProperties;
+
     @Test
     void statusReturnsRiskPolicyProperties() throws Exception {
         org.mockito.Mockito.when(tradingProperties.getMaxOrderAmount())
@@ -62,6 +67,7 @@ class RiskStatusControllerTest {
                 .thenReturn(new BigDecimal("7"));
         org.mockito.Mockito.when(concentrationRiskProperties.blockExposureRate(ExchangeMode.UPBIT))
                 .thenReturn(new BigDecimal("10"));
+        mockStopLossCooldown(false);
 
         mockMvc.perform(get("/api/risk/status?exchange=upbit"))
                 .andExpect(status().isOk())
@@ -77,7 +83,11 @@ class RiskStatusControllerTest {
                 .andExpect(jsonPath("$.concentration.exchange").value("UPBIT"))
                 .andExpect(jsonPath("$.concentration.enabled").value(false))
                 .andExpect(jsonPath("$.concentration.warningExposureRate").value(7))
-                .andExpect(jsonPath("$.concentration.blockExposureRate").value(10));
+                .andExpect(jsonPath("$.concentration.blockExposureRate").value(10))
+                .andExpect(jsonPath("$.stopLossCooldown.enabled").value(false))
+                .andExpect(jsonPath("$.stopLossCooldown.window").value("PT168H"))
+                .andExpect(jsonPath("$.stopLossCooldown.triggerCount").value(2))
+                .andExpect(jsonPath("$.stopLossCooldown.duration").value("PT24H"));
     }
 
     @Test
@@ -100,13 +110,15 @@ class RiskStatusControllerTest {
                 .thenReturn(new BigDecimal("25"));
         org.mockito.Mockito.when(concentrationRiskProperties.blockExposureRate(ExchangeMode.BINANCE))
                 .thenReturn(new BigDecimal("40"));
+        mockStopLossCooldown(true);
 
         mockMvc.perform(get("/api/risk/status?exchange=binance"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.concentration.exchange").value("BINANCE"))
                 .andExpect(jsonPath("$.concentration.enabled").value(true))
                 .andExpect(jsonPath("$.concentration.warningExposureRate").value(25))
-                .andExpect(jsonPath("$.concentration.blockExposureRate").value(40));
+                .andExpect(jsonPath("$.concentration.blockExposureRate").value(40))
+                .andExpect(jsonPath("$.stopLossCooldown.enabled").value(true));
     }
 
     @Test
@@ -131,6 +143,7 @@ class RiskStatusControllerTest {
                 .thenReturn(new BigDecimal("7"));
         org.mockito.Mockito.when(concentrationRiskProperties.blockExposureRate(ExchangeMode.UPBIT))
                 .thenReturn(new BigDecimal("10"));
+        mockStopLossCooldown(false);
 
         mockMvc.perform(get("/api/risk/status"))
                 .andExpect(status().isOk())
@@ -138,5 +151,12 @@ class RiskStatusControllerTest {
                 .andExpect(content().string(not(containsString("chat-id"))))
                 .andExpect(content().string(not(containsString("password"))))
                 .andExpect(content().string(not(containsString("secret"))));
+    }
+
+    private void mockStopLossCooldown(boolean enabled) {
+        org.mockito.Mockito.when(stopLossCooldownProperties.isEnabled()).thenReturn(enabled);
+        org.mockito.Mockito.when(stopLossCooldownProperties.getWindow()).thenReturn(Duration.ofDays(7));
+        org.mockito.Mockito.when(stopLossCooldownProperties.getTriggerCount()).thenReturn(2);
+        org.mockito.Mockito.when(stopLossCooldownProperties.getDuration()).thenReturn(Duration.ofHours(24));
     }
 }

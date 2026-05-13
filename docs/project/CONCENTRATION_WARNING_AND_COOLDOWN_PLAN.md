@@ -84,8 +84,8 @@ Backend:
 
 - `RiskStatusResponse`: concentration threshold 표시 필드 추가 완료
 - `RiskStatusController`: `ConcentrationRiskProperties` 주입 완료
-- 신규 cooldown properties/service: JPA history에서 반복 손절 market 산출
-- 신규 BUY guard: cooldown이 켜져 있으면 해당 market BUY 거절
+- 신규 cooldown properties/service: JPA history에서 반복 손절 market 산출 완료
+- 신규 BUY guard: cooldown이 켜져 있으면 해당 market BUY 거절 완료
 
 Frontend:
 
@@ -96,7 +96,7 @@ Frontend:
 
 Tests:
 
-- backend: risk status 응답, cooldown 산정, 신규 BUY 차단, SELL 미차단
+- backend: risk status 응답, cooldown 산정, 신규 BUY 차단, SELL 미차단 완료
 - frontend: Portfolio threshold 뱃지, exchange별 기준 표시, Candidates warning 표시
 
 ## 완료 기준
