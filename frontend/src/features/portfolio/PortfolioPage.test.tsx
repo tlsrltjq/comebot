@@ -113,8 +113,13 @@ describe('PortfolioPage', () => {
     expect(screen.getAllByText('포지션(Positions)').length).toBeGreaterThan(0);
     expect(screen.getByText('UPBIT 선택 거래소(Selected exchange)')).toBeInTheDocument();
     expect(screen.getByText('분산 양호(Diversified)')).toBeInTheDocument();
-    expect(screen.getByText('손절권(Stop loss)')).toBeInTheDocument();
-    expect(screen.getByText('보유(Hold)')).toBeInTheDocument();
+    expect(screen.getAllByText('손절권(Stop loss)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('보유(Hold)').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('모바일 포지션 카드(Mobile position cards)')).toBeInTheDocument();
+    expect(screen.getAllByText('평가액(Value)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('손익률(PnL %)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('미실현(Unrealized)').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('KRW-BTC 선택').length).toBeGreaterThan(1);
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());

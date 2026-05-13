@@ -74,6 +74,7 @@
 70. Stage 8 WebSocket 시세 snapshot store와 REST fallback provider 구현
 71. Stage 9 candidate/exit scheduler 주기 분리 구현
 72. Stage 10 BTC 등락률 Market Overview 페이지 구현
+73. 포트폴리오 모바일 카드형 포지션 UX 구현
 
 ## 최근 검증
 

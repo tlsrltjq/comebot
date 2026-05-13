@@ -269,7 +269,56 @@ export function PortfolioPage() {
         </article>
       ) : null}
 
-      <div className="table-wrap">
+      <div className="position-card-list" aria-label="모바일 포지션 카드(Mobile position cards)">
+        {positions.map((position) => (
+          <article className="position-card" key={position.market}>
+            <div className="position-card-head">
+              <label className="position-select">
+                <input
+                  aria-label={`${position.market} 선택`}
+                  checked={selectedMarkets.has(position.market)}
+                  disabled={sellSelectedMutation.isPending}
+                  type="checkbox"
+                  onChange={() => toggleMarket(position.market)}
+                />
+                <span>{position.market}</span>
+              </label>
+              <ExitBadge rate={Number(position.unrealizedProfitRate)} />
+            </div>
+            <div className="position-card-value">
+              <span>평가액(Value)</span>
+              <strong>{money(position.positionValue)}</strong>
+            </div>
+            <dl className="position-card-metrics">
+              <div>
+                <dt>손익률(PnL %)</dt>
+                <dd className={profitClass(position.unrealizedProfitRate)}>{formatNumber(position.unrealizedProfitRate, 2)}%</dd>
+              </div>
+              <div>
+                <dt>미실현(Unrealized)</dt>
+                <dd className={profitClass(position.unrealizedProfit)}>{money(position.unrealizedProfit)}</dd>
+              </div>
+              <div>
+                <dt>수량(Quantity)</dt>
+                <dd>{formatNumber(position.quantity, 8)}</dd>
+              </div>
+              <div>
+                <dt>현재가(Current)</dt>
+                <dd>{money(position.currentPrice)}</dd>
+              </div>
+              <div>
+                <dt>평균매수가(Avg Buy)</dt>
+                <dd>{money(position.averageBuyPrice)}</dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+        {!valuationQuery.isLoading && positions.length === 0 ? (
+          <EmptyState title="보유 포지션 없음(No positions)" description="자동 PAPER 매수가 체결되면 여기에 표시됩니다." />
+        ) : null}
+      </div>
+
+      <div className="table-wrap portfolio-position-table">
         <table>
           <thead>
             <tr>
