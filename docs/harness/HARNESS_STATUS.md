@@ -6,10 +6,11 @@
 - 거래 모드: `PAPER_TRADING`
 - 실제 주문 API: 없음
 - Git 관리: 작업 전 상태 확인, 사용자 변경 보호, 파괴적 정리 명령 금지
-- 웹: React 모니터링 전용
+- 웹: React 운영 화면. 조회 중심이며 자동매매 제어와 선택 보유 PAPER 포지션 SELL만 허용
 - Telegram: 기본 조회 전용
 - 자동 실행 대상: `ALL_KRW`
-- 자동 실행 주기: 30초
+- candidate scheduler 기본 주기: 60초
+- exit scheduler 기본 주기: 5초
 - 1회 PAPER 주문 금액: 10,000 KRW
 - 익절/손절 기준: 1.5 / -0.7
 - 같은 market 추가 진입: 기본 허용

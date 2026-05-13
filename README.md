@@ -14,7 +14,7 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 - Candle providers: Upbit public Candle API, Binance public spot Kline API
 - History storage: `IN_MEMORY` by default, optional `JPA`
 - Portfolio storage: `IN_MEMORY`, separated by exchange mode
-- Scheduler: enabled by default for PAPER_TRADING automation
+- Scheduler: candidate and exit schedulers are enabled by default for PAPER_TRADING automation
 - Telegram inbound/outbound: disabled by default
 
 ## What This Project Does
@@ -218,10 +218,12 @@ With `RISK_POSITION_EXIT_ENABLED=true`, take-profit and stop-loss SELL signals c
 
 ## Web UI
 
-The React web UI is monitoring-only.
+The React web UI is operations-focused and keeps trading execution constrained to PAPER_TRADING.
 
 - Korean labels include English in parentheses.
-- Manual BUY/SELL buttons are not exposed.
+- Manual BUY buttons are not exposed.
+- The only manual trade execution UX is selected held PAPER position SELL.
+- Auto trading can be turned on/off and the candidate interval can be set to 30s or 60s from the operations screen.
 - Automatic execution status, candidates, portfolio, and history are visible.
 - All trading remains PAPER_TRADING.
 - The UI does not add real order APIs or `REAL_TRADING`.

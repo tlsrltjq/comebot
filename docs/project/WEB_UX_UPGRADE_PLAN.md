@@ -6,8 +6,11 @@
 
 ## 유지할 원칙
 
-- 웹은 모니터링 전용이다.
-- BUY, SELL, 후보 실행, trading-flow 실행 버튼을 만들지 않는다.
+- 웹은 조회 중심 운영 화면이다.
+- 자동매매 켜기/끄기와 candidate scheduler 주기 변경은 허용한다.
+- 사용자가 명시 선택한 보유 PAPER 포지션 SELL만 거래 실행 UX 예외로 허용한다.
+- 수동 BUY, 후보 실행, trading-flow 실행 버튼을 만들지 않는다.
+- 선택 보유 PAPER 포지션 SELL 외의 임의 SELL 버튼을 만들지 않는다.
 - 실제 주문 API, `REAL_TRADING`, Upbit 인증 설정을 웹에 추가하지 않는다.
 - 서버의 전략, 리스크, 포트폴리오 판단을 React에서 재구현하지 않는다.
 - 모든 신규 화면은 한글(English) 라벨을 유지한다.

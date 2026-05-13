@@ -57,11 +57,11 @@ export default tseslint.config(
         },
         {
           selector: 'CallExpression[callee.object.name="api"][callee.property.name="executeCandidate"]',
-          message: 'The web UI is monitoring-only; do not call candidate execution from React.',
+          message: 'The web UI must not call candidate execution from React.',
         },
         {
           selector: 'CallExpression[callee.object.name="api"][callee.property.name="runTradingFlow"]',
-          message: 'The web UI is monitoring-only; do not call trading execution from React.',
+          message: 'The web UI must not call trading execution from React.',
         },
       ],
     },
@@ -74,19 +74,19 @@ export default tseslint.config(
         'error',
         {
           selector: 'Literal[value=/\\/api\\/candidates\\/execute/]',
-          message: 'The web UI is monitoring-only; do not add candidate execution endpoints.',
+          message: 'The web UI must not add candidate execution endpoints.',
         },
         {
           selector: 'TemplateElement[value.raw=/\\/api\\/candidates\\/execute/]',
-          message: 'The web UI is monitoring-only; do not add candidate execution endpoints.',
+          message: 'The web UI must not add candidate execution endpoints.',
         },
         {
           selector: 'Literal[value=/\\/api\\/trading-flow\\/run/]',
-          message: 'The web UI is monitoring-only; do not add trading execution endpoints.',
+          message: 'The web UI must not add trading execution endpoints.',
         },
         {
           selector: 'TemplateElement[value.raw=/\\/api\\/trading-flow\\/run/]',
-          message: 'The web UI is monitoring-only; do not add trading execution endpoints.',
+          message: 'The web UI must not add trading execution endpoints.',
         },
         {
           selector: 'Literal[value=/\\/api\\/portfolio\\/positions\\/(buy|buy-selected|manual-buy)/]',
