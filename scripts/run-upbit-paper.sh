@@ -9,6 +9,11 @@ if [[ -d "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" ]]; th
 elif [[ -d "/opt/homebrew/opt/openjdk@21" ]]; then
   export JAVA_HOME="/opt/homebrew/opt/openjdk@21"
   export PATH="$JAVA_HOME/bin:$PATH"
+elif [[ -z "${JAVA_HOME:-}" ]] && command -v /usr/libexec/java_home >/dev/null 2>&1; then
+  if JAVA_21_HOME="$(/usr/libexec/java_home -v 21 2>/dev/null)"; then
+    export JAVA_HOME="$JAVA_21_HOME"
+    export PATH="$JAVA_HOME/bin:$PATH"
+  fi
 fi
 
 if [[ -f ".env" ]]; then
@@ -17,16 +22,6 @@ if [[ -f ".env" ]]; then
   source ".env"
   set +a
 fi
-
-export MARKET_PRICE_PROVIDER="${MARKET_PRICE_PROVIDER:-UPBIT}"
-export HISTORY_STORAGE_TYPE="JPA"
-export PAPER_PORTFOLIO_STORAGE_TYPE="JPA"
-export TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE="${TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE:-JPA}"
-export SAFETY_KILL_SWITCH_ENABLED="${SAFETY_KILL_SWITCH_ENABLED:-false}"
-export TRADING_CANDIDATE_SCHEDULER_ENABLED="${TRADING_CANDIDATE_SCHEDULER_ENABLED:-true}"
-export TRADING_EXIT_SCHEDULER_ENABLED="${TRADING_EXIT_SCHEDULER_ENABLED:-true}"
-export TELEGRAM_ENABLED="${TELEGRAM_ENABLED:-false}"
-export TELEGRAM_INBOUND_ENABLED="${TELEGRAM_INBOUND_ENABLED:-false}"
 
 CONTAINER_NAME="${CONTAINER_NAME:-comebot-postgres}"
 
@@ -66,21 +61,22 @@ if [[ -z "${POSTGRES_PORT:-}" ]]; then
   export POSTGRES_PORT
 fi
 
-if [[ -z "${SERVER_PORT:-}" ]] && lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
-  for candidate_port in 8081 8082 8083 8084 8085; do
-    if ! lsof -nP -iTCP:"$candidate_port" -sTCP:LISTEN >/dev/null 2>&1; then
-      export SERVER_PORT="$candidate_port"
-      break
-    fi
-  done
-fi
-SERVER_PORT="${SERVER_PORT:-8080}"
-
-echo "Starting comebot with Upbit public ticker, PAPER_TRADING, and JPA history/portfolio storage."
-echo "REAL_TRADING and real order APIs are not used."
-echo
-
 docker compose up -d postgres
-"$(dirname "$0")/apply-schema.sh"
+
+export MARKET_PRICE_PROVIDER="${MARKET_PRICE_PROVIDER:-UPBIT}"
+export HISTORY_STORAGE_TYPE="IN_MEMORY"
+export PAPER_PORTFOLIO_STORAGE_TYPE="IN_MEMORY"
+export SAFETY_KILL_SWITCH_ENABLED="${SAFETY_KILL_SWITCH_ENABLED:-false}"
+export TRADING_SCHEDULER_ENABLED="${TRADING_SCHEDULER_ENABLED:-false}"
+export TRADING_CANDIDATE_SCHEDULER_ENABLED="${TRADING_CANDIDATE_SCHEDULER_ENABLED:-true}"
+export TRADING_EXIT_SCHEDULER_ENABLED="${TRADING_EXIT_SCHEDULER_ENABLED:-true}"
+export TELEGRAM_ENABLED="${TELEGRAM_ENABLED:-false}"
+export TELEGRAM_INBOUND_ENABLED="${TELEGRAM_INBOUND_ENABLED:-false}"
+
+SERVER_PORT="${SERVER_PORT:-8081}"
+
+echo "Starting comebot backend: http://127.0.0.1:$SERVER_PORT"
+echo "Mode: UPBIT public ticker + PAPER_TRADING only"
+echo
 
 ./gradlew bootRun --args="--server.port=$SERVER_PORT"

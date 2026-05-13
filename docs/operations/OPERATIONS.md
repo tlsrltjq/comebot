@@ -2,6 +2,25 @@
 
 ## 로컬 실행
 
+백엔드와 웹 UI를 함께 실행:
+
+macOS/Linux:
+
+```bash
+scripts/run-local-dev.sh
+```
+
+Windows:
+
+```bat
+scripts\run-local-dev.bat
+```
+
+기본 접속 주소:
+
+- 웹 UI: `http://127.0.0.1:5176`
+- 백엔드 API: `http://127.0.0.1:8081`
+
 PostgreSQL:
 
 ```bat
@@ -15,6 +34,12 @@ gradlew.bat bootRun
 ```
 
 Upbit PAPER 실행:
+
+```bash
+scripts/run-upbit-paper.sh
+```
+
+Windows:
 
 ```bat
 scripts\run-upbit-paper.bat
@@ -149,8 +174,8 @@ scripts/apply-schema.sh
 웹 Dashboard의 `운영 환경(OS Guide)` 패널은 브라우저의 OS 정보를 안내 표시 용도로만 사용한다.
 거래소 선택, 전략 판단, 리스크 검증, 주문 실행에는 OS 감지 결과를 사용하지 않는다.
 
-- macOS: `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `/Users/<user>/workspace/comebot`
-- Windows: `scripts\run-upbit-paper.bat`, `scripts\apply-schema.bat`, `%USERPROFILE%\workspace\comebot`
+- macOS: `scripts/run-local-dev.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `/Users/<user>/workspace/comebot`
+- Windows: `scripts\run-local-dev.bat`, `scripts\run-upbit-paper.bat`, `scripts\apply-schema.bat`, `%USERPROFILE%\workspace\comebot`
 - 민감 정보는 OS와 무관하게 `.env` 또는 환경 변수로만 관리한다.
 
 ## JPA PAPER 누적 확인

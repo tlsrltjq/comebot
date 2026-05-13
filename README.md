@@ -60,6 +60,17 @@ See [Strategy Policy](docs/trading/STRATEGY_POLICY.md).
 
 ## Quick Start
 
+Run backend and web UI together on macOS/Linux:
+
+```bash
+scripts/run-local-dev.sh
+```
+
+Default local addresses:
+
+- Web UI: `http://127.0.0.1:5176`
+- Backend API: `http://127.0.0.1:8081`
+
 Start PostgreSQL:
 
 ```bat
@@ -73,6 +84,12 @@ gradlew.bat bootRun
 ```
 
 Run with Upbit public ticker data and PAPER_TRADING:
+
+```bash
+scripts/run-upbit-paper.sh
+```
+
+Windows:
 
 ```bat
 scripts\run-upbit-paper.bat
@@ -88,11 +105,12 @@ Run the web UI:
 
 ```bat
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-The web UI is available at `http://localhost:5173/`.
+The standalone Vite default is `http://localhost:5173/`.
+The local dev script uses `http://127.0.0.1:5176/` to avoid common port conflicts.
 
 ## Main APIs
 
