@@ -21,6 +21,7 @@
 - JPA PAPER 누적 데이터 스냅샷 기록 완료
 - OS별 운영 화면/가이드 대응 계획 문서화 완료
 - market별 쏠림 리스크 기준 문서화 완료
+- market별 쏠림 신규 BUY 차단 구현 완료
 
 ## 향후 개선 후보: OS별 운영 화면/가이드 대응
 
@@ -44,21 +45,20 @@
 - OS 감지는 안내 표시 용도에만 사용하고, 거래/리스크 판단 로직에는 영향을 주지 않는다.
 - macOS와 Windows 모두에서 텍스트 overflow, 버튼 폭, 표 스크롤이 깨지지 않는다.
 
-## 다음 우선순위: market별 쏠림 제한 구현 검토
+## 다음 우선순위: 쏠림 경고 UI와 반복 손절 cooldown 설계
 
 목표:
 
-- 문서화된 쏠림 기준을 실제 PAPER 신규 BUY 제한에 적용할지 검토한다.
-- 단일 market 비중 경고/차단과 반복 손절 cooldown을 분리해서 설계한다.
+- market별 쏠림 기준 중 아직 남은 경고 표시와 반복 손절 cooldown을 설계한다.
+- 신규 BUY 차단은 `risk.concentration.enabled=true`일 때만 적용되는 상태를 유지한다.
 - 기본 거래 모드는 계속 `PAPER_TRADING`으로 유지한다.
 - 실제 주문 API와 `REAL_TRADING`은 추가하지 않는다.
 
 작업:
 
-- `docs/trading/RISK_POLICY.md`의 market별 쏠림 기준을 코드 적용 범위로 나눈다.
-- 신규 BUY 차단은 risk validator 계층에서 처리하는 방향을 우선 검토한다.
-- 경고 표시는 Dashboard/Portfolio/Candidates 중 어디에 둘지 정한다.
+- Dashboard/Portfolio/Candidates 중 쏠림 경고를 표시할 화면과 API 범위를 정한다.
 - 반복 손절 cooldown은 기간 window와 reset 조건을 먼저 설계한다.
+- Binance와 UPBIT의 경고 threshold를 같은 UI에서 혼동 없이 보여주는 방식을 정한다.
 
 완료 기준:
 

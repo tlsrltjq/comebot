@@ -16,15 +16,25 @@ public class RiskValidationService {
 
     private final TradingProperties tradingProperties;
     private final MarketSelectionService marketSelectionService;
+    private final ConcentrationRiskValidationService concentrationRiskValidationService;
 
     @Autowired
-    public RiskValidationService(TradingProperties tradingProperties, MarketSelectionService marketSelectionService) {
+    public RiskValidationService(
+            TradingProperties tradingProperties,
+            MarketSelectionService marketSelectionService,
+            ConcentrationRiskValidationService concentrationRiskValidationService
+    ) {
         this.tradingProperties = tradingProperties;
         this.marketSelectionService = marketSelectionService;
+        this.concentrationRiskValidationService = concentrationRiskValidationService;
     }
 
     public RiskValidationService(TradingProperties tradingProperties) {
-        this(tradingProperties, new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()));
+        this(
+                tradingProperties,
+                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null
+        );
     }
 
     public RiskCheckResult validate(OrderRequest request) {
@@ -57,6 +67,12 @@ public class RiskValidationService {
         BigDecimal orderAmount = request.quantity().multiply(request.price());
         if (orderAmount.compareTo(tradingProperties.getMaxOrderAmount()) > 0) {
             return rejected("Order amount exceeds max order amount");
+        }
+        if (concentrationRiskValidationService != null) {
+            RiskCheckResult concentrationRiskResult = concentrationRiskValidationService.validate(exchange, request);
+            if (concentrationRiskResult.decision() == RiskDecision.REJECTED) {
+                return concentrationRiskResult;
+            }
         }
 
         return new RiskCheckResult(RiskDecision.APPROVED, "Risk check approved", Instant.now());

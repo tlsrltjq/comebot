@@ -4,7 +4,8 @@
 
 JPA PAPER 누적 데이터 기반으로 market별 쏠림 리스크의 초기 문서 기준을 정한다.
 
-이번 작업은 문서화 단계다. 코드 제한은 아직 추가하지 않는다.
+이번 작업은 문서 기준 확정과 신규 BUY 차단 구현 범위 확정 단계다.
+기본값은 꺼져 있으며, `risk.concentration.enabled=true`일 때만 적용한다.
 
 ## 원자료
 
@@ -23,7 +24,7 @@ JPA PAPER 누적 데이터 기반으로 market별 쏠림 리스크의 초기 문
 | 기준 | Threshold | 의미 |
 | --- | ---: | --- |
 | 경고 | 7% 이상 | Dashboard/Portfolio에서 쏠림 경고 대상 |
-| 신규 BUY 차단 후보 | 10% 이상 | 해당 market 신규 PAPER BUY 제한 후보 |
+| 신규 BUY 차단 | 10% 이상 | 해당 market 신규 PAPER BUY 거절 |
 | 반복 손절 주의 | 손절 count 상위 10개 | cooldown 또는 후보 제외 검토 |
 
 이유:
@@ -37,7 +38,7 @@ JPA PAPER 누적 데이터 기반으로 market별 쏠림 리스크의 초기 문
 | 기준 | Threshold | 의미 |
 | --- | ---: | --- |
 | 경고 | 25% 이상 | Binance symbol 쏠림 경고 대상 |
-| 신규 BUY 차단 후보 | 40% 이상 | 해당 symbol 신규 PAPER BUY 제한 후보 |
+| 신규 BUY 차단 | 40% 이상 | 해당 symbol 신규 PAPER BUY 거절 |
 | 반복 손절 주의 | 손절 count 상위 10개 | cooldown 또는 후보 제외 검토 |
 
 이유:
@@ -71,18 +72,16 @@ UPBIT 반복 손절 상위:
 
 ## 구현 전제
 
-- 적용 대상은 PAPER 신규 BUY 후보 제한이다.
+- 적용 대상은 PAPER 신규 BUY 주문 제한이다.
 - 보유 PAPER SELL, 익절, 손절은 쏠림 기준으로 막지 않는다.
 - 실패한 주문을 성공으로 처리하지 않는다.
 - 실제 주문 API와 `REAL_TRADING`은 추가하지 않는다.
+- 반복 손절 cooldown과 UI 경고 표시는 후속 작업으로 분리한다.
 
 ## 다음 구현 후보
 
-- `RiskValidator` 또는 별도 concentration risk validator에 exchange별 threshold 추가
 - Portfolio/Dashboard에 경고 market 표시
 - Candidate 화면에서 쏠림 차단/반복 손절 cooldown 사유 표시
 - 관련 테스트:
-  - UPBIT 단일 market 10% 이상 신규 BUY 거절
   - UPBIT 7% 이상 경고 표시
-  - BINANCE 40% 이상 신규 BUY 거절
   - 반복 손절 상위 market cooldown 후보 표시

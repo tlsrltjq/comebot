@@ -35,10 +35,11 @@
 - JPA PAPER 누적 데이터 스냅샷 기록
 - OS별 운영 화면/가이드 대응 계획 문서화
 - market별 쏠림 리스크 기준 문서화
+- market별 쏠림 신규 BUY 차단 구현
 
 ## 다음 작업
 
-1. market별 쏠림 제한 구현 검토
+1. 쏠림 경고 UI와 반복 손절 cooldown 설계
 2. OS별 운영 화면/가이드 대응 계획 구현
 
 세부 작업과 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
