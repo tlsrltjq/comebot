@@ -248,6 +248,10 @@ GET /api/analytics/pnl?exchange=upbit&range=24h
 GET /api/analytics/losses?exchange=upbit&range=24h
 ```
 
+전략 성과 판단은 `/api/analytics/summary`의 승률(`winRate`), 평균 보유 시간(`averageHoldingSeconds`), 손익비(`profitLossRatio`)를 함께 본다.
+`winRate`는 선택 범위의 FILLED BUY 대비 익절 SELL 비율이며, `averageHoldingSeconds`는 같은 market의 FILLED BUY->FILLED SELL FIFO 매칭 기준이다.
+`profitLossRatio`는 평균 익절률을 평균 손절률의 절댓값으로 나눈 값이다.
+
 DB 누적 확인:
 
 ```sql

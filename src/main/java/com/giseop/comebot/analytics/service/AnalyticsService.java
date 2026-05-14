@@ -17,11 +17,16 @@ import com.giseop.comebot.strategy.domain.SignalType;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,6 +71,8 @@ public class AnalyticsService {
         List<TradingFlowHistory> histories = tradingFlowHistoryService.findSince(exchange, from);
         List<TradingFlowHistory> stopLosses = stopLosses(histories);
         List<TradingFlowHistory> takeProfits = takeProfits(histories);
+        BigDecimal averageStopLossRate = averageRate(stopLosses);
+        BigDecimal averageTakeProfitRate = averageRate(takeProfits);
 
         return new AnalyticsSummaryResponse(
                 range.value(),
@@ -80,8 +87,11 @@ public class AnalyticsService {
                 countOrderStatus(histories, OrderStatus.FAILED),
                 stopLosses.size(),
                 takeProfits.size(),
-                averageRate(stopLosses),
-                averageRate(takeProfits),
+                averageStopLossRate,
+                averageTakeProfitRate,
+                winRate(histories, takeProfits),
+                averageHoldingSeconds(histories),
+                profitLossRatio(averageTakeProfitRate, averageStopLossRate),
                 topReasons(histories),
                 topMarkets(histories)
         );
@@ -164,6 +174,60 @@ public class AnalyticsService {
         }
         BigDecimal total = rates.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         return total.divide(BigDecimal.valueOf(rates.size()), 8, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal winRate(List<TradingFlowHistory> histories, List<TradingFlowHistory> takeProfits) {
+        long filledBuyCount = histories.stream()
+                .filter(history -> history.signalType() == SignalType.BUY)
+                .filter(history -> history.orderStatus() == OrderStatus.FILLED)
+                .count();
+        if (filledBuyCount == 0) {
+            return BigDecimal.ZERO;
+        }
+        return BigDecimal.valueOf(takeProfits.size())
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(filledBuyCount), 8, RoundingMode.HALF_UP);
+    }
+
+    private long averageHoldingSeconds(List<TradingFlowHistory> histories) {
+        Map<String, Queue<TradingFlowHistory>> openBuys = new HashMap<>();
+        List<Long> holdingSeconds = new ArrayList<>();
+        histories.stream()
+                .filter(history -> history.orderStatus() == OrderStatus.FILLED)
+                .filter(history -> history.market() != null && history.createdAt() != null)
+                .sorted(Comparator.comparing(TradingFlowHistory::createdAt))
+                .forEach(history -> {
+                    if (history.signalType() == SignalType.BUY) {
+                        openBuys.computeIfAbsent(history.market(), ignored -> new ArrayDeque<>()).add(history);
+                        return;
+                    }
+                    if (history.signalType() == SignalType.SELL) {
+                        Queue<TradingFlowHistory> marketBuys = openBuys.get(history.market());
+                        if (marketBuys == null || marketBuys.isEmpty()) {
+                            return;
+                        }
+                        TradingFlowHistory buy = marketBuys.poll();
+                        long seconds = Duration.between(buy.createdAt(), history.createdAt()).getSeconds();
+                        if (seconds >= 0) {
+                            holdingSeconds.add(seconds);
+                        }
+                    }
+                });
+        if (holdingSeconds.isEmpty()) {
+            return 0;
+        }
+        long total = holdingSeconds.stream().mapToLong(Long::longValue).sum();
+        return Math.round((double) total / holdingSeconds.size());
+    }
+
+    private BigDecimal profitLossRatio(BigDecimal averageTakeProfitRate, BigDecimal averageStopLossRate) {
+        if (averageTakeProfitRate == null
+                || averageStopLossRate == null
+                || averageTakeProfitRate.compareTo(BigDecimal.ZERO) <= 0
+                || averageStopLossRate.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return averageTakeProfitRate.divide(averageStopLossRate.abs(), 8, RoundingMode.HALF_UP);
     }
 
     private List<ReasonCountResponse> topReasons(List<TradingFlowHistory> histories) {

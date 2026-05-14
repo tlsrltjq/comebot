@@ -214,6 +214,9 @@ export interface AnalyticsSummaryResponse {
   takeProfitCount: number;
   averageStopLossRate: string;
   averageTakeProfitRate: string;
+  winRate: string;
+  averageHoldingSeconds: number;
+  profitLossRatio: string;
   topHoldReasons: ReasonCountResponse[];
   topMarkets: MarketCountResponse[];
 }

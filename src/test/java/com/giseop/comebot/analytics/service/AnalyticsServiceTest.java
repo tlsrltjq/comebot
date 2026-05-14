@@ -35,24 +35,28 @@ class AnalyticsServiceTest {
     @Test
     void summaryCountsSignalsAndExitReasons() {
         when(historyService.findSince(ExchangeMode.UPBIT, now.minus(AnalyticsRange.TWENTY_FOUR_HOURS.duration()))).thenReturn(List.of(
-                history("KRW-BTC", SignalType.BUY, OrderStatus.FILLED, "Volatility long candidate selected"),
-                history("KRW-BTC", SignalType.SELL, OrderStatus.FILLED, "Stop loss rate reached: -1.25000000"),
-                history("KRW-ETH", SignalType.SELL, OrderStatus.FILLED, "Take profit rate reached: 2.50000000"),
+                history("KRW-BTC", SignalType.BUY, OrderStatus.FILLED, "Volatility long candidate selected", now.minusSeconds(7200)),
+                history("KRW-BTC", SignalType.SELL, OrderStatus.FILLED, "Stop loss rate reached: -1.25000000", now.minusSeconds(3600)),
+                history("KRW-ETH", SignalType.BUY, OrderStatus.FILLED, "Volatility long candidate selected", now.minusSeconds(1800)),
+                history("KRW-ETH", SignalType.SELL, OrderStatus.FILLED, "Take profit rate reached: 2.50000000", now.minusSeconds(600)),
                 history("KRW-XRP", SignalType.HOLD, null, "Trend is not UP"),
                 history("KRW-SOL", SignalType.HOLD, null, "Trend is not UP")
         ));
 
         AnalyticsSummaryResponse response = service.summary(AnalyticsRange.TWENTY_FOUR_HOURS);
 
-        assertThat(response.total()).isEqualTo(5);
-        assertThat(response.buyCount()).isEqualTo(1);
+        assertThat(response.total()).isEqualTo(6);
+        assertThat(response.buyCount()).isEqualTo(2);
         assertThat(response.sellCount()).isEqualTo(2);
         assertThat(response.holdCount()).isEqualTo(2);
-        assertThat(response.filledCount()).isEqualTo(3);
+        assertThat(response.filledCount()).isEqualTo(4);
         assertThat(response.stopLossCount()).isEqualTo(1);
         assertThat(response.takeProfitCount()).isEqualTo(1);
         assertThat(response.averageStopLossRate()).isEqualByComparingTo("-1.25000000");
         assertThat(response.averageTakeProfitRate()).isEqualByComparingTo("2.50000000");
+        assertThat(response.winRate()).isEqualByComparingTo("50.00000000");
+        assertThat(response.averageHoldingSeconds()).isEqualTo(2400);
+        assertThat(response.profitLossRatio()).isEqualByComparingTo("2.00000000");
         assertThat(response.topHoldReasons().getFirst().reason()).isEqualTo("Trend is not UP");
         assertThat(response.topHoldReasons().getFirst().count()).isEqualTo(2);
     }
@@ -100,10 +104,18 @@ class AnalyticsServiceTest {
     }
 
     private TradingFlowHistory history(String market, SignalType signalType, OrderStatus orderStatus, String reason) {
-        return history(ExchangeMode.UPBIT, market, signalType, orderStatus, reason);
+        return history(ExchangeMode.UPBIT, market, signalType, orderStatus, reason, now);
     }
 
     private TradingFlowHistory history(ExchangeMode exchange, String market, SignalType signalType, OrderStatus orderStatus, String reason) {
+        return history(exchange, market, signalType, orderStatus, reason, now);
+    }
+
+    private TradingFlowHistory history(String market, SignalType signalType, OrderStatus orderStatus, String reason, Instant createdAt) {
+        return history(ExchangeMode.UPBIT, market, signalType, orderStatus, reason, createdAt);
+    }
+
+    private TradingFlowHistory history(ExchangeMode exchange, String market, SignalType signalType, OrderStatus orderStatus, String reason, Instant createdAt) {
         return new TradingFlowHistory(
                 java.util.UUID.randomUUID().toString(),
                 exchange,
@@ -114,7 +126,7 @@ class AnalyticsServiceTest {
                 orderStatus != null,
                 orderStatus,
                 "message",
-                now
+                createdAt
         );
     }
 }

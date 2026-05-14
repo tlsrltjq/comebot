@@ -229,6 +229,9 @@ function defaultSummary() {
     takeProfitCount: 1,
     averageStopLossRate: '-0.7',
     averageTakeProfitRate: '1.5',
+    winRate: '50.00000000',
+    averageHoldingSeconds: 5400,
+    profitLossRatio: '2.14285714',
     topHoldReasons: [],
     topMarkets: [],
   };

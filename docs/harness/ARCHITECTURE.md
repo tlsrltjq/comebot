@@ -107,7 +107,7 @@ HOLD, REJECTED, FILLED, FAILED 결과를 모두 저장한다. History에는 `exc
 
 ## Analytics
 
-Analytics는 React 화면이 직접 history를 재계산하지 않도록 서버에서 집계한다. 최근 실행 수, BUY/SELL/HOLD 개수, 체결/거절/실패 개수, 익절/손절 평균, PAPER 포트폴리오 손익, 반복 손실 market을 제공한다.
+Analytics는 React 화면이 직접 history를 재계산하지 않도록 서버에서 집계한다. 최근 실행 수, BUY/SELL/HOLD 개수, 체결/거절/실패 개수, 익절/손절 평균, 승률, 평균 보유 시간, 손익비, PAPER 포트폴리오 손익, 반복 손실 market을 제공한다.
 
 현재 웹이 사용하는 analytics API는 다음과 같다.
 

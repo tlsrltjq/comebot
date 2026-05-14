@@ -83,6 +83,8 @@ export function HistoryPage() {
         <MetricCard label="BUY / SELL" value={`${formatNumber(summary?.buyCount)} / ${formatNumber(summary?.sellCount)}`} detail={`HOLD ${formatNumber(summary?.holdCount)}`} />
         <MetricCard label="거절/실패(REJ/FAIL)" value={`${formatNumber(summary?.rejectedCount)} / ${formatNumber(summary?.failedCount)}`} detail="실패 주문은 성공으로 표시하지 않음" />
         <MetricCard label="익절/손절(TP/SL)" value={`${formatNumber(summary?.takeProfitCount)} / ${formatNumber(summary?.stopLossCount)}`} detail={`평균 SL ${formatNumber(summary?.averageStopLossRate, 3)}%`} />
+        <MetricCard label="승률(Win Rate)" value={`${formatNumber(summary?.winRate, 2)}%`} detail={`평균 보유 ${formatDuration(summary?.averageHoldingSeconds)}`} />
+        <MetricCard label="손익비(P/L Ratio)" value={formatNumber(summary?.profitLossRatio, 2)} detail={`평균 TP ${formatNumber(summary?.averageTakeProfitRate, 3)}%`} />
         <MetricCard label="손실 SELL(Loss sells)" value={formatNumber(losses?.worstTrades.length)} detail={`반복 손절 market ${formatNumber(losses?.repeatedStopLossMarkets.length)}`} />
       </div>
 
@@ -279,6 +281,18 @@ function filterRows(
 
 function containsReason(row: TradingFlowHistoryResponse, text: string) {
   return row.signalReason.includes(text) || row.message.includes(text);
+}
+
+function formatDuration(seconds: number | null | undefined) {
+  if (!seconds) {
+    return '-';
+  }
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 }
 
 function orderTone(orderStatus: OrderStatus | null) {

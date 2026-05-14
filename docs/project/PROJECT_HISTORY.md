@@ -25,6 +25,7 @@
 18. PAPER 현금 부족 read-only 경고 추가
 19. WebSocket reconnect/backoff 구현과 테스트 보강
 20. PAPER 포지션 청산 흐름 스모크 테스트 보강
+21. 전략 성과 측정 API에 승률, 평균 보유 시간, 손익비 추가
 
 ## 최근 검증
 

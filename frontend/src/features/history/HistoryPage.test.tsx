@@ -69,6 +69,9 @@ describe('HistoryPage', () => {
           takeProfitCount: 0,
           averageStopLossRate: '-1.25',
           averageTakeProfitRate: '0',
+          winRate: '0',
+          averageHoldingSeconds: 3600,
+          profitLossRatio: '0',
           topHoldReasons: [{ reason: 'Trend is not UP', count: 5 }],
           topMarkets: [{ market: 'KRW-BTC', count: 2 }],
         });

@@ -48,6 +48,9 @@ class AnalyticsControllerTest {
                 1,
                 new BigDecimal("-1.2"),
                 new BigDecimal("2.1"),
+                new BigDecimal("50.00000000"),
+                3600,
+                new BigDecimal("1.75000000"),
                 List.of(),
                 List.of()
         ));
@@ -56,7 +59,10 @@ class AnalyticsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.range").value("24h"))
                 .andExpect(jsonPath("$.buyCount").value(2))
-                .andExpect(jsonPath("$.stopLossCount").value(2));
+                .andExpect(jsonPath("$.stopLossCount").value(2))
+                .andExpect(jsonPath("$.winRate").value(50.00000000))
+                .andExpect(jsonPath("$.averageHoldingSeconds").value(3600))
+                .andExpect(jsonPath("$.profitLossRatio").value(1.75000000));
     }
 
     @Test
@@ -75,6 +81,9 @@ class AnalyticsControllerTest {
                 0,
                 0,
                 BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                0,
                 BigDecimal.ZERO,
                 List.of(),
                 List.of()

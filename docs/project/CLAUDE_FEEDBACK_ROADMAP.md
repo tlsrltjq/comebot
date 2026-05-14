@@ -30,6 +30,8 @@
 
 ## 1. 전략 성과 측정 API
 
+상태: 완료
+
 목표:
 
 - 현재 PAPER 전략이 잘 동작하는지 운영자가 수치로 판단할 수 있게 한다.
@@ -54,6 +56,13 @@
 - realized/unrealized 판단을 섞지 않는다.
 - 실제 주문 API, `REAL_TRADING`, 수동 BUY UI를 추가하지 않는다.
 - backend service/controller 테스트를 추가한다.
+
+완료 내용:
+
+- `/api/analytics/summary`에 `winRate`, `averageHoldingSeconds`, `profitLossRatio`를 추가했다.
+- 승률은 선택 범위의 FILLED BUY 대비 익절 SELL 비율로 계산한다.
+- 평균 보유 시간은 같은 market의 FILLED BUY->FILLED SELL FIFO 매칭 기준으로 계산한다.
+- 손익비는 평균 익절률 / 평균 손절률 절댓값으로 계산한다.
 
 ## 2. WebSocket 장애/fallback 검증
 

@@ -19,6 +19,9 @@ public record AnalyticsSummaryResponse(
         long takeProfitCount,
         BigDecimal averageStopLossRate,
         BigDecimal averageTakeProfitRate,
+        BigDecimal winRate,
+        long averageHoldingSeconds,
+        BigDecimal profitLossRatio,
         List<ReasonCountResponse> topHoldReasons,
         List<MarketCountResponse> topMarkets
 ) {

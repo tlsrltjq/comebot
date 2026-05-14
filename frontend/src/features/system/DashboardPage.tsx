@@ -172,7 +172,7 @@ export function DashboardPage() {
         <MetricCard label="24시간 실행(Runs)" value={formatNumber(summary?.total)} detail={`체결(Filled) ${formatNumber(summary?.filledCount)}`} />
         <MetricCard label="매수 신호(Buy Signals)" value={formatNumber(summary?.buyCount)} detail={`매도(Sell) ${formatNumber(summary?.sellCount)}`} />
         <MetricCard label="익절/손절(TP/SL)" value={`${formatNumber(summary?.takeProfitCount)} / ${formatNumber(summary?.stopLossCount)}`} detail={`손실 매도(Loss sells) ${formatNumber(losses?.worstTrades.length)}`} />
-        <MetricCard label="평균 익절률(Avg TP)" value={`${formatNumber(summary?.averageTakeProfitRate, 3)}%`} detail={`보유 종목(Positions) ${formatNumber(pnl?.positionCount)}`} />
+        <MetricCard label="승률(Win Rate)" value={`${formatNumber(summary?.winRate, 2)}%`} detail={`손익비(P/L) ${formatNumber(summary?.profitLossRatio, 2)}`} />
       </div>
 
       <div className="section-grid">
@@ -206,6 +206,8 @@ export function DashboardPage() {
             <dd>{`${formatNumber(summary?.averageTakeProfitRate, 3)}%`}</dd>
             <dt>평균 손절률(Avg SL)</dt>
             <dd className="tone-negative">{`${formatNumber(summary?.averageStopLossRate, 3)}%`}</dd>
+            <dt>평균 보유 시간(Avg Holding)</dt>
+            <dd>{formatDuration(summary?.averageHoldingSeconds)}</dd>
             <dt>최근 범위(Range)</dt>
             <dd>{summary ? `${formatDateTime(summary.from)} - ${formatDateTime(summary.to)}` : '-'}</dd>
           </dl>
@@ -513,4 +515,16 @@ function readinessMessage({
     !exitEnabled ? '청산 스케줄러' : null,
   ].filter(Boolean);
   return `${missing.join(', ')} 상태를 확인해야 합니다.`;
+}
+
+function formatDuration(seconds: number | null | undefined) {
+  if (!seconds) {
+    return '-';
+  }
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 }
