@@ -47,6 +47,17 @@ export interface SystemStatusResponse {
     exitExchanges?: ExchangeMode[];
     exitPositionMarketCount: number;
   };
+  portfolio: {
+    exchange: ExchangeMode;
+    currency: string;
+    cash: string;
+    initialCash: string;
+    orderAmount: string;
+    cashRate: string;
+    remainingBuyCount: number;
+    cashWarning: boolean;
+    cashWarningMessage: string;
+  };
   safety: { killSwitchEnabled: boolean };
   notification: {
     enabled: boolean;

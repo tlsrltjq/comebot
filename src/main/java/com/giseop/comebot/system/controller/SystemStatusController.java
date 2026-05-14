@@ -13,10 +13,14 @@ import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
+import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.system.dto.SystemStatusResponse;
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.inbound.TelegramInboundProperties;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +31,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SystemStatusController {
 
+    private static final BigDecimal CASH_WARNING_RATE = new BigDecimal("10");
+    private static final int RATE_SCALE = 2;
+    private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
+
     private final DatabaseHealthService databaseHealthService;
     private final MarketPriceProviderProperties marketPriceProviderProperties;
     private final StrategyProperties strategyProperties;
@@ -36,6 +44,7 @@ public class SystemStatusController {
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final PositionExitSchedulerProperties positionExitSchedulerProperties;
     private final PaperPortfolioService paperPortfolioService;
+    private final PaperPortfolioProperties paperPortfolioProperties;
     private final SafetyProperties safetyProperties;
     private final NotificationProperties notificationProperties;
     private final TelegramProperties telegramProperties;
@@ -51,6 +60,7 @@ public class SystemStatusController {
             CandidateSchedulerProperties candidateSchedulerProperties,
             PositionExitSchedulerProperties positionExitSchedulerProperties,
             PaperPortfolioService paperPortfolioService,
+            PaperPortfolioProperties paperPortfolioProperties,
             SafetyProperties safetyProperties,
             NotificationProperties notificationProperties,
             TelegramProperties telegramProperties,
@@ -65,6 +75,7 @@ public class SystemStatusController {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.positionExitSchedulerProperties = positionExitSchedulerProperties;
         this.paperPortfolioService = paperPortfolioService;
+        this.paperPortfolioProperties = paperPortfolioProperties;
         this.safetyProperties = safetyProperties;
         this.notificationProperties = notificationProperties;
         this.telegramProperties = telegramProperties;
@@ -112,6 +123,7 @@ public class SystemStatusController {
                         names(positionExitSchedulerProperties.getExchanges()),
                         exitPositionMarketCount()
                 ),
+                portfolioCashStatus(exchangeMode),
                 new SystemStatusResponse.SafetyStatus(
                         safetyProperties.isKillSwitchEnabled()
                 ),
@@ -139,6 +151,51 @@ public class SystemStatusController {
                         .distinct()
                         .count())
                 .sum();
+    }
+
+    private SystemStatusResponse.PortfolioCashStatus portfolioCashStatus(ExchangeMode exchange) {
+        PaperPortfolio portfolio = paperPortfolioService.getPortfolio(exchange);
+        BigDecimal cash = nonNull(portfolio.cash());
+        BigDecimal initialCash = nonNull(paperPortfolioProperties.getInitialCash(exchange));
+        BigDecimal orderAmount = nonNull(strategyProperties.getOrderAmount(exchange));
+        BigDecimal cashRate = BigDecimal.ZERO;
+        if (initialCash.signum() > 0) {
+            cashRate = cash.divide(initialCash, RATE_SCALE + 2, RoundingMode.HALF_UP)
+                    .multiply(ONE_HUNDRED)
+                    .setScale(RATE_SCALE, RoundingMode.HALF_UP);
+        }
+        int remainingBuyCount = orderAmount.signum() > 0
+                ? cash.divideToIntegralValue(orderAmount).intValue()
+                : 0;
+        boolean belowOrderAmount = orderAmount.signum() > 0 && cash.compareTo(orderAmount) < 0;
+        boolean belowWarningRate = initialCash.signum() > 0 && cashRate.compareTo(CASH_WARNING_RATE) <= 0;
+        boolean cashWarning = belowOrderAmount || belowWarningRate;
+
+        return new SystemStatusResponse.PortfolioCashStatus(
+                portfolio.exchange().name(),
+                portfolio.currency(),
+                cash,
+                initialCash,
+                orderAmount,
+                cashRate,
+                remainingBuyCount,
+                cashWarning,
+                cashWarningMessage(cashWarning, belowOrderAmount, cashRate, remainingBuyCount)
+        );
+    }
+
+    private String cashWarningMessage(boolean cashWarning, boolean belowOrderAmount, BigDecimal cashRate, int remainingBuyCount) {
+        if (!cashWarning) {
+            return "PAPER cash is available";
+        }
+        if (belowOrderAmount) {
+            return "PAPER cash is below one order amount";
+        }
+        return "PAPER cash is low: " + cashRate + "% remaining, " + remainingBuyCount + " buys available";
+    }
+
+    private BigDecimal nonNull(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 
     private List<String> names(List<ExchangeMode> exchanges) {

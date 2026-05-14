@@ -10,6 +10,7 @@ public record SystemStatusResponse(
         StrategyStatus strategy,
         RiskStatus risk,
         SchedulerStatus scheduler,
+        PortfolioCashStatus portfolio,
         SafetyStatus safety,
         NotificationStatus notification,
         TelegramStatus telegram
@@ -57,6 +58,19 @@ public record SystemStatusResponse(
             String exitExchange,
             List<String> exitExchanges,
             int exitPositionMarketCount
+    ) {
+    }
+
+    public record PortfolioCashStatus(
+            String exchange,
+            String currency,
+            BigDecimal cash,
+            BigDecimal initialCash,
+            BigDecimal orderAmount,
+            BigDecimal cashRate,
+            int remainingBuyCount,
+            boolean cashWarning,
+            String cashWarningMessage
     ) {
     }
 

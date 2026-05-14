@@ -82,17 +82,37 @@ describe('DashboardPage', () => {
     expect(screen.getByText('데이터 부족(Insufficient)')).toBeInTheDocument();
     expect(screen.getByText('아직 24시간 실행 기록과 보유 PAPER 포지션이 없어 손익 판단은 보류합니다.')).toBeInTheDocument();
   });
+
+  it('shows read-only paper cash warning without adding trade controls', async () => {
+    vi.stubGlobal('fetch', mockDashboardFetch({
+      portfolio: {
+        cash: '5000',
+        cashRate: '0.50',
+        remainingBuyCount: 0,
+        cashWarning: true,
+        cashWarningMessage: 'PAPER cash is below one order amount',
+      },
+    }));
+
+    renderWithClient();
+
+    expect((await screen.findAllByText('PAPER 현금(Cash)')).length).toBeGreaterThan(0);
+    expect(screen.getByText('0회 가능 / 0.5%')).toBeInTheDocument();
+    expect(screen.getByText('PAPER cash is below one order amount')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /실행|매수|BUY|매도|SELL/ })).not.toBeInTheDocument();
+  });
 });
 
 function mockDashboardFetch(overrides: {
   summary?: Partial<ReturnType<typeof defaultSummary>>;
   pnl?: Partial<ReturnType<typeof defaultPnl>>;
+  portfolio?: Partial<ReturnType<typeof portfolioCash>>;
   exitPositionMarketCount?: number;
 } = {}) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url === '/api/system/status?exchange=upbit') {
-      return json(defaultSystemStatus(overrides.exitPositionMarketCount ?? 2));
+      return json(defaultSystemStatus(overrides.exitPositionMarketCount ?? 2, overrides.portfolio));
     }
     if (url === '/api/market-provider/status') {
       return json({
@@ -149,7 +169,7 @@ function mockDashboardFetch(overrides: {
   });
 }
 
-function defaultSystemStatus(exitPositionMarketCount: number) {
+function defaultSystemStatus(exitPositionMarketCount: number, portfolio?: Partial<ReturnType<typeof portfolioCash>>) {
   return {
     database: { connected: true },
     marketProvider: { provider: 'UPBIT', externalProvider: true },
@@ -172,9 +192,24 @@ function defaultSystemStatus(exitPositionMarketCount: number) {
       exitExchanges: ['UPBIT'],
       exitPositionMarketCount,
     },
+    portfolio: { ...portfolioCash(), ...portfolio },
     safety: { killSwitchEnabled: false },
     notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
     telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
+  };
+}
+
+function portfolioCash() {
+  return {
+    exchange: 'UPBIT',
+    currency: 'KRW',
+    cash: '900000',
+    initialCash: '1000000',
+    orderAmount: '10000',
+    cashRate: '90.00',
+    remainingBuyCount: 90,
+    cashWarning: false,
+    cashWarningMessage: 'PAPER cash is available',
   };
 }
 

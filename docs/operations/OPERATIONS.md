@@ -106,6 +106,12 @@ Content-Type: application/json
 - Risk/System 읽기 전용 화면: 30초
 - Auto Run 화면: 5초
 
+PAPER 현금 경고 기준:
+
+- `/api/system/status`는 선택 exchange의 PAPER 현금, 초기 현금, 1회 주문 금액, 남은 주문 가능 횟수, 현금 경고 여부를 반환한다.
+- 현금이 1회 주문 금액보다 작거나 초기 현금의 10% 이하이면 read-only 경고로 표시한다.
+- 이 경고는 Dashboard와 Top Status Bar에 표시되며 BUY 실행 로직을 바꾸지 않는다.
+
 공개 API 호출량 점검 기준:
 
 - WebSocket/SNAPSHOT 운영에서는 fresh snapshot이 있으면 주문용 현재가 REST 호출이 발생하지 않는다.

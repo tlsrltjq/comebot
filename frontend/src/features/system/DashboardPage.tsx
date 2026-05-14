@@ -96,6 +96,7 @@ export function DashboardPage() {
   const osGuide = operatingSystemGuide(detectOperatingSystem());
   const concentration = riskQuery.data?.concentration;
   const stopLossCooldown = riskQuery.data?.stopLossCooldown;
+  const portfolioCash = data.portfolio;
 
   return (
     <section className="page">
@@ -125,6 +126,7 @@ export function DashboardPage() {
             <OperationCheck label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
             <OperationCheck label="후보 스케줄러(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.candidateEnabled} />
             <OperationCheck label="청산 스케줄러(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.exitEnabled} />
+            <OperationCheck label="PAPER 현금(Cash)" value={`${portfolioCash.remainingBuyCount}회 가능 / ${formatNumber(portfolioCash.cashRate, 1)}%`} good={!portfolioCash.cashWarning} />
             <OperationCheck label="긴급 정지(Kill switch)" value={data.safety.killSwitchEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'} good={!data.safety.killSwitchEnabled} />
           </div>
         </article>
@@ -159,7 +161,11 @@ export function DashboardPage() {
         <MetricCard label="총 평가금(Total Equity)" value={money(pnl?.totalEquity)} detail={`현금(Cash) ${money(pnl?.cash)}`} />
         <MetricCard label="총 손익(Total PnL)" value={money(pnl?.totalProfit)} detail={`실현(Realized) ${money(pnl?.realizedProfit)}`} />
         <MetricCard label="보유 평가(Position Value)" value={money(pnl?.totalPositionValue)} detail={`미실현(Unrealized) ${money(pnl?.unrealizedProfit)}`} />
-        <MetricCard label="전략(Strategy)" value={data.strategy.strategyName} detail={`1회 거래(Order) ${formatNumber(data.strategy.orderAmount, currency === 'USDT' ? 2 : 0)} ${currency}`} />
+        <MetricCard
+          label="PAPER 현금(Cash)"
+          value={money(portfolioCash.cash)}
+          detail={portfolioCash.cashWarning ? portfolioCash.cashWarningMessage : `주문 가능(Available) ${portfolioCash.remainingBuyCount}회`}
+        />
       </div>
 
       <div className="metric-grid">

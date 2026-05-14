@@ -16,6 +16,8 @@ import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
@@ -66,6 +68,9 @@ class SystemStatusControllerTest {
     private PaperPortfolioService paperPortfolioService;
 
     @MockitoBean
+    private PaperPortfolioProperties paperPortfolioProperties;
+
+    @MockitoBean
     private SafetyProperties safetyProperties;
 
     @MockitoBean
@@ -106,6 +111,14 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.exitFixedDelayMs").value(5000))
                 .andExpect(jsonPath("$.scheduler.exitExchanges[0]").value("UPBIT"))
                 .andExpect(jsonPath("$.scheduler.exitPositionMarketCount").value(1))
+                .andExpect(jsonPath("$.portfolio.exchange").value("UPBIT"))
+                .andExpect(jsonPath("$.portfolio.currency").value("KRW"))
+                .andExpect(jsonPath("$.portfolio.cash").value(900000))
+                .andExpect(jsonPath("$.portfolio.initialCash").value(1000000))
+                .andExpect(jsonPath("$.portfolio.orderAmount").value(10000))
+                .andExpect(jsonPath("$.portfolio.cashRate").value(90.00))
+                .andExpect(jsonPath("$.portfolio.remainingBuyCount").value(90))
+                .andExpect(jsonPath("$.portfolio.cashWarning").value(false))
                 .andExpect(jsonPath("$.safety.killSwitchEnabled").value(false))
                 .andExpect(jsonPath("$.notification.enabled").value(false))
                 .andExpect(jsonPath("$.notification.sendHold").value(false))
@@ -153,7 +166,28 @@ class SystemStatusControllerTest {
 
         mockMvc.perform(get("/api/system/status").param("exchange", "binance"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.marketProvider.provider").value("UPBIT"));
+                .andExpect(jsonPath("$.marketProvider.provider").value("UPBIT"))
+                .andExpect(jsonPath("$.portfolio.exchange").value("BINANCE"))
+                .andExpect(jsonPath("$.portfolio.currency").value("USDT"));
+    }
+
+    @Test
+    void statusWarnsWhenPaperCashIsBelowOneOrderAmount() throws Exception {
+        setUpStatus(true);
+        org.mockito.Mockito.when(paperPortfolioService.getPortfolio(ExchangeMode.UPBIT))
+                .thenReturn(new PaperPortfolio(
+                        ExchangeMode.UPBIT,
+                        "KRW",
+                        new BigDecimal("5000"),
+                        BigDecimal.ZERO,
+                        List.of()
+                ));
+
+        mockMvc.perform(get("/api/system/status").param("exchange", "upbit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.portfolio.cashWarning").value(true))
+                .andExpect(jsonPath("$.portfolio.remainingBuyCount").value(0))
+                .andExpect(jsonPath("$.portfolio.cashWarningMessage").value("PAPER cash is below one order amount"));
     }
 
     @Test
@@ -175,6 +209,10 @@ class SystemStatusControllerTest {
                 .thenReturn(new BigDecimal("0.001"));
         org.mockito.Mockito.when(strategyProperties.getOrderAmount())
                 .thenReturn(new BigDecimal("10000"));
+        org.mockito.Mockito.when(strategyProperties.getOrderAmount(ExchangeMode.UPBIT))
+                .thenReturn(new BigDecimal("10000"));
+        org.mockito.Mockito.when(strategyProperties.getOrderAmount(ExchangeMode.BINANCE))
+                .thenReturn(new BigDecimal("10"));
         org.mockito.Mockito.when(strategySelectionProperties.getStrategyName())
                 .thenReturn("SimpleThresholdStrategy");
         org.mockito.Mockito.when(tradingProperties.getMaxOrderAmount())
@@ -211,6 +249,26 @@ class SystemStatusControllerTest {
                 .thenReturn(List.of(ExchangeMode.UPBIT));
         org.mockito.Mockito.when(paperPortfolioService.findPositions(ExchangeMode.UPBIT))
                 .thenReturn(List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.1"), new BigDecimal("90000000"))));
+        org.mockito.Mockito.when(paperPortfolioService.getPortfolio(ExchangeMode.UPBIT))
+                .thenReturn(new PaperPortfolio(
+                        ExchangeMode.UPBIT,
+                        "KRW",
+                        new BigDecimal("900000"),
+                        BigDecimal.ZERO,
+                        List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.1"), new BigDecimal("90000000")))
+                ));
+        org.mockito.Mockito.when(paperPortfolioService.getPortfolio(ExchangeMode.BINANCE))
+                .thenReturn(new PaperPortfolio(
+                        ExchangeMode.BINANCE,
+                        "USDT",
+                        new BigDecimal("900"),
+                        BigDecimal.ZERO,
+                        List.of()
+                ));
+        org.mockito.Mockito.when(paperPortfolioProperties.getInitialCash(ExchangeMode.UPBIT))
+                .thenReturn(new BigDecimal("1000000"));
+        org.mockito.Mockito.when(paperPortfolioProperties.getInitialCash(ExchangeMode.BINANCE))
+                .thenReturn(new BigDecimal("1000"));
         org.mockito.Mockito.when(safetyProperties.isKillSwitchEnabled())
                 .thenReturn(false);
         org.mockito.Mockito.when(notificationProperties.isEnabled())

@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
-import { Activity, BarChart3, Clock3, Database, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert } from 'lucide-react';
+import { Activity, BarChart3, Clock3, Database, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../shared/api/client';
 import { POLLING_INTERVALS } from '../shared/api/polling';
 import type { ExchangeMode } from '../shared/api/types';
@@ -102,6 +102,7 @@ function TopStatusBar({ exchange }: { exchange: ExchangeMode }) {
   const exitReady = Boolean(system?.scheduler.exitEnabled);
   const killSwitchEnabled = Boolean(system?.safety.killSwitchEnabled);
   const databaseReady = Boolean(system?.database.connected);
+  const cashWarning = Boolean(system?.portfolio.cashWarning);
   const updatedAt = Math.max(systemQuery.dataUpdatedAt, providerQuery.dataUpdatedAt);
 
   return (
@@ -115,6 +116,7 @@ function TopStatusBar({ exchange }: { exchange: ExchangeMode }) {
         <TopStatusItem icon={<Radio size={15} />} label="시세" value={priceReady ? `${provider?.provider ?? '-'} ${snapshotCount ?? 0}` : statusFallback(providerQuery.isLoading)} good={priceReady} />
         <TopStatusItem icon={<Activity size={15} />} label="후보" value={candidateReady ? `${(system?.scheduler.candidateFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={candidateReady} />
         <TopStatusItem icon={<TrendingUp size={15} />} label="청산" value={exitReady ? `${(system?.scheduler.exitFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={exitReady} />
+        <TopStatusItem icon={<Wallet size={15} />} label="현금" value={system ? `${system.portfolio.remainingBuyCount}회` : statusFallback(systemQuery.isLoading)} good={!cashWarning && !systemQuery.isError} />
         <TopStatusItem icon={killSwitchEnabled ? <ShieldX size={15} /> : <ShieldCheck size={15} />} label="Kill" value={killSwitchEnabled ? 'ON' : 'OFF'} good={!killSwitchEnabled && !systemQuery.isError} />
       </div>
       <LiveStatus updatedAt={updatedAt} isFetching={systemQuery.isFetching || providerQuery.isFetching} intervalMs={POLLING_INTERVALS.status} />

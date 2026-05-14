@@ -263,7 +263,7 @@
 - WebSocket 장애 시 성공 주문처럼 보이는 경로가 없다.
 - `./gradlew test`, `./gradlew check`, frontend lint/test/build가 통과한다.
 
-## 다음 우선순위: PAPER 현금 부족 경고
+## 완료: PAPER 현금 부족 경고
 
 목표:
 
@@ -274,7 +274,7 @@
 
 - 현금 비율 warning 기준을 정한다.
 - Dashboard 또는 Top Status Bar에 PAPER 현금 부족 경고를 표시한다.
-- Telegram `/status` 또는 `/pnl`에 경고 요약을 넣을지 검토한다.
+- Telegram `/status` 또는 `/pnl` 경고 요약은 필요 시 별도 작업으로 검토한다.
 - BUY 실행 로직은 바꾸지 않고 read-only 상태 표시만 추가한다.
 
 완료 기준:
@@ -282,6 +282,26 @@
 - 수동 BUY, 실제 주문 API, `REAL_TRADING` UI가 추가되지 않는다.
 - 현금 부족 경고가 주문 상태를 변경하지 않는다.
 - frontend lint/test/build와 관련 backend test가 통과한다.
+
+## 다음 우선순위: WebSocket client reconnect/backoff 테스트 보강
+
+목표:
+
+- WebSocket 연결 종료, 오류, reconnect delay 증가 흐름을 단위 테스트로 더 명확히 고정한다.
+- 실제 시세 데이터 축적 없이 장애 복구 경로를 검증한다.
+
+작업:
+
+- Upbit/Binance WebSocket client의 close/error 처리 테스트 범위를 확인한다.
+- reconnect initial/max delay가 설정값을 따르는지 확인한다.
+- WebSocket 실패가 애플리케이션 전체 종료로 이어지지 않는지 테스트한다.
+- 운영 문서의 reconnect/backoff 설명과 구현이 맞는지 확인한다.
+
+완료 기준:
+
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- WebSocket 장애가 주문 성공처럼 보이는 경로가 없다.
+- `./gradlew test`가 통과한다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 

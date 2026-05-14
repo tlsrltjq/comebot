@@ -127,9 +127,24 @@ function systemStatus() {
       exitExchanges: ['UPBIT'],
       exitPositionMarketCount: 2,
     },
+    portfolio: portfolioCash(),
     safety: { killSwitchEnabled: false },
     notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
     telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
+  };
+}
+
+function portfolioCash() {
+  return {
+    exchange: 'UPBIT',
+    currency: 'KRW',
+    cash: '900000',
+    initialCash: '1000000',
+    orderAmount: '10000',
+    cashRate: '90.00',
+    remainingBuyCount: 90,
+    cashWarning: false,
+    cashWarningMessage: 'PAPER cash is available',
   };
 }
 

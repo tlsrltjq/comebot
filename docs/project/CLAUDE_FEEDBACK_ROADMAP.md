@@ -174,15 +174,17 @@
 
 ## 7. PAPER 현금 부족 경고
 
+상태: 완료
+
 목표:
 
 - PAPER 현금 부족으로 신규 BUY가 계속 막히는 상태를 조용한 장애로 방치하지 않는다.
 
 검토 방향:
 
-- 현금 비율 warning/block threshold를 설정한다.
+- 현금 비율 warning 기준을 설정한다.
 - Dashboard 또는 Top Status Bar에 경고를 표시한다.
-- Telegram `/status` 또는 `/pnl`에도 요약을 표시할 수 있다.
+- Telegram `/status` 또는 `/pnl` 요약은 필요 시 별도 작업으로 검토한다.
 
 완료 기준:
 
