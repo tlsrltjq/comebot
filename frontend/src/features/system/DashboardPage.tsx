@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
-import { Activity, Bot, CheckCircle2, Database, MonitorCog, Radio, ShieldAlert, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
+import { Activity, CheckCircle2, MonitorCog, ShieldAlert, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
@@ -104,7 +103,7 @@ export function DashboardPage() {
       <header className="page-header">
         <div>
           <h1>운영 대시보드(Dashboard)</h1>
-          <p>자동 PAPER 운영 상태와 손익 리스크를 확인합니다.</p>
+          <p>자동 PAPER 운영 가능 여부, 데이터 준비도, 리스크 상태를 한 화면에서 판단합니다.</p>
         </div>
         <Badge tone={readinessTone}>
           {readinessTitle}
@@ -112,48 +111,49 @@ export function DashboardPage() {
         <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching || providerQuery.isFetching} intervalMs={LIVE_REFRESH_MS} />
       </header>
 
-      <article className={`operations-overview operations-overview-${readinessTone}`}>
-        <div className="operations-summary">
-          <div>
-            <span>운영 준비 상태(Operational Readiness)</span>
-            <strong>{readinessTitle}</strong>
-            <p>{readinessDetail}</p>
+      <div className="control-room-grid" aria-label="운영 관제(Control room)">
+        <article className={`operations-overview operations-overview-${readinessTone}`}>
+          <div className="operations-summary">
+            <div>
+              <span>운영 준비 상태(Operational Readiness)</span>
+              <strong>{readinessTitle}</strong>
+              <p>{readinessDetail}</p>
+            </div>
+            {readinessTone === 'bad' ? <ShieldX size={34} /> : <ShieldCheck size={34} />}
           </div>
-          {readinessTone === 'bad' ? <ShieldX size={34} /> : <ShieldCheck size={34} />}
-        </div>
-        <div className="readiness-list" aria-label="운영 준비 조건(Readiness checks)">
-          <OperationCheck label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
-          <OperationCheck label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
-          <OperationCheck label="후보 스케줄러(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.candidateEnabled} />
-          <OperationCheck label="청산 스케줄러(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.exitEnabled} />
-          <OperationCheck label="긴급 정지(Kill switch)" value={data.safety.killSwitchEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'} good={!data.safety.killSwitchEnabled} />
-        </div>
-      </article>
-
-      <article className={`data-readiness-panel data-readiness-${dataReadiness.tone}`}>
-        <div className="data-readiness-head">
-          <div>
-            <span>데이터 준비 상태(Data Readiness)</span>
-            <strong>{dataReadiness.title}</strong>
-            <p>{dataReadiness.detail}</p>
+          <div className="readiness-list" aria-label="운영 준비 조건(Readiness checks)">
+            <OperationCheck label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
+            <OperationCheck label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
+            <OperationCheck label="후보 스케줄러(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.candidateEnabled} />
+            <OperationCheck label="청산 스케줄러(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.exitEnabled} />
+            <OperationCheck label="긴급 정지(Kill switch)" value={data.safety.killSwitchEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'} good={!data.safety.killSwitchEnabled} />
           </div>
-          <Badge tone={dataReadiness.tone}>{dataReadiness.badge}</Badge>
-        </div>
-        <div className="data-readiness-grid" aria-label="데이터 준비 지표(Data readiness metrics)">
-          <ReadinessMetric label="24h 실행(Runs)" value={formatNumber(summary?.total)} />
-          <ReadinessMetric label="체결(Filled)" value={formatNumber(summary?.filledCount)} />
-          <ReadinessMetric label="BUY / SELL" value={`${formatNumber(summary?.buyCount)} / ${formatNumber(summary?.sellCount)}`} />
-          <ReadinessMetric label="보유(Position)" value={formatNumber(pnl?.positionCount)} />
-          <ReadinessMetric label="청산 대상(Exit)" value={formatNumber(data.scheduler.exitPositionMarketCount)} />
-        </div>
-      </article>
+        </article>
 
-      <div className="status-strip dashboard-status-strip" aria-label="운영 상태(Operation status)">
-        <StatusPill icon={<Database size={16} />} label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
-        <StatusPill icon={<Radio size={16} />} label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
-        <StatusPill icon={<Bot size={16} />} label="후보(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.candidateEnabled} />
-        <StatusPill icon={<TrendingDown size={16} />} label="청산(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Off)'} good={data.scheduler.exitEnabled} />
-        <StatusPill icon={data.safety.killSwitchEnabled ? <ShieldX size={16} /> : <ShieldCheck size={16} />} label="긴급 정지(Kill)" value={data.safety.killSwitchEnabled ? '켜짐(On)' : '꺼짐(Off)'} good={!data.safety.killSwitchEnabled} />
+        <article className={`data-readiness-panel data-readiness-${dataReadiness.tone}`}>
+          <div className="data-readiness-head">
+            <div>
+              <span>데이터 준비 상태(Data Readiness)</span>
+              <strong>{dataReadiness.title}</strong>
+              <p>{dataReadiness.detail}</p>
+            </div>
+            <Badge tone={dataReadiness.tone}>{dataReadiness.badge}</Badge>
+          </div>
+          <div className="data-readiness-grid" aria-label="데이터 준비 지표(Data readiness metrics)">
+            <ReadinessMetric label="24h 실행(Runs)" value={formatNumber(summary?.total)} />
+            <ReadinessMetric label="체결(Filled)" value={formatNumber(summary?.filledCount)} />
+            <ReadinessMetric label="BUY / SELL" value={`${formatNumber(summary?.buyCount)} / ${formatNumber(summary?.sellCount)}`} />
+            <ReadinessMetric label="보유(Position)" value={formatNumber(pnl?.positionCount)} />
+            <ReadinessMetric label="청산 대상(Exit)" value={formatNumber(data.scheduler.exitPositionMarketCount)} />
+          </div>
+        </article>
+
+        <RiskSummaryPanel
+          concentration={concentration}
+          stopLossCooldown={stopLossCooldown}
+          lossCount={losses?.worstTrades.length ?? 0}
+          killSwitchEnabled={data.safety.killSwitchEnabled}
+        />
       </div>
 
       <div className="metric-grid">
@@ -272,23 +272,6 @@ export function DashboardPage() {
 
         <article className="panel">
           <div className="panel-title-row">
-            <h2>리스크 경고(Risk Warnings)</h2>
-            <ShieldAlert size={20} />
-          </div>
-          <dl className="definition-list">
-            <dt>쏠림 차단(Concentration)</dt>
-            <dd>{concentration ? `${concentration.exchange} ${formatNumber(concentration.warningExposureRate, 0)}% / ${formatNumber(concentration.blockExposureRate, 0)}%` : '-'}</dd>
-            <dt>쏠림 적용(Guard)</dt>
-            <dd>{concentration?.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
-            <dt>손절 cooldown</dt>
-            <dd>{stopLossCooldown?.enabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
-            <dt>cooldown 기준</dt>
-            <dd>{stopLossCooldown ? `${stopLossCooldown.window} / ${stopLossCooldown.triggerCount}회 / ${stopLossCooldown.duration}` : '-'}</dd>
-          </dl>
-        </article>
-
-        <article className="panel">
-          <div className="panel-title-row">
             <h2>운영 환경(OS Guide)</h2>
             <MonitorCog size={20} />
           </div>
@@ -357,26 +340,6 @@ function OperationCheck({
   );
 }
 
-function StatusPill({
-  icon,
-  label,
-  value,
-  good,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  good: boolean;
-}) {
-  return (
-    <div className={`status-pill ${good ? 'status-pill-good' : 'status-pill-bad'}`}>
-      {icon}
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
 function ReadinessMetric({
   label,
   value,
@@ -390,6 +353,60 @@ function ReadinessMetric({
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function RiskSummaryPanel({
+  concentration,
+  stopLossCooldown,
+  lossCount,
+  killSwitchEnabled,
+}: {
+  concentration: {
+    exchange: string;
+    enabled: boolean;
+    warningExposureRate: string;
+    blockExposureRate: string;
+  } | undefined;
+  stopLossCooldown: {
+    enabled: boolean;
+    window: string;
+    triggerCount: number;
+    duration: string;
+  } | undefined;
+  lossCount: number;
+  killSwitchEnabled: boolean;
+}) {
+  const hasWarning = killSwitchEnabled || lossCount > 0 || Boolean(concentration?.enabled) || Boolean(stopLossCooldown?.enabled);
+  return (
+    <article className={`risk-summary-panel risk-summary-${hasWarning ? 'warn' : 'good'}`}>
+      <div className="risk-summary-head">
+        <div>
+          <span>리스크 요약(Risk Summary)</span>
+          <strong>{hasWarning ? '점검 항목 있음(Review)' : '차단 없음(Clear)'}</strong>
+          <p>쏠림, 반복 손절, 손실 매도, kill switch 상태를 함께 봅니다.</p>
+        </div>
+        {hasWarning ? <ShieldAlert size={30} /> : <ShieldCheck size={30} />}
+      </div>
+      <dl className="risk-summary-list">
+        <div>
+          <dt>쏠림(Concentration)</dt>
+          <dd>{concentration ? `${concentration.exchange} ${formatNumber(concentration.warningExposureRate, 0)}% / ${formatNumber(concentration.blockExposureRate, 0)}%` : '-'}</dd>
+        </div>
+        <div>
+          <dt>Cooldown</dt>
+          <dd>{stopLossCooldown?.enabled ? `${stopLossCooldown.triggerCount}회 / ${stopLossCooldown.duration}` : '꺼짐(Disabled)'}</dd>
+        </div>
+        <div>
+          <dt>손실 매도(Loss sells)</dt>
+          <dd>{formatNumber(lossCount)}</dd>
+        </div>
+        <div>
+          <dt>Kill switch</dt>
+          <dd>{killSwitchEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
+        </div>
+      </dl>
+    </article>
   );
 }
 

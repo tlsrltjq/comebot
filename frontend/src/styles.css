@@ -304,6 +304,31 @@ button:disabled {
   border-color: #f2c7be;
 }
 
+.control-room-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.control-room-grid .operations-overview,
+.control-room-grid .data-readiness-panel,
+.control-room-grid .risk-summary-panel {
+  min-height: 100%;
+}
+
+.control-room-grid .operations-overview {
+  grid-template-columns: 1fr;
+}
+
+.control-room-grid .readiness-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-room-grid .data-readiness-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .operations-overview {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(0, 1.4fr);
@@ -486,6 +511,88 @@ button:disabled {
 .data-readiness-item strong {
   color: #25333d;
   font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.risk-summary-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.risk-summary-good {
+  border-color: #bfe8d7;
+}
+
+.risk-summary-warn {
+  border-color: #f5d782;
+}
+
+.risk-summary-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.risk-summary-head div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.risk-summary-head span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.risk-summary-head strong {
+  color: #25333d;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.risk-summary-head p {
+  margin: 0;
+  color: #60717f;
+}
+
+.risk-summary-head svg {
+  flex: 0 0 auto;
+  color: #7a5200;
+}
+
+.risk-summary-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.risk-summary-list div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e5ebf0;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+
+.risk-summary-list dt {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.risk-summary-list dd {
+  margin: 4px 0 0;
+  color: #25333d;
+  font-size: 14px;
+  font-weight: 800;
   overflow-wrap: anywhere;
 }
 
@@ -1479,14 +1586,17 @@ td:nth-child(7) {
   .portfolio-chart-grid,
   .portfolio-overview,
   .leader-grid,
+  .control-room-grid,
   .status-strip,
   .operations-overview,
   .readiness-list,
-  .data-readiness-grid {
+  .data-readiness-grid,
+  .risk-summary-list {
     grid-template-columns: 1fr;
   }
 
-  .data-readiness-head {
+  .data-readiness-head,
+  .risk-summary-head {
     display: grid;
   }
 

@@ -41,7 +41,7 @@
 - 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
-## 다음 우선순위: UI 전면 개편 Stage 2
+## 완료: UI 전면 개편 Stage 2
 
 목표:
 
@@ -59,6 +59,26 @@
 
 - Dashboard에는 거래 실행 버튼이 없다.
 - 운영 가능 상태와 데이터 충분 상태가 섞이지 않는다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
+## 다음 우선순위: UI 전면 개편 Stage 3
+
+목표:
+
+- Portfolio에서 선택 PAPER SELL UX를 안전하게 고립한다.
+- 보유 포지션 리스크와 선택 액션 경계를 한 화면에서 명확히 보여준다.
+
+작업:
+
+- 포지션 테이블을 exposure, TP/SL distance, risk flags 중심으로 정리한다.
+- 선택 PAPER SELL 확인 모달에서 market, quantity, estimated value, current PnL을 다시 보여준다.
+- 모바일 카드형 포지션 리스트의 정보 우선순위를 개선한다.
+- 수동 BUY와 실제 주문 UI가 없음을 테스트로 유지한다.
+
+완료 기준:
+
+- 선택한 보유 PAPER 포지션만 SELL 가능하다.
+- PAPER SELL 확인 문구가 실제 주문이 아님을 명확히 표시한다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트

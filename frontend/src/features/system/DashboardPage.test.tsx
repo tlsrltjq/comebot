@@ -40,9 +40,9 @@ describe('DashboardPage', () => {
     expect(screen.getByText('후보 스케줄러(Candidate)')).toBeInTheDocument();
     expect(screen.getByText('청산 스케줄러(Exit)')).toBeInTheDocument();
     expect(screen.getByText('운영 제약(Controls)')).toBeInTheDocument();
-    expect(screen.getByText('리스크 경고(Risk Warnings)')).toBeInTheDocument();
+    expect(screen.getByText('리스크 요약(Risk Summary)')).toBeInTheDocument();
     expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
-    expect(screen.getByText('PT168H / 2회 / PT24H')).toBeInTheDocument();
+    expect(screen.getByText('2회 / PT24H')).toBeInTheDocument();
     expect(screen.getByText('운영 환경(OS Guide)')).toBeInTheDocument();
     expect(screen.getByText('Windows')).toBeInTheDocument();
     expect(screen.getByText('scripts\\run-upbit-paper.bat')).toBeInTheDocument();
