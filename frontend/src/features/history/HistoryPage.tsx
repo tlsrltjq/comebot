@@ -78,9 +78,23 @@ export function HistoryPage() {
       <div className="metric-grid">
         <MetricCard label="실행 수(Runs)" value={formatNumber(summary?.total)} detail={`체결(Filled) ${formatNumber(summary?.filledCount)}`} />
         <MetricCard label="BUY / SELL" value={`${formatNumber(summary?.buyCount)} / ${formatNumber(summary?.sellCount)}`} detail={`HOLD ${formatNumber(summary?.holdCount)}`} />
+        <MetricCard label="거절/실패(REJ/FAIL)" value={`${formatNumber(summary?.rejectedCount)} / ${formatNumber(summary?.failedCount)}`} detail="실패 주문은 성공으로 표시하지 않음" />
         <MetricCard label="익절/손절(TP/SL)" value={`${formatNumber(summary?.takeProfitCount)} / ${formatNumber(summary?.stopLossCount)}`} detail={`평균 SL ${formatNumber(summary?.averageStopLossRate, 3)}%`} />
         <MetricCard label="손실 SELL(Loss sells)" value={formatNumber(losses?.worstTrades.length)} detail={`반복 손절 market ${formatNumber(losses?.repeatedStopLossMarkets.length)}`} />
       </div>
+
+      <article className="panel">
+        <div className="panel-title-row">
+          <h2>주문 상태 요약(Order Lifecycle)</h2>
+          <Badge tone="info">{rangeLabel(range)}</Badge>
+        </div>
+        <div className="lifecycle-summary">
+          <LifecycleItem label="FILLED" value={summary?.filledCount ?? 0} tone="good" />
+          <LifecycleItem label="REJECTED" value={summary?.rejectedCount ?? 0} tone="warn" />
+          <LifecycleItem label="FAILED" value={summary?.failedCount ?? 0} tone="bad" />
+          <LifecycleItem label="NO ORDER" value={(summary?.holdCount ?? 0)} tone="neutral" />
+        </div>
+      </article>
 
       <div className="section-grid">
         <article className="panel">
@@ -188,11 +202,7 @@ export function HistoryPage() {
                 <td><strong>{row.market}</strong></td>
                 <td>{formatCurrency(row.currentPrice, currency)}</td>
                 <td><SignalBadge signal={row.signalType} /></td>
-                <td>
-                  <Badge tone={orderTone(row.orderStatus)}>
-                    {row.orderStatus ?? (row.orderCreated ? 'CREATED' : 'NO_ORDER')}
-                  </Badge>
-                </td>
+                <td><OrderStatusBadge row={row} /></td>
                 <td><ReasonBadge row={row} /></td>
                 <td>{row.message}</td>
               </tr>
@@ -266,6 +276,35 @@ function signalTone(signal: SignalType | null) {
 
 function SignalBadge({ signal }: { signal: SignalType | null }) {
   return <Badge tone={signalTone(signal)}>{signal ?? '-'}</Badge>;
+}
+
+function OrderStatusBadge({ row }: { row: TradingFlowHistoryResponse }) {
+  const status = row.orderStatus ?? (row.orderCreated ? 'CREATED' : 'NO_ORDER');
+  const labels: Record<string, string> = {
+    FILLED: '체결(FILLED)',
+    REJECTED: '거절(REJECTED)',
+    FAILED: '실패(FAILED)',
+    CREATED: '생성(CREATED)',
+    NO_ORDER: '주문 없음(NO_ORDER)',
+  };
+  return <Badge tone={orderTone(row.orderStatus)}>{labels[status] ?? status}</Badge>;
+}
+
+function LifecycleItem({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: 'good' | 'warn' | 'bad' | 'neutral';
+}) {
+  return (
+    <div className="lifecycle-item">
+      <span>{label}</span>
+      <Badge tone={tone}>{formatNumber(value)}</Badge>
+    </div>
+  );
 }
 
 function ReasonBadge({ row }: { row: TradingFlowHistoryResponse }) {

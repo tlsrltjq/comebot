@@ -95,6 +95,11 @@ export function CandidatesPage() {
         </article>
       </div>
 
+      <div className="audit-strip" aria-label="후보 감사 기준(Candidate audit rules)">
+        <Badge tone="info">조회 전용(Read-only)</Badge>
+        <span>후보 화면은 자동 스케줄러 판단 결과만 보여주며 수동 BUY나 후보 실행 버튼을 제공하지 않습니다.</span>
+      </div>
+
       <div className="toolbar">
         <label>
           마켓(Market)
@@ -128,6 +133,8 @@ export function CandidatesPage() {
               <th>범위(Range)</th>
               <th>거래대금(Trade amount)</th>
               <th>보유(Position)</th>
+              <th>사유 타입(Reason Type)</th>
+              <th>리스크 플래그(Risk Flag)</th>
               <th>이유(Reason)</th>
               <th>스캔 시각(Scanned)</th>
             </tr>
@@ -149,9 +156,10 @@ export function CandidatesPage() {
                     <Badge tone={positionMarkets.has(candidate.market) ? 'info' : 'neutral'}>
                       {positionMarkets.has(candidate.market) ? '보유(Held)' : '없음(None)'}
                     </Badge>
-                    <RiskReasonBadge reasonType={candidate.riskReasonType} />
                   </div>
                 </td>
+                <td><ReasonTypeBadge reasonType={candidate.reasonType} /></td>
+                <td><RiskReasonBadge reasonType={candidate.riskReasonType} /></td>
                 <td>{candidate.reason}</td>
                 <td>{formatDateTime(candidate.scannedAt)}</td>
               </tr>
@@ -213,5 +221,18 @@ function RiskReasonBadge({ reasonType }: { reasonType?: TradingCandidateResponse
   if (reasonType === 'STOP_LOSS_COOLDOWN') {
     return <Badge tone="warn">Cooldown</Badge>;
   }
-  return null;
+  return <Badge tone="neutral">NONE</Badge>;
+}
+
+function ReasonTypeBadge({ reasonType }: { reasonType?: TradingCandidateResponse['reasonType'] }) {
+  if (reasonType === 'SELECTED') {
+    return <Badge tone="good">SELECTED</Badge>;
+  }
+  if (reasonType === 'CONCENTRATION_RISK' || reasonType === 'STOP_LOSS_COOLDOWN') {
+    return <Badge tone="warn">{reasonType}</Badge>;
+  }
+  if (!reasonType) {
+    return <Badge tone="neutral">UNKNOWN</Badge>;
+  }
+  return <Badge tone="neutral">{reasonType}</Badge>;
 }

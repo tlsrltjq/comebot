@@ -81,7 +81,7 @@
 - PAPER SELL 확인 문구가 실제 주문이 아님을 명확히 표시한다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
-## 다음 우선순위: UI 전면 개편 Stage 4
+## 완료: UI 전면 개편 Stage 4
 
 목표:
 
@@ -99,6 +99,26 @@
 
 - Candidates 화면에 실행 버튼이 없다.
 - History에서 FILLED/REJECTED/FAILED 구분이 명확하다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
+## 다음 우선순위: UI 전면 개편 Stage 5
+
+목표:
+
+- Risk와 System 페이지를 읽기 전용 운영 기준 화면으로 더 다듬는다.
+- 문서의 리스크 정책과 운영 환경 안내가 화면 표현과 어긋나지 않게 한다.
+
+작업:
+
+- Risk page에서 리스크 정책, concentration, cooldown, 금지된 실거래 범위를 더 명확히 묶는다.
+- System page에서 OS guide, scheduler, provider, notification/Telegram 상태를 더 스캔하기 쉽게 정리한다.
+- Mac/Windows/Linux 실행 안내가 깨지지 않는지 테스트한다.
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY 설정 UI가 없음을 유지한다.
+
+완료 기준:
+
+- `docs/trading/RISK_POLICY.md`와 Risk page 표현이 충돌하지 않는다.
+- `docs/operations/RELIABILITY.md`와 System page 표현이 충돌하지 않는다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트

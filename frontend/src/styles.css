@@ -992,6 +992,30 @@ button:disabled {
   align-items: center;
 }
 
+.lifecycle-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lifecycle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #edf1f4;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.lifecycle-item span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .candidate-summary {
   display: flex;
   flex-wrap: wrap;
@@ -1002,6 +1026,25 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.audit-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #b8d9f2;
+  border-radius: 8px;
+  background: #f3f9fd;
+  color: #40515f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.audit-strip span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .segmented-row {
@@ -1630,7 +1673,8 @@ td:nth-child(7) {
   .operations-overview,
   .readiness-list,
   .data-readiness-grid,
-  .risk-summary-list {
+  .risk-summary-list,
+  .lifecycle-summary {
     grid-template-columns: 1fr;
   }
 

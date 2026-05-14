@@ -96,8 +96,12 @@ describe('HistoryPage', () => {
     renderWithClient();
 
     expect(await screen.findByText('반복 HOLD 사유(Top Hold Reasons)')).toBeInTheDocument();
+    expect(screen.getByText('주문 상태 요약(Order Lifecycle)')).toBeInTheDocument();
+    expect(screen.getByText('거절/실패(REJ/FAIL)')).toBeInTheDocument();
     expect(screen.getByText('손실 원인(Loss Review)')).toBeInTheDocument();
     expect((await screen.findAllByText('Trend is not UP')).length).toBeGreaterThan(0);
+    expect(screen.getByText('체결(FILLED)')).toBeInTheDocument();
+    expect(screen.getByText('주문 없음(NO_ORDER)')).toBeInTheDocument();
     expect(screen.getByText('손절(Stop loss)')).toBeInTheDocument();
     expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
 

@@ -484,11 +484,11 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 
 ## 다음 실행 후보
 
-1. Stage 4: Candidates and History Tables
-2. Stage 5: Risk and System Pages
-3. Stage 6: Visual Regression and Cleanup
+1. Stage 5: Risk and System Pages
+2. Stage 6: Visual Regression and Cleanup
+3. PAPER 포지션 청산 흐름 스모크 테스트
 
-현재 우선순위는 Stage 4다.
+현재 우선순위는 Stage 5다.
 
 ## 진행 상황
 
@@ -502,3 +502,6 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 - 완료: Stage 3 Portfolio 선택 PAPER SELL 확인 모달 개선
 - 완료: Portfolio 선택 평가액/현재 손익/처리 범위 표시
 - 완료: Portfolio 테이블과 모바일 카드에 exposure와 TP/SL distance 표시
+- 완료: Stage 4 Candidates reason type/risk flag 분리
+- 완료: Candidates 조회 전용 audit strip 추가
+- 완료: History order lifecycle 요약과 명확한 order status badge 추가
