@@ -256,54 +256,6 @@ button:disabled {
   gap: 14px;
 }
 
-.status-strip {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.dashboard-status-strip {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.status-pill {
-  min-height: 54px;
-  border: 1px solid #dbe3ea;
-  border-radius: 8px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  color: #40515f;
-}
-
-.status-pill svg {
-  flex: 0 0 auto;
-}
-
-.status-pill span {
-  font-size: 12px;
-  font-weight: 800;
-  color: #60717f;
-}
-
-.status-pill strong {
-  margin-left: auto;
-  text-align: right;
-  font-size: 13px;
-  color: #25333d;
-  overflow-wrap: anywhere;
-}
-
-.status-pill-good {
-  border-color: #bfe8d7;
-}
-
-.status-pill-bad {
-  border-color: #f2c7be;
-}
-
 .control-room-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
@@ -1669,7 +1621,6 @@ td:nth-child(7) {
   .portfolio-overview,
   .leader-grid,
   .control-room-grid,
-  .status-strip,
   .operations-overview,
   .readiness-list,
   .data-readiness-grid,
@@ -1706,5 +1657,27 @@ td:nth-child(7) {
 
   input {
     width: min(100%, 320px);
+  }
+}
+
+@media (max-width: 520px) {
+  .top-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-strip {
+    display: grid;
+  }
+
+  .definition-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-actions {
+    display: grid;
+  }
+
+  .dialog-actions .button {
+    width: 100%;
   }
 }

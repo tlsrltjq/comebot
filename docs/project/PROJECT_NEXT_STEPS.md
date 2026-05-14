@@ -121,7 +121,7 @@
 - `docs/operations/RELIABILITY.md`와 System page 표현이 충돌하지 않는다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
-## 다음 우선순위: UI 전면 개편 Stage 6
+## 완료: UI 전면 개편 Stage 6
 
 목표:
 
@@ -141,7 +141,7 @@
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 - 최종 UI 개편 진행 상황이 문서에 반영된다.
 
-## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
+## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:
 
