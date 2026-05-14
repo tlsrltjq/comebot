@@ -101,7 +101,7 @@
 - History에서 FILLED/REJECTED/FAILED 구분이 명확하다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
-## 다음 우선순위: UI 전면 개편 Stage 5
+## 완료: UI 전면 개편 Stage 5
 
 목표:
 
@@ -120,6 +120,26 @@
 - `docs/trading/RISK_POLICY.md`와 Risk page 표현이 충돌하지 않는다.
 - `docs/operations/RELIABILITY.md`와 System page 표현이 충돌하지 않는다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
+## 다음 우선순위: UI 전면 개편 Stage 6
+
+목표:
+
+- 새 디자인의 화면 깨짐, 불필요한 CSS, 테스트 공백을 점검한다.
+- desktop/mobile에서 텍스트 겹침과 위험 액션 노출 문제를 확인한다.
+
+작업:
+
+- 주요 화면의 반응형 grid와 긴 텍스트 줄바꿈 규칙을 점검한다.
+- 사용하지 않는 CSS나 중복된 UI 패턴을 정리한다.
+- 필요하면 Testing Library 회귀 테스트를 보강한다.
+- 최종적으로 수동 BUY, 실제 주문, `REAL_TRADING` UI가 없음을 재확인한다.
+
+완료 기준:
+
+- desktop/mobile 레이아웃에서 명백한 겹침이 없다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+- 최종 UI 개편 진행 상황이 문서에 반영된다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 

@@ -43,6 +43,11 @@ export function SystemPage() {
         </Badge>
       </header>
 
+      <div className="audit-strip" aria-label="운영 환경 안내(System guide constraints)">
+        <Badge tone="info">{osGuide.label}</Badge>
+        <span>OS별 차이는 실행 스크립트, 경로, shell 안내만 바꾸며 거래 기능과 안전 제약은 동일합니다.</span>
+      </div>
+
       <div className="section-grid">
         <article className="panel">
           <div className="panel-title-row">

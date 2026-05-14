@@ -484,11 +484,11 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 
 ## 다음 실행 후보
 
-1. Stage 5: Risk and System Pages
-2. Stage 6: Visual Regression and Cleanup
-3. PAPER 포지션 청산 흐름 스모크 테스트
+1. Stage 6: Visual Regression and Cleanup
+2. PAPER 포지션 청산 흐름 스모크 테스트
+3. 데이터 누적 후 전략 조건 재검토
 
-현재 우선순위는 Stage 5다.
+현재 우선순위는 Stage 6이다.
 
 ## 진행 상황
 
@@ -505,3 +505,6 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 - 완료: Stage 4 Candidates reason type/risk flag 분리
 - 완료: Candidates 조회 전용 audit strip 추가
 - 완료: History order lifecycle 요약과 명확한 order status badge 추가
+- 완료: Stage 5 Risk/System 읽기 전용 제약 표시
+- 완료: Risk page 정책/금지 UI 회귀 테스트 추가
+- 완료: System page OS별 실행 안내 회귀 테스트 추가

@@ -36,6 +36,11 @@ export function RiskPage() {
         <Badge tone="info">{exchange}</Badge>
       </header>
 
+      <div className="audit-strip" aria-label="리스크 정책 제약(Risk policy constraints)">
+        <Badge tone="warn">읽기 전용(Read-only)</Badge>
+        <span>Risk 화면은 정책과 현재 적용 상태만 표시합니다. `REAL_TRADING`, 실제 주문, 수동 BUY 설정은 제공하지 않습니다.</span>
+      </div>
+
       <div className="metric-grid">
         <MetricCard label="최대 주문(Max Order)" value={formatCurrency(risk.maxOrderAmount, currency)} detail="자동 PAPER BUY 상한" />
         <MetricCard label="익절(Take Profit)" value={`${formatNumber(risk.takeProfitRate, 3)}%`} detail="보유 PAPER SELL 기준" />
