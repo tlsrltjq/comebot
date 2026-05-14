@@ -15,6 +15,9 @@
 8. 쏠림 경고 UI 1차 구현
 9. 반복 손절 cooldown 구현
 10. OS별 운영 화면/가이드 대응 구현
+11. PAPER 체결 append-only 원장 추가
+12. Telegram 수동 PAPER 실행 코드 레벨 차단
+13. scheduler 중복 실행 방어 테스트 보강
 
 ## 최근 검증
 

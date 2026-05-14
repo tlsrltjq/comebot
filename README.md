@@ -178,7 +178,7 @@ Telegram commands:
 ```
 
 Telegram messages and inline button labels are Korean.
-Telegram is monitoring-first by default. `/run` and `/candidate-run` are parsed for compatibility, but they execute only when `TELEGRAM_MANUAL_PAPER_EXECUTION_ENABLED=true`.
+Telegram is monitoring-first. `/run` and `/candidate-run` are parsed for compatibility, but manual PAPER execution is blocked in code so Telegram cannot open a manual BUY path.
 
 ## Configuration
 
@@ -235,7 +235,7 @@ Telegram:
 ```properties
 TELEGRAM_ENABLED=true
 TELEGRAM_INBOUND_ENABLED=true
-TELEGRAM_MANUAL_PAPER_EXECUTION_ENABLED=false
+TELEGRAM_MANUAL_PAPER_EXECUTION_ENABLED=false # deprecated safety flag; manual execution remains blocked in code
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ```

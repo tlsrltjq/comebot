@@ -58,17 +58,16 @@ class TelegramCommandServiceTest {
 
         verify(tradingFlowService, never()).run("KRW-BTC");
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 비활성화");
+        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 코드 레벨에서 차단");
     }
 
     @Test
-    void runCommandCallsTradingFlowServiceWhenManualExecutionEnabled() {
+    void runCommandIsBlockedEvenWhenManualExecutionEnabled() {
         TradingFlowService tradingFlowService = mock(TradingFlowService.class);
-        when(tradingFlowService.run("KRW-BTC")).thenReturn(flowResult("KRW-BTC", SignalType.BUY, true, OrderStatus.FILLED));
 
         serviceWithManualExecution(mock(TelegramNotificationSender.class), tradingFlowService).handle("/run KRW-BTC");
 
-        verify(tradingFlowService).run("KRW-BTC");
+        verify(tradingFlowService, never()).run("KRW-BTC");
     }
 
     @Test
@@ -239,17 +238,16 @@ class TelegramCommandServiceTest {
     }
 
     @Test
-    void runCallbackCallsTradingFlowServiceWhenManualExecutionEnabled() {
+    void runCallbackIsBlockedEvenWhenManualExecutionEnabled() {
         TradingFlowService tradingFlowService = mock(TradingFlowService.class);
-        when(tradingFlowService.run("KRW-BTC")).thenReturn(flowResult("KRW-BTC", null, false, OrderStatus.REJECTED));
 
         serviceWithManualExecution(mock(TelegramNotificationSender.class), tradingFlowService).handleCallback("RUN:KRW-BTC");
 
-        verify(tradingFlowService).run("KRW-BTC");
+        verify(tradingFlowService, never()).run("KRW-BTC");
     }
 
     @Test
-    void runCommandSendsBlockedMessageWhenKillSwitchBlocksTradingFlow() {
+    void runCommandDoesNotReachTradingFlowEvenWhenKillSwitchWouldBlock() {
         TradingFlowService tradingFlowService = mock(TradingFlowService.class);
         when(tradingFlowService.run("KRW-BTC")).thenReturn(new TradingFlowResult(
                 "KRW-BTC",
@@ -267,7 +265,8 @@ class TelegramCommandServiceTest {
         serviceWithManualExecution(sender, tradingFlowService).handle("/run KRW-BTC");
 
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("Kill switch enabled: trading flow blocked");
+        verify(tradingFlowService, never()).run("KRW-BTC");
+        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 코드 레벨에서 차단");
     }
 
     @Test
@@ -334,23 +333,21 @@ class TelegramCommandServiceTest {
 
         verify(executionService, never()).execute("KRW-BTC");
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 비활성화");
+        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 코드 레벨에서 차단");
     }
 
     @Test
-    void candidateRunCommandCallsCandidateExecutionServiceWhenManualExecutionEnabled() {
+    void candidateRunCommandIsBlockedEvenWhenManualExecutionEnabled() {
         TelegramNotificationSender sender = mock(TelegramNotificationSender.class);
         CandidateExecutionService executionService = mock(CandidateExecutionService.class);
-        when(executionService.execute("KRW-BTC")).thenReturn(flowResult("KRW-BTC", SignalType.BUY, true, OrderStatus.FILLED));
         ArgumentCaptor<NotificationMessage> messageCaptor = ArgumentCaptor.forClass(NotificationMessage.class);
 
         serviceWithManualExecution(sender, mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
                 .handle("/candidate-run KRW-BTC");
 
-        verify(executionService).execute("KRW-BTC");
+        verify(executionService, never()).execute("KRW-BTC");
         verify(sender).sendMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().body()).contains("후보 PAPER 실행", "Market: KRW-BTC", "주문 상태: FILLED");
-        assertThat(messageCaptor.getValue().body()).doesNotContain("orderStatus=", "orderCreated=");
+        assertThat(messageCaptor.getValue().body()).contains("수동 PAPER 실행은 코드 레벨에서 차단");
     }
 
     @Test
@@ -364,14 +361,13 @@ class TelegramCommandServiceTest {
     }
 
     @Test
-    void candidateRunCallbackCallsCandidateExecutionServiceWhenManualExecutionEnabled() {
+    void candidateRunCallbackIsBlockedEvenWhenManualExecutionEnabled() {
         CandidateExecutionService executionService = mock(CandidateExecutionService.class);
-        when(executionService.execute("KRW-BTC")).thenReturn(flowResult("KRW-BTC", SignalType.BUY, true, OrderStatus.FILLED));
 
         serviceWithManualExecution(mock(TelegramNotificationSender.class), mock(TradingFlowService.class), mock(CandidateScannerService.class), executionService)
                 .handleCallback("CANDIDATE_RUN:KRW-BTC");
 
-        verify(executionService).execute("KRW-BTC");
+        verify(executionService, never()).execute("KRW-BTC");
     }
 
     @Test

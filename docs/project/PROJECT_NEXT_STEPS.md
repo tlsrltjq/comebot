@@ -221,7 +221,47 @@
 - History 대용량 요청이 서버에서 200개 상한으로 정규화된다.
 - `npm run lint`, `npm test`, `npm run build`, `npm run test:e2e`, `./gradlew test`가 통과한다.
 
-## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
+## 완료: 클로드 피드백 기반 안전/추적성 보강
+
+목표:
+
+- PAPER 포지션 원장 부재와 Telegram 수동 BUY 우회 가능성을 줄인다.
+- 이미 구현된 scheduler 중복 실행 방어를 테스트로 고정한다.
+
+작업:
+
+- FILLED PAPER BUY/SELL마다 `paper_trade_log`에 append-only 체결 원장을 저장한다.
+- Telegram `/run`, `/candidate-run`, callback은 env 설정과 무관하게 실행 서비스를 호출하지 않는다.
+- candidate scheduler 중복 실행 방어 테스트를 추가한다.
+- 운영/리스크/Telegram 문서를 코드와 맞춘다.
+
+완료 기준:
+
+- PAPER 포트폴리오 현재 상태와 별도로 체결 원장이 남는다.
+- Telegram으로 수동 BUY 경로가 열리지 않는다.
+- `./gradlew test`, `./gradlew check`가 통과한다.
+
+## 다음 우선순위: WebSocket 재연결/fallback 운영 검증
+
+목표:
+
+- WebSocket 단절, stale snapshot, REST fallback, 재연결 사이클이 운영 중 안전하게 동작하는지 확인한다.
+- 현재가가 불명확한 주문이 성공으로 처리되지 않는다는 제약을 테스트와 문서로 재확인한다.
+
+작업:
+
+- Upbit/Binance WebSocket client의 close/error/reconnect 동작 테스트 범위를 점검한다.
+- `SnapshotMarketPriceProvider`가 stale snapshot에서 REST fallback으로 전환하고, fallback 실패 시 실패로 드러나는지 확인한다.
+- `/api/market-provider/status`가 snapshot freshness와 fallback 상태를 운영자가 판단하기 충분한지 점검한다.
+- 부족하면 read-only status 필드와 테스트를 보강한다.
+
+완료 기준:
+
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- WebSocket 장애 시 성공 주문처럼 보이는 경로가 없다.
+- `./gradlew test`가 통과한다.
+
+## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:
 

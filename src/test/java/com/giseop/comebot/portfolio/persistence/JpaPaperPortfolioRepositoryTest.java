@@ -10,6 +10,8 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
+import com.giseop.comebot.portfolio.domain.PaperTradeLog;
+import com.giseop.comebot.execution.domain.OrderSide;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
@@ -24,6 +26,7 @@ class JpaPaperPortfolioRepositoryTest {
     private SpringDataPaperPortfolioStateJpaRepository stateRepository;
     private SpringDataPaperPositionJpaRepository positionRepository;
     private SpringDataPaperRealizedProfitEventJpaRepository eventRepository;
+    private SpringDataPaperTradeLogJpaRepository tradeLogRepository;
     private JpaPaperPortfolioRepository repository;
 
     @BeforeEach
@@ -31,7 +34,8 @@ class JpaPaperPortfolioRepositoryTest {
         stateRepository = mock(SpringDataPaperPortfolioStateJpaRepository.class);
         positionRepository = mock(SpringDataPaperPositionJpaRepository.class);
         eventRepository = mock(SpringDataPaperRealizedProfitEventJpaRepository.class);
-        repository = new JpaPaperPortfolioRepository(stateRepository, positionRepository, eventRepository);
+        tradeLogRepository = mock(SpringDataPaperTradeLogJpaRepository.class);
+        repository = new JpaPaperPortfolioRepository(stateRepository, positionRepository, eventRepository, tradeLogRepository);
     }
 
     @Test
@@ -40,6 +44,7 @@ class JpaPaperPortfolioRepositoryTest {
         assertThat(PaperPortfolioStateEntity.class.getAnnotation(Table.class).name()).isEqualTo("paper_portfolio_state");
         assertThat(PaperPositionEntity.class.getAnnotation(Table.class).name()).isEqualTo("paper_position");
         assertThat(PaperRealizedProfitEventEntity.class.getAnnotation(Table.class).name()).isEqualTo("paper_realized_profit_event");
+        assertThat(PaperTradeLogEntity.class.getAnnotation(Table.class).name()).isEqualTo("paper_trade_log");
     }
 
     @Test
@@ -107,5 +112,22 @@ class JpaPaperPortfolioRepositoryTest {
                 .thenReturn(List.of(PaperRealizedProfitEventEntity.from(ExchangeMode.UPBIT, event)));
 
         assertThat(repository.findRealizedProfitsSince(ExchangeMode.UPBIT, from)).containsExactly(event);
+    }
+
+    @Test
+    void saveTradeLogPersistsEntity() {
+        PaperTradeLog tradeLog = new PaperTradeLog(
+                "KRW-BTC",
+                OrderSide.BUY,
+                new BigDecimal("1"),
+                new BigDecimal("100"),
+                new BigDecimal("100"),
+                null,
+                Instant.parse("2026-05-14T00:00:00Z")
+        );
+
+        repository.saveTradeLog(ExchangeMode.UPBIT, tradeLog);
+
+        verify(tradeLogRepository).save(any(PaperTradeLogEntity.class));
     }
 }

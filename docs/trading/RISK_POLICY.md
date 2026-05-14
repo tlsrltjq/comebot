@@ -8,7 +8,8 @@
 
 - 기본값은 `safety.kill-switch-enabled=false`다.
 - 켜져 있으면 신규 트레이딩 플로우 실행을 차단한다.
-- 차단 대상은 REST `/run`, candidate scheduler, exit scheduler, 수동 PAPER 실행이 허용된 Telegram `/run`이다.
+- 차단 대상은 REST `/run`, candidate scheduler, exit scheduler다.
+- Telegram `/run`과 `/candidate-run`은 kill switch 이전에 코드 레벨에서 수동 실행 자체를 차단한다.
 - 웹 선택 PAPER SELL도 kill switch가 켜져 있으면 시세 조회 전에 차단한다.
 - history, status, portfolio 조회는 차단하지 않는다.
 - kill switch는 시세 조회와 전략 판단보다 먼저 확인한다.

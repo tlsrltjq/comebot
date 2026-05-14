@@ -4,6 +4,7 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
+import com.giseop.comebot.portfolio.domain.PaperTradeLog;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -40,6 +41,12 @@ public interface PaperPortfolioRepository {
     }
 
     void saveRealizedProfitEvent(ExchangeMode exchange, PaperRealizedProfit realizedProfit);
+
+    default void saveTradeLog(PaperTradeLog tradeLog) {
+        saveTradeLog(ExchangeMode.UPBIT, tradeLog);
+    }
+
+    void saveTradeLog(ExchangeMode exchange, PaperTradeLog tradeLog);
 
     default List<PaperRealizedProfit> findRealizedProfitsSince(Instant from) {
         return findRealizedProfitsSince(ExchangeMode.UPBIT, from);

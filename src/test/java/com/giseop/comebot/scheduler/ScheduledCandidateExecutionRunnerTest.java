@@ -15,6 +15,7 @@ import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 class ScheduledCandidateExecutionRunnerTest {
@@ -131,6 +132,25 @@ class ScheduledCandidateExecutionRunnerTest {
         verify(candidateExecutionService).execute(ExchangeMode.UPBIT, "KRW-ETH");
         org.assertj.core.api.Assertions.assertThat(summary.failedCount()).isEqualTo(1);
         org.assertj.core.api.Assertions.assertThat(summary.holdCount()).isEqualTo(1);
+    }
+
+    @Test
+    void runOnceSkipsWhenPreviousRunIsActive() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setMarkets(List.of("KRW-BTC"));
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+
+        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(
+                properties,
+                candidateExecutionService,
+                mock(CandidateSchedulerNotificationService.class),
+                new com.giseop.comebot.market.service.MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                new AtomicBoolean(true)
+        ).runOnce();
+
+        org.assertj.core.api.Assertions.assertThat(summary).isEqualTo(CandidateSchedulerRunSummary.empty());
+        verify(candidateExecutionService, never()).execute(ExchangeMode.UPBIT, "KRW-BTC");
     }
 
     @Test

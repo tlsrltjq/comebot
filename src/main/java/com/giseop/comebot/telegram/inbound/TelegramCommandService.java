@@ -184,6 +184,7 @@ public class TelegramCommandService {
                 /conditions - 현재 매매 조건
                 /pnl - 손익 요약
                 /candidates - 롱 후보 조회
+                /candidate-run, /run - 비활성화됨
                 /history KRW-BTC - 실행 이력
                 /portfolio - 포트폴리오 요약
                 /positions - 보유 포지션
@@ -206,7 +207,7 @@ public class TelegramCommandService {
                 후보 거래소(Candidate exchange): %s
                 청산 스케줄러(Exit Scheduler): %s
                 청산 거래소(Exit exchange): %s
-                수동 PAPER 실행(Manual paper run): %s
+                수동 PAPER 실행(Manual paper run): 차단(Blocked)
                 긴급 정지(Kill switch): %s
                 알림(Notifications): %s
                 후보 요약 알림(Candidate summary): %s
@@ -224,7 +225,6 @@ public class TelegramCommandService {
                 candidateSchedulerProperties.getExchange(),
                 enabled(positionExitSchedulerProperties.isEnabled()),
                 positionExitSchedulerProperties.getExchange(),
-                allowed(telegramInboundProperties.isManualPaperExecutionEnabled()),
                 enabled(safetyProperties.isKillSwitchEnabled()),
                 enabled(notificationProperties.isEnabled()),
                 enabled(candidateSchedulerProperties.isNotifySummary()),
@@ -248,7 +248,7 @@ public class TelegramCommandService {
                 청산 거래소(Exit exchange): %s
                 청산 주기(Exit interval): %s ms
                 청산 HOLD 기록(Exit HOLD history): %s
-                수동 PAPER 실행(Manual paper run): %s
+                수동 PAPER 실행(Manual paper run): 차단(Blocked)
                 """.formatted(
                 enabled(tradingSchedulerProperties.isEnabled()),
                 tradingSchedulerProperties.getFixedDelayMs(),
@@ -261,8 +261,7 @@ public class TelegramCommandService {
                 enabled(positionExitSchedulerProperties.isEnabled()),
                 positionExitSchedulerProperties.getExchange(),
                 positionExitSchedulerProperties.getFixedDelayMs(),
-                positionExitSchedulerProperties.isSaveHoldHistory() ? "저장(Save)" : "저장 안 함(Skip)",
-                allowed(telegramInboundProperties.isManualPaperExecutionEnabled())
+                positionExitSchedulerProperties.isSaveHoldHistory() ? "저장(Save)" : "저장 안 함(Skip)"
         ).trim();
     }
 
@@ -345,57 +344,15 @@ public class TelegramCommandService {
     }
 
     private String candidateRunMessage(String market) {
-        if (!telegramInboundProperties.isManualPaperExecutionEnabled()) {
-            return manualExecutionDisabledMessage();
-        }
-        if (market == null || market.isBlank()) {
-            return "사용법: /candidate-run KRW-BTC";
-        }
-
-        TradingFlowResult result = candidateExecutionService.execute(market);
-        return """
-                후보 PAPER 실행
-                Market: %s
-                신호: %s
-                주문 생성: %s
-                주문 상태: %s
-                결과: %s
-                """.formatted(
-                result.market(),
-                valueOrDash(result.signalType()),
-                result.orderCreated() ? "예" : "아니오",
-                valueOrDash(result.orderStatus()),
-                result.message()
-        ).trim();
+        return manualExecutionDisabledMessage();
     }
 
     private String runMessage(String market) {
-        if (!telegramInboundProperties.isManualPaperExecutionEnabled()) {
-            return manualExecutionDisabledMessage();
-        }
-        if (market == null || market.isBlank()) {
-            return "사용법: /run KRW-BTC";
-        }
-
-        TradingFlowResult result = tradingFlowService.run(market);
-        return """
-                트레이딩 플로우 결과
-                Market: %s
-                신호: %s
-                주문 생성: %s
-                주문 상태: %s
-                결과: %s
-                """.formatted(
-                result.market(),
-                valueOrDash(result.signalType()),
-                result.orderCreated() ? "예" : "아니오",
-                valueOrDash(result.orderStatus()),
-                result.message()
-        ).trim();
+        return manualExecutionDisabledMessage();
     }
 
     private String manualExecutionDisabledMessage() {
-        return "텔레그램 수동 PAPER 실행은 비활성화되어 있습니다. 자동 실행 결과는 /auto, /history, /portfolio, /pnl로 확인하세요.";
+        return "텔레그램 수동 PAPER 실행은 코드 레벨에서 차단되어 있습니다. 자동 실행 결과는 /auto, /history, /portfolio, /pnl로 확인하세요.";
     }
 
     private String historyMessage(String market) {
@@ -509,7 +466,4 @@ public class TelegramCommandService {
         return value ? "켜짐(Enabled)" : "꺼짐(Disabled)";
     }
 
-    private String allowed(boolean value) {
-        return value ? "허용(Allowed)" : "차단(Blocked)";
-    }
 }

@@ -9,6 +9,7 @@ import com.giseop.comebot.portfolio.PaperPortfolioProperties;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
+import com.giseop.comebot.portfolio.domain.PaperTradeLog;
 import com.giseop.comebot.portfolio.repository.PaperPortfolioRepository;
 import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -123,6 +124,7 @@ public class PaperPortfolioService {
 
         paperPortfolioRepository.saveCash(exchange, paperPortfolioRepository.getCash(exchange).subtract(amount));
         paperPortfolioRepository.savePosition(exchange, new PaperPosition(result.market(), totalQuantity, averageBuyPrice));
+        paperPortfolioRepository.saveTradeLog(exchange, tradeLog(result, amount, null));
     }
 
     private void applySell(ExchangeMode exchange, OrderResult result) {
@@ -135,9 +137,22 @@ public class PaperPortfolioService {
         paperPortfolioRepository.saveRealizedProfit(exchange, paperPortfolioRepository.getRealizedProfit(exchange).add(profit));
         paperPortfolioRepository.saveRealizedProfitEvent(exchange, new PaperRealizedProfit(profit, result.executedAt()));
         paperPortfolioRepository.savePosition(exchange, new PaperPosition(result.market(), remainingQuantity, current.averageBuyPrice()));
+        paperPortfolioRepository.saveTradeLog(exchange, tradeLog(result, result.quantity().multiply(result.price()), profit));
     }
 
     private BigDecimal orderAmount(OrderRequest request) {
         return request.quantity().multiply(request.price());
+    }
+
+    private PaperTradeLog tradeLog(OrderResult result, BigDecimal grossAmount, BigDecimal realizedProfit) {
+        return new PaperTradeLog(
+                result.market(),
+                result.side(),
+                result.quantity(),
+                result.price(),
+                grossAmount,
+                realizedProfit,
+                result.executedAt()
+        );
     }
 }

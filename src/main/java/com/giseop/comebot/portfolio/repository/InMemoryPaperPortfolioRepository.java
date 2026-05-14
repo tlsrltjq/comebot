@@ -4,6 +4,7 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
+import com.giseop.comebot.portfolio.domain.PaperTradeLog;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
@@ -44,6 +45,11 @@ public class InMemoryPaperPortfolioRepository implements PaperPortfolioRepositor
     @Override
     public void saveRealizedProfitEvent(ExchangeMode exchange, PaperRealizedProfit realizedProfit) {
         state(exchange).realizedProfitEvents.addFirst(realizedProfit);
+    }
+
+    @Override
+    public void saveTradeLog(ExchangeMode exchange, PaperTradeLog tradeLog) {
+        state(exchange).tradeLogs.addFirst(tradeLog);
     }
 
     @Override
@@ -91,6 +97,7 @@ public class InMemoryPaperPortfolioRepository implements PaperPortfolioRepositor
     private static final class PortfolioState {
         private final Map<String, PaperPosition> positions = new ConcurrentHashMap<>();
         private final ConcurrentLinkedDeque<PaperRealizedProfit> realizedProfitEvents = new ConcurrentLinkedDeque<>();
+        private final ConcurrentLinkedDeque<PaperTradeLog> tradeLogs = new ConcurrentLinkedDeque<>();
         private BigDecimal cash = BigDecimal.ZERO;
         private BigDecimal realizedProfit = BigDecimal.ZERO;
     }

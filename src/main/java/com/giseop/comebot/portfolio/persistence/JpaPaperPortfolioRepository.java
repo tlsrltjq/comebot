@@ -4,6 +4,7 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPortfolio;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.domain.PaperRealizedProfit;
+import com.giseop.comebot.portfolio.domain.PaperTradeLog;
 import com.giseop.comebot.portfolio.repository.PaperPortfolioRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,15 +20,18 @@ public class JpaPaperPortfolioRepository implements PaperPortfolioRepository {
     private final SpringDataPaperPortfolioStateJpaRepository stateRepository;
     private final SpringDataPaperPositionJpaRepository positionRepository;
     private final SpringDataPaperRealizedProfitEventJpaRepository realizedProfitEventRepository;
+    private final SpringDataPaperTradeLogJpaRepository tradeLogRepository;
 
     public JpaPaperPortfolioRepository(
             SpringDataPaperPortfolioStateJpaRepository stateRepository,
             SpringDataPaperPositionJpaRepository positionRepository,
-            SpringDataPaperRealizedProfitEventJpaRepository realizedProfitEventRepository
+            SpringDataPaperRealizedProfitEventJpaRepository realizedProfitEventRepository,
+            SpringDataPaperTradeLogJpaRepository tradeLogRepository
     ) {
         this.stateRepository = stateRepository;
         this.positionRepository = positionRepository;
         this.realizedProfitEventRepository = realizedProfitEventRepository;
+        this.tradeLogRepository = tradeLogRepository;
     }
 
     @Override
@@ -57,6 +61,11 @@ public class JpaPaperPortfolioRepository implements PaperPortfolioRepository {
     @Override
     public void saveRealizedProfitEvent(ExchangeMode exchange, PaperRealizedProfit realizedProfit) {
         realizedProfitEventRepository.save(PaperRealizedProfitEventEntity.from(exchange, realizedProfit));
+    }
+
+    @Override
+    public void saveTradeLog(ExchangeMode exchange, PaperTradeLog tradeLog) {
+        tradeLogRepository.save(PaperTradeLogEntity.from(exchange, tradeLog));
     }
 
     @Override

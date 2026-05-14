@@ -1,6 +1,10 @@
 package com.giseop.comebot.portfolio.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderRequest;
@@ -8,9 +12,12 @@ import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderSide;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
+import com.giseop.comebot.portfolio.repository.PaperPortfolioRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -128,6 +135,48 @@ class PaperPortfolioServiceTest {
         assertThat(service.realizedLossSince(ExchangeMode.BINANCE, today)).isEqualByComparingTo("30");
     }
 
+    @Test
+    void filledBuyWritesPaperTradeLog() {
+        PaperPortfolioRepository repository = mock(PaperPortfolioRepository.class);
+        when(repository.findPosition(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(Optional.empty());
+        when(repository.getCash(ExchangeMode.UPBIT)).thenReturn(new BigDecimal("1000000"));
+        PaperPortfolioService portfolioService = new PaperPortfolioService(repository, properties("1000000"));
+
+        portfolioService.apply(ExchangeMode.UPBIT, result("KRW-BTC", OrderSide.BUY, "2", "100"));
+
+        verify(repository).saveTradeLog(
+                org.mockito.Mockito.eq(ExchangeMode.UPBIT),
+                argThat(log -> log.market().equals("KRW-BTC")
+                        && log.side() == OrderSide.BUY
+                        && log.quantity().compareTo(new BigDecimal("2")) == 0
+                        && log.price().compareTo(new BigDecimal("100")) == 0
+                        && log.grossAmount().compareTo(new BigDecimal("200")) == 0
+                        && log.realizedProfit() == null)
+        );
+    }
+
+    @Test
+    void filledSellWritesPaperTradeLogWithRealizedProfit() {
+        PaperPortfolioRepository repository = mock(PaperPortfolioRepository.class);
+        when(repository.findPosition(ExchangeMode.UPBIT, "KRW-BTC"))
+                .thenReturn(Optional.of(new PaperPosition("KRW-BTC", new BigDecimal("2"), new BigDecimal("100"))));
+        when(repository.getCash(ExchangeMode.UPBIT)).thenReturn(new BigDecimal("999800"));
+        when(repository.getRealizedProfit(ExchangeMode.UPBIT)).thenReturn(BigDecimal.ZERO);
+        PaperPortfolioService portfolioService = new PaperPortfolioService(repository, properties("1000000"));
+
+        portfolioService.apply(ExchangeMode.UPBIT, result("KRW-BTC", OrderSide.SELL, "1", "120"));
+
+        verify(repository).saveTradeLog(
+                org.mockito.Mockito.eq(ExchangeMode.UPBIT),
+                argThat(log -> log.market().equals("KRW-BTC")
+                        && log.side() == OrderSide.SELL
+                        && log.quantity().compareTo(BigDecimal.ONE) == 0
+                        && log.price().compareTo(new BigDecimal("120")) == 0
+                        && log.grossAmount().compareTo(new BigDecimal("120")) == 0
+                        && log.realizedProfit().compareTo(new BigDecimal("20")) == 0)
+        );
+    }
+
     private OrderResult result(OrderSide side, String quantity, String price) {
         return result("KRW-BTC", side, quantity, price);
     }
@@ -146,5 +195,11 @@ class PaperPortfolioServiceTest {
 
     private OrderRequest request(OrderSide side, String quantity, String price) {
         return new OrderRequest("KRW-BTC", side, new BigDecimal(quantity), new BigDecimal(price), Instant.now());
+    }
+
+    private PaperPortfolioProperties properties(String initialCash) {
+        PaperPortfolioProperties properties = new PaperPortfolioProperties();
+        properties.setInitialCash(new BigDecimal(initialCash));
+        return properties;
     }
 }

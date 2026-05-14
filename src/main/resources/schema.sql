@@ -52,6 +52,24 @@ CREATE TABLE IF NOT EXISTS paper_realized_profit_event (
 CREATE INDEX IF NOT EXISTS idx_paper_realized_profit_event_exchange_realized_at
     ON paper_realized_profit_event (exchange, realized_at DESC);
 
+CREATE TABLE IF NOT EXISTS paper_trade_log (
+    id VARCHAR(36) PRIMARY KEY,
+    exchange VARCHAR(20) NOT NULL,
+    market VARCHAR(50) NOT NULL,
+    side VARCHAR(20) NOT NULL,
+    quantity NUMERIC(38, 18) NOT NULL,
+    price NUMERIC(38, 18) NOT NULL,
+    gross_amount NUMERIC(38, 18) NOT NULL,
+    realized_profit NUMERIC(38, 18),
+    executed_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_paper_trade_log_exchange_executed_at
+    ON paper_trade_log (exchange, executed_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_paper_trade_log_exchange_market_executed_at
+    ON paper_trade_log (exchange, market, executed_at DESC);
+
 CREATE TABLE IF NOT EXISTS scheduler_control_setting (
     id VARCHAR(50) PRIMARY KEY,
     auto_trading_enabled BOOLEAN NOT NULL,

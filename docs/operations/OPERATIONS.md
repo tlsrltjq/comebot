@@ -193,6 +193,7 @@ scripts/apply-schema.sh
 - `paper_portfolio_state`: 거래소별 PAPER 현금과 누적 실현손익
 - `paper_position`: 거래소별 PAPER 보유 포지션
 - `paper_realized_profit_event`: 거래소별 실현손익 이벤트
+- `paper_trade_log`: 거래소별 FILLED PAPER BUY/SELL append-only 체결 원장
 - `scheduler_control_setting`: 자동매매 켜기/끄기와 후보 조회 주기
 
 ## OS별 운영 안내
@@ -236,6 +237,7 @@ DB 누적 확인:
 ```sql
 SELECT exchange, COUNT(*) FROM trading_flow_history GROUP BY exchange;
 SELECT exchange, COUNT(*) FROM paper_position WHERE quantity > 0 GROUP BY exchange;
+SELECT exchange, side, COUNT(*) FROM paper_trade_log GROUP BY exchange, side;
 SELECT exchange, cash, realized_profit FROM paper_portfolio_state ORDER BY exchange;
 ```
 

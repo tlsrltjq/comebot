@@ -34,11 +34,21 @@ public class ScheduledCandidateExecutionRunner {
             CandidateSchedulerNotificationService candidateSchedulerNotificationService,
             MarketSelectionService marketSelectionService
     ) {
+        this(candidateSchedulerProperties, candidateExecutionService, candidateSchedulerNotificationService, marketSelectionService, new AtomicBoolean(false));
+    }
+
+    ScheduledCandidateExecutionRunner(
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            CandidateExecutionService candidateExecutionService,
+            CandidateSchedulerNotificationService candidateSchedulerNotificationService,
+            MarketSelectionService marketSelectionService,
+            AtomicBoolean running
+    ) {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.candidateExecutionService = candidateExecutionService;
         this.candidateSchedulerNotificationService = candidateSchedulerNotificationService;
         this.marketSelectionService = marketSelectionService;
-        this.running = new AtomicBoolean(false);
+        this.running = running;
         this.lastRunStartedAt = new AtomicLong(0);
     }
 
