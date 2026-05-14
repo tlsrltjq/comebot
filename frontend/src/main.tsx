@@ -3,14 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { App } from './app/App';
-import { CandidatesPage } from './features/candidates/CandidatesPage';
-import { HistoryPage } from './features/history/HistoryPage';
-import { MarketOverviewPage } from './features/market/MarketOverviewPage';
-import { PortfolioPage } from './features/portfolio/PortfolioPage';
-import { RiskPage } from './features/risk/RiskPage';
-import { DashboardPage } from './features/system/DashboardPage';
-import { SystemPage } from './features/system/SystemPage';
-import { TradePage } from './features/trading/TradePage';
 import './styles.css';
 
 const queryClient = new QueryClient({
@@ -30,14 +22,62 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'market', element: <MarketOverviewPage /> },
-      { path: 'candidates', element: <CandidatesPage /> },
-      { path: 'trade', element: <TradePage /> },
-      { path: 'portfolio', element: <PortfolioPage /> },
-      { path: 'history', element: <HistoryPage /> },
-      { path: 'risk', element: <RiskPage /> },
-      { path: 'system', element: <SystemPage /> },
+      {
+        index: true,
+        lazy: async () => {
+          const { DashboardPage } = await import('./features/system/DashboardPage');
+          return { Component: DashboardPage };
+        },
+      },
+      {
+        path: 'market',
+        lazy: async () => {
+          const { MarketOverviewPage } = await import('./features/market/MarketOverviewPage');
+          return { Component: MarketOverviewPage };
+        },
+      },
+      {
+        path: 'candidates',
+        lazy: async () => {
+          const { CandidatesPage } = await import('./features/candidates/CandidatesPage');
+          return { Component: CandidatesPage };
+        },
+      },
+      {
+        path: 'trade',
+        lazy: async () => {
+          const { TradePage } = await import('./features/trading/TradePage');
+          return { Component: TradePage };
+        },
+      },
+      {
+        path: 'portfolio',
+        lazy: async () => {
+          const { PortfolioPage } = await import('./features/portfolio/PortfolioPage');
+          return { Component: PortfolioPage };
+        },
+      },
+      {
+        path: 'history',
+        lazy: async () => {
+          const { HistoryPage } = await import('./features/history/HistoryPage');
+          return { Component: HistoryPage };
+        },
+      },
+      {
+        path: 'risk',
+        lazy: async () => {
+          const { RiskPage } = await import('./features/risk/RiskPage');
+          return { Component: RiskPage };
+        },
+      },
+      {
+        path: 'system',
+        lazy: async () => {
+          const { SystemPage } = await import('./features/system/SystemPage');
+          return { Component: SystemPage };
+        },
+      },
     ],
   },
 ]);

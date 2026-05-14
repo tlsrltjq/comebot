@@ -141,6 +141,25 @@
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 - 최종 UI 개편 진행 상황이 문서에 반영된다.
 
+## 완료: Frontend route lazy loading
+
+목표:
+
+- Vite production build의 초기 JavaScript chunk 크기를 줄인다.
+- Recharts 기반 화면을 첫 로딩 번들에서 분리한다.
+
+작업:
+
+- React Router route `lazy`를 사용해 Dashboard, Markets, Candidates, Trade, Portfolio, History, Risk, System 페이지를 동적 import로 전환한다.
+- 페이지 정적 import를 `main.tsx`에서 제거한다.
+- build output에서 초기 `index` chunk와 page/chart chunk가 분리되는지 확인한다.
+
+완료 기준:
+
+- `npm run build`에서 500kB 초과 chunk 경고가 사라진다.
+- 초기 `index` JS chunk가 약 795kB에서 약 332kB로 줄어든다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
 ## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:

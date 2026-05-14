@@ -486,7 +486,7 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 
 1. PAPER 포지션 청산 흐름 스모크 테스트
 2. 데이터 누적 후 전략 조건 재검토
-3. 필요 시 UI 세부 polish
+3. 필요 시 추가 chunk/manualChunks 세부 조정
 
 현재 우선순위는 PAPER 포지션 청산 흐름 스모크 테스트다.
 
@@ -511,3 +511,6 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 - 완료: Stage 6 미사용 status strip CSS 제거
 - 완료: Stage 6 mobile 520px 이하 보강
 - 완료: Stage 6 전체 lint/test/build와 Java build 검증
+- 완료: Frontend route lazy loading 적용
+- 완료: 초기 `index` JS chunk 약 795kB에서 약 332kB로 축소
+- 완료: Recharts chart chunk 분리로 build chunk 경고 제거
