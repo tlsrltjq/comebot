@@ -22,6 +22,7 @@
 - 문서/하네스 경량화 계획 수립
 - Playwright 기반 실제 브라우저 화면 회귀 테스트 추가
 - 모바일 sidebar/nav 가로 overflow 방지
+- Risk/System 문서 정합성 재점검 및 보정
 
 ## 다음 작업
 

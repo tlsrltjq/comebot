@@ -83,9 +83,16 @@
 - DB 비밀번호와 datasource URL 전체를 응답에 노출하지 않는다.
 
 ## Scheduler 장애
+
 - market 단위 실패가 전체 scheduler를 중단시키면 안 된다.
 - Scheduler에는 전략, 주문, 리스크 로직을 직접 넣지 않는다.
 - candidate scheduler는 `CandidateExecutionService`만 호출하고 결과를 filled, rejected, hold, failed로 요약한다.
 - exit scheduler는 `PositionExitExecutionService`만 호출하고 보유 position market만 평가한다.
 - candidate scheduler, legacy trading scheduler, exit scheduler는 모두 `fixedDelay`와 내부 중복 실행 guard를 유지한다.
 - exit scheduler HOLD는 기본적으로 history에 저장하지 않는다. BUY/SELL/REJECTED/FAILED는 추적 가능하게 저장한다.
+
+## System 화면 장애
+
+- System 화면은 `/api/system/status`와 `/api/market-provider/status` 조회 결과만 표시하고 상태를 변경하지 않는다.
+- OS 감지 실패 또는 알 수 없는 OS는 실행 안내 표시만 보수적으로 바꾸며 거래 기능에는 영향을 주지 않는다.
+- provider status 조회가 실패해도 시스템 조회 자체가 민감 정보나 실제 주문 설정을 노출하면 안 된다.

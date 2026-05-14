@@ -171,11 +171,13 @@ scripts/apply-schema.sh
 
 ## OS별 운영 안내
 
-웹 Dashboard의 `운영 환경(OS Guide)` 패널은 브라우저의 OS 정보를 안내 표시 용도로만 사용한다.
+웹 Dashboard와 System 화면의 `운영 환경(OS Guide)` 패널은 브라우저의 OS 정보를 안내 표시 용도로만 사용한다.
 거래소 선택, 전략 판단, 리스크 검증, 주문 실행에는 OS 감지 결과를 사용하지 않는다.
+System 화면은 OS별 실행 스크립트, schema script, workspace path, shell, scheduler, provider, notification/Telegram 상태를 읽기 전용으로 보여준다.
 
 - macOS: `scripts/run-local-dev.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `/Users/<user>/workspace/comebot`
 - Windows: `scripts\run-local-dev.bat`, `scripts\run-upbit-paper.bat`, `scripts\apply-schema.bat`, `%USERPROFILE%\workspace\comebot`
+- Linux: `scripts/run-local-dev.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `$HOME/workspace/comebot`
 - 민감 정보는 OS와 무관하게 `.env` 또는 환경 변수로만 관리한다.
 
 ## JPA PAPER 누적 확인

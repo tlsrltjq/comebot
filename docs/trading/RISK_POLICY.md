@@ -102,9 +102,11 @@
 
 - 현재 구현은 market별 쏠림 신규 BUY 차단과 반복 손절 cooldown 신규 BUY 차단을 적용한다.
 - 쏠림 기준은 SELL, 익절, 손절 흐름을 막지 않는다.
-- Portfolio 쏠림 경고 UI 1차 구현은 완료됐다.
 - 반복 손절 cooldown 기준은 SELL, 익절, 손절 흐름을 막지 않는다.
-- dashboard/candidates 경고 표시는 `docs/project/CONCENTRATION_WARNING_AND_COOLDOWN_PLAN.md` 기준으로 별도 구현한다.
+- Dashboard는 선택 exchange의 쏠림 threshold와 cooldown 설정 상태를 Risk Summary로 표시한다.
+- Candidates는 후보별 `riskReasonType`과 리스크 경고 요약으로 쏠림/cooldown 제외 사유를 표시한다.
+- Portfolio는 보유 PAPER 포지션의 현재가 평가 기준 exposure를 warning/block threshold와 함께 표시한다.
+- Risk 화면은 선택 exchange의 concentration threshold, cooldown 설정, 일일 제한, 익절/손절, 실거래 미구현 상태를 읽기 전용으로 표시한다.
 - 기준을 추가로 바꾸면 이 문서와 condition record를 함께 갱신한다.
 
 ## 시세 기준
