@@ -16,9 +16,13 @@ import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.event.EventListener;
@@ -37,11 +41,15 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
     private final UpbitKrwTickerStore upbitKrwTickerStore;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final CandidateSchedulerProperties candidateSchedulerProperties;
-    private final HttpClient httpClient;
+    private final WebSocketConnector connector;
+    private final ReconnectScheduler reconnectScheduler;
+    private final AtomicBoolean reconnectScheduled = new AtomicBoolean(false);
 
     private volatile boolean running;
     private volatile WebSocket webSocket;
+    private volatile long reconnectDelayMs;
 
+    @Autowired
     public UpbitTickerWebSocketClient(
             MarketWebSocketProperties properties,
             TickerSnapshotStore tickerSnapshotStore,
@@ -49,12 +57,34 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
             TradingSchedulerProperties tradingSchedulerProperties,
             CandidateSchedulerProperties candidateSchedulerProperties
     ) {
+        this(
+                properties,
+                tickerSnapshotStore,
+                upbitKrwTickerStore,
+                tradingSchedulerProperties,
+                candidateSchedulerProperties,
+                defaultConnector(),
+                defaultReconnectScheduler()
+        );
+    }
+
+    UpbitTickerWebSocketClient(
+            MarketWebSocketProperties properties,
+            TickerSnapshotStore tickerSnapshotStore,
+            UpbitKrwTickerStore upbitKrwTickerStore,
+            TradingSchedulerProperties tradingSchedulerProperties,
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            WebSocketConnector connector,
+            ReconnectScheduler reconnectScheduler
+    ) {
         this.properties = properties;
         this.tickerSnapshotStore = tickerSnapshotStore;
         this.upbitKrwTickerStore = upbitKrwTickerStore;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
-        this.httpClient = HttpClient.newHttpClient();
+        this.connector = connector;
+        this.reconnectScheduler = reconnectScheduler;
+        this.reconnectDelayMs = properties.getReconnectInitialDelayMs();
     }
 
     @Override
@@ -72,17 +102,33 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
             log.info("Upbit ticker WebSocket is enabled but no KRW markets are configured");
             return;
         }
+        if (running) {
+            return;
+        }
         running = true;
-        httpClient.newWebSocketBuilder()
-                .buildAsync(UPBIT_WEBSOCKET_URI, new Listener())
+        reconnectDelayMs = properties.getReconnectInitialDelayMs();
+        connect(markets);
+    }
+
+    private void connect(List<String> markets) {
+        if (!running || markets.isEmpty()) {
+            return;
+        }
+        connector.connect(UPBIT_WEBSOCKET_URI, new Listener())
                 .thenAccept(socket -> {
+                    if (!running) {
+                        socket.sendClose(WebSocket.NORMAL_CLOSURE, "stop");
+                        return;
+                    }
                     webSocket = socket;
+                    reconnectScheduled.set(false);
+                    reconnectDelayMs = properties.getReconnectInitialDelayMs();
                     socket.sendText(subscriptionMessage(markets), true);
                     log.info("Upbit ticker WebSocket subscribed markets={}", markets.size());
                 })
                 .exceptionally(exception -> {
                     log.warn("Failed to connect Upbit ticker WebSocket", exception);
-                    running = false;
+                    scheduleReconnect();
                     return null;
                 });
     }
@@ -151,6 +197,37 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
         }
     }
 
+    void handleClose(int statusCode, String reason) {
+        webSocket = null;
+        log.info("Upbit ticker WebSocket closed status={} reason={}", statusCode, reason);
+        scheduleReconnect();
+    }
+
+    void handleError(Throwable error) {
+        webSocket = null;
+        log.warn("Upbit ticker WebSocket error", error);
+        scheduleReconnect();
+    }
+
+    long reconnectDelayMs() {
+        return reconnectDelayMs;
+    }
+
+    private void scheduleReconnect() {
+        if (!running || !reconnectScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        long delayMs = reconnectDelayMs;
+        reconnectDelayMs = Math.min(reconnectDelayMs * 2, properties.getReconnectMaxDelayMs());
+        reconnectScheduler.schedule(() -> {
+            reconnectScheduled.set(false);
+            if (!running) {
+                return;
+            }
+            connect(subscribedMarkets());
+        }, delayMs);
+    }
+
     private String subscriptionMessage(List<String> markets) {
         String codes = markets.stream()
                 .map(market -> "\"" + market + "\"")
@@ -183,15 +260,25 @@ public class UpbitTickerWebSocketClient implements WebSocketTickerClient, SmartL
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            running = false;
-            log.info("Upbit ticker WebSocket closed status={} reason={}", statusCode, reason);
+            handleClose(statusCode, reason);
             return null;
         }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
-            running = false;
-            log.warn("Upbit ticker WebSocket error", error);
+            handleError(error);
         }
+    }
+
+    private static WebSocketConnector defaultConnector() {
+        HttpClient httpClient = HttpClient.newHttpClient();
+        return (uri, listener) -> httpClient.newWebSocketBuilder().buildAsync(uri, listener);
+    }
+
+    private static ReconnectScheduler defaultReconnectScheduler() {
+        return (task, delayMs) -> CompletableFuture.runAsync(
+                task,
+                CompletableFuture.delayedExecutor(delayMs, TimeUnit.MILLISECONDS)
+        );
     }
 }

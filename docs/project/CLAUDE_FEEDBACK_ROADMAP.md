@@ -57,6 +57,8 @@
 
 ## 2. WebSocket 장애/fallback 검증
 
+상태: 부분 완료
+
 목표:
 
 - WebSocket 단절, stale snapshot, REST fallback 실패가 주문 성공으로 보이지 않게 한다.
@@ -76,6 +78,12 @@
 - 현재가가 불명확한 주문은 성공 처리되지 않는다.
 - fallback 실패 경로가 테스트로 고정된다.
 - 운영/reliability 문서가 실제 구현과 맞는다.
+
+진행 기록:
+
+- WebSocket client close/error/connect failure 시 reconnect 예약과 initial/max backoff 테스트를 Upbit/Binance 양쪽에 추가했다.
+- reconnect 예약 중 stop되면 다시 연결하지 않는 테스트를 추가했다.
+- stale snapshot과 REST fallback 실패 경로는 기존 provider 테스트 범위를 유지하며, 주문 성공처럼 보이지 않는지 후속 청산 스모크 테스트에서 함께 본다.
 
 ## 3. PAPER 실행 runtime guard
 

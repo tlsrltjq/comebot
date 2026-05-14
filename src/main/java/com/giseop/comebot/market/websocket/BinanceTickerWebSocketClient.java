@@ -16,9 +16,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.event.EventListener;
@@ -36,11 +40,15 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
     private final BinanceUsdtTickerStore binanceUsdtTickerStore;
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final CandidateSchedulerProperties candidateSchedulerProperties;
-    private final HttpClient httpClient;
+    private final WebSocketConnector connector;
+    private final ReconnectScheduler reconnectScheduler;
+    private final AtomicBoolean reconnectScheduled = new AtomicBoolean(false);
 
     private volatile boolean running;
     private volatile WebSocket webSocket;
+    private volatile long reconnectDelayMs;
 
+    @Autowired
     public BinanceTickerWebSocketClient(
             MarketWebSocketProperties properties,
             TickerSnapshotStore tickerSnapshotStore,
@@ -48,12 +56,34 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
             TradingSchedulerProperties tradingSchedulerProperties,
             CandidateSchedulerProperties candidateSchedulerProperties
     ) {
+        this(
+                properties,
+                tickerSnapshotStore,
+                binanceUsdtTickerStore,
+                tradingSchedulerProperties,
+                candidateSchedulerProperties,
+                defaultConnector(),
+                defaultReconnectScheduler()
+        );
+    }
+
+    BinanceTickerWebSocketClient(
+            MarketWebSocketProperties properties,
+            TickerSnapshotStore tickerSnapshotStore,
+            BinanceUsdtTickerStore binanceUsdtTickerStore,
+            TradingSchedulerProperties tradingSchedulerProperties,
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            WebSocketConnector connector,
+            ReconnectScheduler reconnectScheduler
+    ) {
         this.properties = properties;
         this.tickerSnapshotStore = tickerSnapshotStore;
         this.binanceUsdtTickerStore = binanceUsdtTickerStore;
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
-        this.httpClient = HttpClient.newHttpClient();
+        this.connector = connector;
+        this.reconnectScheduler = reconnectScheduler;
+        this.reconnectDelayMs = properties.getReconnectInitialDelayMs();
     }
 
     @Override
@@ -71,16 +101,32 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
             log.info("Binance ticker WebSocket is enabled but no USDT symbols are configured");
             return;
         }
+        if (running) {
+            return;
+        }
         running = true;
-        httpClient.newWebSocketBuilder()
-                .buildAsync(uri(markets), new Listener())
+        reconnectDelayMs = properties.getReconnectInitialDelayMs();
+        connect(markets);
+    }
+
+    private void connect(List<String> markets) {
+        if (!running || markets.isEmpty()) {
+            return;
+        }
+        connector.connect(uri(markets), new Listener())
                 .thenAccept(socket -> {
+                    if (!running) {
+                        socket.sendClose(WebSocket.NORMAL_CLOSURE, "stop");
+                        return;
+                    }
                     webSocket = socket;
+                    reconnectScheduled.set(false);
+                    reconnectDelayMs = properties.getReconnectInitialDelayMs();
                     log.info("Binance ticker WebSocket subscribed markets={}", markets.size());
                 })
                 .exceptionally(exception -> {
                     log.warn("Failed to connect Binance ticker WebSocket", exception);
-                    running = false;
+                    scheduleReconnect();
                     return null;
                 });
     }
@@ -149,6 +195,38 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
         }
     }
 
+    void handleClose(int statusCode, String reason) {
+        webSocket = null;
+        log.info("Binance ticker WebSocket closed status={} reason={}", statusCode, reason);
+        scheduleReconnect();
+    }
+
+    void handleError(Throwable error) {
+        webSocket = null;
+        log.warn("Binance ticker WebSocket error", error);
+        scheduleReconnect();
+    }
+
+    long reconnectDelayMs() {
+        return reconnectDelayMs;
+    }
+
+    private void scheduleReconnect() {
+        if (!running || !reconnectScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        long delayMs = reconnectDelayMs;
+        reconnectDelayMs = Math.min(reconnectDelayMs * 2, properties.getReconnectMaxDelayMs());
+        reconnectScheduler.schedule(() -> {
+            reconnectScheduled.set(false);
+            if (!running) {
+                return;
+            }
+            connect(subscribedMarkets());
+        }, delayMs);
+    }
+
+
     private URI uri(List<String> markets) {
         String streams = markets.stream()
                 .map(market -> market.toLowerCase(Locale.ROOT) + "@ticker")
@@ -185,15 +263,25 @@ public class BinanceTickerWebSocketClient implements WebSocketTickerClient, Smar
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            running = false;
-            log.info("Binance ticker WebSocket closed status={} reason={}", statusCode, reason);
+            handleClose(statusCode, reason);
             return null;
         }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
-            running = false;
-            log.warn("Binance ticker WebSocket error", error);
+            handleError(error);
         }
+    }
+
+    private static WebSocketConnector defaultConnector() {
+        HttpClient httpClient = HttpClient.newHttpClient();
+        return (uri, listener) -> httpClient.newWebSocketBuilder().buildAsync(uri, listener);
+    }
+
+    private static ReconnectScheduler defaultReconnectScheduler() {
+        return (task, delayMs) -> CompletableFuture.runAsync(
+                task,
+                CompletableFuture.delayedExecutor(delayMs, TimeUnit.MILLISECONDS)
+        );
     }
 }

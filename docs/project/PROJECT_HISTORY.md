@@ -23,6 +23,7 @@
 16. WebSocket snapshot freshness 운영 상태 보강
 17. Incident Log와 API rate limit 운영 기준 문서화
 18. PAPER 현금 부족 read-only 경고 추가
+19. WebSocket reconnect/backoff 구현과 테스트 보강
 
 ## 최근 검증
 

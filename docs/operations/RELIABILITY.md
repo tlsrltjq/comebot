@@ -18,7 +18,9 @@
 - Upbit candle API 테스트는 mock/stub을 사용하고 외부 API를 직접 호출하지 않는다.
 - Binance ticker/kline API 테스트는 mock/stub을 사용하고 외부 API를 직접 호출하지 않는다.
 - WebSocket 수신 실패는 애플리케이션 전체를 중단시키면 안 된다.
-- WebSocket reconnect는 backoff를 둔다.
+- WebSocket close/error 또는 연결 실패는 애플리케이션 전체를 중단시키지 않고 reconnect를 예약한다.
+- WebSocket reconnect는 `market.websocket.reconnect-initial-delay-ms`에서 시작해 실패가 반복되면 2배씩 증가하고 `market.websocket.reconnect-max-delay-ms`를 넘지 않는다.
+- WebSocket reconnect 예약 중 `stop()`이 호출되면 예약된 재연결 작업은 다시 연결하지 않는다.
 - WebSocket snapshot이 stale이면 REST fallback을 사용하거나 stale 상태를 명확히 표시한다.
 - WebSocket과 REST가 모두 실패하면 주문 실행을 차단하고 실패를 추적 가능하게 남긴다.
 - `SNAPSHOT` provider는 fresh snapshot을 먼저 사용하고, 없거나 stale이면 거래소별 REST provider로 fallback한다.

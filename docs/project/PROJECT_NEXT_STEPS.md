@@ -283,7 +283,7 @@
 - 현금 부족 경고가 주문 상태를 변경하지 않는다.
 - frontend lint/test/build와 관련 backend test가 통과한다.
 
-## 다음 우선순위: WebSocket client reconnect/backoff 테스트 보강
+## 완료: WebSocket client reconnect/backoff 테스트 보강
 
 목표:
 
@@ -303,12 +303,25 @@
 - WebSocket 장애가 주문 성공처럼 보이는 경로가 없다.
 - `./gradlew test`가 통과한다.
 
-## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
+완료 내용:
+
+- Upbit/Binance WebSocket client가 close/error/connect failure 후 reconnect를 예약한다.
+- reconnect delay는 initial 값에서 시작해 실패 반복 시 2배로 증가하고 max 값을 넘지 않는다.
+- reconnect 예약 중 `stop()`이 호출되면 다시 연결하지 않는다.
+- 실제 WebSocket 네트워크에 연결하지 않는 단위 테스트로 회복 경로를 고정했다.
+
+## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:
 
 - 현재 쌓인 PAPER 포지션으로 익절/손절/선택 PAPER SELL 흐름을 검증한다.
 - 실제 주문 API와 `REAL_TRADING` 없이 PAPER 상태 전이만 확인한다.
+
+완료 기준:
+
+- 익절/손절 자동 SELL이 PAPER 포트폴리오와 `paper_trade_log`를 일관되게 갱신하는지 확인한다.
+- 웹 선택 PAPER SELL이 보유 position에 대해서만 동작하고 미보유/시세 불명확 market은 실패로 드러나는지 확인한다.
+- 수동 BUY, 실제 주문 API, `REAL_TRADING` UI가 추가되지 않는다.
 
 ## 보류
 
