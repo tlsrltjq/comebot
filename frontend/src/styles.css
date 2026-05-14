@@ -294,6 +294,94 @@ button:disabled {
   color: #bd3d2f;
 }
 
+.data-readiness-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.data-readiness-good {
+  border-color: #bfe8d7;
+}
+
+.data-readiness-warn {
+  border-color: #f5d782;
+}
+
+.data-readiness-info {
+  border-color: #b8d9f2;
+}
+
+.data-readiness-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.data-readiness-head div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.data-readiness-head span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.data-readiness-head strong {
+  color: #25333d;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.data-readiness-head p {
+  margin: 0;
+  color: #60717f;
+}
+
+.data-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.data-readiness-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e5ebf0;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+
+.data-readiness-item svg {
+  grid-row: 1 / span 2;
+  margin-top: 2px;
+  color: #176b87;
+}
+
+.data-readiness-item span {
+  color: #60717f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.data-readiness-item strong {
+  color: #25333d;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
 .metric-card,
 .panel,
 .result-panel,
@@ -1272,8 +1360,13 @@ td:nth-child(7) {
   .leader-grid,
   .status-strip,
   .operations-overview,
-  .readiness-list {
+  .readiness-list,
+  .data-readiness-grid {
     grid-template-columns: 1fr;
+  }
+
+  .data-readiness-head {
+    display: grid;
   }
 
   .portfolio-chart-layout {

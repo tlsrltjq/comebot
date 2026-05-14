@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { Bot, CheckCircle2, Database, MonitorCog, Radio, ShieldAlert, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
+import { Activity, Bot, CheckCircle2, Database, MonitorCog, Radio, ShieldAlert, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { Badge } from '../../shared/ui/Badge';
@@ -87,6 +87,14 @@ export function DashboardPage() {
         exitEnabled: data.scheduler.exitEnabled,
         killSwitchEnabled: data.safety.killSwitchEnabled,
       });
+  const dataReadiness = dataReadinessStatus({
+    totalRuns: summary?.total ?? 0,
+    buyCount: summary?.buyCount ?? 0,
+    sellCount: summary?.sellCount ?? 0,
+    filledCount: summary?.filledCount ?? 0,
+    positionCount: pnl?.positionCount ?? 0,
+    exitPositionMarketCount: data.scheduler.exitPositionMarketCount,
+  });
   const osGuide = operatingSystemGuide(detectOperatingSystem());
   const concentration = riskQuery.data?.concentration;
   const stopLossCooldown = riskQuery.data?.stopLossCooldown;
@@ -119,6 +127,24 @@ export function DashboardPage() {
           <OperationCheck label="후보 스케줄러(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.candidateEnabled} />
           <OperationCheck label="청산 스케줄러(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.exitEnabled} />
           <OperationCheck label="긴급 정지(Kill switch)" value={data.safety.killSwitchEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'} good={!data.safety.killSwitchEnabled} />
+        </div>
+      </article>
+
+      <article className={`data-readiness-panel data-readiness-${dataReadiness.tone}`}>
+        <div className="data-readiness-head">
+          <div>
+            <span>데이터 준비 상태(Data Readiness)</span>
+            <strong>{dataReadiness.title}</strong>
+            <p>{dataReadiness.detail}</p>
+          </div>
+          <Badge tone={dataReadiness.tone}>{dataReadiness.badge}</Badge>
+        </div>
+        <div className="data-readiness-grid" aria-label="데이터 준비 지표(Data readiness metrics)">
+          <ReadinessMetric label="24h 실행(Runs)" value={formatNumber(summary?.total)} />
+          <ReadinessMetric label="체결(Filled)" value={formatNumber(summary?.filledCount)} />
+          <ReadinessMetric label="BUY / SELL" value={`${formatNumber(summary?.buyCount)} / ${formatNumber(summary?.sellCount)}`} />
+          <ReadinessMetric label="보유(Position)" value={formatNumber(pnl?.positionCount)} />
+          <ReadinessMetric label="청산 대상(Exit)" value={formatNumber(data.scheduler.exitPositionMarketCount)} />
         </div>
       </article>
 
@@ -351,6 +377,22 @@ function StatusPill({
   );
 }
 
+function ReadinessMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="data-readiness-item">
+      <Activity size={16} />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
 function marketSummary(markets: string[], exchange: string) {
   if (markets.length === 0) {
     return '-';
@@ -367,6 +409,63 @@ function marketSummary(markets: string[], exchange: string) {
 
 function exchangeList(exchanges: string[] | undefined, fallback: string) {
   return exchanges && exchanges.length > 0 ? exchanges.join(', ') : fallback;
+}
+
+type DataReadinessTone = 'good' | 'warn' | 'info';
+
+function dataReadinessStatus({
+  totalRuns,
+  buyCount,
+  sellCount,
+  filledCount,
+  positionCount,
+  exitPositionMarketCount,
+}: {
+  totalRuns: number;
+  buyCount: number;
+  sellCount: number;
+  filledCount: number;
+  positionCount: number;
+  exitPositionMarketCount: number;
+}): {
+  tone: DataReadinessTone;
+  title: string;
+  badge: string;
+  detail: string;
+} {
+  if (totalRuns === 0 && positionCount === 0 && exitPositionMarketCount === 0) {
+    return {
+      tone: 'warn',
+      title: '데이터 부족(Insufficient)',
+      badge: '보류(Hold)',
+      detail: '아직 24시간 실행 기록과 보유 PAPER 포지션이 없어 손익 판단은 보류합니다.',
+    };
+  }
+
+  if (filledCount === 0 && positionCount === 0) {
+    return {
+      tone: 'warn',
+      title: '수집 중(Collecting)',
+      badge: '수집(Collect)',
+      detail: '후보/HOLD 기록은 있으나 체결 또는 보유 포지션 표본이 부족합니다.',
+    };
+  }
+
+  if (buyCount > 0 && sellCount === 0) {
+    return {
+      tone: 'info',
+      title: '진입 검증 중(Entry Ready)',
+      badge: '진입(Entry)',
+      detail: 'BUY/보유 데이터는 있으나 SELL/청산 표본이 아직 부족합니다.',
+    };
+  }
+
+  return {
+    tone: 'good',
+    title: '검증 가능(Reviewable)',
+    badge: '검토 가능',
+    detail: 'BUY/SELL/FILLED 데이터가 있어 PAPER 흐름 검토가 가능합니다.',
+  };
 }
 
 function readinessMessage({
