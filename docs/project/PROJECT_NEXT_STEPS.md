@@ -310,7 +310,7 @@
 - reconnect 예약 중 `stop()`이 호출되면 다시 연결하지 않는다.
 - 실제 WebSocket 네트워크에 연결하지 않는 단위 테스트로 회복 경로를 고정했다.
 
-## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
+## 완료: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:
 
@@ -322,6 +322,33 @@
 - 익절/손절 자동 SELL이 PAPER 포트폴리오와 `paper_trade_log`를 일관되게 갱신하는지 확인한다.
 - 웹 선택 PAPER SELL이 보유 position에 대해서만 동작하고 미보유/시세 불명확 market은 실패로 드러나는지 확인한다.
 - 수동 BUY, 실제 주문 API, `REAL_TRADING` UI가 추가되지 않는다.
+
+완료 내용:
+
+- 익절 자동 SELL이 position 제거, cash 증가, realized profit, history, `paper_trade_log`를 함께 갱신하는지 스모크 테스트로 고정했다.
+- 손절 자동 SELL이 realized loss와 SELL 원장을 남기는지 스모크 테스트로 고정했다.
+- 자동 청산 현재가가 없으면 FAILED history만 남기고 position과 `paper_trade_log`를 변경하지 않는지 확인했다.
+- 웹 선택 PAPER SELL 테스트가 성공/실패 흐름에서 `paper_trade_log` 변경 여부까지 확인하도록 보강됐다.
+
+## 다음 우선순위: 후보 선정 수치 기록 설계
+
+목표:
+
+- 실제 DB 컬럼 추가 전, BUY 시점에 어떤 전략 판단 수치를 남겨야 나중에 분석 가능한지 확정한다.
+- 데이터 축적 없이 문서와 DTO/도메인 경계만 먼저 정리한다.
+
+작업:
+
+- 후보 선정 시점에 필요한 수치 목록을 정리한다.
+- 변동성, 가격 변화율, 거래대금, trend, risk reject/hold reason의 저장 위치를 설계한다.
+- `paper_trade_log` 확장과 별도 scan log 중 어느 쪽이 더 적절한지 비교한다.
+- 바로 구현할 항목과 데이터 축적 후 구현할 항목을 분리한다.
+
+완료 기준:
+
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- DB migration은 설계가 확정되기 전까지 보류한다.
+- `CLAUDE_FEEDBACK_ROADMAP.md`와 trading/operations 문서가 같은 방향을 가리킨다.
 
 ## 보류
 

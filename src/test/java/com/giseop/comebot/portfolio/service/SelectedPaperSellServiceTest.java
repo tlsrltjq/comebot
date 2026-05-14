@@ -14,6 +14,7 @@ import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.market.domain.MarketPrice;
 import com.giseop.comebot.market.provider.MarketPriceProvider;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
+import com.giseop.comebot.portfolio.domain.PaperTradeLog;
 import com.giseop.comebot.portfolio.dto.SelectedPaperSellResponse;
 import com.giseop.comebot.portfolio.repository.InMemoryPaperPortfolioRepository;
 import com.giseop.comebot.risk.DailyRiskProperties;
@@ -23,6 +24,7 @@ import com.giseop.comebot.safety.KillSwitchService;
 import com.giseop.comebot.safety.SafetyProperties;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 class SelectedPaperSellServiceTest {
 
+    private RecordingPaperPortfolioRepository portfolioRepository;
     private PaperPortfolioService portfolioService;
     private InMemoryTradingFlowHistoryRepository historyRepository;
     private TradingFlowHistoryService historyService;
@@ -41,7 +44,8 @@ class SelectedPaperSellServiceTest {
     void setUp() {
         PaperPortfolioProperties portfolioProperties = new PaperPortfolioProperties();
         portfolioProperties.setInitialCash(new BigDecimal("1000000"));
-        portfolioService = new PaperPortfolioService(new InMemoryPaperPortfolioRepository(), portfolioProperties);
+        portfolioRepository = new RecordingPaperPortfolioRepository();
+        portfolioService = new PaperPortfolioService(portfolioRepository, portfolioProperties);
         portfolioService.initialize();
 
         historyRepository = new InMemoryTradingFlowHistoryRepository();
@@ -82,6 +86,9 @@ class SelectedPaperSellServiceTest {
         assertThat(portfolioService.getPortfolio().cash()).isEqualByComparingTo("1000040");
         assertThat(portfolioService.getPortfolio().realizedProfit()).isEqualByComparingTo("40");
         assertThat(historyRepository.findRecent(ExchangeMode.UPBIT, 10).getFirst().orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(portfolioRepository.tradeLogs()).hasSize(2);
+        assertThat(portfolioRepository.tradeLogs().getFirst().side()).isEqualTo(OrderSide.SELL);
+        assertThat(portfolioRepository.tradeLogs().getFirst().realizedProfit()).isEqualByComparingTo("40");
     }
 
     @Test
@@ -141,6 +148,8 @@ class SelectedPaperSellServiceTest {
         assertThat(response.succeededCount()).isZero();
         assertThat(response.results().getFirst().orderStatus()).isEqualTo(OrderStatus.FAILED);
         assertThat(portfolioService.findPositions()).hasSize(1);
+        assertThat(portfolioRepository.tradeLogs()).hasSize(1);
+        assertThat(portfolioRepository.tradeLogs().getFirst().side()).isEqualTo(OrderSide.BUY);
         assertThat(historyRepository.findRecent(ExchangeMode.UPBIT, 10).getFirst().orderStatus()).isEqualTo(OrderStatus.FAILED);
     }
 
@@ -156,6 +165,21 @@ class SelectedPaperSellServiceTest {
                 throw new IllegalStateException("Current price lookup failed");
             }
             return new MarketPrice(market, prices.get(market), Instant.now());
+        }
+    }
+
+    private static final class RecordingPaperPortfolioRepository extends InMemoryPaperPortfolioRepository {
+
+        private final List<PaperTradeLog> tradeLogs = new ArrayList<>();
+
+        @Override
+        public void saveTradeLog(ExchangeMode exchange, PaperTradeLog tradeLog) {
+            super.saveTradeLog(exchange, tradeLog);
+            tradeLogs.addFirst(tradeLog);
+        }
+
+        List<PaperTradeLog> tradeLogs() {
+            return tradeLogs;
         }
     }
 }
