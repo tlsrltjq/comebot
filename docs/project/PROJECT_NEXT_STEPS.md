@@ -22,7 +22,26 @@
 - 데이터가 없어도 화면이 정상 렌더링된다.
 - 데이터 부족 상태가 매수/매도 실행 버튼을 만들지 않는다.
 
-## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
+## 다음 우선순위: UI 전면 개편 Stage 1
+
+목표:
+
+- `docs/project/UI_REDESIGN_PLAN.md` 기준으로 App Shell, Sidebar, Top Status Bar를 만든다.
+- 기존 PAPER 안전 제약을 유지하면서 화면 구조부터 운영 콘솔 형태로 바꾼다.
+
+작업:
+
+- 전역 레이아웃을 좌측 navigation과 상단 status bar 구조로 교체한다.
+- Dashboard, Markets, Candidates, Portfolio, History, Risk, System route를 새 shell에 연결한다.
+- exchange, `PAPER_TRADING`, DB, 시세, scheduler, kill switch, 마지막 갱신 상태를 상단에서 표시한다.
+
+완료 기준:
+
+- 기존 페이지 접근 경로가 깨지지 않는다.
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
+## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:
 
