@@ -104,3 +104,10 @@
 - Risk/System 같은 읽기 전용 설정 화면과 Market chart는 30초 주기로 낮춘다.
 - history와 analytics는 분리해서 history는 10초, analytics는 15초 주기로 조회한다.
 - polling 주기를 줄여도 자동 PAPER 실행, exit scheduler, WebSocket 시세 수신 주기는 변경하지 않는다.
+
+## 대용량 조회 방어
+
+- Candidates 전체 조회는 서버에서 최대 50개로 제한하고, market 단건 조회는 명시 검색일 때만 수행한다.
+- History 조회는 서버에서 최대 200개로 제한한다.
+- 웹 Candidates/History 화면은 market 입력 중 매 키마다 API를 호출하지 않고 `조회(Search)` 제출 시에만 필터를 적용한다.
+- History analytics는 history row를 프론트에서 재집계하지 않고 서버 analytics API 결과를 사용한다.

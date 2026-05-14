@@ -132,6 +132,16 @@ class TradingFlowHistoryControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void findRecentCapsLargeLimit() throws Exception {
+        when(tradingFlowHistoryService.findRecent(ExchangeMode.UPBIT, null, 200))
+                .thenReturn(List.of(history("history-1")));
+
+        mockMvc.perform(get("/api/trading-flow/history").param("limit", "1000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("history-1"));
+    }
+
     private TradingFlowHistory history(String id) {
         return history(id, "KRW-BTC");
     }

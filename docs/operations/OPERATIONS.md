@@ -134,6 +134,20 @@ GET /api/trading-flow/run?market=KRW-BTC
 GET /api/trading-flow/history?market=KRW-BTC
 ```
 
+History 조회는 대용량 렌더링과 DB 부하를 막기 위해 `limit`을 최대 200개로 제한한다.
+웹 History 화면은 20/50/100/200 단위 조회만 제공하고, market 필터는 입력 후 `조회(Search)`를 눌렀을 때 적용한다.
+
+## 후보 모니터링
+
+```http
+GET /api/candidates?exchange=upbit&limit=20
+GET /api/candidates?exchange=upbit&market=KRW-BTC
+```
+
+전체 후보 조회는 서버에서 최대 50개로 제한한다.
+웹 Candidates 화면은 20/50 단위 조회만 제공하고, market 필터는 입력 후 `조회(Search)`를 눌렀을 때 적용한다.
+후보 화면에는 수동 BUY나 후보 실행 버튼을 제공하지 않는다.
+
 ## 포트폴리오
 
 ```http

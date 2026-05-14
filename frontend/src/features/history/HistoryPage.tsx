@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Filter, RotateCcw } from 'lucide-react';
+import { Filter, RotateCcw, Search } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
 import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { AnalyticsRange, OrderStatus, SignalType, TradingFlowHistoryResponse } from '../../shared/api/types';
@@ -15,20 +15,25 @@ import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 type SignalFilter = 'ALL' | SignalType;
 type OrderFilter = 'ALL' | OrderStatus | 'NO_ORDER';
 type ReasonFilter = 'ALL' | 'TAKE_PROFIT' | 'STOP_LOSS' | 'HOLD';
+type HistoryLimit = 20 | 50 | 100 | 200;
 
 const ranges: AnalyticsRange[] = ['1h', '24h', '3d', '7d'];
 const signals: SignalFilter[] = ['ALL', 'BUY', 'SELL', 'HOLD'];
 const orders: OrderFilter[] = ['ALL', 'FILLED', 'REJECTED', 'FAILED', 'NO_ORDER'];
 const reasons: ReasonFilter[] = ['ALL', 'TAKE_PROFIT', 'STOP_LOSS', 'HOLD'];
+const historyLimits: HistoryLimit[] = [20, 50, 100, 200];
+
 export function HistoryPage() {
+  const [marketInput, setMarketInput] = useState('');
   const [market, setMarket] = useState('');
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState<HistoryLimit>(50);
   const [range, setRange] = useState<AnalyticsRange>('24h');
   const [signalFilter, setSignalFilter] = useState<SignalFilter>('ALL');
   const [orderFilter, setOrderFilter] = useState<OrderFilter>('ALL');
   const [reasonFilter, setReasonFilter] = useState<ReasonFilter>('ALL');
   const { exchange } = useExchangeMode();
   const normalizedMarket = market.trim().toUpperCase();
+  const normalizedMarketInput = marketInput.trim().toUpperCase();
   const historyQuery = useQuery({
     queryKey: queryKeys.history(exchange, normalizedMarket || undefined, limit),
     queryFn: () => api.history(exchange, normalizedMarket || undefined, limit),
@@ -137,26 +142,56 @@ export function HistoryPage() {
       </article>
 
       <div className="toolbar history-toolbar">
-        <label>
-          마켓(Market)
-          <input value={market} onChange={(event) => setMarket(event.target.value)} placeholder={exchange === 'BINANCE' ? '전체 또는 BTCUSDT' : '전체 또는 KRW-BTC'} />
-        </label>
-        <label>
-          개수(Limit)
-          <input
-            type="number"
-            min="1"
-            max="100"
-            value={limit}
-            onChange={(event) => setLimit(Math.max(1, Number(event.target.value) || 1))}
-          />
-        </label>
+        <form
+          className="toolbar-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setMarket(normalizedMarketInput);
+          }}
+        >
+          <label>
+            마켓(Market)
+            <input value={marketInput} onChange={(event) => setMarketInput(event.target.value)} placeholder={exchange === 'BINANCE' ? '전체 또는 BTCUSDT' : '전체 또는 KRW-BTC'} />
+          </label>
+          <button className="button button-secondary" type="submit">
+            <Search size={16} />
+            조회(Search)
+          </button>
+          {normalizedMarket ? (
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => {
+                setMarket('');
+                setMarketInput('');
+              }}
+            >
+              전체(All)
+            </button>
+          ) : null}
+        </form>
+        <div className="filter-stack">
+          <span className="control-label">개수(Limit)</span>
+          <div className="segmented-row compact-segmented">
+            {historyLimits.map((item) => (
+              <button
+                key={item}
+                className={limit === item ? 'button button-primary' : 'button button-secondary'}
+                type="button"
+                onClick={() => setLimit(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           className="button button-secondary"
           type="button"
           onClick={() => {
             setMarket('');
-            setLimit(100);
+            setMarketInput('');
+            setLimit(50);
             setSignalFilter('ALL');
             setOrderFilter('ALL');
             setReasonFilter('ALL');

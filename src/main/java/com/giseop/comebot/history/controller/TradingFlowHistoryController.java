@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TradingFlowHistoryController {
 
+    private static final int DEFAULT_RECENT_LIMIT = 20;
+    private static final int MAX_RECENT_LIMIT = 200;
+
     private final TradingFlowHistoryService tradingFlowHistoryService;
 
     public TradingFlowHistoryController(TradingFlowHistoryService tradingFlowHistoryService) {
@@ -24,7 +27,7 @@ public class TradingFlowHistoryController {
     @GetMapping("/api/trading-flow/history")
     public ResponseEntity<List<TradingFlowHistoryResponse>> findRecent(
             @RequestParam(required = false) String market,
-            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "" + DEFAULT_RECENT_LIMIT) int limit,
             @RequestParam(required = false) String exchange
     ) {
         ExchangeMode exchangeMode = ExchangeModeResolver.resolve(exchange);
@@ -33,7 +36,7 @@ public class TradingFlowHistoryController {
             return ResponseEntity.badRequest().build();
         }
 
-        List<TradingFlowHistoryResponse> response = tradingFlowHistoryService.findRecent(exchangeMode, market, limit).stream()
+        List<TradingFlowHistoryResponse> response = tradingFlowHistoryService.findRecent(exchangeMode, market, Math.min(limit, MAX_RECENT_LIMIT)).stream()
                 .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(response);

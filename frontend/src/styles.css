@@ -1249,6 +1249,13 @@ button:disabled {
   align-items: end;
 }
 
+.toolbar-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
 label {
   display: grid;
   gap: 6px;

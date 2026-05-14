@@ -200,6 +200,27 @@
 - 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
 - `npm run lint`, `npm test`, `npm run build`, `npm run test:e2e`가 통과한다.
 
+## 완료: Candidates/History 대용량 대비
+
+목표:
+
+- 후보/이력 데이터가 늘어나도 API 요청과 화면 렌더링이 과도하게 커지지 않게 한다.
+- market 검색 입력 중 매 키마다 재조회되는 흐름을 막는다.
+
+작업:
+
+- History API `limit`을 서버에서 최대 200개로 제한한다.
+- Candidates 전체 조회는 기존 서버 상한 50개를 유지하고, 웹에서 20/50 선택만 제공한다.
+- History 웹 화면은 20/50/100/200 단위 조회만 제공한다.
+- Candidates/History market 필터는 `조회(Search)` 제출 시에만 적용한다.
+- 운영/reliability 문서에 대용량 조회 방어 기준을 반영한다.
+
+완료 기준:
+
+- 수동 BUY, 후보 실행, trading-flow 실행 버튼은 추가하지 않는다.
+- History 대용량 요청이 서버에서 200개 상한으로 정규화된다.
+- `npm run lint`, `npm test`, `npm run build`, `npm run test:e2e`, `./gradlew test`가 통과한다.
+
 ## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:

@@ -24,6 +24,7 @@
 - 모바일 sidebar/nav 가로 overflow 방지
 - Risk/System 문서 정합성 재점검 및 보정
 - Web API polling 주기 경량화 및 백그라운드 polling 중단
+- Candidates/History 대용량 조회 상한 및 명시 검색 적용
 
 ## 다음 작업
 

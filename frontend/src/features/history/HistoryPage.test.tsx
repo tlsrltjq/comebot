@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HistoryPage } from './HistoryPage';
@@ -104,11 +104,21 @@ describe('HistoryPage', () => {
     expect(screen.getByText('주문 없음(NO_ORDER)')).toBeInTheDocument();
     expect(screen.getByText('손절(Stop loss)')).toBeInTheDocument();
     expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
+    expect(fetchMock).toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&limit=50', expect.anything());
 
     await userEvent.click(screen.getByRole('button', { name: '손절(SL)' }));
 
     expect(screen.getAllByText('KRW-BTC').length).toBeGreaterThan(0);
     expect(screen.queryByText('KRW-ETH')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '200' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&limit=200', expect.anything()));
+
+    await userEvent.type(screen.getByLabelText('마켓(Market)'), 'KRW-SOL');
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&limit=200&market=KRW-SOL', expect.anything());
+    await userEvent.click(screen.getByRole('button', { name: /조회/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&market=KRW-SOL&limit=200', expect.anything()));
+
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());

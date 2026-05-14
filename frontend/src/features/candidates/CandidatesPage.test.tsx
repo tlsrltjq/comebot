@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CandidatesPage } from './CandidatesPage';
@@ -114,6 +114,14 @@ describe('CandidatesPage', () => {
     expect(screen.queryByText('KRW-ETH')).not.toBeInTheDocument();
     expect(screen.queryByText('KRW-XRP')).not.toBeInTheDocument();
     expect(screen.getByText('KRW-BTC')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '50' }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=upbit&limit=50', expect.anything()));
+
+    await user.type(screen.getByLabelText('마켓(Market)'), 'KRW-SOL');
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/candidates?exchange=upbit&market=KRW-SOL', expect.anything());
+    await user.click(screen.getByRole('button', { name: /조회/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=upbit&market=KRW-SOL', expect.anything()));
 
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());

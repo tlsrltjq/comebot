@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CircleSlash, Filter, ListFilter } from 'lucide-react';
+import { CircleSlash, Filter, ListFilter, Search } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
 import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { TradingCandidateResponse } from '../../shared/api/types';
@@ -12,17 +12,22 @@ import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
-const FULL_SCAN_LIMIT = 20;
+type CandidateLimit = 20 | 50;
+
+const candidateLimits: CandidateLimit[] = [20, 50];
 
 export function CandidatesPage() {
+  const [marketInput, setMarketInput] = useState('');
   const [market, setMarket] = useState('');
+  const [limit, setLimit] = useState<CandidateLimit>(20);
   const [selectedOnly, setSelectedOnly] = useState(false);
   const normalizedMarket = market.trim().toUpperCase();
+  const normalizedMarketInput = marketInput.trim().toUpperCase();
   const { exchange } = useExchangeMode();
 
   const candidatesQuery = useQuery({
-    queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined, FULL_SCAN_LIMIT),
-    queryFn: () => api.candidates(exchange, normalizedMarket || undefined, FULL_SCAN_LIMIT),
+    queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined, limit),
+    queryFn: () => api.candidates(exchange, normalizedMarket || undefined, limit),
     refetchInterval: POLLING_INTERVALS.candidates,
   });
   const positionsQuery = useQuery({
@@ -56,7 +61,7 @@ export function CandidatesPage() {
       </header>
 
       <div className="metric-grid">
-        <MetricCard label="조회 후보(Scanned)" value={formatNumber(candidateSummary.total)} detail={`상위 ${FULL_SCAN_LIMIT} / ${POLLING_INTERVALS.candidates / 1000}s`} />
+        <MetricCard label="조회 후보(Scanned)" value={formatNumber(candidateSummary.total)} detail={`${normalizedMarket || `상위 ${limit}`} / ${POLLING_INTERVALS.candidates / 1000}s`} />
         <MetricCard label="선택됨(Selected)" value={formatNumber(candidateSummary.selected)} detail={`${formatNumber(candidateSummary.selectedRate, 1)}%`} />
         <MetricCard label="제외됨(Skipped)" value={formatNumber(candidateSummary.skipped)} detail={`${formatNumber(candidateSummary.skippedRate, 1)}%`} />
         <MetricCard label="보유 포지션(Held)" value={formatNumber(candidateSummary.held)} detail="후보 market 기준" />
@@ -101,10 +106,49 @@ export function CandidatesPage() {
       </div>
 
       <div className="toolbar">
-        <label>
-          마켓(Market)
-          <input value={market} onChange={(event) => setMarket(event.target.value)} placeholder={exchange === 'BINANCE' ? '전체 또는 BTCUSDT' : '전체 또는 KRW-BTC'} />
-        </label>
+        <form
+          className="toolbar-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setMarket(normalizedMarketInput);
+          }}
+        >
+          <label>
+            마켓(Market)
+            <input value={marketInput} onChange={(event) => setMarketInput(event.target.value)} placeholder={exchange === 'BINANCE' ? '전체 또는 BTCUSDT' : '전체 또는 KRW-BTC'} />
+          </label>
+          <button className="button button-secondary" type="submit">
+            <Search size={16} />
+            조회(Search)
+          </button>
+          {normalizedMarket ? (
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => {
+                setMarket('');
+                setMarketInput('');
+              }}
+            >
+              전체(All)
+            </button>
+          ) : null}
+        </form>
+        <div className="filter-stack">
+          <span className="control-label">개수(Limit)</span>
+          <div className="segmented-row compact-segmented">
+            {candidateLimits.map((item) => (
+              <button
+                key={item}
+                className={limit === item ? 'button button-primary' : 'button button-secondary'}
+                type="button"
+                onClick={() => setLimit(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="filter-stack">
           <span className="control-label">보기(View)</span>
           <button
