@@ -2,13 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { Power, ShieldCheck, TimerReset, TrendingDown, TrendingUp } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { LiveStatus } from '../../shared/ui/LiveStatus';
 import { formatDateTime } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
-
-const AUTO_RUN_REFRESH_MS = 2_000;
 
 export function TradePage() {
   const { exchange } = useExchangeMode();
@@ -16,12 +15,12 @@ export function TradePage() {
   const systemQuery = useQuery({
     queryKey: queryKeys.system(exchange),
     queryFn: () => api.systemStatus(exchange),
-    refetchInterval: AUTO_RUN_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.autoRun,
   });
   const historyQuery = useQuery({
     queryKey: queryKeys.history(exchange, undefined, 10),
     queryFn: () => api.history(exchange, undefined, 10),
-    refetchInterval: AUTO_RUN_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.autoRun,
   });
   const schedulerMutation = useMutation({
     mutationFn: api.schedulerControl,
@@ -43,7 +42,7 @@ export function TradePage() {
           <h1>자동매매 운영(Auto Trading Operations)</h1>
           <p>후보 스케줄러와 청산 스케줄러를 제어하고 자동 PAPER 실행 이력을 확인합니다.</p>
         </div>
-        <LiveStatus updatedAt={historyQuery.dataUpdatedAt || systemQuery.dataUpdatedAt} isFetching={systemQuery.isFetching || historyQuery.isFetching} intervalMs={AUTO_RUN_REFRESH_MS} />
+        <LiveStatus updatedAt={historyQuery.dataUpdatedAt || systemQuery.dataUpdatedAt} isFetching={systemQuery.isFetching || historyQuery.isFetching} intervalMs={POLLING_INTERVALS.autoRun} />
       </header>
 
       {systemQuery.error ? <ErrorPanel title="자동매매 상태 조회 실패(Auto trading status failed)" error={systemQuery.error} /> : null}

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 import { formatCurrency, formatNumber } from '../../shared/format';
 import { Badge } from '../../shared/ui/Badge';
@@ -12,7 +13,7 @@ export function RiskPage() {
   const riskQuery = useQuery({
     queryKey: queryKeys.riskStatus(exchange),
     queryFn: () => api.riskStatus(exchange),
-    refetchInterval: 5_000,
+    refetchInterval: POLLING_INTERVALS.risk,
   });
 
   if (riskQuery.isLoading) {

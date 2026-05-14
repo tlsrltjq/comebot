@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { BtcChangeRange } from '../../shared/api/types';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
@@ -12,8 +13,6 @@ import { LiveStatus } from '../../shared/ui/LiveStatus';
 import { MetricCard } from '../../shared/ui/MetricCard';
 
 const ranges: BtcChangeRange[] = ['1h', '24h', '3d', '7d'];
-const MARKET_REFRESH_MS = 10_000;
-
 export function MarketOverviewPage() {
   const { exchange } = useExchangeMode();
   const [range, setRange] = useState<BtcChangeRange>('24h');
@@ -21,7 +20,7 @@ export function MarketOverviewPage() {
   const { data, error, isLoading, isFetching, dataUpdatedAt } = useQuery({
     queryKey: queryKeys.btcChange(range, exchange),
     queryFn: () => api.btcChange(range, exchange),
-    refetchInterval: MARKET_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.marketChart,
   });
   const chartData = (data?.points ?? []).map((point) => ({
     time: point.time,
@@ -39,7 +38,7 @@ export function MarketOverviewPage() {
           <p>선택 거래소 기준 비트코인 등락률을 조회 전용 그래프로 확인합니다.</p>
         </div>
         <Badge tone="info">{exchange}</Badge>
-        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching} intervalMs={MARKET_REFRESH_MS} />
+        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching} intervalMs={POLLING_INTERVALS.marketChart} />
       </header>
 
       <div className="segmented-row" aria-label="BTC 등락률 범위(BTC change range)">

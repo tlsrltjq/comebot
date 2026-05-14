@@ -90,8 +90,20 @@ Content-Type: application/json
 
 ## 웹 운영 화면
 
-프론트엔드는 React Query 기본값으로 백그라운드 탭, 네트워크 재연결, 브라우저 포커스 복귀 시 자동 재조회한다.
-각 주요 화면은 `실시간 운영(Live)` 배지에 최근 갱신 시각과 갱신 중 상태를 표시한다.
+프론트엔드는 React Query로 활성 탭에서만 주기 재조회한다.
+백그라운드 탭 polling은 API 부하를 줄이기 위해 끄고, 네트워크 재연결과 브라우저 포커스 복귀 시에는 자동 재조회한다.
+각 주요 화면은 `실시간 운영(Live)` 배지에 최근 갱신 시각, 갱신 중 상태, 현재 화면의 polling 주기를 표시한다.
+
+웹 polling 기준:
+
+- Top status bar: 15초
+- Dashboard: 10초, Risk 보조 조회 30초
+- Candidates: 10초
+- Portfolio: 5초, System/Risk 보조 조회 30초
+- History: 10초, analytics 15초
+- Market chart: 30초
+- Risk/System 읽기 전용 화면: 30초
+- Auto Run 화면: 5초
 
 운영형 PAPER 확인 시에는 실제 공개 시세와 스케줄러를 켜고, 주문/자산만 PAPER로 유지한다.
 실제 주문 API와 REAL_TRADING은 계속 금지한다.

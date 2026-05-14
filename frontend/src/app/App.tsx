@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
 import { Activity, BarChart3, Clock3, Database, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert } from 'lucide-react';
 import { api, queryKeys } from '../shared/api/client';
+import { POLLING_INTERVALS } from '../shared/api/polling';
 import type { ExchangeMode } from '../shared/api/types';
 import { ExchangeModeContext, exchangeParam } from '../shared/exchange/ExchangeModeContext';
 import { LiveStatus } from '../shared/ui/LiveStatus';
@@ -17,8 +18,6 @@ const navItems = [
   { to: '/system', label: '시스템(System)', icon: MonitorCog },
   { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
 ];
-
-const STATUS_REFRESH_MS = 5_000;
 
 export function App() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -88,12 +87,12 @@ function TopStatusBar({ exchange }: { exchange: ExchangeMode }) {
   const systemQuery = useQuery({
     queryKey: queryKeys.system(exchange),
     queryFn: () => api.systemStatus(exchange),
-    refetchInterval: STATUS_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.status,
   });
   const providerQuery = useQuery({
     queryKey: queryKeys.marketProviderStatus(),
     queryFn: api.marketProviderStatus,
-    refetchInterval: STATUS_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.status,
   });
   const system = systemQuery.data;
   const provider = providerQuery.data;
@@ -118,7 +117,7 @@ function TopStatusBar({ exchange }: { exchange: ExchangeMode }) {
         <TopStatusItem icon={<TrendingUp size={15} />} label="청산" value={exitReady ? `${(system?.scheduler.exitFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={exitReady} />
         <TopStatusItem icon={killSwitchEnabled ? <ShieldX size={15} /> : <ShieldCheck size={15} />} label="Kill" value={killSwitchEnabled ? 'ON' : 'OFF'} good={!killSwitchEnabled && !systemQuery.isError} />
       </div>
-      <LiveStatus updatedAt={updatedAt} isFetching={systemQuery.isFetching || providerQuery.isFetching} intervalMs={STATUS_REFRESH_MS} />
+      <LiveStatus updatedAt={updatedAt} isFetching={systemQuery.isFetching || providerQuery.isFetching} intervalMs={POLLING_INTERVALS.status} />
     </header>
   );
 }

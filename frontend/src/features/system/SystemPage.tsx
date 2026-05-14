@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Bell, Bot, MonitorCog, Radio } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 import { detectOperatingSystem, operatingSystemGuide } from '../../shared/os/operatingSystem';
 import { Badge } from '../../shared/ui/Badge';
@@ -11,12 +12,12 @@ export function SystemPage() {
   const systemQuery = useQuery({
     queryKey: queryKeys.system(exchange),
     queryFn: () => api.systemStatus(exchange),
-    refetchInterval: 5_000,
+    refetchInterval: POLLING_INTERVALS.system,
   });
   const providerQuery = useQuery({
     queryKey: queryKeys.marketProviderStatus(),
     queryFn: api.marketProviderStatus,
-    refetchInterval: 5_000,
+    refetchInterval: POLLING_INTERVALS.system,
   });
 
   if (systemQuery.isLoading) {

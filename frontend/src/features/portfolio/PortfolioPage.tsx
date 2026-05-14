@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart as PieIcon, Radar, ShieldCheck, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { PositionValuationResponse, SelectedPaperSellResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
@@ -28,8 +29,6 @@ const MARKET_COLORS = ['#176b87', '#1f8a70', '#b7791f', '#8c5a2b', '#5d6d7e', '#
 const CASH_COLOR = '#1f8a70';
 const POSITION_COLOR = '#176b87';
 const OTHER_COLOR = '#7b8794';
-const PORTFOLIO_REFRESH_MS = 2_000;
-
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
   const [selectedMarkets, setSelectedMarkets] = useState<Set<string>>(() => new Set());
@@ -37,11 +36,11 @@ export function PortfolioPage() {
   const [sellSummary, setSellSummary] = useState<SelectedPaperSellResponse | null>(null);
   const { exchange } = useExchangeMode();
   const queryClient = useQueryClient();
-  const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: PORTFOLIO_REFRESH_MS });
-  const positionsQuery = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: PORTFOLIO_REFRESH_MS });
-  const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: PORTFOLIO_REFRESH_MS });
-  const systemQuery = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: 5_000 });
-  const riskQuery = useQuery({ queryKey: queryKeys.riskStatus(exchange), queryFn: () => api.riskStatus(exchange), refetchInterval: 5_000 });
+  const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
+  const positionsQuery = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
+  const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
+  const systemQuery = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: POLLING_INTERVALS.system });
+  const riskQuery = useQuery({ queryKey: queryKeys.riskStatus(exchange), queryFn: () => api.riskStatus(exchange), refetchInterval: POLLING_INTERVALS.risk });
 
   const positions = useMemo(
     () => sortPositions(valuationQuery.data?.positions ?? [], sortKey),
@@ -120,7 +119,7 @@ export function PortfolioPage() {
           <h1>포트폴리오(Portfolio)</h1>
           <p>자동 PAPER 거래의 현금, 포지션, 평가 손익을 확인합니다.</p>
         </div>
-        <LiveStatus updatedAt={valuationQuery.dataUpdatedAt} isFetching={statusQuery.isFetching || positionsQuery.isFetching || valuationQuery.isFetching} intervalMs={PORTFOLIO_REFRESH_MS} />
+        <LiveStatus updatedAt={valuationQuery.dataUpdatedAt} isFetching={statusQuery.isFetching || positionsQuery.isFetching || valuationQuery.isFetching} intervalMs={POLLING_INTERVALS.portfolio} />
       </header>
 
       {statusQuery.error ? <ErrorPanel title="포트폴리오 상태 조회 실패(Portfolio status failed)" error={statusQuery.error} /> : null}

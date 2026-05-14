@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Activity, CheckCircle2, MonitorCog, ShieldAlert, ShieldCheck, ShieldX, TrendingDown, TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import { Badge } from '../../shared/ui/Badge';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { LiveStatus } from '../../shared/ui/LiveStatus';
@@ -11,39 +12,37 @@ import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 import { detectOperatingSystem, operatingSystemGuide } from '../../shared/os/operatingSystem';
 
 const DASHBOARD_RANGE = '24h' as const;
-const LIVE_REFRESH_MS = 2_000;
-
 export function DashboardPage() {
   const { exchange } = useExchangeMode();
   const systemQuery = useQuery({
     queryKey: queryKeys.system(exchange),
     queryFn: () => api.systemStatus(exchange),
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.dashboard,
   });
   const providerQuery = useQuery({
     queryKey: queryKeys.marketProviderStatus(),
     queryFn: api.marketProviderStatus,
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.dashboard,
   });
   const { data: summary } = useQuery({
     queryKey: queryKeys.analyticsSummary(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsSummary(DASHBOARD_RANGE, exchange),
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.dashboard,
   });
   const { data: pnl } = useQuery({
     queryKey: queryKeys.analyticsPnl(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsPnl(DASHBOARD_RANGE, exchange),
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.dashboard,
   });
   const { data: losses } = useQuery({
     queryKey: queryKeys.analyticsLosses(DASHBOARD_RANGE, exchange),
     queryFn: () => api.analyticsLosses(DASHBOARD_RANGE, exchange),
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.dashboard,
   });
   const riskQuery = useQuery({
     queryKey: queryKeys.riskStatus(exchange),
     queryFn: () => api.riskStatus(exchange),
-    refetchInterval: 5_000,
+    refetchInterval: POLLING_INTERVALS.risk,
   });
   const { data, error, isLoading, isFetching, dataUpdatedAt } = systemQuery;
 
@@ -108,7 +107,7 @@ export function DashboardPage() {
         <Badge tone={readinessTone}>
           {readinessTitle}
         </Badge>
-        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching || providerQuery.isFetching} intervalMs={LIVE_REFRESH_MS} />
+        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching || providerQuery.isFetching} intervalMs={POLLING_INTERVALS.dashboard} />
       </header>
 
       <div className="control-room-grid" aria-label="운영 관제(Control room)">

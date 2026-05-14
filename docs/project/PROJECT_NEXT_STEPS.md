@@ -180,6 +180,26 @@
 - desktop/mobile Chromium에서 루트 가로 overflow가 없다.
 - `npm run test:e2e`가 통과한다.
 
+## 완료: Web API polling 부하 정리
+
+목표:
+
+- React Query polling이 API와 브라우저를 과하게 쓰지 않도록 화면별 주기를 정리한다.
+- 백그라운드 탭에서는 주기 polling을 멈추고, 포커스 복귀/네트워크 재연결 시 재조회한다.
+
+작업:
+
+- polling interval을 `frontend/src/shared/api/polling.ts`의 공통 상수로 모은다.
+- Top status bar 15초, Dashboard 10초, Portfolio/Auto Run 5초, History 10초, analytics 15초, Market/Risk/System 30초 기준으로 조정한다.
+- 기존 2초/3초 고빈도 조회를 제거한다.
+- 운영 문서와 reliability 문서에 웹 polling 기준을 반영한다.
+
+완료 기준:
+
+- 자동 PAPER 실행, exit scheduler, WebSocket 시세 수신 주기는 변경하지 않는다.
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- `npm run lint`, `npm test`, `npm run build`, `npm run test:e2e`가 통과한다.
+
 ## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CircleSlash, Filter, ListFilter } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { TradingCandidateResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
@@ -11,7 +12,6 @@ import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 
-const LIVE_REFRESH_MS = 5_000;
 const FULL_SCAN_LIMIT = 20;
 
 export function CandidatesPage() {
@@ -23,12 +23,12 @@ export function CandidatesPage() {
   const candidatesQuery = useQuery({
     queryKey: queryKeys.candidates(exchange, normalizedMarket || undefined, FULL_SCAN_LIMIT),
     queryFn: () => api.candidates(exchange, normalizedMarket || undefined, FULL_SCAN_LIMIT),
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.candidates,
   });
   const positionsQuery = useQuery({
     queryKey: queryKeys.positions(exchange),
     queryFn: () => api.positions(exchange),
-    refetchInterval: LIVE_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.candidates,
   });
 
   const candidates = useMemo(() => candidatesQuery.data ?? [], [candidatesQuery.data]);
@@ -52,11 +52,11 @@ export function CandidatesPage() {
           <h1>후보 모니터링(Candidate Monitoring)</h1>
           <p>자동 실행 스케줄러(Auto scheduler)가 판단하는 롱 후보를 확인합니다.</p>
         </div>
-        <LiveStatus updatedAt={candidatesQuery.dataUpdatedAt} isFetching={candidatesQuery.isFetching} intervalMs={LIVE_REFRESH_MS} />
+        <LiveStatus updatedAt={candidatesQuery.dataUpdatedAt} isFetching={candidatesQuery.isFetching} intervalMs={POLLING_INTERVALS.candidates} />
       </header>
 
       <div className="metric-grid">
-        <MetricCard label="조회 후보(Scanned)" value={formatNumber(candidateSummary.total)} detail={`상위 ${FULL_SCAN_LIMIT} / ${LIVE_REFRESH_MS / 1000}s`} />
+        <MetricCard label="조회 후보(Scanned)" value={formatNumber(candidateSummary.total)} detail={`상위 ${FULL_SCAN_LIMIT} / ${POLLING_INTERVALS.candidates / 1000}s`} />
         <MetricCard label="선택됨(Selected)" value={formatNumber(candidateSummary.selected)} detail={`${formatNumber(candidateSummary.selectedRate, 1)}%`} />
         <MetricCard label="제외됨(Skipped)" value={formatNumber(candidateSummary.skipped)} detail={`${formatNumber(candidateSummary.skippedRate, 1)}%`} />
         <MetricCard label="보유 포지션(Held)" value={formatNumber(candidateSummary.held)} detail="후보 market 기준" />

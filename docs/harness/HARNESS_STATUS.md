@@ -23,6 +23,7 @@
 - Playwright 기반 실제 브라우저 화면 회귀 테스트 추가
 - 모바일 sidebar/nav 가로 overflow 방지
 - Risk/System 문서 정합성 재점검 및 보정
+- Web API polling 주기 경량화 및 백그라운드 polling 중단
 
 ## 다음 작업
 

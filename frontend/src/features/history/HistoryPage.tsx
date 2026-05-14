@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Filter, RotateCcw } from 'lucide-react';
 import { api, queryKeys } from '../../shared/api/client';
+import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { AnalyticsRange, OrderStatus, SignalType, TradingFlowHistoryResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
@@ -19,9 +20,6 @@ const ranges: AnalyticsRange[] = ['1h', '24h', '3d', '7d'];
 const signals: SignalFilter[] = ['ALL', 'BUY', 'SELL', 'HOLD'];
 const orders: OrderFilter[] = ['ALL', 'FILLED', 'REJECTED', 'FAILED', 'NO_ORDER'];
 const reasons: ReasonFilter[] = ['ALL', 'TAKE_PROFIT', 'STOP_LOSS', 'HOLD'];
-const HISTORY_REFRESH_MS = 2_000;
-const ANALYTICS_REFRESH_MS = 3_000;
-
 export function HistoryPage() {
   const [market, setMarket] = useState('');
   const [limit, setLimit] = useState(100);
@@ -34,17 +32,17 @@ export function HistoryPage() {
   const historyQuery = useQuery({
     queryKey: queryKeys.history(exchange, normalizedMarket || undefined, limit),
     queryFn: () => api.history(exchange, normalizedMarket || undefined, limit),
-    refetchInterval: HISTORY_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.history,
   });
   const summaryQuery = useQuery({
     queryKey: queryKeys.analyticsSummary(range, exchange),
     queryFn: () => api.analyticsSummary(range, exchange),
-    refetchInterval: ANALYTICS_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.analytics,
   });
   const lossesQuery = useQuery({
     queryKey: queryKeys.analyticsLosses(range, exchange),
     queryFn: () => api.analyticsLosses(range, exchange),
-    refetchInterval: ANALYTICS_REFRESH_MS,
+    refetchInterval: POLLING_INTERVALS.analytics,
   });
 
   const rows = filterRows(historyQuery.data ?? [], signalFilter, orderFilter, reasonFilter);
@@ -59,7 +57,7 @@ export function HistoryPage() {
           <h1>실행 이력(History)</h1>
           <p>자동 실행 결과를 HOLD, REJECTED, FILLED, FAILED 상태로 확인합니다.</p>
         </div>
-        <LiveStatus updatedAt={historyQuery.dataUpdatedAt} isFetching={historyQuery.isFetching || summaryQuery.isFetching || lossesQuery.isFetching} intervalMs={HISTORY_REFRESH_MS} />
+        <LiveStatus updatedAt={historyQuery.dataUpdatedAt} isFetching={historyQuery.isFetching || summaryQuery.isFetching || lossesQuery.isFetching} intervalMs={POLLING_INTERVALS.history} />
       </header>
 
       <div className="segmented-row" aria-label="분석 범위(Analytics range)">

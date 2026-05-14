@@ -96,3 +96,11 @@
 - System 화면은 `/api/system/status`와 `/api/market-provider/status` 조회 결과만 표시하고 상태를 변경하지 않는다.
 - OS 감지 실패 또는 알 수 없는 OS는 실행 안내 표시만 보수적으로 바꾸며 거래 기능에는 영향을 주지 않는다.
 - provider status 조회가 실패해도 시스템 조회 자체가 민감 정보나 실제 주문 설정을 노출하면 안 된다.
+
+## Web API polling
+
+- 웹은 활성 탭에서만 주기 polling을 수행하고, 백그라운드 탭에서는 polling을 중단한다.
+- 빠른 상태 확인이 필요한 Top status bar, Dashboard, Portfolio, Auto Run만 5~15초 범위로 갱신한다.
+- Risk/System 같은 읽기 전용 설정 화면과 Market chart는 30초 주기로 낮춘다.
+- history와 analytics는 분리해서 history는 10초, analytics는 15초 주기로 조회한다.
+- polling 주기를 줄여도 자동 PAPER 실행, exit scheduler, WebSocket 시세 수신 주기는 변경하지 않는다.
