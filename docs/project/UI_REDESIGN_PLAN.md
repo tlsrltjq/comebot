@@ -484,11 +484,11 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 
 ## 다음 실행 후보
 
-1. Stage 3: Portfolio 선택 PAPER SELL 경계 강화
-2. Stage 4: Candidates and History Tables
-3. Stage 5: Risk and System Pages
+1. Stage 4: Candidates and History Tables
+2. Stage 5: Risk and System Pages
+3. Stage 6: Visual Regression and Cleanup
 
-현재 우선순위는 Stage 3이다.
+현재 우선순위는 Stage 4다.
 
 ## 진행 상황
 
@@ -499,3 +499,6 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 - 완료: Stage 2 Dashboard Control Room 상단 3분할 재배치
 - 완료: Dashboard 리스크 요약 상단 배치
 - 완료: Dashboard 중복 운영 status strip 제거
+- 완료: Stage 3 Portfolio 선택 PAPER SELL 확인 모달 개선
+- 완료: Portfolio 선택 평가액/현재 손익/처리 범위 표시
+- 완료: Portfolio 테이블과 모바일 카드에 exposure와 TP/SL distance 표시

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ExchangeModeContext } from '../../shared/exchange/ExchangeModeContext';
@@ -361,7 +361,6 @@ describe('PortfolioPage', () => {
 
   it('sells only selected paper positions after confirmation', async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url === '/api/portfolio/status?exchange=upbit') {
@@ -451,12 +450,17 @@ describe('PortfolioPage', () => {
 
     await user.click((await screen.findAllByLabelText('KRW-BTC 선택'))[0]);
     await user.click(screen.getByRole('button', { name: /선택 매도/ }));
+    const dialog = screen.getByRole('dialog', { name: '선택 PAPER SELL 확인' });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText('실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.')).toBeInTheDocument();
+    expect(within(dialog).getByText('KRW-BTC')).toBeInTheDocument();
+    expect(within(dialog).getByText('선택한 보유 PAPER 포지션 전량')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'PAPER SELL 실행' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
       '/api/portfolio/positions/sell-selected?exchange=upbit',
       expect.objectContaining({ method: 'POST' }),
     ));
-    expect(confirmSpy).toHaveBeenCalled();
     expect(await screen.findByText('선택 매도 결과(Selected Sell Result)')).toBeInTheDocument();
     expect(screen.getByText('FILLED · Selected PAPER position sold')).toBeInTheDocument();
   });

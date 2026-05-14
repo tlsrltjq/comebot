@@ -5,6 +5,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import type { PositionValuationResponse, SelectedPaperSellResponse } from '../../shared/api/types';
 import { Badge } from '../../shared/ui/Badge';
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
 import { LiveStatus } from '../../shared/ui/LiveStatus';
@@ -32,6 +33,7 @@ const PORTFOLIO_REFRESH_MS = 2_000;
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
   const [selectedMarkets, setSelectedMarkets] = useState<Set<string>>(() => new Set());
+  const [confirmSellOpen, setConfirmSellOpen] = useState(false);
   const [sellSummary, setSellSummary] = useState<SelectedPaperSellResponse | null>(null);
   const { exchange } = useExchangeMode();
   const queryClient = useQueryClient();
@@ -73,7 +75,10 @@ export function PortfolioPage() {
     null,
   );
   const selectedVisibleMarkets = positions.map((position) => position.market).filter((market) => selectedMarkets.has(market));
+  const selectedPositions = positions.filter((position) => selectedMarkets.has(position.market));
   const selectedCount = selectedVisibleMarkets.length;
+  const selectedPositionValue = selectedPositions.reduce((sum, position) => sum + Number(position.positionValue), 0);
+  const selectedUnrealizedProfit = selectedPositions.reduce((sum, position) => sum + Number(position.unrealizedProfit), 0);
   const displayedSellSummary = sellSummary?.exchange === exchange ? sellSummary : null;
   const sellSelectedMutation = useMutation({
     mutationFn: (markets: string[]) => api.sellSelectedPositions(exchange, { markets }),
@@ -104,9 +109,7 @@ export function PortfolioPage() {
     if (markets.length === 0) {
       return;
     }
-    if (!window.confirm('선택한 PAPER 포지션을 전량 매도할까요?')) {
-      return;
-    }
+    setConfirmSellOpen(false);
     sellSelectedMutation.mutate(markets);
   };
 
@@ -249,9 +252,13 @@ export function PortfolioPage() {
       </div>
 
       {selectedCount > 0 ? (
-        <div className="toolbar portfolio-toolbar" aria-label="선택 PAPER 매도(Selected PAPER sell)">
-          <span>선택됨(Selected) {selectedCount}</span>
-          <button className="button button-primary" type="button" onClick={sellSelected} disabled={sellSelectedMutation.isPending}>
+        <div className="selected-sell-bar" aria-label="선택 PAPER 매도(Selected PAPER sell)">
+          <div>
+            <span>선택 PAPER SELL</span>
+            <strong>{selectedCount} positions · {money(selectedPositionValue)}</strong>
+            <small className={profitClass(selectedUnrealizedProfit)}>현재 손익(Current PnL) {money(selectedUnrealizedProfit)}</small>
+          </div>
+          <button className="button button-danger" type="button" onClick={() => setConfirmSellOpen(true)} disabled={sellSelectedMutation.isPending}>
             <ShieldCheck size={16} />
             선택 매도(Sell selected)
           </button>
@@ -318,6 +325,14 @@ export function PortfolioPage() {
                 <dt>평균매수가(Avg Buy)</dt>
                 <dd>{money(position.averageBuyPrice)}</dd>
               </div>
+              <div>
+                <dt>비중(Exposure)</dt>
+                <dd>{formatNumber(exposureRate(position, totalEquity), 2)}%</dd>
+              </div>
+              <div>
+                <dt>청산 거리(Exit Gap)</dt>
+                <dd>{exitDistance(Number(position.unrealizedProfitRate))}</dd>
+              </div>
             </dl>
           </article>
         ))}
@@ -338,7 +353,8 @@ export function PortfolioPage() {
               <th>가치(Value)</th>
               <th>미실현손익(Unrealized)</th>
               <th>수익률(Rate)</th>
-              <th>상태(Status)</th>
+              <th>비중(Exposure)</th>
+              <th>리스크(Risk)</th>
             </tr>
           </thead>
           <tbody>
@@ -365,8 +381,10 @@ export function PortfolioPage() {
                     {formatNumber(position.unrealizedProfitRate, 2)}%
                   </span>
                 </td>
+                <td>{formatNumber(exposureRate(position, totalEquity), 2)}%</td>
                 <td>
                   <ExitBadge rate={Number(position.unrealizedProfitRate)} />
+                  <small className="risk-distance">{exitDistance(Number(position.unrealizedProfitRate))}</small>
                 </td>
               </tr>
             ))}
@@ -383,6 +401,30 @@ export function PortfolioPage() {
           <p>현재가 평가 API가 실패했지만 보유 포지션은 존재합니다.</p>
         </article>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmSellOpen}
+        title="선택 PAPER SELL 확인"
+        confirmLabel="PAPER SELL 실행"
+        busy={sellSelectedMutation.isPending}
+        onCancel={() => setConfirmSellOpen(false)}
+        onConfirm={sellSelected}
+        description={(
+          <div className="confirm-copy">
+            <p>실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.</p>
+            <dl className="definition-list">
+              <dt>선택 포지션</dt>
+              <dd>{selectedVisibleMarkets.join(', ')}</dd>
+              <dt>예상 평가액</dt>
+              <dd>{money(selectedPositionValue)}</dd>
+              <dt>현재 손익</dt>
+              <dd className={profitClass(selectedUnrealizedProfit)}>{money(selectedUnrealizedProfit)}</dd>
+              <dt>처리 범위</dt>
+              <dd>선택한 보유 PAPER 포지션 전량</dd>
+            </dl>
+          </div>
+        )}
+      />
     </section>
   );
 }
@@ -540,6 +582,22 @@ function exposureShortLabel(exposureRate: number, warningRate: number, blockRate
 
 function profitClass(value: string | number) {
   return Number(value) >= 0 ? 'tone-positive' : 'tone-negative';
+}
+
+function exposureRate(position: PositionValuationResponse, totalEquity: number) {
+  return totalEquity > 0 ? (Number(position.positionValue) / totalEquity) * 100 : 0;
+}
+
+function exitDistance(rate: number) {
+  const takeProfitGap = TAKE_PROFIT_RATE - rate;
+  const stopLossGap = rate - STOP_LOSS_RATE;
+  if (takeProfitGap <= 0) {
+    return '익절 조건 충족(TP reached)';
+  }
+  if (stopLossGap <= 0) {
+    return '손절 조건 충족(SL reached)';
+  }
+  return `TP ${formatNumber(takeProfitGap, 2)}% / SL ${formatNumber(stopLossGap, 2)}%`;
 }
 
 function AllocationBar({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {

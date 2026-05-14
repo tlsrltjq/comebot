@@ -61,7 +61,7 @@
 - 운영 가능 상태와 데이터 충분 상태가 섞이지 않는다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
-## 다음 우선순위: UI 전면 개편 Stage 3
+## 완료: UI 전면 개편 Stage 3
 
 목표:
 
@@ -79,6 +79,26 @@
 
 - 선택한 보유 PAPER 포지션만 SELL 가능하다.
 - PAPER SELL 확인 문구가 실제 주문이 아님을 명확히 표시한다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
+## 다음 우선순위: UI 전면 개편 Stage 4
+
+목표:
+
+- Candidates와 History를 분석 가능한 테이블 중심 화면으로 정리한다.
+- 후보 판단 사유와 주문 상태 흐름을 더 빠르게 감사할 수 있게 한다.
+
+작업:
+
+- Candidates 필터와 정렬 구조를 decision, reason, risk flag 중심으로 정리한다.
+- 제외 사유 TOP 요약과 cooldown/concentration 표시를 더 눈에 띄게 배치한다.
+- History range/filter UI와 order lifecycle 상태 표시를 통일한다.
+- failed/rejected 주문이 성공처럼 보이지 않도록 badge와 문구를 재점검한다.
+
+완료 기준:
+
+- Candidates 화면에 실행 버튼이 없다.
+- History에서 FILLED/REJECTED/FAILED 구분이 명확하다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
