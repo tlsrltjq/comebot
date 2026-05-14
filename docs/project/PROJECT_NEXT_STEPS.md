@@ -160,6 +160,26 @@
 - 초기 `index` JS chunk가 약 795kB에서 약 332kB로 줄어든다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
+## 완료: Playwright 실제 브라우저 화면 회귀 테스트
+
+목표:
+
+- 새 운영 UI가 실제 Chromium 렌더링에서 깨지지 않는지 확인한다.
+- desktop/mobile에서 주요 route와 선택 PAPER SELL 경계를 회귀 테스트한다.
+
+작업:
+
+- Playwright 설정과 `npm run test:e2e` 스크립트를 추가한다.
+- Dashboard, Market, Candidates, Portfolio, History, Risk, System route의 heading, status bar, `PAPER_TRADING`, 금지된 실행성 BUY/REAL_TRADING 버튼 부재를 검증한다.
+- Portfolio 선택 PAPER SELL 확인 모달이 선택한 보유 PAPER 포지션에만 한정되는지 검증한다.
+- 모바일 sidebar/nav 가로 overflow를 방지한다.
+
+완료 기준:
+
+- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- desktop/mobile Chromium에서 루트 가로 overflow가 없다.
+- `npm run test:e2e`가 통과한다.
+
 ## 다음 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
 목표:

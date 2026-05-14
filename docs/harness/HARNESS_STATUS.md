@@ -20,10 +20,12 @@
 - 반복 손절 cooldown 구현
 - OS별 운영 화면/가이드 대응 구현
 - 문서/하네스 경량화 계획 수립
+- Playwright 기반 실제 브라우저 화면 회귀 테스트 추가
+- 모바일 sidebar/nav 가로 overflow 방지
 
 ## 다음 작업
 
-1. Dashboard/Candidates 리스크 경고 요약
+1. PAPER 포지션 청산 흐름 스모크 테스트
 
 상세 목표와 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 
@@ -31,6 +33,7 @@
 
 - Backend 변경: `./gradlew test`
 - Frontend 변경: `npm run lint`, `npm run build`, `npm test`
+- Frontend 화면/반응형/위험 액션 변경: `npm run test:e2e`
 - 문서만 변경: `git diff --check`, 필요 시 `./gradlew test`
 - 보안 린트 또는 테스트 실패 시 커밋하지 않는다.
 

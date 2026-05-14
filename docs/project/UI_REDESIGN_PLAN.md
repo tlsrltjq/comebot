@@ -478,6 +478,7 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 - `npm run lint`
 - `npm test`
 - `npm run build`
+- 화면 구조, 반응형 레이아웃, 위험 액션 UX 변경 시 `npm run test:e2e`
 - Java 코드 변경이 있으면 `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew clean build`
 - 보안/민감 정보 린트 기준 위반 없음
 - 수동 BUY와 실제 주문 API 추가 없음
@@ -514,3 +515,6 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 - 완료: Frontend route lazy loading 적용
 - 완료: 초기 `index` JS chunk 약 795kB에서 약 332kB로 축소
 - 완료: Recharts chart chunk 분리로 build chunk 경고 제거
+- 완료: Playwright 실제 브라우저 화면 회귀 테스트 추가
+- 완료: desktop/mobile Chromium route 렌더링, 루트 overflow, 선택 PAPER SELL 경계 검증
+- 완료: 모바일 sidebar/nav min-width 보강으로 가로 overflow 제거

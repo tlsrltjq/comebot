@@ -43,11 +43,13 @@ button:disabled {
 
 .shell {
   min-height: 100vh;
+  min-width: 0;
   display: grid;
   grid-template-columns: 248px 1fr;
 }
 
 .sidebar {
+  min-width: 0;
   background: #172026;
   color: #f8fafc;
   padding: 24px 18px;
@@ -1578,6 +1580,8 @@ td:nth-child(7) {
 
   .nav {
     grid-auto-flow: column;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: auto;
   }
 
