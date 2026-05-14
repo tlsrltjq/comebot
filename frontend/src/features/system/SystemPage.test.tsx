@@ -43,6 +43,9 @@ describe('SystemPage', () => {
           snapshotCount: 120,
           upbitSnapshotCount: 120,
           binanceSnapshotCount: 0,
+          freshSnapshotCount: 118,
+          staleSnapshotCount: 2,
+          orderStaleMs: 3000,
         });
       }
       return json({});
@@ -59,6 +62,7 @@ describe('SystemPage', () => {
     expect(screen.getByText('OS별 차이는 실행 스크립트, 경로, shell 안내만 바꾸며 거래 기능과 안전 제약은 동일합니다.')).toBeInTheDocument();
     expect(screen.getByText('스케줄러(Schedulers)')).toBeInTheDocument();
     expect(screen.getByText('시세 Provider')).toBeInTheDocument();
+    expect(screen.getByText('118/2 (3000ms)')).toBeInTheDocument();
     expect(screen.getByText('알림과 Telegram')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /매수|BUY|실거래|REAL/ })).not.toBeInTheDocument();
   });

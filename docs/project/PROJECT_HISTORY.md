@@ -18,6 +18,10 @@
 11. PAPER 체결 append-only 원장 추가
 12. Telegram 수동 PAPER 실행 코드 레벨 차단
 13. scheduler 중복 실행 방어 테스트 보강
+14. PAPER 실행 runtime guard 추가
+15. 실제 주문 API security lint 강화
+16. WebSocket snapshot freshness 운영 상태 보강
+17. Incident Log와 API rate limit 운영 기준 문서화
 
 ## 최근 검증
 

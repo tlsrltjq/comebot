@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 public class PaperTradingExecutionGateway implements ExecutionGateway {
 
     @Override
+    public boolean supportsOnlyPaperTrading() {
+        return true;
+    }
+
+    @Override
     public OrderResult execute(OrderRequest request) {
         if (request == null) {
             return failed("Order request must not be null");

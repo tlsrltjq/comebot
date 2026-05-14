@@ -23,6 +23,7 @@
 - 로그에 token, chatId, password, secret, accessKey를 직접 출력하지 않는지
 - Upbit/Binance 인증키 설정이 추가되지 않았는지
 - `REAL_TRADING` 구현체가 추가되지 않았는지
+- 실제 주문 API 또는 real execution 성격의 production 코드가 추가되지 않았는지
 
 스캔 범위에는 backend main source/resources, frontend source, scripts, docs, README, AGENTS, `.env.example`, `docker-compose.yml`이 포함된다.
 

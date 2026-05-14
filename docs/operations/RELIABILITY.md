@@ -23,6 +23,7 @@
 - WebSocket과 REST가 모두 실패하면 주문 실행을 차단하고 실패를 추적 가능하게 남긴다.
 - `SNAPSHOT` provider는 fresh snapshot을 먼저 사용하고, 없거나 stale이면 거래소별 REST provider로 fallback한다.
 - REST fallback도 실패하면 stale snapshot만으로 주문 가격을 만들지 않는다.
+- REST fallback 실패는 주문 성공으로 처리하지 않고 실패 상태 또는 조회 실패로 드러낸다.
 - WebSocket은 기본 disabled이며, `market.websocket.enabled=true`와 거래소별 `market.websocket.<exchange>.enabled=true`가 모두 켜진 경우에만 연결한다.
 - Upbit 전체 KRW REST polling scheduler는 `ALL_KRW` 후보 universe bootstrap/refresh 용도이며 가격 수집 경로가 아니다.
   기본값은 부팅 시 1회와 10분 간격 refresh다.
@@ -90,6 +91,17 @@
 - exit scheduler는 `PositionExitExecutionService`만 호출하고 보유 position market만 평가한다.
 - candidate scheduler, legacy trading scheduler, exit scheduler는 모두 `fixedDelay`와 내부 중복 실행 guard를 유지한다.
 - exit scheduler HOLD는 기본적으로 history에 저장하지 않는다. BUY/SELL/REJECTED/FAILED는 추적 가능하게 저장한다.
+
+## Public API Rate Limit
+
+- 거래소 공개 API 제한을 넘기지 않도록 scheduler 주기와 universe 크기를 함께 본다.
+- WebSocket fresh snapshot이 있는 market은 REST fallback을 호출하지 않는 것이 정상이다.
+- stale snapshot, missing snapshot, WebSocket disabled 상태에서는 REST fallback 호출이 늘어난다.
+- candidate scheduler는 후보 universe 크기와 candle/price 조회 방식에 따라 호출량이 커질 수 있다.
+- exit scheduler는 보유 PAPER position market만 평가하므로 보유 position 수가 호출량 상한이다.
+- `ALL_KRW`와 `ALL_USDT`를 동시에 켜고 candidate 주기를 30초로 낮출 때는 429, failed summary, provider status를 먼저 확인한다.
+- 429 또는 REST fallback 실패가 발생하면 scheduler 결과는 failed/rejected로 남아야 하며, stale 가격으로 FILLED 주문을 만들면 안 된다.
+- 반복 장애는 `docs/operations/INCIDENT_LOG.md`에 기록한다.
 
 ## System 화면 장애
 

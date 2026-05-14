@@ -147,6 +147,33 @@ class SnapshotMarketPriceProviderTest {
                 .hasMessageContaining("REST fallback failed");
     }
 
+    @Test
+    void currentPricesThrowWhenStaleSnapshotsAndBatchFallbackAreUnavailable() {
+        TickerSnapshotStore store = new TickerSnapshotStore();
+        MarketWebSocketProperties properties = new MarketWebSocketProperties();
+        properties.setOrderStaleMs(1);
+        store.save(new TickerSnapshot(
+                ExchangeMode.UPBIT,
+                "KRW-BTC",
+                new BigDecimal("100"),
+                null,
+                Instant.now().minusSeconds(1),
+                PriceSource.WEBSOCKET
+        ));
+        SnapshotMarketPriceProvider provider = new SnapshotMarketPriceProvider(
+                store,
+                properties,
+                batchProvider(markets -> {
+                    throw new IllegalStateException("upbit unavailable");
+                }),
+                batchProvider(markets -> markets.stream().map(market -> price(market, "300")).toList())
+        );
+
+        assertThatThrownBy(() -> provider.getCurrentPrices(List.of("KRW-BTC")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("REST fallback failed");
+    }
+
     private MarketPrice price(String market, String price) {
         return new MarketPrice(market.toUpperCase(), new BigDecimal(price), Instant.now());
     }

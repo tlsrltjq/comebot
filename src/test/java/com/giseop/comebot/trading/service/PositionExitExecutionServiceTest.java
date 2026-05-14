@@ -115,6 +115,20 @@ class PositionExitExecutionServiceTest {
         assertThat(historyRepository.findRecent(ExchangeMode.UPBIT, 10).getFirst().orderStatus()).isEqualTo(OrderStatus.REJECTED);
     }
 
+    @Test
+    void executeSavesFailedHistoryWhenPriceProviderFails() {
+        when(paperPortfolioService.findPositions(ExchangeMode.UPBIT))
+                .thenReturn(List.of(new PaperPosition("KRW-BTC", new BigDecimal("0.1"), new BigDecimal("100"))));
+        when(marketPriceProvider.getCurrentPrices(List.of("KRW-BTC")))
+                .thenThrow(new IllegalStateException("price unavailable"));
+
+        PositionExitRunSummary summary = service().execute(ExchangeMode.UPBIT);
+
+        assertThat(summary.failedCount()).isEqualTo(1);
+        assertThat(historyRepository.findRecent(ExchangeMode.UPBIT, 10).getFirst().orderStatus()).isEqualTo(OrderStatus.FAILED);
+        verify(orderExecutionService, never()).execute(eq(ExchangeMode.UPBIT), any(OrderRequest.class));
+    }
+
     private PositionExitExecutionService service() {
         return new PositionExitExecutionService(
                 paperPortfolioService,

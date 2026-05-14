@@ -142,6 +142,9 @@ function marketProviderStatus() {
     snapshotCount: 120,
     upbitSnapshotCount: 120,
     binanceSnapshotCount: 0,
+    freshSnapshotCount: 118,
+    staleSnapshotCount: 2,
+    orderStaleMs: 3000,
   };
 }
 

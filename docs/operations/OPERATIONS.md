@@ -70,6 +70,7 @@ GET /api/scheduler/status
 
 `/api/scheduler/status`는 기존 trading flow scheduler와 candidate scheduler 상태를 함께 보여준다.
 candidate scheduler의 `candidateExchanges` 값으로 현재 후보 실행 거래소 목록을 확인한다.
+운영 중 장애와 이상 사례는 `docs/operations/INCIDENT_LOG.md`에 기록한다.
 
 자동 PAPER 매매 런타임 제어:
 
@@ -104,6 +105,15 @@ Content-Type: application/json
 - Market chart: 30초
 - Risk/System 읽기 전용 화면: 30초
 - Auto Run 화면: 5초
+
+공개 API 호출량 점검 기준:
+
+- WebSocket/SNAPSHOT 운영에서는 fresh snapshot이 있으면 주문용 현재가 REST 호출이 발생하지 않는다.
+- stale snapshot 또는 missing snapshot일 때만 거래소별 REST fallback을 호출한다.
+- candidate scheduler에서 `ALL_KRW` 또는 `ALL_USDT`를 사용하면 universe refresh 결과를 기준으로 market별 candle/price 조회가 발생할 수 있다.
+- exit scheduler는 보유 PAPER position market만 평가하므로 포지션 수가 REST fallback 호출량의 상한이다.
+- candidate 주기를 줄이거나 `ALL_KRW,ALL_USDT`를 동시에 켤 때는 `/api/market-provider/status`, scheduler summary, 429 로그를 함께 확인한다.
+- 429 또는 fallback 실패가 발생하면 주문 성공으로 처리하지 말고 history의 `FAILED`/`REJECTED`와 Incident Log를 확인한다.
 
 운영형 PAPER 확인 시에는 실제 공개 시세와 스케줄러를 켜고, 주문/자산만 PAPER로 유지한다.
 실제 주문 API와 REAL_TRADING은 계속 금지한다.

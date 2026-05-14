@@ -104,6 +104,12 @@ export function SystemPage() {
             <dd>{providerQuery.data?.webSocketEnabled ? '켜짐(Enabled)' : '꺼짐(Disabled)'}</dd>
             <dt>Snapshot</dt>
             <dd>{snapshotCount ?? '-'}</dd>
+            <dt>Fresh/Stale</dt>
+            <dd>
+              {providerQuery.data
+                ? `${providerQuery.data.freshSnapshotCount}/${providerQuery.data.staleSnapshotCount} (${providerQuery.data.orderStaleMs}ms)`
+                : '-'}
+            </dd>
             <dt>Message</dt>
             <dd>{providerQuery.data?.message ?? '-'}</dd>
           </dl>

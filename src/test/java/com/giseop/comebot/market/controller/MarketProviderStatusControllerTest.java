@@ -76,13 +76,25 @@ class MarketProviderStatusControllerTest {
                 .thenReturn(true);
         org.mockito.Mockito.when(tickerSnapshotStore.count())
                 .thenReturn(3);
+        org.mockito.Mockito.when(marketWebSocketProperties.orderStaleDuration())
+                .thenReturn(java.time.Duration.ofMillis(3000));
+        org.mockito.Mockito.when(marketWebSocketProperties.getOrderStaleMs())
+                .thenReturn(3000L);
+        org.mockito.Mockito.when(tickerSnapshotStore.countFresh(
+                        org.mockito.Mockito.eq(java.time.Duration.ofMillis(3000)),
+                        org.mockito.Mockito.any(java.time.Instant.class)
+                ))
+                .thenReturn(2);
 
         mockMvc.perform(get("/api/market-provider/status"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.provider").value("SNAPSHOT"))
                 .andExpect(jsonPath("$.externalProvider").value(true))
                 .andExpect(jsonPath("$.webSocketEnabled").value(true))
-                .andExpect(jsonPath("$.snapshotCount").value(3));
+                .andExpect(jsonPath("$.snapshotCount").value(3))
+                .andExpect(jsonPath("$.freshSnapshotCount").value(2))
+                .andExpect(jsonPath("$.staleSnapshotCount").value(1))
+                .andExpect(jsonPath("$.orderStaleMs").value(3000));
     }
 
 

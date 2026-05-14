@@ -70,6 +70,22 @@ public class TickerSnapshotStore {
                 .count();
     }
 
+    public int countFresh(Duration staleAfter, Instant now) {
+        return (int) snapshots.values().stream()
+                .filter(snapshot -> isFresh(snapshot, staleAfter, now))
+                .count();
+    }
+
+    public int countFresh(ExchangeMode exchange, Duration staleAfter, Instant now) {
+        if (exchange == null) {
+            return 0;
+        }
+        return (int) snapshots.values().stream()
+                .filter(snapshot -> snapshot.exchange() == exchange)
+                .filter(snapshot -> isFresh(snapshot, staleAfter, now))
+                .count();
+    }
+
     private String normalize(String market) {
         return market.trim().toUpperCase(Locale.ROOT);
     }

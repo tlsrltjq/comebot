@@ -105,6 +105,9 @@ function mockStatusFetch() {
         snapshotCount: 20,
         upbitSnapshotCount: 20,
         binanceSnapshotCount: 10,
+        freshSnapshotCount: 20,
+        staleSnapshotCount: 0,
+        orderStaleMs: 3000,
       });
     }
     return json({});

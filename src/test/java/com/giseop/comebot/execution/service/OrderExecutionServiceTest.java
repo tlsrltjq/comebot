@@ -1,6 +1,7 @@
 package com.giseop.comebot.execution.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -158,6 +159,20 @@ class OrderExecutionServiceTest {
         assertThat(executionGateway.callCount).isZero();
     }
 
+    @Test
+    void constructorRejectsNonPaperExecutionGateway() {
+        TradingProperties tradingProperties = new TradingProperties();
+        tradingProperties.setAllowedMarkets(List.of("KRW-BTC"));
+
+        assertThatThrownBy(() -> new OrderExecutionService(
+                new NonPaperExecutionGateway(),
+                new RiskValidationService(tradingProperties),
+                dailyRiskValidationService(paperPortfolioService()),
+                paperPortfolioService()
+        )).isInstanceOf(UnsupportedOperationException.class)
+                .hasMessageContaining("Only PAPER_TRADING execution gateways are supported");
+    }
+
     private OrderRequest orderRequest(String market, String quantity, String price) {
         return new OrderRequest(
                 market,
@@ -190,6 +205,11 @@ class OrderExecutionServiceTest {
         private int callCount;
 
         @Override
+        public boolean supportsOnlyPaperTrading() {
+            return true;
+        }
+
+        @Override
         public OrderResult execute(OrderRequest request) {
             callCount++;
             return new OrderResult(
@@ -201,6 +221,19 @@ class OrderExecutionServiceTest {
                     "Paper trading order filled",
                     Instant.now()
             );
+        }
+    }
+
+    private static class NonPaperExecutionGateway implements ExecutionGateway {
+
+        @Override
+        public boolean supportsOnlyPaperTrading() {
+            return false;
+        }
+
+        @Override
+        public OrderResult execute(OrderRequest request) {
+            throw new AssertionError("must not execute");
         }
     }
 }

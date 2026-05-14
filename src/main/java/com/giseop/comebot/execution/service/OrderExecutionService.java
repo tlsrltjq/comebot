@@ -26,6 +26,9 @@ public class OrderExecutionService {
             DailyRiskValidationService dailyRiskValidationService,
             PaperPortfolioService paperPortfolioService
     ) {
+        if (executionGateway == null || !executionGateway.supportsOnlyPaperTrading()) {
+            throw new UnsupportedOperationException("Only PAPER_TRADING execution gateways are supported");
+        }
         this.executionGateway = executionGateway;
         this.riskValidationService = riskValidationService;
         this.dailyRiskValidationService = dailyRiskValidationService;

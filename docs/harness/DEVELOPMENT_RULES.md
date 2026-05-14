@@ -5,6 +5,8 @@
 - Java 21을 기준으로 개발한다.
 - 기본 거래 모드는 `PAPER_TRADING`이다.
 - 실제 주문 API와 `REAL_TRADING`은 구현하지 않는다.
+- execution gateway는 PAPER 전용임을 코드에서 명시해야 한다.
+- PAPER 전용이 아닌 execution gateway는 런타임에서 차단되어야 한다.
 - 사용자가 웹 포트폴리오에서 명시 선택한 보유 PAPER 포지션 SELL만 거래 실행 UX 예외로 허용한다.
 - 수동 BUY는 계속 금지한다.
 - 민감 정보는 코드, 로그, 응답에 노출하지 않는다.

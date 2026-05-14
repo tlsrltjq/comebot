@@ -144,6 +144,34 @@ class SecurityLintTest {
     }
 
     @Test
+    void productionOrderApiImplementationMustNotBeAdded() throws IOException {
+        List<String> violations = new ArrayList<>();
+        List<String> forbiddenFragments = List.of(
+                "realorder",
+                "realexecution",
+                "exchangeorderapi",
+                "upbitorderapi",
+                "binanceorderapi",
+                "upbitexecutiongateway",
+                "binanceexecutiongateway"
+        );
+
+        for (Path file : javaMainFiles()) {
+            String normalizedPath = ROOT.relativize(file).toString().replace('\\', '/');
+            String fileName = file.getFileName().toString().toLowerCase(Locale.ROOT);
+            String content = Files.readString(file, StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
+
+            for (String forbidden : forbiddenFragments) {
+                if (fileName.contains(forbidden) || content.contains(forbidden)) {
+                    violations.add(normalizedPath + ": " + forbidden);
+                }
+            }
+        }
+
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
     void scheduledTasksMustNotUseFixedRate() throws IOException {
         List<String> violations = new ArrayList<>();
 

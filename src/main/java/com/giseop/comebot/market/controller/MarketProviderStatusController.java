@@ -6,6 +6,7 @@ import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.market.service.TickerSnapshotStore;
 import com.giseop.comebot.market.websocket.MarketWebSocketProperties;
+import java.time.Instant;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,14 +33,23 @@ public class MarketProviderStatusController {
         boolean externalProvider = provider == MarketPriceProviderType.UPBIT
                 || provider == MarketPriceProviderType.BINANCE
                 || provider == MarketPriceProviderType.SNAPSHOT;
+        Instant now = Instant.now();
+        int snapshotCount = tickerSnapshotStore.count();
+        int freshSnapshotCount = tickerSnapshotStore.countFresh(
+                marketWebSocketProperties.orderStaleDuration(),
+                now
+        );
         return new MarketProviderStatusResponse(
                 provider,
                 externalProvider,
                 message(provider),
                 marketWebSocketProperties.isEnabled(),
-                tickerSnapshotStore.count(),
+                snapshotCount,
                 tickerSnapshotStore.count(ExchangeMode.UPBIT),
-                tickerSnapshotStore.count(ExchangeMode.BINANCE)
+                tickerSnapshotStore.count(ExchangeMode.BINANCE),
+                freshSnapshotCount,
+                Math.max(0, snapshotCount - freshSnapshotCount),
+                marketWebSocketProperties.getOrderStaleMs()
         );
     }
 

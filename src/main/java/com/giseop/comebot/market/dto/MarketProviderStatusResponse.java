@@ -9,7 +9,10 @@ public record MarketProviderStatusResponse(
         boolean webSocketEnabled,
         int snapshotCount,
         int upbitSnapshotCount,
-        int binanceSnapshotCount
+        int binanceSnapshotCount,
+        int freshSnapshotCount,
+        int staleSnapshotCount,
+        long orderStaleMs
 ) {
 
     public MarketProviderStatusResponse(
@@ -17,6 +20,6 @@ public record MarketProviderStatusResponse(
             boolean externalProvider,
             String message
     ) {
-        this(provider, externalProvider, message, false, 0, 0, 0);
+        this(provider, externalProvider, message, false, 0, 0, 0, 0, 0, 0);
     }
 }

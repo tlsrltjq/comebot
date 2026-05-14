@@ -241,25 +241,47 @@
 - Telegram으로 수동 BUY 경로가 열리지 않는다.
 - `./gradlew test`, `./gradlew check`가 통과한다.
 
-## 다음 우선순위: WebSocket 재연결/fallback 운영 검증
+## 완료: 데이터 비의존 안전/운영 보강
 
 목표:
 
-- WebSocket 단절, stale snapshot, REST fallback, 재연결 사이클이 운영 중 안전하게 동작하는지 확인한다.
+- 데이터 축적 없이 가능한 안전장치와 운영 문서를 먼저 보강한다.
 - 현재가가 불명확한 주문이 성공으로 처리되지 않는다는 제약을 테스트와 문서로 재확인한다.
 
 작업:
 
-- Upbit/Binance WebSocket client의 close/error/reconnect 동작 테스트 범위를 점검한다.
+- PAPER 전용이 아닌 execution gateway를 런타임에서 차단한다.
+- 실제 주문 API 성격의 production 코드가 추가되면 security lint가 실패하게 한다.
 - `SnapshotMarketPriceProvider`가 stale snapshot에서 REST fallback으로 전환하고, fallback 실패 시 실패로 드러나는지 확인한다.
-- `/api/market-provider/status`가 snapshot freshness와 fallback 상태를 운영자가 판단하기 충분한지 점검한다.
-- 부족하면 read-only status 필드와 테스트를 보강한다.
+- exit scheduler의 시세 provider 실패가 FAILED history로 남는지 확인한다.
+- `/api/market-provider/status`에 fresh/stale snapshot 수와 stale threshold를 추가한다.
+- Incident Log와 공개 API rate limit 운영 기준을 문서화한다.
 
 완료 기준:
 
 - 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
 - WebSocket 장애 시 성공 주문처럼 보이는 경로가 없다.
-- `./gradlew test`가 통과한다.
+- `./gradlew test`, `./gradlew check`, frontend lint/test/build가 통과한다.
+
+## 다음 우선순위: PAPER 현금 부족 경고
+
+목표:
+
+- PAPER 현금 부족으로 신규 BUY가 계속 막히는 상태를 조용한 장애로 방치하지 않는다.
+- 데이터 축적이 없어도 read-only 상태 표시로 먼저 구현한다.
+
+작업:
+
+- 현금 비율 warning 기준을 정한다.
+- Dashboard 또는 Top Status Bar에 PAPER 현금 부족 경고를 표시한다.
+- Telegram `/status` 또는 `/pnl`에 경고 요약을 넣을지 검토한다.
+- BUY 실행 로직은 바꾸지 않고 read-only 상태 표시만 추가한다.
+
+완료 기준:
+
+- 수동 BUY, 실제 주문 API, `REAL_TRADING` UI가 추가되지 않는다.
+- 현금 부족 경고가 주문 상태를 변경하지 않는다.
+- frontend lint/test/build와 관련 backend test가 통과한다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
 
@@ -267,18 +289,6 @@
 
 - 현재 쌓인 PAPER 포지션으로 익절/손절/선택 PAPER SELL 흐름을 검증한다.
 - 실제 주문 API와 `REAL_TRADING` 없이 PAPER 상태 전이만 확인한다.
-
-작업:
-
-- `/api/portfolio/valuation`, `/api/analytics/losses`, `/api/trading-flow/history` 상태를 기준선으로 기록한다.
-- 손절/익절 조건 도달 포지션의 exit scheduler 처리 결과를 확인한다.
-- 웹 선택 PAPER SELL이 선택한 보유 포지션에만 적용되는지 재확인한다.
-
-완료 기준:
-
-- 실패한 주문을 성공으로 처리하지 않는다.
-- PAPER 현금/포지션/history가 서로 일치한다.
-- 실제 주문 API와 수동 BUY는 추가되지 않는다.
 
 ## 보류
 

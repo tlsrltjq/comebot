@@ -5,5 +5,7 @@ import com.giseop.comebot.execution.domain.OrderResult;
 
 public interface ExecutionGateway {
 
+    boolean supportsOnlyPaperTrading();
+
     OrderResult execute(OrderRequest request);
 }
