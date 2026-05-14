@@ -1,17 +1,24 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
-import { Activity, BarChart3, Clock3, LineChart, PieChart, Radar, TrendingUp } from 'lucide-react';
+import { Activity, BarChart3, Clock3, Database, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert } from 'lucide-react';
+import { api, queryKeys } from '../shared/api/client';
 import type { ExchangeMode } from '../shared/api/types';
 import { ExchangeModeContext, exchangeParam } from '../shared/exchange/ExchangeModeContext';
+import { LiveStatus } from '../shared/ui/LiveStatus';
 
 const navItems = [
   { to: '/', label: '대시보드(Dashboard)', icon: Activity },
-  { to: '/market', label: '시장(Market)', icon: TrendingUp },
+  { to: '/market', label: '시장(Markets)', icon: TrendingUp },
   { to: '/candidates', label: '후보(Candidates)', icon: Radar },
-  { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
   { to: '/portfolio', label: '포트폴리오(Portfolio)', icon: PieChart },
   { to: '/history', label: '이력(History)', icon: Clock3 },
+  { to: '/risk', label: '리스크(Risk)', icon: TriangleAlert },
+  { to: '/system', label: '시스템(System)', icon: MonitorCog },
+  { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
 ];
+
+const STATUS_REFRESH_MS = 5_000;
 
 export function App() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -66,12 +73,78 @@ export function App() {
             ))}
           </nav>
         </aside>
-        <main className="content">
-          <Outlet />
-        </main>
+        <div className="workspace">
+          <TopStatusBar exchange={exchange} />
+          <main className="content">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </ExchangeModeContext.Provider>
   );
+}
+
+function TopStatusBar({ exchange }: { exchange: ExchangeMode }) {
+  const systemQuery = useQuery({
+    queryKey: queryKeys.system(exchange),
+    queryFn: () => api.systemStatus(exchange),
+    refetchInterval: STATUS_REFRESH_MS,
+  });
+  const providerQuery = useQuery({
+    queryKey: queryKeys.marketProviderStatus(),
+    queryFn: api.marketProviderStatus,
+    refetchInterval: STATUS_REFRESH_MS,
+  });
+  const system = systemQuery.data;
+  const provider = providerQuery.data;
+  const snapshotCount = exchange === 'BINANCE' ? provider?.binanceSnapshotCount : provider?.upbitSnapshotCount;
+  const priceReady = Boolean(provider?.externalProvider && (snapshotCount ?? 0) > 0);
+  const candidateReady = Boolean(system?.scheduler.candidateEnabled);
+  const exitReady = Boolean(system?.scheduler.exitEnabled);
+  const killSwitchEnabled = Boolean(system?.safety.killSwitchEnabled);
+  const databaseReady = Boolean(system?.database.connected);
+  const updatedAt = Math.max(systemQuery.dataUpdatedAt, providerQuery.dataUpdatedAt);
+
+  return (
+    <header className="top-status-bar" aria-label="운영 상태 바(Operation status bar)">
+      <div className="top-status-main">
+        <strong>{exchange}</strong>
+        <span>PAPER_TRADING</span>
+      </div>
+      <div className="top-status-grid">
+        <TopStatusItem icon={<Database size={15} />} label="DB" value={databaseReady ? '연결' : statusFallback(systemQuery.isLoading)} good={databaseReady} />
+        <TopStatusItem icon={<Radio size={15} />} label="시세" value={priceReady ? `${provider?.provider ?? '-'} ${snapshotCount ?? 0}` : statusFallback(providerQuery.isLoading)} good={priceReady} />
+        <TopStatusItem icon={<Activity size={15} />} label="후보" value={candidateReady ? `${(system?.scheduler.candidateFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={candidateReady} />
+        <TopStatusItem icon={<TrendingUp size={15} />} label="청산" value={exitReady ? `${(system?.scheduler.exitFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={exitReady} />
+        <TopStatusItem icon={killSwitchEnabled ? <ShieldX size={15} /> : <ShieldCheck size={15} />} label="Kill" value={killSwitchEnabled ? 'ON' : 'OFF'} good={!killSwitchEnabled && !systemQuery.isError} />
+      </div>
+      <LiveStatus updatedAt={updatedAt} isFetching={systemQuery.isFetching || providerQuery.isFetching} intervalMs={STATUS_REFRESH_MS} />
+    </header>
+  );
+}
+
+function TopStatusItem({
+  icon,
+  label,
+  value,
+  good,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  good: boolean;
+}) {
+  return (
+    <div className={`top-status-item ${good ? 'top-status-item-good' : 'top-status-item-warn'}`}>
+      {icon}
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function statusFallback(isLoading: boolean) {
+  return isLoading ? '확인 중' : '점검';
 }
 
 function parseExchange(value: string | null): ExchangeMode {

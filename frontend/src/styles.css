@@ -1,6 +1,16 @@
 :root {
   color: #172026;
   background: #f5f7f9;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafb;
+  --line: #dbe3ea;
+  --muted: #60717f;
+  --text: #172026;
+  --text-strong: #25333d;
+  --good: #116149;
+  --warn: #7a5200;
+  --bad: #963225;
+  --info: #176b87;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -108,6 +118,103 @@ button:disabled {
 .nav a:hover {
   background: #24323b;
   color: #ffffff;
+}
+
+.workspace {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.top-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 28px;
+  border-bottom: 1px solid var(--line);
+  background: rgb(248 250 251 / 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.top-status-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.top-status-main strong {
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.top-status-main span {
+  color: var(--good);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.top-status-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.top-status-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.top-status-item svg {
+  flex: 0 0 auto;
+}
+
+.top-status-item span {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-status-item strong {
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.top-status-item-good {
+  border-color: #bfe8d7;
+}
+
+.top-status-item-good svg {
+  color: var(--good);
+}
+
+.top-status-item-warn {
+  border-color: #f5d782;
+}
+
+.top-status-item-warn svg {
+  color: var(--warn);
 }
 
 .content {
@@ -1336,6 +1443,20 @@ td:nth-child(7) {
 
   .nav a {
     white-space: nowrap;
+  }
+
+  .workspace {
+    min-height: auto;
+  }
+
+  .top-status-bar {
+    position: static;
+    grid-template-columns: 1fr;
+    padding: 12px 18px;
+  }
+
+  .top-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .content {

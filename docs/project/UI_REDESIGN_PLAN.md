@@ -484,8 +484,15 @@ OS별 차이는 실행 안내, 경로, 단축키, shell 표기만 바꾼다.
 
 ## 다음 실행 후보
 
-1. Stage 1: `AppShell`, `Sidebar`, `TopStatusBar` 구현
-2. Stage 2: Dashboard Control Room 재배치
-3. Stage 3: Portfolio 선택 PAPER SELL 경계 강화
+1. Stage 2: Dashboard Control Room 재배치
+2. Stage 3: Portfolio 선택 PAPER SELL 경계 강화
+3. Stage 4: Candidates and History Tables
 
-현재 우선순위는 Stage 1이다.
+현재 우선순위는 Stage 2다.
+
+## 진행 상황
+
+- 완료: Stage 1 `AppShell`, `Sidebar`, `TopStatusBar` 구현
+- 완료: Risk 읽기 전용 route 추가
+- 완료: System 읽기 전용 route 추가
+- 완료: 기존 `/trade` route 유지

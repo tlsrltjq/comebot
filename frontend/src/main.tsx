@@ -7,7 +7,9 @@ import { CandidatesPage } from './features/candidates/CandidatesPage';
 import { HistoryPage } from './features/history/HistoryPage';
 import { MarketOverviewPage } from './features/market/MarketOverviewPage';
 import { PortfolioPage } from './features/portfolio/PortfolioPage';
+import { RiskPage } from './features/risk/RiskPage';
 import { DashboardPage } from './features/system/DashboardPage';
+import { SystemPage } from './features/system/SystemPage';
 import { TradePage } from './features/trading/TradePage';
 import './styles.css';
 
@@ -34,6 +36,8 @@ const router = createBrowserRouter([
       { path: 'trade', element: <TradePage /> },
       { path: 'portfolio', element: <PortfolioPage /> },
       { path: 'history', element: <HistoryPage /> },
+      { path: 'risk', element: <RiskPage /> },
+      { path: 'system', element: <SystemPage /> },
     ],
   },
 ]);

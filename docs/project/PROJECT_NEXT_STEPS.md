@@ -22,7 +22,7 @@
 - 데이터가 없어도 화면이 정상 렌더링된다.
 - 데이터 부족 상태가 매수/매도 실행 버튼을 만들지 않는다.
 
-## 다음 우선순위: UI 전면 개편 Stage 1
+## 완료: UI 전면 개편 Stage 1
 
 목표:
 
@@ -39,6 +39,26 @@
 
 - 기존 페이지 접근 경로가 깨지지 않는다.
 - 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않는다.
+- `npm run lint`, `npm test`, `npm run build`가 통과한다.
+
+## 다음 우선순위: UI 전면 개편 Stage 2
+
+목표:
+
+- Dashboard를 Control Room 구조로 재배치한다.
+- 운영 준비 상태, 데이터 준비 상태, 리스크 요약을 첫 화면 상단에서 바로 판단하게 한다.
+
+작업:
+
+- Operational Readiness, Data Readiness, Risk Summary를 상단 3분할 영역으로 정리한다.
+- PnL, signal, order status metric을 중앙 영역으로 재배치한다.
+- 최근 손실, 최근 신호, OS guide를 하단 운영 보조 영역으로 이동한다.
+- 빈 데이터 상태를 읽기 쉬운 공통 패턴으로 맞춘다.
+
+완료 기준:
+
+- Dashboard에는 거래 실행 버튼이 없다.
+- 운영 가능 상태와 데이터 충분 상태가 섞이지 않는다.
 - `npm run lint`, `npm test`, `npm run build`가 통과한다.
 
 ## 이후 우선순위: PAPER 포지션 청산 흐름 스모크 테스트
