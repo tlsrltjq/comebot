@@ -7,6 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.market.service.MarketDataReadiness;
+import com.giseop.comebot.market.service.MarketDataReadinessService;
 import com.giseop.comebot.market.provider.MarketPriceProviderProperties;
 import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.market.service.TickerSnapshotStore;
@@ -32,10 +35,14 @@ class MarketProviderStatusControllerTest {
     @MockitoBean
     private TickerSnapshotStore tickerSnapshotStore;
 
+    @MockitoBean
+    private MarketDataReadinessService marketDataReadinessService;
+
     @Test
     void statusReturnsInMemoryProviderByDefault() throws Exception {
         org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
                 .thenReturn(MarketPriceProviderType.IN_MEMORY);
+        readyReadiness();
 
         mockMvc.perform(get("/api/market-provider/status"))
                 .andExpect(status().isOk())
@@ -48,6 +55,7 @@ class MarketProviderStatusControllerTest {
     void statusReturnsUpbitProviderWhenConfigured() throws Exception {
         org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
                 .thenReturn(MarketPriceProviderType.UPBIT);
+        readyReadiness();
 
         mockMvc.perform(get("/api/market-provider/status"))
                 .andExpect(status().isOk())
@@ -60,6 +68,7 @@ class MarketProviderStatusControllerTest {
     void statusReturnsBinanceProviderWhenConfigured() throws Exception {
         org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
                 .thenReturn(MarketPriceProviderType.BINANCE);
+        readyReadiness();
 
         mockMvc.perform(get("/api/market-provider/status"))
                 .andExpect(status().isOk())
@@ -85,6 +94,19 @@ class MarketProviderStatusControllerTest {
                         org.mockito.Mockito.any(java.time.Instant.class)
                 ))
                 .thenReturn(2);
+        org.mockito.Mockito.when(tickerSnapshotStore.countFresh(
+                        org.mockito.Mockito.eq(ExchangeMode.UPBIT),
+                        org.mockito.Mockito.eq(java.time.Duration.ofMillis(3000)),
+                        org.mockito.Mockito.any(java.time.Instant.class)
+                ))
+                .thenReturn(1);
+        org.mockito.Mockito.when(tickerSnapshotStore.countFresh(
+                        org.mockito.Mockito.eq(ExchangeMode.BINANCE),
+                        org.mockito.Mockito.eq(java.time.Duration.ofMillis(3000)),
+                        org.mockito.Mockito.any(java.time.Instant.class)
+                ))
+                .thenReturn(1);
+        readyReadiness();
 
         mockMvc.perform(get("/api/market-provider/status"))
                 .andExpect(status().isOk())
@@ -92,9 +114,31 @@ class MarketProviderStatusControllerTest {
                 .andExpect(jsonPath("$.externalProvider").value(true))
                 .andExpect(jsonPath("$.webSocketEnabled").value(true))
                 .andExpect(jsonPath("$.snapshotCount").value(3))
+                .andExpect(jsonPath("$.upbitFreshSnapshotCount").value(1))
+                .andExpect(jsonPath("$.binanceFreshSnapshotCount").value(1))
                 .andExpect(jsonPath("$.freshSnapshotCount").value(2))
                 .andExpect(jsonPath("$.staleSnapshotCount").value(1))
-                .andExpect(jsonPath("$.orderStaleMs").value(3000));
+                .andExpect(jsonPath("$.orderStaleMs").value(3000))
+                .andExpect(jsonPath("$.automationReady").value(true));
+    }
+
+    @Test
+    void statusShowsAutomationBlockedWhenNoExchangeHasFreshSnapshot() throws Exception {
+        org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
+                .thenReturn(MarketPriceProviderType.SNAPSHOT);
+        org.mockito.Mockito.when(marketWebSocketProperties.isEnabled())
+                .thenReturn(true);
+        org.mockito.Mockito.when(marketWebSocketProperties.orderStaleDuration())
+                .thenReturn(java.time.Duration.ofMillis(3000));
+        org.mockito.Mockito.when(marketDataReadinessService.readiness(ExchangeMode.UPBIT))
+                .thenReturn(MarketDataReadiness.snapshot(ExchangeMode.UPBIT, 0, 0));
+        org.mockito.Mockito.when(marketDataReadinessService.readiness(ExchangeMode.BINANCE))
+                .thenReturn(MarketDataReadiness.snapshot(ExchangeMode.BINANCE, 0, 0));
+
+        mockMvc.perform(get("/api/market-provider/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.automationReady").value(false))
+                .andExpect(jsonPath("$.automationBlockReason").value("Fresh ticker snapshot is not available for any exchange"));
     }
 
 
@@ -102,6 +146,7 @@ class MarketProviderStatusControllerTest {
     void statusDoesNotExposeSensitiveValues() throws Exception {
         org.mockito.Mockito.when(marketPriceProviderProperties.getPriceProvider())
                 .thenReturn(MarketPriceProviderType.UPBIT);
+        readyReadiness();
 
         mockMvc.perform(get("/api/market-provider/status"))
                 .andExpect(status().isOk())
@@ -109,5 +154,12 @@ class MarketProviderStatusControllerTest {
                 .andExpect(content().string(not(containsString("Secret Key"))))
                 .andExpect(content().string(not(containsString("password"))))
                 .andExpect(content().string(not(containsString("bot-token"))));
+    }
+
+    private void readyReadiness() {
+        org.mockito.Mockito.when(marketDataReadinessService.readiness(ExchangeMode.UPBIT))
+                .thenReturn(MarketDataReadiness.ready(ExchangeMode.UPBIT, "ready"));
+        org.mockito.Mockito.when(marketDataReadinessService.readiness(ExchangeMode.BINANCE))
+                .thenReturn(MarketDataReadiness.ready(ExchangeMode.BINANCE, "ready"));
     }
 }

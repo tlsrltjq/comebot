@@ -1,7 +1,10 @@
 package com.giseop.comebot.scheduler;
 
+import com.giseop.comebot.market.service.MarketDataReadiness;
+import com.giseop.comebot.market.service.MarketDataReadinessService;
 import com.giseop.comebot.trading.service.PositionExitExecutionService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,14 +18,30 @@ public class ScheduledPositionExitRunner {
 
     private final PositionExitSchedulerProperties positionExitSchedulerProperties;
     private final PositionExitExecutionService positionExitExecutionService;
+    private final MarketDataReadinessService marketDataReadinessService;
     private final AtomicBoolean running;
+    private final AtomicLong lastMarketDataSkipLoggedAt;
 
     @Autowired
     public ScheduledPositionExitRunner(
             PositionExitSchedulerProperties positionExitSchedulerProperties,
-            PositionExitExecutionService positionExitExecutionService
+            PositionExitExecutionService positionExitExecutionService,
+            MarketDataReadinessService marketDataReadinessService
     ) {
-        this(positionExitSchedulerProperties, positionExitExecutionService, new AtomicBoolean(false));
+        this(positionExitSchedulerProperties, positionExitExecutionService, marketDataReadinessService, new AtomicBoolean(false));
+    }
+
+    ScheduledPositionExitRunner(
+            PositionExitSchedulerProperties positionExitSchedulerProperties,
+            PositionExitExecutionService positionExitExecutionService,
+            MarketDataReadinessService marketDataReadinessService,
+            AtomicBoolean running
+    ) {
+        this.positionExitSchedulerProperties = positionExitSchedulerProperties;
+        this.positionExitExecutionService = positionExitExecutionService;
+        this.marketDataReadinessService = marketDataReadinessService;
+        this.running = running;
+        this.lastMarketDataSkipLoggedAt = new AtomicLong(0);
     }
 
     ScheduledPositionExitRunner(
@@ -30,9 +49,14 @@ public class ScheduledPositionExitRunner {
             PositionExitExecutionService positionExitExecutionService,
             AtomicBoolean running
     ) {
-        this.positionExitSchedulerProperties = positionExitSchedulerProperties;
-        this.positionExitExecutionService = positionExitExecutionService;
-        this.running = running;
+        this(positionExitSchedulerProperties, positionExitExecutionService, null, running);
+    }
+
+    ScheduledPositionExitRunner(
+            PositionExitSchedulerProperties positionExitSchedulerProperties,
+            PositionExitExecutionService positionExitExecutionService
+    ) {
+        this(positionExitSchedulerProperties, positionExitExecutionService, null, new AtomicBoolean(false));
     }
 
     @Scheduled(fixedDelayString = "${trading.exit-scheduler.fixed-delay-ms:5000}")
@@ -51,6 +75,11 @@ public class ScheduledPositionExitRunner {
         try {
             PositionExitRunSummary summary = PositionExitRunSummary.empty();
             for (var exchange : positionExitSchedulerProperties.getExchanges()) {
+                MarketDataReadiness readiness = marketDataReadinessService == null ? null : marketDataReadinessService.readiness(exchange);
+                if (readiness != null && !readiness.ready()) {
+                    logMarketDataSkip(exchange, readiness);
+                    continue;
+                }
                 summary = summary.add(positionExitExecutionService.execute(exchange));
             }
             if (summary.positionMarkets() > 0) {
@@ -71,5 +100,23 @@ public class ScheduledPositionExitRunner {
         } finally {
             running.set(false);
         }
+    }
+
+    private void logMarketDataSkip(com.giseop.comebot.exchange.ExchangeMode exchange, MarketDataReadiness readiness) {
+        long now = System.currentTimeMillis();
+        long previous = lastMarketDataSkipLoggedAt.get();
+        if (previous != 0 && now - previous < 60000) {
+            return;
+        }
+        if (!lastMarketDataSkipLoggedAt.compareAndSet(previous, now)) {
+            return;
+        }
+        log.warn(
+                "Scheduled position exit skipped because market data is not ready. exchange={}, reason={}, snapshots={}, freshSnapshots={}",
+                exchange,
+                readiness.reason(),
+                readiness.snapshotCount(),
+                readiness.freshSnapshotCount()
+        );
     }
 }

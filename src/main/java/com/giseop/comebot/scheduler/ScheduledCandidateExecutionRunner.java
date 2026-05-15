@@ -1,14 +1,16 @@
 package com.giseop.comebot.scheduler;
 
-import com.giseop.comebot.market.service.MarketSelectionService;
-import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.market.service.MarketDataReadiness;
+import com.giseop.comebot.market.service.MarketDataReadinessService;
+import com.giseop.comebot.market.service.MarketSelectionService;
+import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +26,20 @@ public class ScheduledCandidateExecutionRunner {
     private final CandidateExecutionService candidateExecutionService;
     private final CandidateSchedulerNotificationService candidateSchedulerNotificationService;
     private final MarketSelectionService marketSelectionService;
+    private final MarketDataReadinessService marketDataReadinessService;
     private final AtomicBoolean running;
     private final AtomicLong lastRunStartedAt;
+    private final AtomicLong lastMarketDataSkipLoggedAt;
 
     @Autowired
     public ScheduledCandidateExecutionRunner(
             CandidateSchedulerProperties candidateSchedulerProperties,
             CandidateExecutionService candidateExecutionService,
             CandidateSchedulerNotificationService candidateSchedulerNotificationService,
-            MarketSelectionService marketSelectionService
+            MarketSelectionService marketSelectionService,
+            MarketDataReadinessService marketDataReadinessService
     ) {
-        this(candidateSchedulerProperties, candidateExecutionService, candidateSchedulerNotificationService, marketSelectionService, new AtomicBoolean(false));
+        this(candidateSchedulerProperties, candidateExecutionService, candidateSchedulerNotificationService, marketSelectionService, marketDataReadinessService, new AtomicBoolean(false));
     }
 
     ScheduledCandidateExecutionRunner(
@@ -42,14 +47,17 @@ public class ScheduledCandidateExecutionRunner {
             CandidateExecutionService candidateExecutionService,
             CandidateSchedulerNotificationService candidateSchedulerNotificationService,
             MarketSelectionService marketSelectionService,
+            MarketDataReadinessService marketDataReadinessService,
             AtomicBoolean running
     ) {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.candidateExecutionService = candidateExecutionService;
         this.candidateSchedulerNotificationService = candidateSchedulerNotificationService;
         this.marketSelectionService = marketSelectionService;
+        this.marketDataReadinessService = marketDataReadinessService;
         this.running = running;
         this.lastRunStartedAt = new AtomicLong(0);
+        this.lastMarketDataSkipLoggedAt = new AtomicLong(0);
     }
 
     ScheduledCandidateExecutionRunner(
@@ -61,7 +69,8 @@ public class ScheduledCandidateExecutionRunner {
                 candidateSchedulerProperties,
                 candidateExecutionService,
                 candidateSchedulerNotificationService,
-                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore())
+                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null
         );
     }
 
@@ -117,6 +126,11 @@ public class ScheduledCandidateExecutionRunner {
         CandidateSchedulerRunSummary summary = CandidateSchedulerRunSummary.empty();
         int requestedMarkets = 0;
         for (ExchangeMode exchange : candidateSchedulerProperties.getExchanges()) {
+            MarketDataReadiness readiness = marketDataReadinessService == null ? null : marketDataReadinessService.readiness(exchange);
+            if (readiness != null && !readiness.ready()) {
+                logMarketDataSkip("Scheduled candidate execution", exchange, readiness);
+                continue;
+            }
             List<String> markets = marketSelectionService.resolve(exchange, candidateSchedulerProperties.getMarkets());
             requestedMarkets += markets.size();
             for (int index = 0; index < markets.size(); index++) {
@@ -164,6 +178,25 @@ public class ScheduledCandidateExecutionRunner {
             return new CandidateSchedulerRunSummary(0, 1, 0, 0, 1, 0);
         }
         return new CandidateSchedulerRunSummary(0, 1, 0, 0, 0, 1);
+    }
+
+    private void logMarketDataSkip(String schedulerName, ExchangeMode exchange, MarketDataReadiness readiness) {
+        long now = System.currentTimeMillis();
+        long previous = lastMarketDataSkipLoggedAt.get();
+        if (previous != 0 && now - previous < 60000) {
+            return;
+        }
+        if (!lastMarketDataSkipLoggedAt.compareAndSet(previous, now)) {
+            return;
+        }
+        log.warn(
+                "{} skipped because market data is not ready. exchange={}, reason={}, snapshots={}, freshSnapshots={}",
+                schedulerName,
+                exchange,
+                readiness.reason(),
+                readiness.snapshotCount(),
+                readiness.freshSnapshotCount()
+        );
     }
 
     private void delayBeforeNextMarket(int currentIndex, int marketCount) {

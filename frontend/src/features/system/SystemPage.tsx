@@ -31,6 +31,7 @@ export function SystemPage() {
   const data = systemQuery.data;
   const osGuide = operatingSystemGuide(detectOperatingSystem());
   const snapshotCount = exchange === 'BINANCE' ? providerQuery.data?.binanceSnapshotCount : providerQuery.data?.upbitSnapshotCount;
+  const freshSnapshotCount = exchange === 'BINANCE' ? providerQuery.data?.binanceFreshSnapshotCount : providerQuery.data?.upbitFreshSnapshotCount;
 
   return (
     <section className="page">
@@ -108,6 +109,16 @@ export function SystemPage() {
             <dd>
               {providerQuery.data
                 ? `${providerQuery.data.freshSnapshotCount}/${providerQuery.data.staleSnapshotCount} (${providerQuery.data.orderStaleMs}ms)`
+                : '-'}
+            </dd>
+            <dt>선택 거래소 Fresh</dt>
+            <dd>{freshSnapshotCount ?? '-'}</dd>
+            <dt>자동 실행 보호</dt>
+            <dd>
+              {providerQuery.data
+                ? providerQuery.data.automationReady
+                  ? '정상(Ready)'
+                  : `차단(Blocked): ${providerQuery.data.automationBlockReason}`
                 : '-'}
             </dd>
             <dt>Message</dt>

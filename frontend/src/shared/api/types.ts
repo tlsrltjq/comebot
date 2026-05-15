@@ -76,9 +76,13 @@ export interface MarketProviderStatusResponse {
   snapshotCount: number;
   upbitSnapshotCount: number;
   binanceSnapshotCount: number;
+  upbitFreshSnapshotCount: number;
+  binanceFreshSnapshotCount: number;
   freshSnapshotCount: number;
   staleSnapshotCount: number;
   orderStaleMs: number;
+  automationReady: boolean;
+  automationBlockReason: string;
 }
 
 export interface SchedulerControlRequest {

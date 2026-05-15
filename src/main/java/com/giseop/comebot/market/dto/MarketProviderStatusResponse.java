@@ -10,9 +10,13 @@ public record MarketProviderStatusResponse(
         int snapshotCount,
         int upbitSnapshotCount,
         int binanceSnapshotCount,
+        int upbitFreshSnapshotCount,
+        int binanceFreshSnapshotCount,
         int freshSnapshotCount,
         int staleSnapshotCount,
-        long orderStaleMs
+        long orderStaleMs,
+        boolean automationReady,
+        String automationBlockReason
 ) {
 
     public MarketProviderStatusResponse(
@@ -20,6 +24,6 @@ public record MarketProviderStatusResponse(
             boolean externalProvider,
             String message
     ) {
-        this(provider, externalProvider, message, false, 0, 0, 0, 0, 0, 0);
+        this(provider, externalProvider, message, false, 0, 0, 0, 0, 0, 0, 0, 0, true, "Snapshot readiness guard is not required for this provider");
     }
 }
