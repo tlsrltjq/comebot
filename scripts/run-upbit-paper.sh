@@ -76,7 +76,8 @@ export TELEGRAM_INBOUND_ENABLED="${TELEGRAM_INBOUND_ENABLED:-false}"
 SERVER_PORT="${SERVER_PORT:-8081}"
 
 echo "Starting comebot backend: http://127.0.0.1:$SERVER_PORT"
-echo "Mode: UPBIT public ticker + PAPER_TRADING only"
+echo "Mode: UPBIT-only PAPER_TRADING smoke run"
+echo "Storage: IN_MEMORY history/portfolio; use scripts/run-paper-jpa.sh for long-running Upbit/Binance JPA operation."
 echo
 
 ./gradlew bootRun --args="--server.port=$SERVER_PORT"

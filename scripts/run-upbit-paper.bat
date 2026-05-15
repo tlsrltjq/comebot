@@ -24,8 +24,9 @@ if not defined TELEGRAM_ENABLED set "TELEGRAM_ENABLED=false"
 if not defined TELEGRAM_INBOUND_ENABLED set "TELEGRAM_INBOUND_ENABLED=false"
 if not defined SERVER_PORT set "SERVER_PORT=8081"
 
-echo Starting comebot with Upbit public ticker and PAPER_TRADING.
+echo Starting comebot with Upbit-only PAPER_TRADING smoke run.
 echo REAL_TRADING and real order APIs are not used.
+echo Storage: IN_MEMORY history/portfolio; use scripts\run-paper-jpa.bat for long-running Upbit/Binance JPA operation.
 echo Backend: http://127.0.0.1:%SERVER_PORT%
 echo.
 

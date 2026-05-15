@@ -25,5 +25,5 @@ echo Backend: http://127.0.0.1:%BACKEND_PORT%
 echo Web UI:  http://127.0.0.1:%FRONTEND_PORT%
 echo.
 
-start "comebot-backend" cmd /k "set SERVER_PORT=%BACKEND_PORT%&& scripts\run-upbit-paper.bat"
+start "comebot-backend" cmd /k "set SERVER_PORT=%BACKEND_PORT%&& scripts\run-paper-jpa.bat"
 start "comebot-web" cmd /k "cd frontend && set VITE_API_TARGET=http://localhost:%BACKEND_PORT%&& npm run dev -- --host 127.0.0.1 --port %FRONTEND_PORT%"
