@@ -19,7 +19,7 @@ scripts\run-local-dev.bat
 기본 접속 주소:
 
 - 웹 UI: `http://127.0.0.1:5176`
-- 백엔드 API: `http://127.0.0.1:8081`
+- 백엔드 API: `http://127.0.0.1:18080`
 
 `run-local-dev`는 백엔드를 `scripts/run-paper-jpa.*`로 실행한다. 기본 로컬 운영값은 Upbit/Binance 동시 PAPER, `SNAPSHOT` provider, JPA history/portfolio 저장이다.
 

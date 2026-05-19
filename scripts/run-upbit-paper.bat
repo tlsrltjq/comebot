@@ -22,7 +22,7 @@ set "SAFETY_KILL_SWITCH_ENABLED=false"
 if not defined TRADING_SCHEDULER_ENABLED set "TRADING_SCHEDULER_ENABLED=false"
 if not defined TELEGRAM_ENABLED set "TELEGRAM_ENABLED=false"
 if not defined TELEGRAM_INBOUND_ENABLED set "TELEGRAM_INBOUND_ENABLED=false"
-if not defined SERVER_PORT set "SERVER_PORT=8081"
+if not defined SERVER_PORT set "SERVER_PORT=18080"
 
 echo Starting comebot with Upbit-only PAPER_TRADING smoke run.
 echo REAL_TRADING and real order APIs are not used.

@@ -80,15 +80,7 @@ if [[ -z "${POSTGRES_PORT:-}" ]]; then
   export POSTGRES_PORT
 fi
 
-if [[ -z "${SERVER_PORT:-}" ]] && lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
-  for candidate_port in 8081 8082 8083 8084 8085; do
-    if ! lsof -nP -iTCP:"$candidate_port" -sTCP:LISTEN >/dev/null 2>&1; then
-      export SERVER_PORT="$candidate_port"
-      break
-    fi
-  done
-fi
-SERVER_PORT="${SERVER_PORT:-8080}"
+SERVER_PORT="${SERVER_PORT:-18080}"
 
 echo "Starting comebot with Upbit/Binance public market data, PAPER_TRADING, and JPA history/portfolio storage."
 echo "REAL_TRADING and real order APIs are not used."

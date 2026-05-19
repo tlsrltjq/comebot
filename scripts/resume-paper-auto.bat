@@ -3,7 +3,7 @@ setlocal
 
 cd /d "%~dp0.."
 
-if not defined COMEBOT_API_BASE set "COMEBOT_API_BASE=http://127.0.0.1:8081"
+if not defined COMEBOT_API_BASE set "COMEBOT_API_BASE=http://127.0.0.1:18080"
 if not defined CANDIDATE_INTERVAL_MS set "CANDIDATE_INTERVAL_MS=30000"
 if not defined MARKET_DIAG_TIMEOUT_SECONDS set "MARKET_DIAG_TIMEOUT_SECONDS=10"
 if not defined SKIP_NETWORK_DIAG set "SKIP_NETWORK_DIAG=false"

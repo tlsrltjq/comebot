@@ -3,7 +3,7 @@ setlocal
 
 cd /d "%~dp0.."
 
-if not defined BACKEND_PORT set "BACKEND_PORT=8081"
+if not defined BACKEND_PORT set "BACKEND_PORT=18080"
 if not defined FRONTEND_PORT set "FRONTEND_PORT=5176"
 
 where java >nul 2>&1

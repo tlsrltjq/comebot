@@ -71,7 +71,7 @@ This starts the backend with Upbit/Binance public market data, `SNAPSHOT` price 
 Default local addresses:
 
 - Web UI: `http://127.0.0.1:5176`
-- Backend API: `http://127.0.0.1:8081`
+- Backend API: `http://127.0.0.1:18080`
 
 Start PostgreSQL:
 

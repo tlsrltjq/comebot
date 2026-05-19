@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-BACKEND_PORT="${BACKEND_PORT:-8081}"
+BACKEND_PORT="${BACKEND_PORT:-18080}"
 FRONTEND_PORT="${FRONTEND_PORT:-5176}"
 LOG_DIR="${COMEBOT_LOG_DIR:-/tmp/comebot-logs}"
 mkdir -p "$LOG_DIR"

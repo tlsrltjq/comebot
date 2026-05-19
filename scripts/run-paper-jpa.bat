@@ -32,7 +32,7 @@ if not defined TRADING_EXIT_SCHEDULER_ENABLED set "TRADING_EXIT_SCHEDULER_ENABLE
 if not defined TRADING_EXIT_SCHEDULER_EXCHANGES set "TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE"
 if not defined TELEGRAM_ENABLED set "TELEGRAM_ENABLED=false"
 if not defined TELEGRAM_INBOUND_ENABLED set "TELEGRAM_INBOUND_ENABLED=false"
-if not defined SERVER_PORT set "SERVER_PORT=8081"
+if not defined SERVER_PORT set "SERVER_PORT=18080"
 
 echo Starting comebot with Upbit/Binance public market data, PAPER_TRADING, and JPA history/portfolio storage.
 echo REAL_TRADING and real order APIs are not used.
