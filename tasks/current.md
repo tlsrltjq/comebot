@@ -21,7 +21,11 @@
 - `REAL_TRADING` 관련 코드: 추가 금지
 
 ## 이전 세션에서 멈춘 곳
-하네스 재구성 완료 (HARNESS.md, CHANGELOG.md, docs/decisions.md, tasks/current.md, GC_ROUTINE.md 신규 생성, AGENTS.md 업데이트).
+하네스·문서·설정 정합성 점검 완료.
+- PositionLimitRiskValidationService RiskValidationService 파이프라인 연결
+- stop-loss-cooldown 기본값 수정 (disabled, 7d, 24h)
+- MarketSelectionProperties, PaperFeeProperties, PositionLimitProperties 키 application.properties + .env.example 등록
+- RISK_POLICY.md 포지션 수 상한 섹션 추가, STRATEGY_POLICY.md 기본값 수정
 다음 세션에서 후보 선정 수치 기록 설계를 시작한다.
 참고: `docs/project/PROJECT_NEXT_STEPS.md` "다음 우선순위: 후보 선정 수치 기록 설계" 섹션.
 

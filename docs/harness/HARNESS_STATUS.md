@@ -15,6 +15,9 @@
 
 ## 최근 완료 (상세 이력: CHANGELOG.md)
 
+- position limit 리스크 검증 (거래소별 max 3, 전체 max 5) + RiskValidationService 파이프라인 연결
+- MarketSelectionProperties, PaperFeeProperties 등 새 ConfigurationProperties 등록
+- stop-loss-cooldown 기본값 RISK_POLICY.md 기준 정렬 (disabled, 7d, 24h)
 - PAPER 포지션 청산 흐름 스모크 테스트 (익절/손절/선택 SELL)
 - strategy performance analytics (winRate, profitLossRatio, averageHoldingSeconds)
 - market data readiness guard (SNAPSHOT+WebSocket fresh snapshot 0개 → scheduler 차단)
