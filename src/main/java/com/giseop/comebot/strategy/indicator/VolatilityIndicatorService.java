@@ -43,6 +43,8 @@ public class VolatilityIndicatorService {
                 oldest.accumulatedTradePrice()
         );
 
+        boolean lastCandleBullish = latest.tradePrice().compareTo(latest.openingPrice()) > 0;
+
         return new VolatilitySnapshot(
                 latest.market(),
                 latest.tradePrice(),
@@ -50,7 +52,8 @@ public class VolatilityIndicatorService {
                 highLowRangeRate,
                 tradeAmountChangeRate,
                 trend(priceChangeRate),
-                orderedCandles.size()
+                orderedCandles.size(),
+                lastCandleBullish
         );
     }
 

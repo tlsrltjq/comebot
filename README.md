@@ -10,10 +10,10 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 - Language: Java 21
 - Base package: `com.giseop.comebot`
 - Default trading mode: `PAPER_TRADING`
-- Market price providers: `IN_MEMORY`, `UPBIT`, `BINANCE`
+- Market price providers: `IN_MEMORY`, `UPBIT`, `BINANCE`, `SNAPSHOT`
 - Candle providers: Upbit public Candle API, Binance public spot Kline API
-- History storage: `IN_MEMORY` by default, optional `JPA`
-- Portfolio storage: `IN_MEMORY`, separated by exchange mode
+- History storage: `JPA` for the local dev script, optional `IN_MEMORY` for isolated tests
+- Portfolio storage: `JPA` for the local dev script, separated by exchange mode
 - Scheduler: candidate and exit schedulers are enabled by default for PAPER_TRADING automation
 - Telegram inbound/outbound: disabled by default
 
@@ -66,6 +66,8 @@ Run backend and web UI together on macOS/Linux:
 scripts/run-local-dev.sh
 ```
 
+This starts the backend with Upbit/Binance public market data, `SNAPSHOT` price provider, PAPER_TRADING, and JPA history/portfolio storage.
+
 Default local addresses:
 
 - Web UI: `http://127.0.0.1:5176`
@@ -83,7 +85,7 @@ Run the app:
 gradlew.bat bootRun
 ```
 
-Run with Upbit public ticker data and PAPER_TRADING:
+Run a short Upbit-only PAPER smoke session with in-memory history/portfolio:
 
 ```bash
 scripts/run-upbit-paper.sh
@@ -95,10 +97,30 @@ Windows:
 scripts\run-upbit-paper.bat
 ```
 
-Run with Upbit public ticker data, PAPER_TRADING, and JPA history/portfolio storage:
+This legacy smoke script is not the default long-running operation path. It forces `HISTORY_STORAGE_TYPE=IN_MEMORY` and `PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY`.
+
+Run with Upbit/Binance public market data, PAPER_TRADING, and JPA history/portfolio storage:
 
 ```bash
-scripts/run-upbit-paper-jpa.sh
+scripts/run-paper-jpa.sh
+```
+
+Windows:
+
+```bat
+scripts\run-paper-jpa.bat
+```
+
+The legacy `scripts/run-upbit-paper-jpa.*` names remain as compatibility aliases, but the neutral `run-paper-jpa` scripts are the preferred long-running path.
+
+```properties
+MARKET_PRICE_PROVIDER=SNAPSHOT
+HISTORY_STORAGE_TYPE=JPA
+PAPER_PORTFOLIO_STORAGE_TYPE=JPA
+TRADING_ALLOWED_MARKETS=ALL_KRW,ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW,ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_EXCHANGES=UPBIT,BINANCE
+TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE
 ```
 
 Run the web UI:
@@ -153,6 +175,32 @@ GET /api/analytics/pnl?range=24h
 GET /api/analytics/losses?range=24h
 ```
 
+Market network diagnostics:
+
+```bash
+scripts/diagnose-market-network.sh
+```
+
+Windows:
+
+```bat
+scripts\diagnose-market-network.bat
+```
+
+The diagnostic scripts do not read `.env` and do not print secrets.
+
+Resume automatic PAPER trading only after market data is healthy:
+
+```bash
+scripts/resume-paper-auto.sh
+```
+
+Windows:
+
+```bat
+scripts\resume-paper-auto.bat
+```
+
 Telegram:
 
 ```http
@@ -185,11 +233,11 @@ Telegram is monitoring-first. `/run` and `/candidate-run` are parsed for compati
 Use `.env` or environment variables.
 
 ```properties
-MARKET_PRICE_PROVIDER=UPBIT
-HISTORY_STORAGE_TYPE=IN_MEMORY
-PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY
+MARKET_PRICE_PROVIDER=SNAPSHOT
+HISTORY_STORAGE_TYPE=JPA
+PAPER_PORTFOLIO_STORAGE_TYPE=JPA
 PAPER_INITIAL_CASH=1000000
-TRADING_ALLOWED_MARKETS=ALL_KRW
+TRADING_ALLOWED_MARKETS=ALL_KRW,ALL_USDT
 TRADING_MAX_ORDER_AMOUNT=100000
 STRATEGY_BUY_PRICE=90000000
 STRATEGY_SELL_PRICE=110000000
@@ -219,15 +267,16 @@ TRADING_CANDIDATE_SCHEDULER_ENABLED=true
 TRADING_SCHEDULER_FIXED_DELAY_MS=30000
 TRADING_SCHEDULER_MARKETS=ALL_KRW
 TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=30000
-TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW,ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_EXCHANGES=UPBIT,BINANCE
+TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE
 ```
 
-For long-running PAPER data accumulation, use:
+For isolated tests, override storage back to memory:
 
 ```properties
-HISTORY_STORAGE_TYPE=JPA
-PAPER_PORTFOLIO_STORAGE_TYPE=JPA
-TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE=JPA
+HISTORY_STORAGE_TYPE=IN_MEMORY
+PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY
 ```
 
 Telegram:

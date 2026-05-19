@@ -75,6 +75,8 @@ WebSocket 시세 수신은 REST provider와 분리한다.
 - snapshot이 없거나 주문용 stale 기준을 넘으면 REST fallback을 사용한다.
 - fallback 성공 가격은 `REST_FALLBACK` source로 snapshot store에 저장한다.
 - WebSocket과 REST가 모두 실패하면 주문 실행은 차단하고 조회 화면에는 실패 또는 stale 상태를 표시한다.
+- `SNAPSHOT` provider와 WebSocket이 켜져 있는데 거래소별 fresh snapshot이 0개이면 candidate/exit scheduler는 해당 거래소 실행을 시작하지 않는다.
+- 이 guard는 주문 판단 이전 단계이므로 history를 `FAILED`로 남기지 않고, `/api/market-provider/status`와 System 화면에서 자동 실행 차단 사유를 표시한다.
 - 기본 설정은 WebSocket disabled로 유지해서 기존 REST provider 동작을 보존한다.
 - 기존 Upbit 전체 KRW REST polling scheduler는 가격 수집용이 아니라 `ALL_KRW` 후보 universe bootstrap/refresh 용도로만 사용한다.
   기본 동작은 부팅 시 1회와 `market.upbit-krw-ticker-polling.fixed-delay-ms` 간격 refresh이며, 기본값은 10분이다.
@@ -82,7 +84,7 @@ WebSocket 시세 수신은 REST provider와 분리한다.
 - Binance 전체 USDT REST polling scheduler는 `ALL_USDT` 후보 universe bootstrap/refresh 용도로만 사용한다.
   기본값은 disabled이며, `market.binance-usdt-ticker-polling.enabled=true`일 때 부팅 시 1회와 10분 간격으로 24h ticker를 갱신한다.
   Binance WebSocket client는 `ALL_USDT`를 Binance USDT 거래대금 상위 50개 symbol로 확장해 구독한다.
-- `/api/market-provider/status`는 WebSocket 활성 여부와 거래소별 snapshot 개수를 반환한다.
+- `/api/market-provider/status`는 WebSocket 활성 여부, 거래소별 snapshot/fresh snapshot 개수, 자동 실행 가능 여부를 반환한다.
 
 ## Strategy
 

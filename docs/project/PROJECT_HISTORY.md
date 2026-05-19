@@ -1,33 +1,21 @@
 # Project History
 
-완료 이력의 source of truth는 Git history다.
-이 문서는 최근 맥락 파악용 항목만 유지한다.
+완료 이력의 source of truth는 `CHANGELOG.md`와 Git history다.
+이 문서는 현재 운영 중인 기능의 맥락만 요약한다.
 
-## 최근 완료
+## 현재 운영 기능
 
-1. Dashboard 운영 준비 상태 중심 UX 개선
-2. Trade 자동매매 제어 UX 정리
-3. JPA PAPER 누적 실행 스크립트와 확인 절차 정리
-4. JPA PAPER 누적 데이터 스냅샷 기록
-5. OS별 운영 화면/가이드 대응 계획 문서화
-6. market별 쏠림 리스크 기준 문서화
-7. market별 쏠림 신규 BUY 차단 구현
-8. 쏠림 경고 UI 1차 구현
-9. 반복 손절 cooldown 구현
-10. OS별 운영 화면/가이드 대응 구현
-11. PAPER 체결 append-only 원장 추가
-12. Telegram 수동 PAPER 실행 코드 레벨 차단
-13. scheduler 중복 실행 방어 테스트 보강
-14. PAPER 실행 runtime guard 추가
-15. 실제 주문 API security lint 강화
-16. WebSocket snapshot freshness 운영 상태 보강
-17. Incident Log와 API rate limit 운영 기준 문서화
-18. PAPER 현금 부족 read-only 경고 추가
-19. WebSocket reconnect/backoff 구현과 테스트 보강
-20. PAPER 포지션 청산 흐름 스모크 테스트 보강
-21. 전략 성과 측정 API에 승률, 평균 보유 시간, 손익비 추가
+- **시세 수집**: Upbit/Binance WebSocket + REST fallback (SNAPSHOT provider)
+- **후보 스캔**: VolatilityBreakoutLong — 변동성·거래대금·추세 기반 롱 후보 판단
+- **자동 실행**: candidate scheduler (BUY) + exit scheduler (익절/손절)
+- **리스크**: concentration risk (쏠림 차단), stop-loss cooldown, daily limit, kill switch
+- **포트폴리오**: Upbit(KRW) + Binance(USDT) 분리, JPA/InMemory 이중 저장
+- **이력**: `trading_flow_history` + `paper_trade_log` append-only 원장
+- **analytics**: summary (winRate, profitLossRatio, averageHoldingSeconds), pnl, losses
+- **웹 UI**: React+Vite, 조회 전용 + 선택 PAPER SELL 예외
+- **Telegram**: 조회 전용 (수동 BUY·실행 경로 코드 레벨 차단)
 
 ## 최근 검증
 
-- Java 21 기준 `./gradlew test` 통과
-- `npm run lint`, `npm test`, `npm run build` 통과
+- `./gradlew test` 통과 (Java 21)
+- `npm run lint`, `npm test`, `npm run build`, `npm run test:e2e` 통과

@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.market.service.MarketDataReadiness;
+import com.giseop.comebot.market.service.MarketDataReadinessService;
 import com.giseop.comebot.trading.service.PositionExitExecutionService;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -67,5 +69,26 @@ class ScheduledPositionExitRunnerTest {
 
         assertThat(summary).isEqualTo(PositionExitRunSummary.empty());
         verify(service, never()).execute(properties.getExchange());
+    }
+
+    @Test
+    void runOnceSkipsExchangeWhenMarketDataIsNotReady() {
+        PositionExitSchedulerProperties properties = new PositionExitSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setExchanges(List.of(ExchangeMode.UPBIT));
+        PositionExitExecutionService service = mock(PositionExitExecutionService.class);
+        MarketDataReadinessService readinessService = mock(MarketDataReadinessService.class);
+        when(readinessService.readiness(ExchangeMode.UPBIT))
+                .thenReturn(MarketDataReadiness.snapshot(ExchangeMode.UPBIT, 0, 0));
+
+        PositionExitRunSummary summary = new ScheduledPositionExitRunner(
+                properties,
+                service,
+                readinessService,
+                new AtomicBoolean(false)
+        ).runOnce();
+
+        assertThat(summary).isEqualTo(PositionExitRunSummary.empty());
+        verify(service, never()).execute(ExchangeMode.UPBIT);
     }
 }

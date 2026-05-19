@@ -64,10 +64,11 @@ export function DashboardPage() {
   const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
   const money = (value: string | number | null | undefined) => formatCurrency(value, currency);
   const snapshotCount = exchange === 'BINANCE' ? providerQuery.data?.binanceSnapshotCount : providerQuery.data?.upbitSnapshotCount;
+  const freshSnapshotCount = exchange === 'BINANCE' ? providerQuery.data?.binanceFreshSnapshotCount : providerQuery.data?.upbitFreshSnapshotCount;
   const marketCoverage = data.scheduler.candidateMarkets.some((market) => market === 'ALL_KRW' || market === 'ALL_USDT')
     ? marketSummary(data.scheduler.candidateMarkets, exchange)
     : `${snapshotCount ?? 0}`;
-  const priceReady = Boolean(providerQuery.data?.externalProvider && ((snapshotCount ?? 0) > 0 || marketCoverage.startsWith('전체')));
+  const priceReady = providerQuery.data?.automationReady ?? Boolean(providerQuery.data?.externalProvider && ((freshSnapshotCount ?? 0) > 0 || marketCoverage.startsWith('전체')));
   const schedulerReady = data.scheduler.candidateEnabled && data.scheduler.exitEnabled;
   const autoReady = data.database.connected && priceReady && schedulerReady && !data.safety.killSwitchEnabled;
   const readinessTone = data.safety.killSwitchEnabled ? 'bad' : autoReady ? 'good' : 'warn';
@@ -81,6 +82,7 @@ export function DashboardPage() {
     : readinessMessage({
         databaseConnected: data.database.connected,
         priceReady,
+        priceBlockReason: providerQuery.data?.automationBlockReason,
         candidateEnabled: data.scheduler.candidateEnabled,
         exitEnabled: data.scheduler.exitEnabled,
         killSwitchEnabled: data.safety.killSwitchEnabled,
@@ -123,7 +125,7 @@ export function DashboardPage() {
           </div>
           <div className="readiness-list" aria-label="운영 준비 조건(Readiness checks)">
             <OperationCheck label="DB" value={data.database.connected ? '연결됨(Connected)' : '끊김(Disconnected)'} good={data.database.connected} />
-            <OperationCheck label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / ${marketCoverage}`} good={priceReady} />
+            <OperationCheck label="시세(Price)" value={`${providerQuery.data?.provider ?? data.marketProvider.provider} / fresh ${freshSnapshotCount ?? 0}`} good={priceReady} />
             <OperationCheck label="후보 스케줄러(Candidate)" value={data.scheduler.candidateEnabled ? `${data.scheduler.candidateFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.candidateEnabled} />
             <OperationCheck label="청산 스케줄러(Exit)" value={data.scheduler.exitEnabled ? `${data.scheduler.exitFixedDelayMs / 1000}s` : '꺼짐(Disabled)'} good={data.scheduler.exitEnabled} />
             <OperationCheck label="PAPER 현금(Cash)" value={`${portfolioCash.remainingBuyCount}회 가능 / ${formatNumber(portfolioCash.cashRate, 1)}%`} good={!portfolioCash.cashWarning} />
@@ -495,12 +497,14 @@ function dataReadinessStatus({
 function readinessMessage({
   databaseConnected,
   priceReady,
+  priceBlockReason,
   candidateEnabled,
   exitEnabled,
   killSwitchEnabled,
 }: {
   databaseConnected: boolean;
   priceReady: boolean;
+  priceBlockReason?: string;
   candidateEnabled: boolean;
   exitEnabled: boolean;
   killSwitchEnabled: boolean;
@@ -510,7 +514,7 @@ function readinessMessage({
   }
   const missing = [
     !databaseConnected ? 'DB' : null,
-    !priceReady ? '시세' : null,
+    !priceReady ? `시세${priceBlockReason ? `(${priceBlockReason})` : ''}` : null,
     !candidateEnabled ? '후보 스케줄러' : null,
     !exitEnabled ? '청산 스케줄러' : null,
   ].filter(Boolean);

@@ -9,6 +9,7 @@ public record VolatilitySnapshot(
         BigDecimal highLowRangeRate,
         BigDecimal tradeAmountChangeRate,
         MarketTrend trend,
-        int candleCount
+        int candleCount,
+        boolean lastCandleBullish
 ) {
 }

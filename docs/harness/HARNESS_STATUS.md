@@ -13,22 +13,16 @@
 - 익절/손절 기준: 1.5 / -0.7
 - 같은 market 추가 진입: 기본 허용
 
-## 최근 완료
+## 최근 완료 (상세 이력: CHANGELOG.md)
 
-- market별 쏠림 신규 BUY 차단 구현
-- 쏠림 경고 UI 1차 구현
-- 반복 손절 cooldown 구현
-- OS별 운영 화면/가이드 대응 구현
-- 문서/하네스 경량화 계획 수립
-- Playwright 기반 실제 브라우저 화면 회귀 테스트 추가
-- 모바일 sidebar/nav 가로 overflow 방지
-- Risk/System 문서 정합성 재점검 및 보정
-- Web API polling 주기 경량화 및 백그라운드 polling 중단
-- Candidates/History 대용량 조회 상한 및 명시 검색 적용
+- PAPER 포지션 청산 흐름 스모크 테스트 (익절/손절/선택 SELL)
+- strategy performance analytics (winRate, profitLossRatio, averageHoldingSeconds)
+- market data readiness guard (SNAPSHOT+WebSocket fresh snapshot 0개 → scheduler 차단)
+- 하네스 재구성 (HARNESS.md, CHANGELOG, decisions.md, tasks/current.md, GC_ROUTINE)
 
 ## 다음 작업
 
-1. PAPER 포지션 청산 흐름 스모크 테스트
+1. 후보 선정 수치 기록 설계
 
 상세 목표와 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 

@@ -9,6 +9,9 @@ import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.history.repository.InMemoryTradingFlowHistoryRepository;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
+import com.giseop.comebot.market.service.MarketDataReadiness;
+import com.giseop.comebot.market.service.MarketDataReadinessService;
+import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.candidate.CandidateExecutionService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
@@ -146,7 +149,32 @@ class ScheduledCandidateExecutionRunnerTest {
                 candidateExecutionService,
                 mock(CandidateSchedulerNotificationService.class),
                 new com.giseop.comebot.market.service.MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null,
                 new AtomicBoolean(true)
+        ).runOnce();
+
+        org.assertj.core.api.Assertions.assertThat(summary).isEqualTo(CandidateSchedulerRunSummary.empty());
+        verify(candidateExecutionService, never()).execute(ExchangeMode.UPBIT, "KRW-BTC");
+    }
+
+    @Test
+    void runOnceSkipsExchangeWhenMarketDataIsNotReady() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setExchanges(List.of(ExchangeMode.UPBIT));
+        properties.setMarkets(List.of("KRW-BTC"));
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        MarketDataReadinessService readinessService = mock(MarketDataReadinessService.class);
+        when(readinessService.readiness(ExchangeMode.UPBIT))
+                .thenReturn(MarketDataReadiness.snapshot(ExchangeMode.UPBIT, 0, 0));
+
+        CandidateSchedulerRunSummary summary = new ScheduledCandidateExecutionRunner(
+                properties,
+                candidateExecutionService,
+                mock(CandidateSchedulerNotificationService.class),
+                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                readinessService,
+                new AtomicBoolean(false)
         ).runOnce();
 
         org.assertj.core.api.Assertions.assertThat(summary).isEqualTo(CandidateSchedulerRunSummary.empty());

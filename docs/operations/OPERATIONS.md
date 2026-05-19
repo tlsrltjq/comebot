@@ -21,6 +21,8 @@ scripts\run-local-dev.bat
 - 웹 UI: `http://127.0.0.1:5176`
 - 백엔드 API: `http://127.0.0.1:8081`
 
+`run-local-dev`는 백엔드를 `scripts/run-paper-jpa.*`로 실행한다. 기본 로컬 운영값은 Upbit/Binance 동시 PAPER, `SNAPSHOT` provider, JPA history/portfolio 저장이다.
+
 PostgreSQL:
 
 ```bat
@@ -33,7 +35,7 @@ docker compose up -d postgres
 gradlew.bat bootRun
 ```
 
-Upbit PAPER 실행:
+Upbit-only PAPER 단기 smoke 실행:
 
 ```bash
 scripts/run-upbit-paper.sh
@@ -45,13 +47,23 @@ Windows:
 scripts\run-upbit-paper.bat
 ```
 
-Upbit PAPER JPA 누적 실행:
+이 legacy smoke 스크립트는 `HISTORY_STORAGE_TYPE=IN_MEMORY`, `PAPER_PORTFOLIO_STORAGE_TYPE=IN_MEMORY`를 강제한다. 장기 PAPER 누적 운영이나 Upbit/Binance 동시 실행에는 사용하지 않는다.
+
+Upbit/Binance PAPER JPA 누적 실행:
 
 ```bash
-scripts/run-upbit-paper-jpa.sh
+scripts/run-paper-jpa.sh
+```
+
+Windows:
+
+```bat
+scripts\run-paper-jpa.bat
 ```
 
 이 스크립트는 PostgreSQL을 시작하고 `schema.sql`을 적용한 뒤 `HISTORY_STORAGE_TYPE=JPA`, `PAPER_PORTFOLIO_STORAGE_TYPE=JPA`로 앱을 실행한다.
+`.env`에서 별도로 override하지 않으면 `MARKET_PRICE_PROVIDER=SNAPSHOT`, `TRADING_CANDIDATE_SCHEDULER_EXCHANGES=UPBIT,BINANCE`, `TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW,ALL_USDT`, `TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE`를 사용한다.
+기존 `scripts/run-upbit-paper-jpa.*` 이름은 호환용 alias로만 유지한다.
 실제 주문 API와 `REAL_TRADING`은 사용하지 않는다.
 
 Binance PAPER 후보 스모크 테스트 절차:
@@ -116,10 +128,46 @@ PAPER 현금 경고 기준:
 
 - WebSocket/SNAPSHOT 운영에서는 fresh snapshot이 있으면 주문용 현재가 REST 호출이 발생하지 않는다.
 - stale snapshot 또는 missing snapshot일 때만 거래소별 REST fallback을 호출한다.
+- `SNAPSHOT` provider와 WebSocket 운영 중 거래소별 fresh snapshot이 0개이면 candidate/exit scheduler는 해당 거래소 실행을 건너뛴다.
+- `/api/market-provider/status`의 `automationReady=false`와 `automationBlockReason`은 자동 PAPER 실행 guard가 동작 중임을 의미한다.
 - candidate scheduler에서 `ALL_KRW` 또는 `ALL_USDT`를 사용하면 universe refresh 결과를 기준으로 market별 candle/price 조회가 발생할 수 있다.
 - exit scheduler는 보유 PAPER position market만 평가하므로 포지션 수가 REST fallback 호출량의 상한이다.
 - candidate 주기를 줄이거나 `ALL_KRW,ALL_USDT`를 동시에 켤 때는 `/api/market-provider/status`, scheduler summary, 429 로그를 함께 확인한다.
 - 429 또는 fallback 실패가 발생하면 주문 성공으로 처리하지 말고 history의 `FAILED`/`REJECTED`와 Incident Log를 확인한다.
+
+공개 시세 네트워크 진단:
+
+```bash
+scripts/diagnose-market-network.sh
+```
+
+Windows:
+
+```bat
+scripts\diagnose-market-network.bat
+```
+
+- 이 스크립트는 `.env`를 읽지 않고 민감 정보를 출력하지 않는다.
+- DNS, HTTPS, TLS, WebSocket TLS endpoint 연결을 분리해서 확인한다.
+- `Connection reset by peer`, TLS 실패, DNS 실패가 나오면 앱 설정보다 로컬 네트워크, DNS, 프록시, 방화벽, TLS inspection, 지역 차단을 먼저 의심한다.
+- 진단 결과 HTTPS는 정상인데 `/api/market-provider/status`의 `automationReady=false`가 유지되면 WebSocket bootstrap 또는 universe refresh 로그를 확인한다.
+
+시세 장애 후 자동 PAPER 안전 재개:
+
+```bash
+scripts/resume-paper-auto.sh
+```
+
+Windows:
+
+```bat
+scripts\resume-paper-auto.bat
+```
+
+- 이 스크립트는 백엔드 reachable 여부, 공개 시세 네트워크 진단, `/api/market-provider/status.automationReady`를 모두 확인한 뒤 scheduler를 켠다.
+- 하나라도 실패하면 candidate/exit scheduler를 켜지 않고 종료한다.
+- 후보 주기는 `CANDIDATE_INTERVAL_MS=30000` 또는 `60000`으로 지정할 수 있다.
+- 네트워크 진단을 별도로 이미 완료한 경우에만 `SKIP_NETWORK_DIAG=true`를 사용할 수 있다.
 
 운영형 PAPER 확인 시에는 실제 공개 시세와 스케줄러를 켜고, 주문/자산만 PAPER로 유지한다.
 실제 주문 API와 REAL_TRADING은 계속 금지한다.
@@ -218,9 +266,9 @@ scripts/apply-schema.sh
 거래소 선택, 전략 판단, 리스크 검증, 주문 실행에는 OS 감지 결과를 사용하지 않는다.
 System 화면은 OS별 실행 스크립트, schema script, workspace path, shell, scheduler, provider, notification/Telegram 상태를 읽기 전용으로 보여준다.
 
-- macOS: `scripts/run-local-dev.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `/Users/<user>/workspace/comebot`
-- Windows: `scripts\run-local-dev.bat`, `scripts\run-upbit-paper.bat`, `scripts\apply-schema.bat`, `%USERPROFILE%\workspace\comebot`
-- Linux: `scripts/run-local-dev.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `$HOME/workspace/comebot`
+- macOS: `scripts/run-local-dev.sh`, `scripts/run-paper-jpa.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `/Users/<user>/workspace/comebot`
+- Windows: `scripts\run-local-dev.bat`, `scripts\run-paper-jpa.bat`, `scripts\run-upbit-paper.bat`, `scripts\apply-schema.bat`, `%USERPROFILE%\workspace\comebot`
+- Linux: `scripts/run-local-dev.sh`, `scripts/run-paper-jpa.sh`, `scripts/run-upbit-paper.sh`, `scripts/apply-schema.sh`, `$HOME/workspace/comebot`
 - 민감 정보는 OS와 무관하게 `.env` 또는 환경 변수로만 관리한다.
 
 ## JPA PAPER 누적 확인

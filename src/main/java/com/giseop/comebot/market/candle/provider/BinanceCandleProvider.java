@@ -5,14 +5,10 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-@Component
-@ConditionalOnProperty(name = "market.candle-provider", havingValue = "BINANCE")
 public class BinanceCandleProvider implements CandleProvider {
 
     private static final String BINANCE_API_BASE_URL = "https://api.binance.com";

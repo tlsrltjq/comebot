@@ -258,6 +258,9 @@ public class CandidateScannerService {
         if (snapshot.trend() != MarketTrend.UP) {
             return skipped(snapshot, "Trend is not UP");
         }
+        if (!snapshot.lastCandleBullish()) {
+            return skipped(snapshot, "Last candle is not bullish");
+        }
         if (snapshot.priceChangeRate().compareTo(strategyMarketSettingsService.minPriceChangeRate(snapshot.market())) < 0) {
             return skipped(snapshot, "Price change rate is below threshold");
         }

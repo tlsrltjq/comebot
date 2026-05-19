@@ -26,6 +26,9 @@
 - `SNAPSHOT` provider는 fresh snapshot을 먼저 사용하고, 없거나 stale이면 거래소별 REST provider로 fallback한다.
 - REST fallback도 실패하면 stale snapshot만으로 주문 가격을 만들지 않는다.
 - REST fallback 실패는 주문 성공으로 처리하지 않고 실패 상태 또는 조회 실패로 드러낸다.
+- 자동 candidate/exit scheduler는 `SNAPSHOT` provider와 WebSocket 운영 중 거래소별 fresh snapshot이 0개이면 해당 거래소 실행을 건너뛴다.
+- 이 보호는 공개 API 또는 WebSocket bootstrap 장애 시 가격 없음 `FAILED` 이력이 대량으로 쌓이는 것을 막기 위한 실행 전 guard다.
+- `/api/market-provider/status`의 `automationReady`, `automationBlockReason`, 거래소별 fresh snapshot count로 guard 상태를 확인한다.
 - WebSocket은 기본 disabled이며, `market.websocket.enabled=true`와 거래소별 `market.websocket.<exchange>.enabled=true`가 모두 켜진 경우에만 연결한다.
 - Upbit 전체 KRW REST polling scheduler는 `ALL_KRW` 후보 universe bootstrap/refresh 용도이며 가격 수집 경로가 아니다.
   기본값은 부팅 시 1회와 10분 간격 refresh다.
@@ -88,6 +91,7 @@
 ## Scheduler 장애
 
 - market 단위 실패가 전체 scheduler를 중단시키면 안 된다.
+- 시세 guard로 건너뛴 거래소는 failed/rejected/hold history를 만들지 않는다. 이는 주문 판단 자체를 시작하지 않은 상태이기 때문이다.
 - Scheduler에는 전략, 주문, 리스크 로직을 직접 넣지 않는다.
 - candidate scheduler는 `CandidateExecutionService`만 호출하고 결과를 filled, rejected, hold, failed로 요약한다.
 - exit scheduler는 `PositionExitExecutionService`만 호출하고 보유 position market만 평가한다.
@@ -103,6 +107,9 @@
 - exit scheduler는 보유 PAPER position market만 평가하므로 보유 position 수가 호출량 상한이다.
 - `ALL_KRW`와 `ALL_USDT`를 동시에 켜고 candidate 주기를 30초로 낮출 때는 429, failed summary, provider status를 먼저 확인한다.
 - 429 또는 REST fallback 실패가 발생하면 scheduler 결과는 failed/rejected로 남아야 하며, stale 가격으로 FILLED 주문을 만들면 안 된다.
+- Upbit/Binance HTTPS가 모두 `Connection reset by peer` 또는 TLS 실패로 실패하면 `scripts/diagnose-market-network.*`로 앱 외부 네트워크 계층을 먼저 점검한다.
+- 진단 스크립트는 DNS, HTTPS, TLS, WebSocket TLS endpoint를 분리 확인하며 `.env`나 토큰을 출력하지 않는다.
+- 시세 장애 후 자동 PAPER 재개는 `scripts/resume-paper-auto.*`를 사용한다. 이 스크립트는 네트워크 진단과 `automationReady=true`를 모두 만족할 때만 scheduler를 다시 켠다.
 - 반복 장애는 `docs/operations/INCIDENT_LOG.md`에 기록한다.
 
 ## System 화면 장애
