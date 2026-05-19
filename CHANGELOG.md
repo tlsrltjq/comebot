@@ -5,6 +5,7 @@
 
 ---
 
+2026-05-19 | binance | fix: BinanceCandleProvider 죽은 @Component 제거, price-provider 기본값 UPBIT→SNAPSHOT (Binance exit 정상화)
 2026-05-19 | risk  | fix: enable stop-loss cooldown (1d/2회→6h차단), lastCandleBullish 필터 추가, minPriceChangeRate 0.3→1.0
 2026-05-19 | sync  | docs: optimize docs — delete 5 stale plan files, trim completed history to CHANGELOG
 2026-05-19 | sync  | chore: align orderQuantity default, register WebSocket config, update HARNESS_STATUS next task
