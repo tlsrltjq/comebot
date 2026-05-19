@@ -10,32 +10,40 @@ public class MarketSelectionService {
 
     public static final String ALL_KRW = "ALL_KRW";
     public static final String ALL_USDT = "ALL_USDT";
-    private static final int DEFAULT_TOP_KRW_MARKET_LIMIT = 50;
-    private static final int DEFAULT_TOP_USDT_SYMBOL_LIMIT = 50;
 
     private final UpbitKrwTickerStore upbitKrwTickerStore;
     private final BinanceUsdtTickerStore binanceUsdtTickerStore;
+    private final MarketSelectionProperties marketSelectionProperties;
 
     public MarketSelectionService(UpbitKrwTickerStore upbitKrwTickerStore) {
-        this(upbitKrwTickerStore, new BinanceUsdtTickerStore());
+        this(upbitKrwTickerStore, new BinanceUsdtTickerStore(), new MarketSelectionProperties());
+    }
+
+    public MarketSelectionService(
+            UpbitKrwTickerStore upbitKrwTickerStore,
+            BinanceUsdtTickerStore binanceUsdtTickerStore
+    ) {
+        this(upbitKrwTickerStore, binanceUsdtTickerStore, new MarketSelectionProperties());
     }
 
     @Autowired
     public MarketSelectionService(
             UpbitKrwTickerStore upbitKrwTickerStore,
-            BinanceUsdtTickerStore binanceUsdtTickerStore
+            BinanceUsdtTickerStore binanceUsdtTickerStore,
+            MarketSelectionProperties marketSelectionProperties
     ) {
         this.upbitKrwTickerStore = upbitKrwTickerStore;
         this.binanceUsdtTickerStore = binanceUsdtTickerStore;
+        this.marketSelectionProperties = marketSelectionProperties;
     }
 
     public List<String> resolve(List<String> configuredMarkets) {
         List<String> markets = normalize(configuredMarkets);
         if (markets.contains(ALL_KRW)) {
-            return upbitKrwTickerStore.topMarkets(DEFAULT_TOP_KRW_MARKET_LIMIT);
+            return upbitKrwTickerStore.topMarkets(marketSelectionProperties.getTopKrwMarketLimit());
         }
         if (markets.contains(ALL_USDT)) {
-            return binanceUsdtTickerStore.topSymbols(DEFAULT_TOP_USDT_SYMBOL_LIMIT);
+            return binanceUsdtTickerStore.topSymbols(marketSelectionProperties.getTopUsdtSymbolLimit());
         }
         return markets;
     }
@@ -44,10 +52,10 @@ public class MarketSelectionService {
         ExchangeMode mode = exchange == null ? ExchangeMode.UPBIT : exchange;
         List<String> markets = normalize(configuredMarkets);
         if (mode == ExchangeMode.UPBIT && markets.contains(ALL_KRW)) {
-            return upbitKrwTickerStore.topMarkets(DEFAULT_TOP_KRW_MARKET_LIMIT);
+            return upbitKrwTickerStore.topMarkets(marketSelectionProperties.getTopKrwMarketLimit());
         }
         if (mode == ExchangeMode.BINANCE && markets.contains(ALL_USDT)) {
-            return binanceUsdtTickerStore.topSymbols(DEFAULT_TOP_USDT_SYMBOL_LIMIT);
+            return binanceUsdtTickerStore.topSymbols(marketSelectionProperties.getTopUsdtSymbolLimit());
         }
         return markets.stream()
                 .filter(market -> isMarketForExchange(mode, market))

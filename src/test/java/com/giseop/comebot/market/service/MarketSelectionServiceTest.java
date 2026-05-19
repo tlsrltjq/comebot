@@ -28,13 +28,13 @@ class MarketSelectionServiceTest {
     }
 
     @Test
-    void allKrwUsesTopFiftyMarkets() {
-        tickerStore.replace(java.util.stream.IntStream.rangeClosed(1, 55)
+    void allKrwUsesTopKrwMarketLimitFromProperties() {
+        tickerStore.replace(java.util.stream.IntStream.rangeClosed(1, 25)
                 .mapToObj(index -> ticker("KRW-COIN" + index, String.valueOf(index)))
                 .toList());
 
-        assertThat(service.resolve(List.of("ALL_KRW"))).hasSize(50);
-        assertThat(service.resolve(List.of("ALL_KRW")).getFirst()).isEqualTo("KRW-COIN55");
+        assertThat(service.resolve(List.of("ALL_KRW"))).hasSize(20);
+        assertThat(service.resolve(List.of("ALL_KRW")).getFirst()).isEqualTo("KRW-COIN25");
     }
 
     @Test
@@ -56,13 +56,13 @@ class MarketSelectionServiceTest {
     }
 
     @Test
-    void allUsdtUsesTopFiftySymbols() {
-        binanceTickerStore.replace(java.util.stream.IntStream.rangeClosed(1, 55)
+    void allUsdtUsesTopUsdtSymbolLimitFromProperties() {
+        binanceTickerStore.replace(java.util.stream.IntStream.rangeClosed(1, 35)
                 .mapToObj(index -> binanceTicker("COIN" + index + "USDT", String.valueOf(index)))
                 .toList());
 
-        assertThat(service.resolve(List.of("ALL_USDT"))).hasSize(50);
-        assertThat(service.resolve(List.of("ALL_USDT")).getFirst()).isEqualTo("COIN55USDT");
+        assertThat(service.resolve(List.of("ALL_USDT"))).hasSize(30);
+        assertThat(service.resolve(List.of("ALL_USDT")).getFirst()).isEqualTo("COIN35USDT");
     }
 
     @Test

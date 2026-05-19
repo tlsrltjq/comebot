@@ -68,7 +68,8 @@ SELL 신호는 보유 포지션에 대해서만 만든다.
 `application.properties` 기준 기본값:
 
 - 최근 캔들 수: 5
-- 전체 KRW 중 24시간 거래대금 상위 50개
+- 전체 KRW 중 24시간 거래대금 상위 20개 (`market.selection.top-krw-market-limit`)
+- 전체 USDT 중 24시간 거래대금 상위 30개 (`market.selection.top-usdt-symbol-limit`)
 - 최소 가격 변화율: 1.0
 - 최소 거래대금 변화율: 30
 - 최대 가격 변화율: 10
