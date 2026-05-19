@@ -27,6 +27,16 @@
 
 실패 시 `REJECTED`로 처리한다.
 
+## 포지션 수 상한
+
+- 기본값은 `risk.position-limit.enabled=true`다.
+- 켜져 있을 때 신규 BUY에만 적용하며, SELL과 기존 포지션 재진입 BUY는 차단하지 않는다.
+- `risk.position-limit.upbit-max-positions`: Upbit 포지션 상한 (기본 3)
+- `risk.position-limit.binance-max-positions`: Binance 포지션 상한 (기본 3)
+- `risk.position-limit.total-max-positions`: 거래소 합산 포지션 상한 (기본 5)
+- 거래소 상한에 먼저 도달하면 `REJECTED`로 처리한다.
+- 거래소 상한을 통과하더라도 전체 상한에 도달하면 `REJECTED`로 처리한다.
+
 ## PAPER 포트폴리오 검증
 
 - BUY는 PAPER 현금이 충분해야 한다.
