@@ -11,7 +11,7 @@ public class StrategyProperties {
 
     private BigDecimal buyPrice = new BigDecimal("90000000");
     private BigDecimal sellPrice = new BigDecimal("110000000");
-    private BigDecimal orderQuantity = new BigDecimal("0.001");
+    private BigDecimal orderQuantity = new BigDecimal("0.01");
     private BigDecimal orderAmount = new BigDecimal("10000");
     private BigDecimal binanceOrderAmount = new BigDecimal("10");
 
@@ -36,7 +36,7 @@ public class StrategyProperties {
     }
 
     public void setOrderQuantity(BigDecimal orderQuantity) {
-        this.orderQuantity = orderQuantity == null ? new BigDecimal("0.001") : orderQuantity;
+        this.orderQuantity = orderQuantity == null ? new BigDecimal("0.01") : orderQuantity;
     }
 
     public BigDecimal getOrderAmount() {

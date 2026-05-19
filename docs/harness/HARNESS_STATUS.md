@@ -25,10 +25,15 @@
 - Risk/System 문서 정합성 재점검 및 보정
 - Web API polling 주기 경량화 및 백그라운드 polling 중단
 - Candidates/History 대용량 조회 상한 및 명시 검색 적용
+- WebSocket reconnect/backoff 단위 테스트 보강
+- PAPER 포지션 청산 흐름 스모크 테스트 (익절/손절/선택 SELL)
+- strategy performance analytics 추가 (`/api/analytics/summary` winRate/profitLossRatio)
+- paper run scripts 정규화 (`run-paper-jpa.*` 기준, `run-upbit-paper-jpa.*`는 alias)
+- market data readiness guard — SNAPSHOT+WebSocket 운영 시 fresh snapshot 0개면 scheduler 실행 차단
 
 ## 다음 작업
 
-1. PAPER 포지션 청산 흐름 스모크 테스트
+1. 후보 선정 수치 기록 설계
 
 상세 목표와 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
 
