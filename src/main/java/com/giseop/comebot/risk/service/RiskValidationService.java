@@ -16,6 +16,7 @@ public class RiskValidationService {
 
     private final TradingProperties tradingProperties;
     private final MarketSelectionService marketSelectionService;
+    private final PositionLimitRiskValidationService positionLimitRiskValidationService;
     private final ConcentrationRiskValidationService concentrationRiskValidationService;
     private final StopLossCooldownValidationService stopLossCooldownValidationService;
 
@@ -23,11 +24,13 @@ public class RiskValidationService {
     public RiskValidationService(
             TradingProperties tradingProperties,
             MarketSelectionService marketSelectionService,
+            PositionLimitRiskValidationService positionLimitRiskValidationService,
             ConcentrationRiskValidationService concentrationRiskValidationService,
             StopLossCooldownValidationService stopLossCooldownValidationService
     ) {
         this.tradingProperties = tradingProperties;
         this.marketSelectionService = marketSelectionService;
+        this.positionLimitRiskValidationService = positionLimitRiskValidationService;
         this.concentrationRiskValidationService = concentrationRiskValidationService;
         this.stopLossCooldownValidationService = stopLossCooldownValidationService;
     }
@@ -36,6 +39,7 @@ public class RiskValidationService {
         this(
                 tradingProperties,
                 new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null,
                 null,
                 null
         );
@@ -71,6 +75,12 @@ public class RiskValidationService {
         BigDecimal orderAmount = request.quantity().multiply(request.price());
         if (orderAmount.compareTo(tradingProperties.getMaxOrderAmount()) > 0) {
             return rejected("Order amount exceeds max order amount");
+        }
+        if (positionLimitRiskValidationService != null) {
+            RiskCheckResult positionLimitResult = positionLimitRiskValidationService.validate(exchange, request);
+            if (positionLimitResult.decision() == RiskDecision.REJECTED) {
+                return positionLimitResult;
+            }
         }
         if (concentrationRiskValidationService != null) {
             RiskCheckResult concentrationRiskResult = concentrationRiskValidationService.validate(exchange, request);
