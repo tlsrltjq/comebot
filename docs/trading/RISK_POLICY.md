@@ -108,6 +108,8 @@
 - rolling window 안 손절 count가 2회 미만으로 내려가거나 마지막 손절 후 24시간이 지나면 cooldown 대상에서 빠진다.
 - 최초 구현 기본값은 비활성화로 둔다.
 - 설정 키는 `risk.stop-loss-cooldown.enabled`, `risk.stop-loss-cooldown.window`, `risk.stop-loss-cooldown.trigger-count`, `risk.stop-loss-cooldown.duration`이다.
+- 현재 기본값: `enabled=true`, `window=1d`, `trigger-count=2`, `duration=6h`.
+  반복 손절 스파이럴 방지를 위해 2026-05-19에 활성화로 전환했다. 로컬 개발에서 비활성화가 필요하면 `.env`에서 `RISK_STOP_LOSS_COOLDOWN_ENABLED=false`로 설정한다.
 
 ### 구현 범위
 
