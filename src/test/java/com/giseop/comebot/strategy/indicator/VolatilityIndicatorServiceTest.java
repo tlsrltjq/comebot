@@ -76,6 +76,26 @@ class VolatilityIndicatorServiceTest {
     }
 
     @Test
+    void detectsBullishLastCandle() {
+        VolatilitySnapshot snapshot = service.calculate(List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "105", "1000", "10"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "100", "120", "1500", "12")
+        ));
+
+        assertThat(snapshot.lastCandleBullish()).isTrue();
+    }
+
+    @Test
+    void detectsBearishLastCandle() {
+        VolatilitySnapshot snapshot = service.calculate(List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "105", "1000", "10"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "120", "125", "100", "110", "1500", "12")
+        ));
+
+        assertThat(snapshot.lastCandleBullish()).isFalse();
+    }
+
+    @Test
     void requiresAtLeastTwoCandles() {
         assertThatThrownBy(() -> service.calculate(List.of(
                 candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "105", "1000", "10")

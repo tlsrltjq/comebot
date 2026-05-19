@@ -20,7 +20,7 @@ class StrategyMarketSettingsServiceTest {
                 new StrategyMarketOverrideProperties()
         );
 
-        assertThat(service.orderQuantity("KRW-BTC")).isEqualByComparingTo("0.001");
+        assertThat(service.orderQuantity("KRW-BTC")).isEqualByComparingTo("0.01");
         assertThat(service.orderAmount("KRW-BTC")).isEqualByComparingTo("10000");
         assertThat(service.buyQuantity("KRW-BTC", new BigDecimal("100"))).isEqualByComparingTo("100.00000000");
         assertThat(service.minPriceChangeRate("KRW-BTC")).isEqualByComparingTo("0.3");

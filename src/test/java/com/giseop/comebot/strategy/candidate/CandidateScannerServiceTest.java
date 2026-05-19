@@ -110,6 +110,23 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void bearishLastCandleIsSkipped() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1.5"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "120", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:04:00Z", "118", "125", "104", "110", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Last candle is not bullish");
+    }
+
+    @Test
     void downTrendIsSkipped() {
         candleProvider.candles = List.of(
                 candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "95", "1000"),
