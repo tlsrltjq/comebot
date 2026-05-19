@@ -4,6 +4,8 @@ import com.giseop.comebot.scheduler.persistence.SchedulerControlSettingEntity;
 import com.giseop.comebot.scheduler.persistence.SpringDataSchedulerControlSettingJpaRepository;
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SchedulerControlService {
 
+    private static final Logger log = LoggerFactory.getLogger(SchedulerControlService.class);
     private static final long THIRTY_SECONDS = 30000;
     private static final long SIXTY_SECONDS = 60000;
 
@@ -45,7 +48,13 @@ public class SchedulerControlService {
             return;
         }
         settingRepository.findById(SchedulerControlSettingEntity.DEFAULT_ID)
-                .ifPresent(setting -> apply(setting.isAutoTradingEnabled(), setting.getCandidateFixedDelayMs()));
+                .ifPresent(setting -> {
+                    try {
+                        apply(setting.isAutoTradingEnabled(), setting.getCandidateFixedDelayMs());
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Ignoring invalid persisted candidateFixedDelayMs={}: {}", setting.getCandidateFixedDelayMs(), e.getMessage());
+                    }
+                });
     }
 
     public void update(Boolean autoTradingEnabled, Long candidateFixedDelayMs) {
