@@ -125,6 +125,7 @@ public class ScheduledCandidateExecutionRunner {
     private CandidateSchedulerRunSummary executeOnce() {
         CandidateSchedulerRunSummary summary = CandidateSchedulerRunSummary.empty();
         int requestedMarkets = 0;
+        int maxBuysPerRun = candidateSchedulerProperties.getMaxBuysPerRun();
         for (ExchangeMode exchange : candidateSchedulerProperties.getExchanges()) {
             MarketDataReadiness readiness = marketDataReadinessService == null ? null : marketDataReadinessService.readiness(exchange);
             if (readiness != null && !readiness.ready()) {
@@ -133,9 +134,15 @@ public class ScheduledCandidateExecutionRunner {
             }
             List<String> markets = marketSelectionService.resolve(exchange, candidateSchedulerProperties.getMarkets());
             requestedMarkets += markets.size();
+            int filledThisCycle = 0;
             for (int index = 0; index < markets.size(); index++) {
+                if (maxBuysPerRun > 0 && filledThisCycle >= maxBuysPerRun) {
+                    break;
+                }
                 String market = markets.get(index);
-                summary = summary.add(executeMarket(exchange, market));
+                CandidateSchedulerRunSummary marketSummary = executeMarket(exchange, market);
+                summary = summary.add(marketSummary);
+                filledThisCycle += marketSummary.filledCount();
                 delayBeforeNextMarket(index, markets.size());
             }
         }

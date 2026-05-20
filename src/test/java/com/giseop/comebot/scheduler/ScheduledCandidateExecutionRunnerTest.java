@@ -229,6 +229,42 @@ class ScheduledCandidateExecutionRunnerTest {
     }
 
     @Test
+    void maxBuysPerRunLimitsFilledOrdersPerExchangeCycle() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setMaxBuysPerRun(1);
+        properties.setMarkets(List.of("KRW-BTC", "KRW-ETH", "KRW-XRP"));
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        when(candidateExecutionService.execute(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(result("KRW-BTC", SignalType.BUY, OrderStatus.FILLED));
+
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
+
+        verify(candidateExecutionService).execute(ExchangeMode.UPBIT, "KRW-BTC");
+        verify(candidateExecutionService, never()).execute(ExchangeMode.UPBIT, "KRW-ETH");
+        verify(candidateExecutionService, never()).execute(ExchangeMode.UPBIT, "KRW-XRP");
+        org.assertj.core.api.Assertions.assertThat(summary.filledCount()).isEqualTo(1);
+    }
+
+    @Test
+    void maxBuysPerRunZeroMeansUnlimited() {
+        CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
+        properties.setEnabled(true);
+        properties.setMaxBuysPerRun(0);
+        properties.setMarkets(List.of("KRW-BTC", "KRW-ETH", "KRW-XRP"));
+        CandidateExecutionService candidateExecutionService = mock(CandidateExecutionService.class);
+        when(candidateExecutionService.execute(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(result("KRW-BTC", SignalType.BUY, OrderStatus.FILLED));
+        when(candidateExecutionService.execute(ExchangeMode.UPBIT, "KRW-ETH")).thenReturn(result("KRW-ETH", SignalType.BUY, OrderStatus.FILLED));
+        when(candidateExecutionService.execute(ExchangeMode.UPBIT, "KRW-XRP")).thenReturn(result("KRW-XRP", SignalType.BUY, OrderStatus.FILLED));
+
+        CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
+
+        verify(candidateExecutionService).execute(ExchangeMode.UPBIT, "KRW-BTC");
+        verify(candidateExecutionService).execute(ExchangeMode.UPBIT, "KRW-ETH");
+        verify(candidateExecutionService).execute(ExchangeMode.UPBIT, "KRW-XRP");
+        org.assertj.core.api.Assertions.assertThat(summary.filledCount()).isEqualTo(3);
+    }
+
+    @Test
     void runOnceSummaryMatchesSavedHistoryForHandledResults() {
         CandidateSchedulerProperties properties = new CandidateSchedulerProperties();
         properties.setEnabled(true);

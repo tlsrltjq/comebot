@@ -15,6 +15,7 @@ public class CandidateSchedulerProperties {
     private boolean notifySummary = false;
     private long fixedDelayMs = 60000;
     private long perMarketDelayMs = 0;
+    private int maxBuysPerRun = 2;
     private ExchangeMode exchange = ExchangeMode.UPBIT;
     private List<ExchangeMode> exchanges = new ArrayList<>();
     private List<String> markets = new ArrayList<>(List.of("KRW-BTC", "KRW-ETH"));
@@ -49,6 +50,14 @@ public class CandidateSchedulerProperties {
 
     public void setPerMarketDelayMs(long perMarketDelayMs) {
         this.perMarketDelayMs = Math.max(0, perMarketDelayMs);
+    }
+
+    public int getMaxBuysPerRun() {
+        return maxBuysPerRun;
+    }
+
+    public void setMaxBuysPerRun(int maxBuysPerRun) {
+        this.maxBuysPerRun = Math.max(0, maxBuysPerRun);
     }
 
     public ExchangeMode getExchange() {
