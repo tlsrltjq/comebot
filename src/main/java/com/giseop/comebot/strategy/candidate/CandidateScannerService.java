@@ -183,11 +183,7 @@ public class CandidateScannerService {
                         market,
                         CandidateDecision.SKIPPED,
                         "Not enough valid trade amount candles",
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
+                        null, null, null, null, null, null,
                         Instant.now()
                 );
             }
@@ -199,11 +195,7 @@ public class CandidateScannerService {
                     market,
                     CandidateDecision.SKIPPED,
                     "Candidate scan failed: " + failureReason(exception),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
+                    null, null, null, null, null, null,
                     Instant.now()
             );
         }
@@ -214,11 +206,7 @@ public class CandidateScannerService {
                 market,
                 CandidateDecision.SKIPPED,
                 reason,
-                null,
-                null,
-                null,
-                null,
-                null,
+                null, null, null, null, null, null,
                 Instant.now()
         );
     }
@@ -282,6 +270,7 @@ public class CandidateScannerService {
                 snapshot.highLowRangeRate(),
                 snapshot.tradeAmountChangeRate(),
                 snapshot.trend(),
+                snapshot.lastCandleBullish(),
                 Instant.now()
         );
     }
@@ -296,6 +285,7 @@ public class CandidateScannerService {
                 snapshot.highLowRangeRate(),
                 snapshot.tradeAmountChangeRate(),
                 snapshot.trend(),
+                snapshot.lastCandleBullish(),
                 Instant.now()
         );
     }

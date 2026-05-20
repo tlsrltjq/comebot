@@ -70,6 +70,27 @@ CREATE INDEX IF NOT EXISTS idx_paper_trade_log_exchange_executed_at
 CREATE INDEX IF NOT EXISTS idx_paper_trade_log_exchange_market_executed_at
     ON paper_trade_log (exchange, market, executed_at DESC);
 
+CREATE TABLE IF NOT EXISTS candidate_scan_log (
+    id VARCHAR(36) PRIMARY KEY,
+    exchange VARCHAR(20) NOT NULL,
+    market VARCHAR(50) NOT NULL,
+    decision VARCHAR(20) NOT NULL,
+    reason VARCHAR(500),
+    current_price NUMERIC(19, 8),
+    price_change_rate NUMERIC(19, 4),
+    high_low_range_rate NUMERIC(19, 4),
+    trade_amount_change_rate NUMERIC(19, 4),
+    trend VARCHAR(20),
+    last_candle_bullish BOOLEAN,
+    scanned_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_scan_log_exchange_scanned_at
+    ON candidate_scan_log (exchange, scanned_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_scan_log_exchange_decision_scanned_at
+    ON candidate_scan_log (exchange, decision, scanned_at DESC);
+
 CREATE TABLE IF NOT EXISTS scheduler_control_setting (
     id VARCHAR(50) PRIMARY KEY,
     auto_trading_enabled BOOLEAN NOT NULL,

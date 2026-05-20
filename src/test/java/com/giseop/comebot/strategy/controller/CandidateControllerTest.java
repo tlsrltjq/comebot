@@ -247,6 +247,7 @@ class CandidateControllerTest {
                 new BigDecimal("5.0"),
                 new BigDecimal("10.0"),
                 MarketTrend.UP,
+                decision == CandidateDecision.SELECTED,
                 Instant.parse("2026-04-30T00:00:00Z")
         );
     }
@@ -261,6 +262,7 @@ class CandidateControllerTest {
                 new BigDecimal("5.0"),
                 new BigDecimal("10.0"),
                 MarketTrend.UP,
+                true,
                 Instant.parse("2026-04-30T00:00:00Z")
         );
     }

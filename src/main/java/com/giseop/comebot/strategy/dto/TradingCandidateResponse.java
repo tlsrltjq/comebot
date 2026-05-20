@@ -15,6 +15,7 @@ public record TradingCandidateResponse(
         BigDecimal highLowRangeRate,
         BigDecimal tradeAmountChangeRate,
         MarketTrend trend,
+        Boolean lastCandleBullish,
         Instant scannedAt,
         CandidateReasonType reasonType,
         CandidateRiskReasonType riskReasonType
@@ -31,6 +32,7 @@ public record TradingCandidateResponse(
                 candidate.highLowRangeRate(),
                 candidate.tradeAmountChangeRate(),
                 candidate.trend(),
+                candidate.lastCandleBullish(),
                 candidate.scannedAt(),
                 reasonType,
                 riskReasonType(reasonType)

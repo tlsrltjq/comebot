@@ -21,6 +21,7 @@ import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.safety.KillSwitchService;
+import com.giseop.comebot.scanlog.service.CandidateScanLogService;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.PositionEntryGuardService;
@@ -48,6 +49,8 @@ class CandidateExecutionServiceTest {
     @Mock
     private TradingFlowNotificationService tradingFlowNotificationService;
     @Mock
+    private CandidateScanLogService candidateScanLogService;
+    @Mock
     private KillSwitchService killSwitchService;
     @Mock
     private PositionEntryGuardService positionEntryGuardService;
@@ -66,6 +69,7 @@ class CandidateExecutionServiceTest {
                 new OrderRequestFactory(),
                 orderExecutionService,
                 tradingFlowHistoryService,
+                candidateScanLogService,
                 notificationProperties,
                 notificationPolicyService,
                 tradingFlowNotificationService,
@@ -150,6 +154,7 @@ class CandidateExecutionServiceTest {
                 new OrderRequestFactory(),
                 orderExecutionService,
                 tradingFlowHistoryService,
+                candidateScanLogService,
                 notificationProperties,
                 notificationPolicyService,
                 tradingFlowNotificationService,
@@ -189,6 +194,7 @@ class CandidateExecutionServiceTest {
                 new BigDecimal("5"),
                 new BigDecimal("20"),
                 MarketTrend.UP,
+                true,
                 Instant.parse("2026-04-30T00:00:00Z")
         ));
         when(orderExecutionService.execute(eq(ExchangeMode.BINANCE), any(OrderRequest.class))).thenReturn(new OrderResult(
@@ -221,6 +227,7 @@ class CandidateExecutionServiceTest {
                 new BigDecimal("5"),
                 new BigDecimal("20"),
                 MarketTrend.UP,
+                true,
                 Instant.parse("2026-04-30T00:00:00Z")
         );
     }
@@ -235,6 +242,7 @@ class CandidateExecutionServiceTest {
                 new BigDecimal("5"),
                 new BigDecimal("20"),
                 MarketTrend.DOWN,
+                false,
                 Instant.parse("2026-04-30T00:00:00Z")
         );
     }

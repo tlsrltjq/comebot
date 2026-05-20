@@ -9,6 +9,7 @@ import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.safety.KillSwitchService;
+import com.giseop.comebot.scanlog.service.CandidateScanLogService;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.strategy.domain.TradingSignal;
 import com.giseop.comebot.strategy.service.OrderRequestFactory;
@@ -30,6 +31,7 @@ public class CandidateExecutionService {
     private final OrderRequestFactory orderRequestFactory;
     private final OrderExecutionService orderExecutionService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
+    private final CandidateScanLogService candidateScanLogService;
     private final NotificationProperties notificationProperties;
     private final NotificationPolicyService notificationPolicyService;
     private final TradingFlowNotificationService tradingFlowNotificationService;
@@ -42,6 +44,7 @@ public class CandidateExecutionService {
             OrderRequestFactory orderRequestFactory,
             OrderExecutionService orderExecutionService,
             TradingFlowHistoryService tradingFlowHistoryService,
+            CandidateScanLogService candidateScanLogService,
             NotificationProperties notificationProperties,
             NotificationPolicyService notificationPolicyService,
             TradingFlowNotificationService tradingFlowNotificationService,
@@ -53,6 +56,7 @@ public class CandidateExecutionService {
         this.orderRequestFactory = orderRequestFactory;
         this.orderExecutionService = orderExecutionService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
+        this.candidateScanLogService = candidateScanLogService;
         this.notificationProperties = notificationProperties;
         this.notificationPolicyService = notificationPolicyService;
         this.tradingFlowNotificationService = tradingFlowNotificationService;
@@ -79,6 +83,7 @@ public class CandidateExecutionService {
         }
 
         TradingCandidate candidate = candidateScannerService.scan(exchange, market);
+        candidateScanLogService.save(exchange, candidate);
         if (candidate.decision() != CandidateDecision.SELECTED) {
             return save(new TradingFlowResult(
                     candidate.market(),

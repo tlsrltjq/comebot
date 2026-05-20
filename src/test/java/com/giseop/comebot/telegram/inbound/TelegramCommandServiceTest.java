@@ -649,6 +649,7 @@ class TelegramCommandServiceTest {
                 new BigDecimal("4.0"),
                 new BigDecimal("10.0"),
                 MarketTrend.UP,
+                decision == CandidateDecision.SELECTED,
                 Instant.now()
         );
     }
