@@ -258,7 +258,9 @@ scripts/apply-schema.sh
 - `paper_position`: 거래소별 PAPER 보유 포지션
 - `paper_realized_profit_event`: 거래소별 실현손익 이벤트
 - `paper_trade_log`: 거래소별 FILLED PAPER BUY/SELL append-only 체결 원장
+- `candidate_scan_log`: 모든 후보 스캔 결과 SELECTED/SKIPPED append-only 기록
 - `scheduler_control_setting`: 자동매매 켜기/끄기와 후보 조회 주기
+- `telegram_update_offset`: Telegram inbound polling offset (JPA 저장 시 재시작 후 중복 처리 방지)
 
 ## OS별 운영 안내
 

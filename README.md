@@ -44,17 +44,17 @@ This project does not implement real exchange orders or `REAL_TRADING`.
 ## Strategy Direction
 
 The default `SimpleThresholdStrategy` is only a test strategy.
-`VolatilityBreakoutLongStrategy` can be selected for long-only PAPER_TRADING entry validation.
+`VolatilityBreakoutLongStrategy` is the primary strategy for long-only PAPER_TRADING entry validation.
 
 The target strategy is:
 
-1. Watch public market data.
-2. Track volatility and short-term trend.
-3. Select long-only candidates.
-4. Enter only through PAPER_TRADING.
-5. Take profit after a configured gain.
-6. Stop loss after a configured loss.
-7. Reject orders that fail risk checks.
+1. Watch public market data (Upbit/Binance public API).
+2. Scan 1-minute candles and calculate a volatility snapshot.
+3. Apply entry filters: UP trend, last candle bullish, price change ≥ 1%, volume surge ≥ 30%, not overheated, price within 2% of 5-min high, minimum candle trade amount.
+4. Limit new BUYs per scheduler cycle (`max-buys-per-run`, default 2).
+5. Enter only through PAPER_TRADING after kill switch + risk checks pass.
+6. Take profit after a configured gain, stop loss after a configured loss.
+7. Stop-loss cooldown blocks re-entry after repeated losses on the same market.
 
 See [Strategy Policy](docs/trading/STRATEGY_POLICY.md).
 
@@ -175,6 +175,13 @@ GET /api/analytics/pnl?range=24h
 GET /api/analytics/losses?range=24h
 ```
 
+Candidate scan log:
+
+```http
+GET /api/candidate-scan-log?range=24h&exchange=UPBIT
+GET /api/candidate-scan-log?range=24h&exchange=UPBIT&decision=SELECTED
+```
+
 Market network diagnostics:
 
 ```bash
@@ -246,29 +253,36 @@ STRATEGY_ORDER_AMOUNT=10000
 STRATEGY_SELECTED=VOLATILITY_BREAKOUT_LONG
 STRATEGY_CANDIDATE_CANDLE_UNIT_MINUTES=1
 STRATEGY_CANDIDATE_CANDLE_COUNT=5
-STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=0.3
-STRATEGY_CANDIDATE_MIN_TRADE_AMOUNT_CHANGE_RATE=20
+STRATEGY_CANDIDATE_MIN_PRICE_CHANGE_RATE=1.0
+STRATEGY_CANDIDATE_MIN_TRADE_AMOUNT_CHANGE_RATE=30
 STRATEGY_CANDIDATE_MAX_PRICE_CHANGE_RATE=10
 STRATEGY_CANDIDATE_MAX_HIGH_LOW_RANGE_RATE=20
+STRATEGY_CANDIDATE_MAX_DISTANCE_FROM_HIGH_RATE=2
+STRATEGY_CANDIDATE_MIN_LATEST_CANDLE_TRADE_AMOUNT_KRW=10000000
+STRATEGY_CANDIDATE_MIN_LATEST_CANDLE_TRADE_AMOUNT_USDT=50000
 STRATEGY_ENTRY_PREVENT_REENTRY_WITH_POSITION=false
 SAFETY_KILL_SWITCH_ENABLED=false
 RISK_POSITION_EXIT_ENABLED=true
+RISK_POSITION_LIMIT_ENABLED=true
+RISK_POSITION_LIMIT_UPBIT_MAX_POSITIONS=3
+RISK_POSITION_LIMIT_BINANCE_MAX_POSITIONS=3
+RISK_POSITION_LIMIT_TOTAL_MAX_POSITIONS=5
 RISK_CONCENTRATION_ENABLED=false
 RISK_CONCENTRATION_UPBIT_BLOCK_EXPOSURE_RATE=10
 RISK_CONCENTRATION_BINANCE_BLOCK_EXPOSURE_RATE=40
-RISK_STOP_LOSS_COOLDOWN_ENABLED=false
-RISK_STOP_LOSS_COOLDOWN_WINDOW=7d
+RISK_STOP_LOSS_COOLDOWN_ENABLED=true
+RISK_STOP_LOSS_COOLDOWN_WINDOW=1d
 RISK_STOP_LOSS_COOLDOWN_TRIGGER_COUNT=2
-RISK_STOP_LOSS_COOLDOWN_DURATION=24h
+RISK_STOP_LOSS_COOLDOWN_DURATION=6h
 RISK_TAKE_PROFIT_RATE=1.5
 RISK_STOP_LOSS_RATE=-0.7
-TRADING_SCHEDULER_ENABLED=true
+TRADING_SCHEDULER_ENABLED=false
 TRADING_CANDIDATE_SCHEDULER_ENABLED=true
-TRADING_SCHEDULER_FIXED_DELAY_MS=30000
-TRADING_SCHEDULER_MARKETS=ALL_KRW
-TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=30000
+TRADING_CANDIDATE_SCHEDULER_FIXED_DELAY_MS=60000
+TRADING_CANDIDATE_SCHEDULER_MAX_BUYS_PER_RUN=2
 TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_KRW,ALL_USDT
 TRADING_CANDIDATE_SCHEDULER_EXCHANGES=UPBIT,BINANCE
+TRADING_EXIT_SCHEDULER_ENABLED=true
 TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE
 ```
 

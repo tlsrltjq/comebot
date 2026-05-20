@@ -59,8 +59,13 @@
 ## ADR-006: 롱 전용 변동성 돌파 전략 (VolatilityBreakoutLong)
 
 - **결정**: 기본 전략은 `VolatilityBreakoutLongStrategy`다. 숏, 마진, 레버리지는 구현하지 않는다.
-  후보 선정 조건: 최근 캔들 가격 변화율, 거래대금 증가율, 추세 UP, 과열 회피.
+  후보 선정 조건: 추세 UP, 마지막 캔들 양봉(`lastCandleBullish`), 가격 변화율(`priceChangeRate` ≥ 1%), 거래대금 증가율(`tradeAmountChangeRate` ≥ 30%), 과열 회피, 최근 고점 대비 거리(`distanceFromHighRate` ≤ 2%), 최소 캔들 거래대금(`minLatestCandleTradeAmount`).
+  1회 스케줄 주기당 최대 BUY 수는 `max-buys-per-run`(기본 2)으로 제한한다.
 - **이유**: 변동성이 검증된 코인의 단기 상승 모멘텀을 포착하는 것이 PAPER 환경에서 빠르게 가설을 검증하기 좋다. 숏 전략은 리스크 복잡도가 크게 올라간다.
+  `lastCandleBullish`: 직전 캔들이 음봉이면 모멘텀 약화 신호이므로 진입 차단.
+  `distanceFromHighRate`: 최근 5분 고점에서 이미 많이 내려온 경우 추세 반전 후 재진입이어서 리스크가 높다.
+  `minLatestCandleTradeAmount`: 상대적 증가율(tradeAmountChangeRate)만으로는 기저 거래대금이 너무 낮아도 통과될 수 있다. 절댓값 필터로 실질 유동성 하한을 보장한다.
+  `max-buys-per-run`: 동일 주기에 여러 BUY가 실행되면 포지션 집중도가 급격히 올라가고 stop-loss cooldown을 동시에 트리거할 위험이 있다.
 - **트레이드오프**: 하락장에서 후보가 거의 없어 자동 매수가 드물다. 전략 단순화로 실제 알파 포착 능력이 제한될 수 있다.
 - **재검토 조건**: 장기 PAPER 손익비(profitLossRatio)가 1 미만으로 유지되면 전략 조건 조정 검토. 숏은 별도 전략 모듈로만 검토.
 
@@ -85,3 +90,17 @@
 - **이유**: kill switch가 시세 조회 이후에 있으면 시세 API 호출이 먼저 발생해 장애 상황에서 불필요한 외부 요청이 쌓인다. 리스크 검증 실패 시 ExecutionGateway를 호출하면 안 된다는 원칙을 코드 구조로 강제.
 - **트레이드오프**: kill switch 체크 레이어가 여러 서비스에 중복 삽입될 수 있다.
 - **재검토 조건**: kill switch 체크 로직을 AOP나 공통 필터로 추출할 필요가 생기면 재검토.
+
+---
+
+## ADR-009: 후보 스캔 결과 별도 테이블 기록 (candidate_scan_log)
+
+- **결정**: SELECTED/SKIPPED 포함 모든 후보 스캔 결과를 `candidate_scan_log` 테이블에 append-only로 기록한다.
+  `paper_trade_log` 확장이나 `trading_flow_history` 확장을 선택하지 않았다.
+- **이유**:
+  `paper_trade_log`는 FILLED 체결 원장이며 SKIPPED 결과를 포함하면 테이블 의미가 훼손된다.
+  `trading_flow_history`는 주문 실행 결과 중심이라 스캔 단계의 SKIPPED 이유 필드와 구조가 맞지 않는다.
+  별도 테이블이면 스캔 로그와 주문 이력을 독립적으로 쿼리하고 각각 보존 정책을 달리 적용할 수 있다.
+- **트레이드오프**: InMemory 저장소는 ring buffer(max 10,000건)로 제한하고, JPA 저장소는 외부 DB 비용이 추가된다.
+  스키마 분리로 조인 없이 스캔 로그만 조회할 수 있지만, 같은 market의 스캔 결과와 체결 이력을 연결하려면 애플리케이션 레이어에서 market+time으로 매칭해야 한다.
+- **재검토 조건**: 스캔 로그가 대용량이 되어 별도 시계열 DB가 필요해지면 재검토.

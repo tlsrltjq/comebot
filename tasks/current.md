@@ -1,33 +1,33 @@
 # 현재 작업 컨텍스트
 
-## 지금 단계: 후보 선정 수치 기록 설계
+## 지금 단계: 데이터 축적 대기
 
 ## 목표
-- [ ] BUY 시점에 남겨야 할 전략 판단 수치 목록 확정
-      (변동성, 가격 변화율, 거래대금 변화율, trend, risk reject/hold reason)
-- [ ] 저장 위치 설계: `paper_trade_log` 확장 vs 별도 `scan_log` 테이블 비교
-- [ ] 데이터 축적 전 바로 구현할 항목과 축적 후 구현할 항목 분리
-- [ ] `CLAUDE_FEEDBACK_ROADMAP.md`와 방향 일치 확인
 
-## 완료 기준
-- 실제 DB migration 없이 문서와 DTO/도메인 경계만 정리됨
-- `paper_trade_log` 확장 또는 별도 scan log 중 설계 방향 하나가 확정됨
-- 실제 주문 API, `REAL_TRADING`, 수동 BUY UI가 추가되지 않음
-- 설계 결과를 `docs/trading/condition-records/` 또는 `docs/project/CLAUDE_FEEDBACK_ROADMAP.md`에 기록
+2026-05-20 기준으로 모든 계획된 구현이 완료되었다.
+지금은 PAPER 운용 데이터를 충분히 쌓고, 전략 성과를 관찰하는 단계다.
 
-## 건드리면 안 되는 파일
-- `src/main/resources/schema.sql`: DB migration 확정 전 변경 금지
-- `frontend/src/shared/api/types.ts`: API 계약 변경 전 수정 금지
-- `REAL_TRADING` 관련 코드: 추가 금지
+## 완료된 구현 (이번 세션)
 
-## 이전 세션에서 멈춘 곳
-하네스·문서·설정 정합성 점검 완료.
-- PositionLimitRiskValidationService RiskValidationService 파이프라인 연결
-- stop-loss-cooldown 기본값 수정 (disabled, 7d, 24h)
-- MarketSelectionProperties, PaperFeeProperties, PositionLimitProperties 키 application.properties + .env.example 등록
-- RISK_POLICY.md 포지션 수 상한 섹션 추가, STRATEGY_POLICY.md 기본값 수정
-다음 세션에서 후보 선정 수치 기록 설계를 시작한다.
-참고: `docs/project/PROJECT_NEXT_STEPS.md` "다음 우선순위: 후보 선정 수치 기록 설계" 섹션.
+- [x] CandidateScanLogService, InMemoryCandidateScanLogRepository 구현
+- [x] CandidateScanLogController (`GET /api/candidate-scan-log`)
+- [x] CandidateScannerService scan 결과 SELECTED/SKIPPED 전량 기록
+- [x] max-buys-per-run (1회 스케줄 주기당 최대 BUY 수 제한, 기본 2)
+- [x] minLatestCandleTradeAmount 진입 필터 (KRW 1천만 / USDT 5만)
+- [x] maxDistanceFromHighRate 진입 필터 (최근 5분 고점 대비 2% 이내)
+- [x] VolatilitySnapshot에 latestCandleTradeAmount, distanceFromHighRate 추가
+- [x] PositionLimitRiskValidationService 테스트 (4개)
+- [x] CandidateScanLogService 테스트 (6개), CandidateScanLogController 테스트 (4개)
+- [x] 전체 문서 최신화 (README, HARNESS, ARCHITECTURE, PROJECT_HISTORY, PROJECT_NEXT_STEPS, OPERATIONS, decisions)
 
-## 다음 단계 예고
-설계 확정 후 → `paper_trade_log` 확장 또는 신규 테이블 schema.sql 작성 및 마이그레이션
+## 완료 기준 충족
+
+- `./gradlew test` 통과
+- 보안 린트 통과
+- 실제 주문 API, REAL_TRADING, 수동 BUY UI 추가 없음
+
+## 다음 작업
+
+데이터 축적 후 결정:
+- trailing stop / 시간 기반 청산 (2–3개월 PAPER 이력 필요)
+- 진입 필터 수치 조정 (scan log 통계로 filter-out rate 분석 후 결정)

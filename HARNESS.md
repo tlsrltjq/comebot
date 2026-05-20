@@ -29,8 +29,8 @@ frontend/src/
 ```
 
 ## 현재 상태
-- **완료**: PAPER 자동 매수·청산, WebSocket+REST fallback, Upbit/Binance 이중 거래소, concentration risk, stop-loss cooldown, 전략 성과 analytics, Playwright E2E
-- **다음**: 후보 선정 수치 기록 설계 (scan log 또는 paper_trade_log 확장)
+- **완료**: PAPER 자동 매수·청산, WebSocket+REST fallback, Upbit/Binance 이중 거래소, concentration risk, stop-loss cooldown, 전략 성과 analytics, Playwright E2E, candidate scan log, 진입 품질 필터 (lastCandleBullish/distanceFromHigh/minTradeAmount/maxBuysPerRun)
+- **다음**: 2–3개월 PAPER 데이터 축적 후 trailing stop 설계 검토
 - **보류**: REAL_TRADING, 실제 주문 API, 수동 BUY
 
 ## 코딩 규칙
