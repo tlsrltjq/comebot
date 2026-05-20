@@ -5,6 +5,13 @@
 
 ---
 
+2026-05-20 | quality | feat: add max-distance-from-high-rate filter (최근 고가 대비 2% 초과 하락 시 진입 거부)
+2026-05-20 | quality | feat: add min-latest-candle-trade-amount filter (KRW 1천만/USDT 5만 미만 거래대금 진입 거부)
+2026-05-20 | quality | feat: add max-buys-per-run=2 — 스케줄러 1회 최대 BUY 수 제한
+2026-05-20 | scanlog | feat: implement candidate scan log — 모든 스캔 결과 기록, GET /api/candidate-scan-log
+2026-05-20 | scanlog | feat: TradingCandidate에 lastCandleBullish 필드 추가, 스캔 로그에 포함
+2026-05-20 | risk    | fix: PositionLimitRiskValidationService RiskValidationService 파이프라인에 주입 (이전에는 미연결)
+2026-05-20 | config  | feat: MarketSelectionProperties 실제 연결 (top-20 KRW / top-30 USDT)
 2026-05-19 | binance | fix: BinanceCandleProvider 죽은 @Component 제거, price-provider 기본값 UPBIT→SNAPSHOT (Binance exit 정상화)
 2026-05-19 | risk  | fix: enable stop-loss cooldown (1d/2회→6h차단), lastCandleBullish 필터 추가, minPriceChangeRate 0.3→1.0
 2026-05-19 | sync  | docs: optimize docs — delete 5 stale plan files, trim completed history to CHANGELOG

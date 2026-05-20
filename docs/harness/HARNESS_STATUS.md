@@ -15,19 +15,20 @@
 
 ## 최근 완료 (상세 이력: CHANGELOG.md)
 
-- position limit 리스크 검증 (거래소별 max 3, 전체 max 5) + RiskValidationService 파이프라인 연결
-- MarketSelectionProperties, PaperFeeProperties 등 새 ConfigurationProperties 등록
-- stop-loss-cooldown 기본값 RISK_POLICY.md 기준 정렬 (disabled, 7d, 24h)
+- candidate scan log — 모든 스캔 결과 기록, GET /api/candidate-scan-log
+- TradingCandidate.lastCandleBullish 필드, distanceFromHighRate/latestCandleTradeAmount 스냅샷 필드
+- max-distance-from-high-rate 필터 (default 2%) — 피크 이후 하락 진입 차단
+- min-latest-candle-trade-amount 필터 (KRW 1천만 / USDT 5만) — 유동성 하한 보장
+- max-buys-per-run=2 — 스케줄러 1회 최대 BUY 수 제한
+- PositionLimitRiskValidationService RiskValidationService 파이프라인 연결 (이전에는 미연결)
+- stop-loss-cooldown 기본값 정정: enabled=true, window=1d, duration=6h
+- MarketSelectionProperties 실제 연결 (top-20 KRW / top-30 USDT)
 - PAPER 포지션 청산 흐름 스모크 테스트 (익절/손절/선택 SELL)
 - strategy performance analytics (winRate, profitLossRatio, averageHoldingSeconds)
-- market data readiness guard (SNAPSHOT+WebSocket fresh snapshot 0개 → scheduler 차단)
-- 하네스 재구성 (HARNESS.md, CHANGELOG, decisions.md, tasks/current.md, GC_ROUTINE)
 
 ## 다음 작업
 
-1. 후보 선정 수치 기록 설계
-
-상세 목표와 완료 기준은 `docs/project/PROJECT_NEXT_STEPS.md`를 따른다.
+1. 2–3개월 운용 데이터 축적 후 trailing stop 설계 검토
 
 ## 검증 기준
 
