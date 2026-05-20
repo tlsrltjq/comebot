@@ -302,6 +302,43 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void priceTooFarBelowHighIsSkipped() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMaxDistanceFromHighRate(new BigDecimal("2"));
+        // latest close (120) is 4% below the high (125) → should be rejected
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Price is too far below the recent high");
+    }
+
+    @Test
+    void priceCloseToHighPassesFilter() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMaxDistanceFromHighRate(new BigDecimal("2"));
+        // latest close (124) is 0.8% below the high (125) → should be selected
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "124", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
     void latestCandleTradeAmountAboveThresholdIsNotBlocked() {
         scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
         scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));

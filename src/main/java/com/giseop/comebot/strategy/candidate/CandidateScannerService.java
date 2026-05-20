@@ -273,6 +273,11 @@ public class CandidateScannerService {
         if (snapshot.highLowRangeRate().compareTo(strategyMarketSettingsService.maxHighLowRangeRate(snapshot.market())) > 0) {
             return skipped(snapshot, "High low range rate is overheated");
         }
+        BigDecimal maxDistFromHigh = candidateScannerProperties.getMaxDistanceFromHighRate();
+        if (maxDistFromHigh.compareTo(BigDecimal.ZERO) > 0
+                && snapshot.distanceFromHighRate().compareTo(maxDistFromHigh) > 0) {
+            return skipped(snapshot, "Price is too far below the recent high");
+        }
         return new TradingCandidate(
                 snapshot.market(),
                 CandidateDecision.SELECTED,

@@ -16,6 +16,7 @@ public class CandidateScannerProperties {
     private BigDecimal maxHighLowRangeRate = new BigDecimal("20");
     private BigDecimal minLatestCandleTradeAmountKrw = BigDecimal.ZERO;
     private BigDecimal minLatestCandleTradeAmountUsdt = BigDecimal.ZERO;
+    private BigDecimal maxDistanceFromHighRate = BigDecimal.ZERO;
 
     public int getCandleUnitMinutes() {
         return candleUnitMinutes;
@@ -79,5 +80,13 @@ public class CandidateScannerProperties {
 
     public void setMinLatestCandleTradeAmountUsdt(BigDecimal minLatestCandleTradeAmountUsdt) {
         this.minLatestCandleTradeAmountUsdt = minLatestCandleTradeAmountUsdt == null ? BigDecimal.ZERO : minLatestCandleTradeAmountUsdt;
+    }
+
+    public BigDecimal getMaxDistanceFromHighRate() {
+        return maxDistanceFromHighRate;
+    }
+
+    public void setMaxDistanceFromHighRate(BigDecimal maxDistanceFromHighRate) {
+        this.maxDistanceFromHighRate = maxDistanceFromHighRate == null ? BigDecimal.ZERO : maxDistanceFromHighRate;
     }
 }
