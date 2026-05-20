@@ -266,6 +266,59 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void latestCandleTradeAmountBelowKrwThresholdIsSkipped() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinLatestCandleTradeAmountKrw(new BigDecimal("2000"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Latest candle trade amount is below minimum threshold");
+    }
+
+    @Test
+    void latestCandleTradeAmountBelowUsdtThresholdIsSkipped() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinLatestCandleTradeAmountUsdt(new BigDecimal("2000"));
+        candleProvider.candles = List.of(
+                candle("BTCUSDT", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("BTCUSDT", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+
+        TradingCandidate candidate = service.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Latest candle trade amount is below minimum threshold");
+    }
+
+    @Test
+    void latestCandleTradeAmountAboveThresholdIsNotBlocked() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinLatestCandleTradeAmountKrw(new BigDecimal("1000"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
     void providerFailureIsReturnedAsSkippedCandidate() {
         candleProvider.failure = true;
 

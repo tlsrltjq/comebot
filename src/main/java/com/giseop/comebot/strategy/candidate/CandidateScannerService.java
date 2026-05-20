@@ -188,6 +188,11 @@ public class CandidateScannerService {
                 );
             }
             VolatilitySnapshot snapshot = volatilityIndicatorService.calculate(validCandles);
+            BigDecimal minTradeAmount = minLatestCandleTradeAmount(exchange);
+            if (minTradeAmount.compareTo(BigDecimal.ZERO) > 0
+                    && snapshot.latestCandleTradeAmount().compareTo(minTradeAmount) < 0) {
+                return skipped(snapshot, "Latest candle trade amount is below minimum threshold");
+            }
             return toCandidate(snapshot);
         } catch (RuntimeException exception) {
             log.warn("Candidate scan failed. market={}, reason={}", market, failureReason(exception));
@@ -213,6 +218,13 @@ public class CandidateScannerService {
 
     private CandleProvider candleProvider(ExchangeMode exchange) {
         return exchange == ExchangeMode.BINANCE ? binanceCandleProvider : upbitCandleProvider;
+    }
+
+    private BigDecimal minLatestCandleTradeAmount(ExchangeMode exchange) {
+        if (exchange == ExchangeMode.BINANCE) {
+            return candidateScannerProperties.getMinLatestCandleTradeAmountUsdt();
+        }
+        return candidateScannerProperties.getMinLatestCandleTradeAmountKrw();
     }
 
     private boolean hasPositiveTradeAmount(Candle candle) {

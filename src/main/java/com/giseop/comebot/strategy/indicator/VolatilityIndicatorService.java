@@ -53,7 +53,8 @@ public class VolatilityIndicatorService {
                 tradeAmountChangeRate,
                 trend(priceChangeRate),
                 orderedCandles.size(),
-                lastCandleBullish
+                lastCandleBullish,
+                latest.accumulatedTradePrice()
         );
     }
 
