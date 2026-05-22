@@ -6,6 +6,7 @@ import com.giseop.comebot.market.candle.domain.Candle;
 import com.giseop.comebot.market.candle.provider.BinanceCandleProvider;
 import com.giseop.comebot.market.candle.provider.CandleProvider;
 import com.giseop.comebot.market.candle.provider.UpbitCandleProvider;
+import com.giseop.comebot.market.service.BtcTrendCacheService;
 import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
@@ -35,6 +36,7 @@ public class CandidateScannerService {
     private final VolatilityIndicatorService volatilityIndicatorService;
     private final StrategyMarketSettingsService strategyMarketSettingsService;
     private final MarketSelectionService marketSelectionService;
+    private final BtcTrendCacheService btcTrendCacheService;
 
     @Autowired
     public CandidateScannerService(
@@ -43,7 +45,8 @@ public class CandidateScannerService {
             UpbitCandleProvider upbitCandleProvider,
             VolatilityIndicatorService volatilityIndicatorService,
             StrategyMarketSettingsService strategyMarketSettingsService,
-            MarketSelectionService marketSelectionService
+            MarketSelectionService marketSelectionService,
+            BtcTrendCacheService btcTrendCacheService
     ) {
         this.tradingProperties = tradingProperties;
         this.candidateScannerProperties = candidateScannerProperties;
@@ -52,6 +55,7 @@ public class CandidateScannerService {
         this.volatilityIndicatorService = volatilityIndicatorService;
         this.strategyMarketSettingsService = strategyMarketSettingsService;
         this.marketSelectionService = marketSelectionService;
+        this.btcTrendCacheService = btcTrendCacheService;
     }
 
     CandidateScannerService(
@@ -68,7 +72,8 @@ public class CandidateScannerService {
                 candleProvider,
                 volatilityIndicatorService,
                 strategyMarketSettingsService,
-                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore())
+                new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null
         );
     }
 
@@ -79,7 +84,8 @@ public class CandidateScannerService {
             CandleProvider binanceCandleProvider,
             VolatilityIndicatorService volatilityIndicatorService,
             StrategyMarketSettingsService strategyMarketSettingsService,
-            MarketSelectionService marketSelectionService
+            MarketSelectionService marketSelectionService,
+            BtcTrendCacheService btcTrendCacheService
     ) {
         this.tradingProperties = tradingProperties;
         this.candidateScannerProperties = candidateScannerProperties;
@@ -88,6 +94,7 @@ public class CandidateScannerService {
         this.volatilityIndicatorService = volatilityIndicatorService;
         this.strategyMarketSettingsService = strategyMarketSettingsService;
         this.marketSelectionService = marketSelectionService;
+        this.btcTrendCacheService = btcTrendCacheService;
     }
 
     public List<TradingCandidate> scanAllowedMarkets() {
@@ -255,33 +262,50 @@ public class CandidateScannerService {
     }
 
     private TradingCandidate toCandidate(VolatilitySnapshot snapshot) {
-        if (snapshot.trend() != MarketTrend.UP) {
+        // Weak downtrend filter: net move from start to end must not be negative
+        if (snapshot.priceChangeRate().compareTo(BigDecimal.ZERO) < 0) {
             return skipped(snapshot, "Trend is not UP");
         }
-        if (!snapshot.lastCandleBullish()) {
-            return skipped(snapshot, "Last candle is not bullish");
+        // Pump must have occurred somewhere in the window
+        if (snapshot.windowHighChangeRate().compareTo(strategyMarketSettingsService.minPriceChangeRate(snapshot.market())) < 0) {
+            return skipped(snapshot, "No significant pump detected in window");
         }
-        if (snapshot.priceChangeRate().compareTo(strategyMarketSettingsService.minPriceChangeRate(snapshot.market())) < 0) {
-            return skipped(snapshot, "Price change rate is below threshold");
-        }
-        if (snapshot.tradeAmountChangeRate().compareTo(strategyMarketSettingsService.minTradeAmountChangeRate(snapshot.market())) < 0) {
-            return skipped(snapshot, "Trade amount change rate is below threshold");
-        }
-        if (snapshot.priceChangeRate().compareTo(strategyMarketSettingsService.maxPriceChangeRate(snapshot.market())) > 0) {
+        if (snapshot.windowHighChangeRate().compareTo(strategyMarketSettingsService.maxPriceChangeRate(snapshot.market())) > 0) {
             return skipped(snapshot, "Price change rate is overheated");
+        }
+        // Volume spike must have occurred at peak (not just latest candle)
+        if (snapshot.peakTradeAmountChangeRate().compareTo(strategyMarketSettingsService.minTradeAmountChangeRate(snapshot.market())) < 0) {
+            return skipped(snapshot, "Trade amount change rate is below threshold");
         }
         if (snapshot.highLowRangeRate().compareTo(strategyMarketSettingsService.maxHighLowRangeRate(snapshot.market())) > 0) {
             return skipped(snapshot, "High low range rate is overheated");
+        }
+        // Pullback zone: price must have pulled back from the high (not at the peak)
+        BigDecimal minDistFromHigh = candidateScannerProperties.getMinDistanceFromHighRate();
+        if (minDistFromHigh.compareTo(BigDecimal.ZERO) > 0
+                && snapshot.distanceFromHighRate().compareTo(minDistFromHigh) < 0) {
+            return skipped(snapshot, "Price has not pulled back sufficiently from high");
         }
         BigDecimal maxDistFromHigh = candidateScannerProperties.getMaxDistanceFromHighRate();
         if (maxDistFromHigh.compareTo(BigDecimal.ZERO) > 0
                 && snapshot.distanceFromHighRate().compareTo(maxDistFromHigh) > 0) {
             return skipped(snapshot, "Price is too far below the recent high");
         }
+        // Bounce confirmation: last candle must be bullish
+        if (!snapshot.lastCandleBullish()) {
+            return skipped(snapshot, "Last candle is not bullish");
+        }
+        // BTC 1h trend filter (UPBIT markets only)
+        if (btcTrendCacheService != null && snapshot.market() != null && !snapshot.market().endsWith("USDT")) {
+            BtcTrendCacheService.BtcTrend btcTrend = btcTrendCacheService.trend();
+            if (btcTrend == BtcTrendCacheService.BtcTrend.DOWN) {
+                return skipped(snapshot, "BTC 1h trend is DOWN");
+            }
+        }
         return new TradingCandidate(
                 snapshot.market(),
                 CandidateDecision.SELECTED,
-                "Volatility long candidate selected",
+                "Pullback bounce candidate selected",
                 snapshot.currentPrice(),
                 snapshot.priceChangeRate(),
                 snapshot.highLowRangeRate(),

@@ -35,11 +35,20 @@ public class VolatilityIndicatorService {
                 .map(Candle::lowPrice)
                 .min(BigDecimal::compareTo)
                 .orElseThrow();
+        BigDecimal peakTradeAmount = orderedCandles.stream()
+                .map(Candle::accumulatedTradePrice)
+                .max(BigDecimal::compareTo)
+                .orElseThrow();
 
         BigDecimal priceChangeRate = rate(latest.tradePrice().subtract(oldest.openingPrice()), oldest.openingPrice());
         BigDecimal highLowRangeRate = rate(highestPrice.subtract(lowestPrice), lowestPrice);
         BigDecimal tradeAmountChangeRate = rate(
                 latest.accumulatedTradePrice().subtract(oldest.accumulatedTradePrice()),
+                oldest.accumulatedTradePrice()
+        );
+        BigDecimal windowHighChangeRate = rate(highestPrice.subtract(oldest.openingPrice()), oldest.openingPrice());
+        BigDecimal peakTradeAmountChangeRate = rate(
+                peakTradeAmount.subtract(oldest.accumulatedTradePrice()),
                 oldest.accumulatedTradePrice()
         );
 
@@ -56,7 +65,9 @@ public class VolatilityIndicatorService {
                 orderedCandles.size(),
                 lastCandleBullish,
                 latest.accumulatedTradePrice(),
-                distanceFromHighRate
+                distanceFromHighRate,
+                windowHighChangeRate,
+                peakTradeAmountChangeRate
         );
     }
 

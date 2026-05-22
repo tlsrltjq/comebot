@@ -12,6 +12,8 @@ public record VolatilitySnapshot(
         int candleCount,
         boolean lastCandleBullish,
         BigDecimal latestCandleTradeAmount,
-        BigDecimal distanceFromHighRate
+        BigDecimal distanceFromHighRate,
+        BigDecimal windowHighChangeRate,
+        BigDecimal peakTradeAmountChangeRate
 ) {
 }

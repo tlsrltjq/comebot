@@ -47,7 +47,7 @@ class CandidateScannerServiceTest {
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
         assertThat(candidate.trend()).isEqualTo(MarketTrend.UP);
         assertThat(candidate.priceChangeRate()).isEqualByComparingTo("20.0000");
-        assertThat(candidate.reason()).isEqualTo("Volatility long candidate selected");
+        assertThat(candidate.reason()).isEqualTo("Pullback bounce candidate selected");
     }
 
     @Test
@@ -68,7 +68,8 @@ class CandidateScannerServiceTest {
                 new com.giseop.comebot.market.service.MarketSelectionService(
                         new com.giseop.comebot.market.service.UpbitKrwTickerStore(),
                         new com.giseop.comebot.market.service.BinanceUsdtTickerStore()
-                )
+                ),
+                null
         );
 
         TradingCandidate candidate = exchangeAwareService.scan(ExchangeMode.BINANCE, "BTCUSDT");
@@ -128,6 +129,7 @@ class CandidateScannerServiceTest {
 
     @Test
     void downTrendIsSkipped() {
+        // Both candles are declining — net priceChangeRate is negative
         candleProvider.candles = List.of(
                 candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "95", "1000"),
                 candle("KRW-BTC", "2026-04-30T00:01:00Z", "95", "100", "80", "90", "1200")
@@ -141,6 +143,7 @@ class CandidateScannerServiceTest {
 
     @Test
     void sidewaysMarketIsSkipped() {
+        // Price returns to start — last candle close equals open → not bullish
         scannerProperties.setMinPriceChangeRate(BigDecimal.ZERO);
         scannerProperties.setMinTradeAmountChangeRate(BigDecimal.ZERO);
         scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
@@ -154,11 +157,12 @@ class CandidateScannerServiceTest {
 
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
         assertThat(candidate.trend()).isEqualTo(MarketTrend.SIDEWAYS);
-        assertThat(candidate.reason()).isEqualTo("Trend is not UP");
+        assertThat(candidate.reason()).isEqualTo("Last candle is not bullish");
     }
 
     @Test
     void lowPriceChangeRateIsSkipped() {
+        // windowHighChangeRate (3%) is below minPriceChangeRate (5%)
         scannerProperties.setMinPriceChangeRate(new BigDecimal("5"));
         candleProvider.candles = List.of(
                 candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "102", "99", "101", "1000"),
@@ -168,7 +172,7 @@ class CandidateScannerServiceTest {
         TradingCandidate candidate = service.scan("KRW-BTC");
 
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
-        assertThat(candidate.reason()).isEqualTo("Price change rate is below threshold");
+        assertThat(candidate.reason()).isEqualTo("No significant pump detected in window");
     }
 
     @Test
@@ -336,6 +340,46 @@ class CandidateScannerServiceTest {
         TradingCandidate candidate = service.scan("KRW-BTC");
 
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
+    void pullbackBounceIsSelectedWhenPriceIsInPullbackZone() {
+        // Pump to 125, then pullback to 122 (2.4% from high) → within [0.5%, 3%] zone + bullish last candle
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinDistanceFromHighRate(new BigDecimal("0.5"));
+        scannerProperties.setMaxDistanceFromHighRate(new BigDecimal("3"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "99", "102", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "102", "125", "101", "121", "1500"),
+                candle("KRW-BTC", "2026-04-30T00:02:00Z", "121", "123", "120", "122", "1200")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
+    void pullbackAtPeakIsRejectedWhenMinDistanceNotMet() {
+        // Price is still at the peak — no pullback yet (distanceFromHigh = 0% < minDistance 0.5%)
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinDistanceFromHighRate(new BigDecimal("0.5"));
+        scannerProperties.setMaxDistanceFromHighRate(new BigDecimal("3"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "99", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "125", "1500")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Price has not pulled back sufficiently from high");
     }
 
     @Test
