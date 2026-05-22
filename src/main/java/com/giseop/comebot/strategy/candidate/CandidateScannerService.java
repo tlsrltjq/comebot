@@ -102,7 +102,7 @@ public class CandidateScannerService {
         List<String> configuredMarkets = exchange == ExchangeMode.BINANCE
                 ? binanceCandidateMarkets()
                 : tradingProperties.getAllowedMarkets();
-        List<String> markets = marketSelectionService.resolve(configuredMarkets);
+        List<String> markets = marketSelectionService.resolve(exchange, configuredMarkets);
         return scanMarkets(exchange, limitMarkets(markets, limit));
     }
 
