@@ -1,0 +1,8 @@
+build/
+.gradle/
+frontend/
+*.md
+.env
+.git/
+docs/
+scripts/

@@ -10,6 +10,54 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - comebot-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-comebot} -d ${POSTGRES_DB:-comebot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comebot-app
+    ports:
+      - "${SERVER_PORT:-18080}:18080"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HISTORY_STORAGE_TYPE: JPA
+      PAPER_PORTFOLIO_STORAGE_TYPE: JPA
+      TELEGRAM_INBOUND_OFFSET_STORAGE_TYPE: JPA
+      CANDIDATE_SCAN_LOG_STORAGE_TYPE: JPA
+      MARKET_PRICE_PROVIDER: ${MARKET_PRICE_PROVIDER:-SNAPSHOT}
+      MARKET_WEBSOCKET_ENABLED: ${MARKET_WEBSOCKET_ENABLED:-true}
+      MARKET_WEBSOCKET_UPBIT_ENABLED: ${MARKET_WEBSOCKET_UPBIT_ENABLED:-true}
+      MARKET_WEBSOCKET_BINANCE_ENABLED: ${MARKET_WEBSOCKET_BINANCE_ENABLED:-true}
+      MARKET_UPBIT_KRW_TICKER_POLLING_ENABLED: ${MARKET_UPBIT_KRW_TICKER_POLLING_ENABLED:-true}
+      MARKET_BINANCE_USDT_TICKER_POLLING_ENABLED: ${MARKET_BINANCE_USDT_TICKER_POLLING_ENABLED:-true}
+      TRADING_CANDIDATE_SCHEDULER_ENABLED: ${TRADING_CANDIDATE_SCHEDULER_ENABLED:-true}
+      TRADING_CANDIDATE_SCHEDULER_MARKETS: ${TRADING_CANDIDATE_SCHEDULER_MARKETS:-ALL_KRW,ALL_USDT}
+      TRADING_CANDIDATE_SCHEDULER_EXCHANGES: ${TRADING_CANDIDATE_SCHEDULER_EXCHANGES:-UPBIT,BINANCE}
+      TRADING_EXIT_SCHEDULER_ENABLED: ${TRADING_EXIT_SCHEDULER_ENABLED:-true}
+      TRADING_EXIT_SCHEDULER_EXCHANGES: ${TRADING_EXIT_SCHEDULER_EXCHANGES:-UPBIT,BINANCE}
+      TRADING_SCHEDULER_ENABLED: "false"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-comebot}
+      SPRING_SQL_INIT_MODE: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: comebot-web
+    ports:
+      - "${WEB_PORT:-5173}:80"
+    depends_on:
+      - app
 
 volumes:
   comebot-postgres-data:
