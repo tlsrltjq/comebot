@@ -40,30 +40,33 @@ public class MarketSelectionService {
     public List<String> resolve(List<String> configuredMarkets) {
         List<String> markets = normalize(configuredMarkets);
         if (markets.contains(ALL_KRW)) {
-            return upbitKrwTickerStore.topMarkets(marketSelectionProperties.getTopKrwMarketLimit());
+            return exclude(upbitKrwTickerStore.topMarkets(marketSelectionProperties.getTopKrwMarketLimit()));
         }
         if (markets.contains(ALL_USDT)) {
-            return binanceUsdtTickerStore.topSymbols(marketSelectionProperties.getTopUsdtSymbolLimit());
+            return exclude(binanceUsdtTickerStore.topSymbols(marketSelectionProperties.getTopUsdtSymbolLimit()));
         }
-        return markets;
+        return exclude(markets);
     }
 
     public List<String> resolve(ExchangeMode exchange, List<String> configuredMarkets) {
         ExchangeMode mode = exchange == null ? ExchangeMode.UPBIT : exchange;
         List<String> markets = normalize(configuredMarkets);
         if (mode == ExchangeMode.UPBIT && markets.contains(ALL_KRW)) {
-            return upbitKrwTickerStore.topMarkets(marketSelectionProperties.getTopKrwMarketLimit());
+            return exclude(upbitKrwTickerStore.topMarkets(marketSelectionProperties.getTopKrwMarketLimit()));
         }
         if (mode == ExchangeMode.BINANCE && markets.contains(ALL_USDT)) {
-            return binanceUsdtTickerStore.topSymbols(marketSelectionProperties.getTopUsdtSymbolLimit());
+            return exclude(binanceUsdtTickerStore.topSymbols(marketSelectionProperties.getTopUsdtSymbolLimit()));
         }
-        return markets.stream()
+        return exclude(markets.stream()
                 .filter(market -> isMarketForExchange(mode, market))
-                .toList();
+                .toList());
     }
 
     public boolean isAllowed(String market, List<String> configuredMarkets) {
         if (market == null || market.isBlank()) {
+            return false;
+        }
+        if (isExcluded(market)) {
             return false;
         }
         List<String> markets = normalize(configuredMarkets);
@@ -74,6 +77,18 @@ public class MarketSelectionService {
             return market.endsWith("USDT");
         }
         return markets.contains(market);
+    }
+
+    private List<String> exclude(List<String> markets) {
+        if (marketSelectionProperties.getExcludedMarkets().isEmpty()) {
+            return markets;
+        }
+        return markets.stream().filter(m -> !isExcluded(m)).toList();
+    }
+
+    private boolean isExcluded(String market) {
+        return marketSelectionProperties.getExcludedMarkets().stream()
+                .anyMatch(ex -> ex.equalsIgnoreCase(market));
     }
 
     private boolean isMarketForExchange(ExchangeMode exchange, String market) {
