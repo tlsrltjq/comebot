@@ -281,10 +281,10 @@ class ScheduledCandidateExecutionRunnerTest {
 
         CandidateSchedulerRunSummary summary = runner(properties, candidateExecutionService).runOnce();
 
-        org.assertj.core.api.Assertions.assertThat(historyRepository.findRecent(10)).hasSize(summary.executedMarkets());
+        org.assertj.core.api.Assertions.assertThat(historyRepository.findRecent(10)).hasSize(2);
         org.assertj.core.api.Assertions.assertThat(historyRepository.findRecent(10))
-                .extracting(history -> history.orderStatus() == null ? "HOLD" : history.orderStatus().name())
-                .containsExactlyInAnyOrder("FILLED", "REJECTED", "HOLD");
+                .extracting(history -> history.orderStatus().name())
+                .containsExactlyInAnyOrder("FILLED", "REJECTED");
         org.assertj.core.api.Assertions.assertThat(summary.filledCount()).isEqualTo(1);
         org.assertj.core.api.Assertions.assertThat(summary.rejectedCount()).isEqualTo(1);
         org.assertj.core.api.Assertions.assertThat(summary.holdCount()).isEqualTo(1);

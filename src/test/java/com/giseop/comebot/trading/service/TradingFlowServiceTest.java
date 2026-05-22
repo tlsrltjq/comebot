@@ -148,10 +148,7 @@ class TradingFlowServiceTest {
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.orderStatus()).isNull();
         assertThat(result.message()).isEqualTo("No order created");
-
-        TradingFlowHistory history = historyRepository.findRecent(1).getFirst();
-        assertThat(history.signalType()).isEqualTo(SignalType.HOLD);
-        assertThat(history.orderCreated()).isFalse();
+        assertThat(historyRepository.findRecent(1)).isEmpty();
         assertThat(paperPortfolioService.getPortfolio().cash()).isEqualByComparingTo("1000000");
         assertThat(paperPortfolioService.findPositions()).isEmpty();
     }
@@ -191,7 +188,7 @@ class TradingFlowServiceTest {
         tradingFlowService.run("KRW-BTC");
 
         assertThat(notificationService.results).isEmpty();
-        assertThat(historyRepository.findRecent(1)).hasSize(1);
+        assertThat(historyRepository.findRecent(1)).isEmpty();
     }
 
     @Test

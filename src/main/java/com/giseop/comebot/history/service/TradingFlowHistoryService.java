@@ -3,6 +3,7 @@ package com.giseop.comebot.history.service;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.domain.TradingFlowHistory;
 import com.giseop.comebot.history.repository.TradingFlowHistoryRepository;
+import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +25,9 @@ public class TradingFlowHistoryService {
     }
 
     public TradingFlowHistory save(ExchangeMode exchange, TradingFlowResult result) {
+        if (result.signalType() == SignalType.HOLD) {
+            return null;
+        }
         TradingFlowHistory history = new TradingFlowHistory(
                 UUID.randomUUID().toString(),
                 exchange,

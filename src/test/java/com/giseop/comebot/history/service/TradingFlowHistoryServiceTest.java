@@ -79,6 +79,27 @@ class TradingFlowHistoryServiceTest {
         assertThat(service.findRecent(ExchangeMode.BINANCE, "KRW-BTC", 20)).isEmpty();
     }
 
+    @Test
+    void holdResultIsNotPersisted() {
+        TradingFlowHistoryService service = new TradingFlowHistoryService(
+                new InMemoryTradingFlowHistoryRepository()
+        );
+
+        TradingFlowHistory result = service.save(ExchangeMode.UPBIT, new TradingFlowResult(
+                "KRW-BTC",
+                new BigDecimal("100"),
+                SignalType.HOLD,
+                "Trend is not UP",
+                false,
+                OrderStatus.REJECTED,
+                null,
+                Instant.now()
+        ));
+
+        assertThat(result).isNull();
+        assertThat(service.findRecent(20)).isEmpty();
+    }
+
     private TradingFlowResult result(String market) {
         return new TradingFlowResult(
                 market,
