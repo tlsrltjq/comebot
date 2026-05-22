@@ -122,7 +122,7 @@ class CandidateExecutionServiceTest {
     @Test
     void existingPaperPositionBlocksCandidateExecution() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
-        when(positionEntryGuardService.shouldBlockEntry(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(true);
+        when(positionEntryGuardService.shouldBlockEntry(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any())).thenReturn(true);
 
         TradingFlowResult result = service.execute("KRW-BTC");
 

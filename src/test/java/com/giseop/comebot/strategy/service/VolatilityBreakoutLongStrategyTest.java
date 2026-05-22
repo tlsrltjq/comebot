@@ -1,6 +1,8 @@
 package com.giseop.comebot.strategy.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -87,7 +89,7 @@ class VolatilityBreakoutLongStrategyTest {
     @Test
     void existingPaperPositionCreatesHoldSignal() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(candidate("KRW-BTC", CandidateDecision.SELECTED));
-        when(positionEntryGuardService.shouldBlockEntry(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(true);
+        when(positionEntryGuardService.shouldBlockEntry(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any())).thenReturn(true);
 
         TradingSignal signal = strategy.evaluate(marketPrice("KRW-BTC", "100"));
 

@@ -96,7 +96,7 @@ public class CandidateExecutionService {
                     candidate.scannedAt()
             ), exchange);
         }
-        if (positionEntryGuardService.shouldBlockEntry(exchange, candidate.market())) {
+        if (positionEntryGuardService.shouldBlockEntry(exchange, candidate.market(), candidate.currentPrice())) {
             return save(new TradingFlowResult(
                     candidate.market(),
                     candidate.currentPrice(),

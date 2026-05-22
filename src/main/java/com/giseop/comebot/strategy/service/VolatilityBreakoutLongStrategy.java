@@ -39,7 +39,7 @@ public class VolatilityBreakoutLongStrategy implements TradingStrategy {
             if (candidate.decision() != CandidateDecision.SELECTED) {
                 return hold(marketPrice.market(), marketPrice.currentPrice(), "No volatility breakout long signal: " + candidate.reason());
             }
-            if (positionEntryGuardService.shouldBlockEntry(exchange, marketPrice.market())) {
+            if (positionEntryGuardService.shouldBlockEntry(exchange, marketPrice.market(), marketPrice.currentPrice())) {
                 return hold(marketPrice.market(), marketPrice.currentPrice(), "Paper position already exists");
             }
 
