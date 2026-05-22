@@ -31,14 +31,18 @@ public class PaperPositionEntity {
     @Column(name = "average_buy_price", nullable = false, precision = 38, scale = 18)
     private BigDecimal averageBuyPrice = BigDecimal.ZERO;
 
+    @Column(name = "peak_price", precision = 38, scale = 18)
+    private BigDecimal peakPrice;
+
     protected PaperPositionEntity() {
     }
 
-    private PaperPositionEntity(ExchangeMode exchange, String market, BigDecimal quantity, BigDecimal averageBuyPrice) {
+    private PaperPositionEntity(ExchangeMode exchange, String market, BigDecimal quantity, BigDecimal averageBuyPrice, BigDecimal peakPrice) {
         this.exchange = exchange == null ? ExchangeMode.UPBIT : exchange;
         this.market = market;
         this.quantity = quantity == null ? BigDecimal.ZERO : quantity;
         this.averageBuyPrice = averageBuyPrice == null ? BigDecimal.ZERO : averageBuyPrice;
+        this.peakPrice = peakPrice;
     }
 
     public static PaperPositionEntity from(ExchangeMode exchange, PaperPosition position) {
@@ -46,11 +50,12 @@ public class PaperPositionEntity {
                 exchange,
                 position.market(),
                 position.quantity(),
-                position.averageBuyPrice()
+                position.averageBuyPrice(),
+                position.peakPrice()
         );
     }
 
     public PaperPosition toDomain() {
-        return new PaperPosition(market, quantity, averageBuyPrice);
+        return new PaperPosition(market, quantity, averageBuyPrice, peakPrice);
     }
 }

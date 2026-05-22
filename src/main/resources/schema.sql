@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS paper_position (
 CREATE INDEX IF NOT EXISTS idx_paper_position_exchange_market
     ON paper_position (exchange, market);
 
+ALTER TABLE paper_position
+    ADD COLUMN IF NOT EXISTS peak_price NUMERIC(38, 18) NULL;
+
 CREATE TABLE IF NOT EXISTS paper_realized_profit_event (
     id VARCHAR(36) PRIMARY KEY,
     exchange VARCHAR(20) NOT NULL,

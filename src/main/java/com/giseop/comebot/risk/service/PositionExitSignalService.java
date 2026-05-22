@@ -60,6 +60,12 @@ public class PositionExitSignalService {
         if (profitRate.compareTo(policy.takeProfitRate()) >= 0) {
             return Optional.of(sellSignal(marketPrice, position.get(), "Take profit rate reached: " + profitRate));
         }
+        if (policy.trailingStopEnabled()) {
+            Optional<TradingSignal> trailingSignal = evaluateTrailingStop(policy, position.get(), marketPrice, profitRate);
+            if (trailingSignal.isPresent()) {
+                return trailingSignal;
+            }
+        }
         if (profitRate.compareTo(policy.stopLossRate()) <= 0) {
             return Optional.of(sellSignal(marketPrice, position.get(), "Stop loss rate reached: " + profitRate));
         }
@@ -70,8 +76,30 @@ public class PositionExitSignalService {
         return new PositionExitPolicy(
                 positionExitProperties.isPositionExitEnabled(),
                 positionExitProperties.getTakeProfitRate(),
-                positionExitProperties.getStopLossRate()
+                positionExitProperties.getStopLossRate(),
+                positionExitProperties.isTrailingStopEnabled(),
+                positionExitProperties.getTrailingStopActivationRate(),
+                positionExitProperties.getTrailingStopTrailRate()
         );
+    }
+
+    private Optional<TradingSignal> evaluateTrailingStop(PositionExitPolicy policy, PaperPosition position, MarketPrice marketPrice, BigDecimal profitRate) {
+        BigDecimal peakPrice = position.peakPrice();
+        if (peakPrice == null || peakPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return Optional.empty();
+        }
+        BigDecimal peakProfitRate = profitRate(position, peakPrice);
+        if (peakProfitRate.compareTo(policy.trailingStopActivationRate()) < 0) {
+            return Optional.empty();
+        }
+        BigDecimal drawdownFromPeak = peakPrice.subtract(marketPrice.currentPrice())
+                .divide(peakPrice, RATE_SCALE, RoundingMode.HALF_UP)
+                .multiply(ONE_HUNDRED);
+        if (drawdownFromPeak.compareTo(policy.trailingStopTrailRate()) >= 0) {
+            return Optional.of(sellSignal(marketPrice, position,
+                    "Trailing stop triggered: peak=" + peakPrice + ", drawdown=" + drawdownFromPeak + "%, profit=" + profitRate + "%"));
+        }
+        return Optional.empty();
     }
 
     private TradingSignal sellSignal(MarketPrice marketPrice, PaperPosition position, String reason) {

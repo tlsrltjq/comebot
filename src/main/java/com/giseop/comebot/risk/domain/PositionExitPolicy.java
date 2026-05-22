@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 public record PositionExitPolicy(
         boolean enabled,
         BigDecimal takeProfitRate,
-        BigDecimal stopLossRate
+        BigDecimal stopLossRate,
+        boolean trailingStopEnabled,
+        BigDecimal trailingStopActivationRate,
+        BigDecimal trailingStopTrailRate
 ) {
 }

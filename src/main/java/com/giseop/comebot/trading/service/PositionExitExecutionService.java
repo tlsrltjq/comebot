@@ -98,6 +98,7 @@ public class PositionExitExecutionService {
     }
 
     private PositionExitRunSummary evaluateOne(ExchangeMode exchange, MarketPrice marketPrice) {
+        paperPortfolioService.updatePeakPriceIfHigher(exchange, marketPrice.market(), marketPrice.currentPrice());
         try {
             Optional<TradingSignal> signal = positionExitSignalService.evaluate(exchange, marketPrice);
             if (signal.isEmpty()) {

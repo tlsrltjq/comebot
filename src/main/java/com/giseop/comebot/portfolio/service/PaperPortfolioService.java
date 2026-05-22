@@ -127,6 +127,21 @@ public class PaperPortfolioService {
         paperPortfolioRepository.saveTradeLog(exchange, tradeLog(result, amount, null));
     }
 
+    public synchronized void updatePeakPriceIfHigher(ExchangeMode exchange, String market, BigDecimal currentPrice) {
+        if (currentPrice == null || currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        paperPortfolioRepository.findPosition(exchange, market).ifPresent(position -> {
+            if (position.quantity() == null || position.quantity().compareTo(BigDecimal.ZERO) <= 0) {
+                return;
+            }
+            if (position.peakPrice() == null || currentPrice.compareTo(position.peakPrice()) > 0) {
+                paperPortfolioRepository.savePosition(exchange,
+                        new PaperPosition(market, position.quantity(), position.averageBuyPrice(), currentPrice));
+            }
+        });
+    }
+
     private void applySell(ExchangeMode exchange, OrderResult result) {
         PaperPosition current = paperPortfolioRepository.findPosition(exchange, result.market())
                 .orElse(new PaperPosition(result.market(), BigDecimal.ZERO, BigDecimal.ZERO));
@@ -136,7 +151,7 @@ public class PaperPortfolioService {
         paperPortfolioRepository.saveCash(exchange, paperPortfolioRepository.getCash(exchange).add(result.quantity().multiply(result.price())));
         paperPortfolioRepository.saveRealizedProfit(exchange, paperPortfolioRepository.getRealizedProfit(exchange).add(profit));
         paperPortfolioRepository.saveRealizedProfitEvent(exchange, new PaperRealizedProfit(profit, result.executedAt()));
-        paperPortfolioRepository.savePosition(exchange, new PaperPosition(result.market(), remainingQuantity, current.averageBuyPrice()));
+        paperPortfolioRepository.savePosition(exchange, new PaperPosition(result.market(), remainingQuantity, current.averageBuyPrice(), null));
         paperPortfolioRepository.saveTradeLog(exchange, tradeLog(result, result.quantity().multiply(result.price()), profit));
     }
 
