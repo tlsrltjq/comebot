@@ -29,7 +29,9 @@ public class PositionLimitRiskValidationService {
         if (!properties.isEnabled() || request == null || request.side() != OrderSide.BUY) {
             return approved();
         }
-        if (paperPortfolioService.findPosition(exchange, request.market()).isPresent()) {
+        if (paperPortfolioService.findPosition(exchange, request.market())
+                .filter(position -> position.quantity() != null && position.quantity().signum() > 0)
+                .isPresent()) {
             return approved();
         }
 

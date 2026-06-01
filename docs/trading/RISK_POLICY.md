@@ -55,6 +55,7 @@
 - 현재 PAPER 자동 실행 기본값은 `risk.take-profit-rate=1.5`, `risk.stop-loss-rate=-0.7`다.
 - 미실현 수익률이 `risk.take-profit-rate` 이상이면 익절 SELL 신호를 만든다.
 - 미실현 수익률이 `risk.stop-loss-rate` 이하이면 손절 SELL 신호를 만든다.
+- 단일 현재가가 평균 매수가 대비 `risk.abnormal-exit-price-drop-rate` 이하로 급락한 것처럼 보이면 비정상 시세로 보고 자동 SELL 신호를 만들지 않는다. 기본값은 `-20`이다.
 - SELL 수량은 보유 수량을 초과할 수 없다.
 - Stage 9 이후 보유 포지션 익절/손절 평가는 `trading.exit-scheduler`가 전담한다.
 - exit scheduler는 보유 position market만 평가하고, HOLD는 기본적으로 history에 저장하지 않는다.

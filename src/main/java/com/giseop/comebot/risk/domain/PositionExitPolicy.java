@@ -8,6 +8,7 @@ public record PositionExitPolicy(
         BigDecimal stopLossRate,
         boolean trailingStopEnabled,
         BigDecimal trailingStopActivationRate,
-        BigDecimal trailingStopTrailRate
+        BigDecimal trailingStopTrailRate,
+        BigDecimal abnormalExitPriceDropRate
 ) {
 }

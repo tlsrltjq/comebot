@@ -49,6 +49,25 @@ class PositionLimitRiskValidationServiceTest {
     }
 
     @Test
+    void closedPositionDoesNotBypassPositionLimit() {
+        PaperPortfolioService portfolioService = mock(PaperPortfolioService.class);
+        when(portfolioService.findPosition(ExchangeMode.UPBIT, "KRW-BTC"))
+                .thenReturn(Optional.of(new PaperPosition("KRW-BTC", BigDecimal.ZERO, BigDecimal.TEN)));
+        when(portfolioService.findPositions(ExchangeMode.UPBIT)).thenReturn(List.of(
+                position("KRW-ETH"),
+                position("KRW-XRP"),
+                position("KRW-SOL")
+        ));
+        when(portfolioService.findPositions(ExchangeMode.BINANCE)).thenReturn(List.of());
+
+        var result = new PositionLimitRiskValidationService(new PositionLimitProperties(), portfolioService)
+                .validate(ExchangeMode.UPBIT, buy("KRW-BTC"));
+
+        assertThat(result.decision()).isEqualTo(RiskDecision.REJECTED);
+        assertThat(result.reason()).contains("Exchange position limit reached");
+    }
+
+    @Test
     void rejectsNewBuyWhenTotalPositionLimitIsReached() {
         PositionLimitProperties props = new PositionLimitProperties();
         props.setUpbitMaxPositions(3);

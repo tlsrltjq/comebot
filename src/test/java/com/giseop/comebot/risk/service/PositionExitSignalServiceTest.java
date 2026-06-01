@@ -62,6 +62,20 @@ class PositionExitSignalServiceTest {
     }
 
     @Test
+    void evaluateReturnsEmptyWhenExitPriceDropLooksAbnormal() {
+        PositionExitProperties properties = enabledProperties();
+        properties.setAbnormalExitPriceDropRate(new BigDecimal("-20"));
+        PaperPortfolioService portfolioService = portfolioService(List.of(
+                new PaperPosition("KRW-BTC", new BigDecimal("1"), new BigDecimal("100"))
+        ));
+
+        Optional<TradingSignal> signal = new PositionExitSignalService(properties, portfolioService)
+                .evaluate(price("KRW-BTC", "10"));
+
+        assertThat(signal).isEmpty();
+    }
+
+    @Test
     void evaluateReturnsEmptyWhenPositionDoesNotExist() {
         PositionExitProperties properties = enabledProperties();
         PaperPortfolioService portfolioService = portfolioService(List.of());
@@ -167,6 +181,7 @@ class PositionExitSignalServiceTest {
     private PaperPortfolioService portfolioService(List<PaperPosition> positions) {
         PaperPortfolioService service = mock(PaperPortfolioService.class);
         when(service.findPositions()).thenReturn(positions);
+        when(service.findPositions(com.giseop.comebot.exchange.ExchangeMode.UPBIT)).thenReturn(positions);
         return service;
     }
 

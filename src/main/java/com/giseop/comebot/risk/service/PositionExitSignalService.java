@@ -57,6 +57,9 @@ public class PositionExitSignalService {
         }
 
         BigDecimal profitRate = profitRate(position.get(), marketPrice.currentPrice());
+        if (profitRate.compareTo(policy.abnormalExitPriceDropRate()) <= 0) {
+            return Optional.empty();
+        }
         if (profitRate.compareTo(policy.takeProfitRate()) >= 0) {
             return Optional.of(sellSignal(marketPrice, position.get(), "Take profit rate reached: " + profitRate));
         }
@@ -79,7 +82,8 @@ public class PositionExitSignalService {
                 positionExitProperties.getStopLossRate(),
                 positionExitProperties.isTrailingStopEnabled(),
                 positionExitProperties.getTrailingStopActivationRate(),
-                positionExitProperties.getTrailingStopTrailRate()
+                positionExitProperties.getTrailingStopTrailRate(),
+                positionExitProperties.getAbnormalExitPriceDropRate()
         );
     }
 

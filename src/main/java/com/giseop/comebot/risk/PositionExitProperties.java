@@ -14,6 +14,7 @@ public class PositionExitProperties {
     private boolean trailingStopEnabled = false;
     private BigDecimal trailingStopActivationRate = new BigDecimal("0.5");
     private BigDecimal trailingStopTrailRate = new BigDecimal("0.3");
+    private BigDecimal abnormalExitPriceDropRate = new BigDecimal("-20");
 
     public BigDecimal getTakeProfitRate() {
         return takeProfitRate;
@@ -61,5 +62,13 @@ public class PositionExitProperties {
 
     public void setTrailingStopTrailRate(BigDecimal trailingStopTrailRate) {
         this.trailingStopTrailRate = trailingStopTrailRate == null ? new BigDecimal("0.3") : trailingStopTrailRate;
+    }
+
+    public BigDecimal getAbnormalExitPriceDropRate() {
+        return abnormalExitPriceDropRate;
+    }
+
+    public void setAbnormalExitPriceDropRate(BigDecimal abnormalExitPriceDropRate) {
+        this.abnormalExitPriceDropRate = abnormalExitPriceDropRate == null ? new BigDecimal("-20") : abnormalExitPriceDropRate;
     }
 }
