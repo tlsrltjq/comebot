@@ -54,6 +54,9 @@ public class VolatilityIndicatorService {
 
         boolean lastCandleBullish = latest.tradePrice().compareTo(latest.openingPrice()) > 0;
         BigDecimal distanceFromHighRate = rate(highestPrice.subtract(latest.tradePrice()), highestPrice);
+        BigDecimal volumeCooldownRatio = peakTradeAmount.compareTo(BigDecimal.ZERO) > 0
+                ? latest.accumulatedTradePrice().divide(peakTradeAmount, RATE_SCALE, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
         return new VolatilitySnapshot(
                 latest.market(),
@@ -67,7 +70,8 @@ public class VolatilityIndicatorService {
                 latest.accumulatedTradePrice(),
                 distanceFromHighRate,
                 windowHighChangeRate,
-                peakTradeAmountChangeRate
+                peakTradeAmountChangeRate,
+                volumeCooldownRatio
         );
     }
 

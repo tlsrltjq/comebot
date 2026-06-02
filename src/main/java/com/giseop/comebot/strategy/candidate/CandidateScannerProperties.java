@@ -19,6 +19,7 @@ public class CandidateScannerProperties {
     private BigDecimal minLatestCandleTradeAmountUsdt = BigDecimal.ZERO;
     private BigDecimal maxDistanceFromHighRate = BigDecimal.ZERO;
     private BigDecimal minDistanceFromHighRate = BigDecimal.ZERO;
+    private BigDecimal maxVolumeCooldownRatio = BigDecimal.ZERO;
     private ExchangeSettings upbit = new ExchangeSettings();
     private ExchangeSettings binance = new ExchangeSettings();
 
@@ -152,6 +153,19 @@ public class CandidateScannerProperties {
         return override == null ? minDistanceFromHighRate : override;
     }
 
+    public BigDecimal getMaxVolumeCooldownRatio() {
+        return maxVolumeCooldownRatio;
+    }
+
+    public BigDecimal getMaxVolumeCooldownRatio(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMaxVolumeCooldownRatio();
+        return override == null ? maxVolumeCooldownRatio : override;
+    }
+
+    public void setMaxVolumeCooldownRatio(BigDecimal maxVolumeCooldownRatio) {
+        this.maxVolumeCooldownRatio = maxVolumeCooldownRatio == null ? BigDecimal.ZERO : maxVolumeCooldownRatio;
+    }
+
     public ExchangeSettings getUpbit() {
         return upbit;
     }
@@ -184,6 +198,7 @@ public class CandidateScannerProperties {
         private BigDecimal minLatestCandleTradeAmountUsdt;
         private BigDecimal maxDistanceFromHighRate;
         private BigDecimal minDistanceFromHighRate;
+        private BigDecimal maxVolumeCooldownRatio;
 
         public Integer getCandleUnitMinutes() {
             return candleUnitMinutes;
@@ -263,6 +278,14 @@ public class CandidateScannerProperties {
 
         public void setMinDistanceFromHighRate(BigDecimal minDistanceFromHighRate) {
             this.minDistanceFromHighRate = minDistanceFromHighRate;
+        }
+
+        public BigDecimal getMaxVolumeCooldownRatio() {
+            return maxVolumeCooldownRatio;
+        }
+
+        public void setMaxVolumeCooldownRatio(BigDecimal maxVolumeCooldownRatio) {
+            this.maxVolumeCooldownRatio = maxVolumeCooldownRatio;
         }
     }
 }

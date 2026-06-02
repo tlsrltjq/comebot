@@ -359,6 +359,12 @@ public class CandidateScannerService {
         if (!snapshot.lastCandleBullish()) {
             return skipped(snapshot, "Last candle is not bullish");
         }
+        // Volume cooldown filter: latest candle volume must not dominate the peak
+        BigDecimal maxVcr = candidateScannerProperties.getMaxVolumeCooldownRatio(exchange);
+        if (maxVcr.compareTo(BigDecimal.ZERO) > 0
+                && snapshot.volumeCooldownRatio().compareTo(maxVcr) > 0) {
+            return skipped(snapshot, "Volume has not cooled down after peak");
+        }
         // BTC 1h trend filter (UPBIT markets only)
         if (btcTrendCacheService != null && snapshot.market() != null && !snapshot.market().endsWith("USDT")) {
             BtcTrendCacheService.BtcTrend btcTrend = btcTrendCacheService.trend();

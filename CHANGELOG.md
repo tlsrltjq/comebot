@@ -3,6 +3,8 @@
 ## 형식
 `날짜 | 단계 | feat/fix/chore/docs: 내용`
 
+2026-06-02 | 진입 신호 재설계 | feat: volumeCooldownRatio 진입 필터 추가 (기본값 비활성, ADR-012 후보)
+
 ---
 
 2026-06-02 | strategy | feat: exit redesign — let winners run (TP 2→4, SL -1.5→-2, trailing off); OOS-validated train 0.94/test 1.02 (ADR-011)

@@ -71,7 +71,14 @@
 - USDT 마켓: `latestCandleTradeAmount ≥ minLatestCandleTradeAmountUsdt`
 - 절댓값 유동성 하한 보장
 
-### 2-10. 진입 시간대 필터 (KST)
+### 2-10. 볼륨 쿨다운 비율 필터
+
+- `volumeCooldownRatio = latestCandleTradeAmount / windowPeakTradeAmount`
+- 최신 캔들 거래대금이 윈도우 최대 거래대금 대비 `maxVolumeCooldownRatio` 초과 시 SKIPPED
+- 낮을수록 펌프 에너지가 식은 상태(건강한 눌림목). 비율 = 1.0이면 최신 캔들이 여전히 피크
+- **기본값 = 0 (비활성)** — OOS 검증 통과 시에만 활성화
+
+### 2-11. 진입 시간대 필터 (KST)
 
 - 현재 KST 시각이 `strategy.entry.allowed-hours-kst` 화이트리스트에 없으면 SKIPPED (`Outside allowed trading hours (KST)`)
 - 빈 목록이면 비활성(전 시간 허용)
@@ -97,6 +104,7 @@
 | 최신 캔들 최소 거래대금 (KRW) | 10,000,000 | `STRATEGY_CANDIDATE_MIN_LATEST_CANDLE_TRADE_AMOUNT_KRW` |
 | 최신 캔들 최소 거래대금 (USDT) | 50,000 | `STRATEGY_CANDIDATE_MIN_LATEST_CANDLE_TRADE_AMOUNT_USDT` |
 | 스캔 제외 마켓 | KRW-DOGE, KRW-PROVE, KRW-TRAC, KRW-IRYS | `MARKET_SELECTION_EXCLUDED_MARKETS` |
+| 볼륨 쿨다운 최대 비율 | 0 (비활성) | `STRATEGY_CANDIDATE_MAX_VOLUME_COOLDOWN_RATIO` |
 | 진입 허용 시간대 (KST) | (빈 값=비활성) | `STRATEGY_ENTRY_ALLOWED_HOURS_KST` |
 
 ### Upbit 운영 override (`.env`)

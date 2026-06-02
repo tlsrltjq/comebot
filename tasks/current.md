@@ -12,12 +12,32 @@
 
 → 현 상태: "손실 구조 → break-even". robust 흑자엔 진입 신호 개선 필요.
 
-## 다음 작업: 진입 신호(entry) 재설계 [2순위 레버]
+## 진입 신호 재설계 [진행 중, ADR-012 후보]
 
 목표: train·test 모두 PF ≥ 1.05 (현 청산구조에선 train 0.94 / test 1.02)
-- 현 pullback 진입 외 가설 실험 (상위 timeframe 진입, 다른 신호)
-- bt_redesign.py 확장, OOS 게이트 동일 적용
-- 통과 시 ADR-012로 채택
+
+### 구현 완료 (2026-06-02)
+- [x] `volumeCooldownRatio` 지표 추가 — VolatilitySnapshot 필드, VolatilityIndicatorService 계산
+- [x] `maxVolumeCooldownRatio` 필터 — CandidateScannerProperties + CandidateScannerService
+  - 기본값 0 (비활성), 환경변수: `STRATEGY_CANDIDATE_MAX_VOLUME_COOLDOWN_RATIO`
+  - per-exchange override: `STRATEGY_CANDIDATE_UPBIT_MAX_VOLUME_COOLDOWN_RATIO`
+- [x] `bt_entry_redesign.py` 작성 — 6개 변형(V0~V5) OOS 백테스트 스크립트
+
+### 다음 단계
+- [ ] 로컬에서 `python3 bt_entry_redesign.py` 실행 (Upbit API 필요, 인터넷 접근 환경)
+- [ ] OOS 게이트 통과한 변형 확인 (test PF ≥ 1.05, |train-test| < 0.15)
+- [ ] 통과 변형의 파라미터를 `.env`에 반영
+- [ ] ADR-012 기록
+
+### 백테스트 변형 목록
+| 변형 | 캔들 | volumeCooldown |
+|---|---|---|
+| V0 | 1분봉 × 20 (현행) | 비활성 |
+| V1 | 5분봉 × 10 | 비활성 |
+| V2 | 5분봉 × 6 | 비활성 |
+| V3 | 15분봉 × 6 | 비활성 |
+| V4 | 5분봉 × 10 | ≤ 0.5 |
+| V5 | 5분봉 × 10 | ≤ 0.3 |
 
 ---
 

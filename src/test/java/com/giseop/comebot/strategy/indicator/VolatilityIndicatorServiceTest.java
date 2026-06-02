@@ -96,6 +96,30 @@ class VolatilityIndicatorServiceTest {
     }
 
     @Test
+    void calculatesVolumeCooldownRatioWhenLatestIsLowerThanPeak() {
+        // peak trade amount = 2000 (second candle), latest = 500 (third candle)
+        // ratio = 500/2000 = 0.25
+        VolatilitySnapshot snapshot = service.calculate(List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "105", "1000", "10"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "122", "2000", "18"),
+                candle("KRW-BTC", "2026-04-30T00:02:00Z", "122", "123", "120", "121", "500", "4")
+        ));
+
+        assertThat(snapshot.volumeCooldownRatio()).isEqualByComparingTo("0.2500");
+    }
+
+    @Test
+    void volumeCooldownRatioIsOneWhenLatestIsThePeak() {
+        // latest and peak are the same candle → ratio = 1.0
+        VolatilitySnapshot snapshot = service.calculate(List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "105", "500", "5"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "2000", "18")
+        ));
+
+        assertThat(snapshot.volumeCooldownRatio()).isEqualByComparingTo("1.0000");
+    }
+
+    @Test
     void requiresAtLeastTwoCandles() {
         assertThatThrownBy(() -> service.calculate(List.of(
                 candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "90", "105", "1000", "10")
