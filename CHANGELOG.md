@@ -5,6 +5,19 @@
 
 ---
 
+2026-06-02 | docs  | docs: sync HARNESS_STATUS, ARCHITECTURE, RISK_POLICY with implemented features
+2026-05-28 | strategy | feat: split candidate scanner filters by exchange (upbit.* / binance.* overrides)
+2026-05-27 | strategy | fix: ignore in-progress latest candle during candidate scan
+2026-05-27 | strategy | chore: relax PAPER entry filters for ordinary market conditions and document rollback values
+2026-05-27 | risk | chore: loosen PAPER position limits without disabling risk validation
+2026-05-22 | risk    | feat: guard abnormal paper exits (abnormal-exit-price-drop-rate=-20)
+2026-05-22 | market  | feat: add market exclusion list to MarketSelectionService
+2026-05-22 | strategy | docs: add ADR-010 for pullback bounce entry strategy overhaul
+2026-05-22 | strategy | feat: overhaul entry strategy from pump-chasing to pullback bounce with BTC trend filter
+2026-05-22 | risk    | feat: add trailing stop loss to position exit (activation-rate, trail-rate)
+2026-05-22 | perf    | perf: reduce position exit scheduler interval to 1s
+2026-05-22 | risk    | feat: add profit-based re-entry guard (min-reentry-profit-rate)
+2026-05-22 | ops     | feat: add Docker support for full stack deployment (18080 port)
 2026-05-20 | quality | feat: add max-distance-from-high-rate filter (최근 고가 대비 2% 초과 하락 시 진입 거부)
 2026-05-20 | quality | feat: add min-latest-candle-trade-amount filter (KRW 1천만/USDT 5만 미만 거래대금 진입 거부)
 2026-05-20 | quality | feat: add max-buys-per-run=2 — 스케줄러 1회 최대 BUY 수 제한
@@ -17,10 +30,6 @@
 2026-05-19 | sync  | docs: optimize docs — delete 5 stale plan files, trim completed history to CHANGELOG
 2026-05-19 | sync  | chore: align orderQuantity default, register WebSocket config, update HARNESS_STATUS next task
 2026-05-19 | sync  | docs: restructure harness — add HARNESS.md, CHANGELOG, decisions.md, tasks/current.md, GC_ROUTINE
-2026-05-27 | strategy | chore: relax PAPER entry filters for ordinary market conditions and document rollback values
-2026-05-27 | strategy | fix: ignore in-progress latest candle during candidate scan
-2026-05-27 | risk | chore: loosen PAPER position limits without disabling risk validation
-2026-05-28 | strategy | feat: split candidate scanner filters by exchange
 2026-05-15 | ops   | feat: guard candidate/exit scheduler on market data readiness (automationReady=false blocks run)
 2026-05-15 | ops   | chore: normalize paper run scripts — run-paper-jpa.* as primary, run-upbit-paper-jpa.* as alias
 2026-05-14 | analytics | feat: add strategy performance analytics — winRate, averageHoldingSeconds, profitLossRatio

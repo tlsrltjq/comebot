@@ -67,6 +67,17 @@
 - exit scheduler는 보유 position market만 평가하고, HOLD는 기본적으로 history에 저장하지 않는다.
 - 신규 BUY 후보 탐색은 candidate scheduler가 담당한다.
 
+## 트레일링 스톱
+
+- 기본값은 `risk.trailing-stop-enabled=false`다.
+- 켜져 있을 때 익절/손절 판단 이전에 추가로 평가한다.
+- 포지션별로 진입 이후 최고 미실현 수익률(peak profit)을 추적한다.
+- peak profit이 `risk.trailing-stop-activation-rate` 이상에 도달한 뒤,
+  현재 수익률이 peak profit 대비 `risk.trailing-stop-trail-rate` 이상 하락하면 SELL 신호를 만든다.
+- application.properties 기본값: 비활성, 활성화율 0.5%, trail 0.3%.
+- 운영 `.env` 기준값: 활성, 활성화율 2.0%, trail 1.5%.
+- 트레일링 스톱은 일반 손절(`stop-loss-rate`)보다 먼저 평가하며, 트레일링 스톱이 발동되면 stop-loss는 중복 평가하지 않는다.
+
 ## 일일 제한
 
 - 기본값은 `risk.daily-risk-enabled=false`다.

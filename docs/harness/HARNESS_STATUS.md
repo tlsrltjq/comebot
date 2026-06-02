@@ -7,14 +7,25 @@
 - 실제 주문 API: 없음
 - 웹: 조회 중심 React 운영 화면. 자동매매 제어와 선택 보유 PAPER 포지션 SELL만 허용
 - Telegram: 기본 조회 전용
-- candidate scheduler 기본 주기: 60초
-- exit scheduler 기본 주기: 5초
-- 1회 PAPER 주문 금액: 10,000 KRW
-- 익절/손절 기준: 1.5 / -0.7
+- candidate scheduler 기본 주기: 60초 (운영 `.env`: 30초)
+- exit scheduler 기본 주기: 1초
+- 1회 PAPER 주문 금액: 10,000 KRW (운영 `.env`: 동일)
+- 익절/손절 기준: 1.5 / -0.7 (운영 `.env`: 2.0 / -1.5)
+- 트레일링 스톱: 기본 비활성 (운영 `.env`: 활성, 활성화 2%, trail 1.5%)
 - 같은 market 추가 진입: 기본 허용
 
 ## 최근 완료 (상세 이력: CHANGELOG.md)
 
+- per-exchange scanner override — Upbit/Binance 캔들 수·필터값 독립 설정 (`strategy.candidate-scanner.upbit.*` / `.binance.*`)
+- 미완성 최신 캔들 제외 — 진행 중인 1분봉 드롭 후 완성 캔들만 판단에 사용
+- market exclusion list — `market.selection.excluded-markets` 로 특정 마켓 스캔 제외
+- guard abnormal paper exits — 비정상 급락 시세로 자동 SELL 차단 (`risk.abnormal-exit-price-drop-rate`)
+- pullback bounce strategy 전면 교체 — 펌프 추격 → 눌림목 반등 진입 (ADR-010)
+- BTC 1h 트렌드 필터 — `BtcTrendCacheService` EMA 기반, DOWN이면 진입 차단
+- trailing stop — 활성화율·trail 비율 설정, `PositionExitSignalService`에서 peak profit 추적
+- exit scheduler 주기 5초 → 1초 단축
+- profit-based re-entry guard — `strategy.entry.min-reentry-profit-rate` 이상 미실현 수익 시에만 동일 market 재진입 허용
+- Docker 전체 스택 지원 (docker-compose, 18080 포트)
 - candidate scan log — 모든 스캔 결과 기록, GET /api/candidate-scan-log
 - TradingCandidate.lastCandleBullish 필드, distanceFromHighRate/latestCandleTradeAmount 스냅샷 필드
 - max-distance-from-high-rate 필터 (default 2%) — 피크 이후 하락 진입 차단
@@ -28,7 +39,7 @@
 
 ## 다음 작업
 
-1. 2–3개월 운용 데이터 축적 후 trailing stop 설계 검토
+1. 운용 데이터 축적 후 pullback bounce 전략 파라미터 튜닝 (per-exchange 기준값 개선)
 
 ## 검증 기준
 
