@@ -5,6 +5,8 @@
 
 ---
 
+2026-06-02 | harness | chore: 하네스 초기 구축 (CLAUDE.md, HARNESS.md, tasks/current.md, docs/decisions.md, docs/architecture.md, docs/spec.md)
+2026-06-02 | refactor | refactor: DI inversion, @Deprecated legacy, Checkstyle, unused imports
 2026-06-02 | docs  | docs: sync HARNESS_STATUS, ARCHITECTURE, RISK_POLICY with implemented features
 2026-05-28 | strategy | feat: split candidate scanner filters by exchange (upbit.* / binance.* overrides)
 2026-05-27 | strategy | fix: ignore in-progress latest candle during candidate scan
