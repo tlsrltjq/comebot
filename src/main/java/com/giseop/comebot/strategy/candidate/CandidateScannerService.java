@@ -10,10 +10,14 @@ import com.giseop.comebot.market.service.BtcTrendCacheService;
 import com.giseop.comebot.market.service.MarketSelectionService;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
 import com.giseop.comebot.strategy.indicator.VolatilitySnapshot;
+import com.giseop.comebot.strategy.service.StrategyEntryProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -28,6 +32,7 @@ import org.springframework.stereotype.Service;
 public class CandidateScannerService {
 
     private static final Logger log = LoggerFactory.getLogger(CandidateScannerService.class);
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final TradingProperties tradingProperties;
     private final CandidateScannerProperties candidateScannerProperties;
@@ -37,6 +42,8 @@ public class CandidateScannerService {
     private final StrategyMarketSettingsService strategyMarketSettingsService;
     private final MarketSelectionService marketSelectionService;
     private final BtcTrendCacheService btcTrendCacheService;
+    private final StrategyEntryProperties strategyEntryProperties;
+    private final Clock clock;
 
     @Autowired
     public CandidateScannerService(
@@ -46,7 +53,8 @@ public class CandidateScannerService {
             VolatilityIndicatorService volatilityIndicatorService,
             StrategyMarketSettingsService strategyMarketSettingsService,
             MarketSelectionService marketSelectionService,
-            BtcTrendCacheService btcTrendCacheService
+            BtcTrendCacheService btcTrendCacheService,
+            StrategyEntryProperties strategyEntryProperties
     ) {
         this.tradingProperties = tradingProperties;
         this.candidateScannerProperties = candidateScannerProperties;
@@ -56,6 +64,8 @@ public class CandidateScannerService {
         this.strategyMarketSettingsService = strategyMarketSettingsService;
         this.marketSelectionService = marketSelectionService;
         this.btcTrendCacheService = btcTrendCacheService;
+        this.strategyEntryProperties = strategyEntryProperties;
+        this.clock = Clock.system(KST);
     }
 
     CandidateScannerService(
@@ -73,7 +83,9 @@ public class CandidateScannerService {
                 volatilityIndicatorService,
                 strategyMarketSettingsService,
                 new MarketSelectionService(new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
-                null
+                null,
+                null,
+                Clock.system(KST)
         );
     }
 
@@ -87,6 +99,32 @@ public class CandidateScannerService {
             MarketSelectionService marketSelectionService,
             BtcTrendCacheService btcTrendCacheService
     ) {
+        this(
+                tradingProperties,
+                candidateScannerProperties,
+                upbitCandleProvider,
+                binanceCandleProvider,
+                volatilityIndicatorService,
+                strategyMarketSettingsService,
+                marketSelectionService,
+                btcTrendCacheService,
+                null,
+                Clock.system(KST)
+        );
+    }
+
+    CandidateScannerService(
+            TradingProperties tradingProperties,
+            CandidateScannerProperties candidateScannerProperties,
+            CandleProvider upbitCandleProvider,
+            CandleProvider binanceCandleProvider,
+            VolatilityIndicatorService volatilityIndicatorService,
+            StrategyMarketSettingsService strategyMarketSettingsService,
+            MarketSelectionService marketSelectionService,
+            BtcTrendCacheService btcTrendCacheService,
+            StrategyEntryProperties strategyEntryProperties,
+            Clock clock
+    ) {
         this.tradingProperties = tradingProperties;
         this.candidateScannerProperties = candidateScannerProperties;
         this.upbitCandleProvider = upbitCandleProvider;
@@ -95,6 +133,8 @@ public class CandidateScannerService {
         this.strategyMarketSettingsService = strategyMarketSettingsService;
         this.marketSelectionService = marketSelectionService;
         this.btcTrendCacheService = btcTrendCacheService;
+        this.strategyEntryProperties = strategyEntryProperties;
+        this.clock = clock == null ? Clock.system(KST) : clock;
     }
 
     public List<TradingCandidate> scanAllowedMarkets() {
@@ -324,6 +364,13 @@ public class CandidateScannerService {
             BtcTrendCacheService.BtcTrend btcTrend = btcTrendCacheService.trend();
             if (btcTrend == BtcTrendCacheService.BtcTrend.DOWN) {
                 return skipped(snapshot, "BTC 1h trend is DOWN");
+            }
+        }
+        // Time-of-day filter: block entries outside allowed KST hours (empty list = all allowed)
+        if (strategyEntryProperties != null) {
+            int hourKst = ZonedDateTime.now(clock).withZoneSameInstant(KST).getHour();
+            if (!strategyEntryProperties.isTradingHourAllowed(hourKst)) {
+                return skipped(snapshot, "Outside allowed trading hours (KST)");
             }
         }
         return new TradingCandidate(

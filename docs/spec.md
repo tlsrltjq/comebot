@@ -71,6 +71,13 @@
 - USDT 마켓: `latestCandleTradeAmount ≥ minLatestCandleTradeAmountUsdt`
 - 절댓값 유동성 하한 보장
 
+### 2-10. 진입 시간대 필터 (KST)
+
+- 현재 KST 시각이 `strategy.entry.allowed-hours-kst` 화이트리스트에 없으면 SKIPPED (`Outside allowed trading hours (KST)`)
+- 빈 목록이면 비활성(전 시간 허용)
+- 기본값 `0,12,17,21,23` — 180일 백테스트(현 파라미터) 흑자 시간대. 과최적화 위험으로 누적 데이터 후 재조정 대상
+- 근거: `condition-records/2026-06-02-time-filter-and-irys-exclusion.md`
+
 ---
 
 ## 3. 파라미터 기본값
@@ -89,7 +96,8 @@
 | 최근 고점 대비 최소 거리 | 0% | `STRATEGY_CANDIDATE_MIN_DISTANCE_FROM_HIGH_RATE` |
 | 최신 캔들 최소 거래대금 (KRW) | 10,000,000 | `STRATEGY_CANDIDATE_MIN_LATEST_CANDLE_TRADE_AMOUNT_KRW` |
 | 최신 캔들 최소 거래대금 (USDT) | 50,000 | `STRATEGY_CANDIDATE_MIN_LATEST_CANDLE_TRADE_AMOUNT_USDT` |
-| 스캔 제외 마켓 | KRW-DOGE, KRW-PROVE, KRW-TRAC | `MARKET_SELECTION_EXCLUDED_MARKETS` |
+| 스캔 제외 마켓 | KRW-DOGE, KRW-PROVE, KRW-TRAC, KRW-IRYS | `MARKET_SELECTION_EXCLUDED_MARKETS` |
+| 진입 허용 시간대 (KST) | 0,12,17,21,23 | `STRATEGY_ENTRY_ALLOWED_HOURS_KST` |
 
 ### Upbit 운영 override (`.env`)
 

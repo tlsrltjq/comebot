@@ -9,10 +9,13 @@ import com.giseop.comebot.market.candle.domain.Candle;
 import com.giseop.comebot.market.candle.provider.CandleProvider;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
+import com.giseop.comebot.strategy.service.StrategyEntryProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -513,6 +516,63 @@ class CandidateScannerServiceTest {
 
         assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
         assertThat(candidate.reason()).isEqualTo("Candidate scan failed: IllegalStateException - failed");
+    }
+
+    // 2026-04-30T05:00:00Z == 14:00 KST
+    private static final Clock CLOCK_AT_KST_14 =
+            Clock.fixed(Instant.parse("2026-04-30T05:00:00Z"), ZoneId.of("Asia/Seoul"));
+
+    private CandidateScannerService timeFilteredService(StrategyEntryProperties entryProps, Clock clock) {
+        return new CandidateScannerService(
+                tradingProperties,
+                scannerProperties,
+                candleProvider,
+                candleProvider,
+                new VolatilityIndicatorService(),
+                new StrategyMarketSettingsService(strategyProperties, scannerProperties, overrideProperties),
+                new com.giseop.comebot.market.service.MarketSelectionService(
+                        new com.giseop.comebot.market.service.UpbitKrwTickerStore()),
+                null,
+                entryProps,
+                clock
+        );
+    }
+
+    @Test
+    void entryIsSelectedWhenWithinAllowedTradingHour() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1.5"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        StrategyEntryProperties entryProps = new StrategyEntryProperties();
+        entryProps.setAllowedHoursKst(List.of(14));
+
+        TradingCandidate candidate = timeFilteredService(entryProps, CLOCK_AT_KST_14).scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
+    void entryIsSkippedWhenOutsideAllowedTradingHour() {
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1.5"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        StrategyEntryProperties entryProps = new StrategyEntryProperties();
+        entryProps.setAllowedHoursKst(List.of(3)); // 14 KST is not allowed
+
+        TradingCandidate candidate = timeFilteredService(entryProps, CLOCK_AT_KST_14).scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Outside allowed trading hours (KST)");
     }
 
     private Candle candle(
