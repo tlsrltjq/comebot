@@ -16,8 +16,9 @@
 
 ## 최근 완료 (상세 이력: CHANGELOG.md)
 
-- KST 시간대 진입 필터 — `strategy.entry.allowed-hours-kst` (기본 0,12,17,21,23), 백테스트 흑자 시간대 (condition-records/2026-06-02)
-- KRW-IRYS 스캔 제외 추가 (18% 승률 독성 마켓)
+- KST 시간대 진입 필터 메커니즘 — `strategy.entry.allowed-hours-kst` (기본 **비활성**: OOS 검증서 과최적화 확인, 튜닝 도구로만 유지)
+- KRW-IRYS 스캔 제외 추가 (OOS에서도 견고하게 최악 마켓)
+- ⚠️ OOS 검증 결론: 현 전략은 비용 차감 후 검증된 엣지 없음 — 청산구조/timeframe 재설계 필요 (condition-records/2026-06-02-oos-validation-and-edge-analysis.md)
 - per-exchange scanner override — Upbit/Binance 캔들 수·필터값 독립 설정 (`strategy.candidate-scanner.upbit.*` / `.binance.*`)
 - 미완성 최신 캔들 제외 — 진행 중인 1분봉 드롭 후 완성 캔들만 판단에 사용
 - market exclusion list — `market.selection.excluded-markets` 로 특정 마켓 스캔 제외

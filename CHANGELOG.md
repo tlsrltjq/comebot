@@ -5,6 +5,7 @@
 
 ---
 
+2026-06-02 | strategy | chore: disable time-of-day filter by default (OOS train/test validation showed it overfits; mechanism kept as tunable tool)
 2026-06-02 | strategy | feat: add KST time-of-day entry filter (strategy.entry.allowed-hours-kst, default 0,12,17,21,23) + exclude KRW-IRYS
 2026-06-02 | harness | chore: 하네스 초기 구축 (CLAUDE.md, HARNESS.md, tasks/current.md, docs/decisions.md, docs/architecture.md, docs/spec.md)
 2026-06-02 | refactor | refactor: DI inversion, @Deprecated legacy, Checkstyle, unused imports

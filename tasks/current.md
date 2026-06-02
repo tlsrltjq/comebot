@@ -1,18 +1,28 @@
 # tasks/current.md — 현재 작업 컨텍스트
 
-## 단계: 시간대 필터 적용 후 검증 대기
+## 단계: 엣지 부재 확인 — 전략 재설계 필요
 
-## 이번 세션 목표 (완료)
+## 이번 세션 결과 (OOS 검증)
 
-- [x] backtest.py에 KST 시간대 필터 + 현 .env 파라미터 반영, 재백테스트
-- [x] 시간 필터(0,12,17,21,23) + IRYS 제외 코드 구현
-- [x] 분석을 condition-records/2026-06-02-time-filter-and-irys-exclusion.md 기록
+- [x] train/test 분리(120/60일) walk-forward 검증
+- [x] 시간대 필터 OOS 무효 확인 → 기본값 비활성으로 되돌림
+- [x] 진입조건 스윕(min_vol/min_px/dist) — 어떤 조합도 test PF < 1.0
+- [x] 근본원인 규명: gross edge 0.066%/거래 < 왕복 비용 0.1%
+- [x] DOGE/PROVE 해제안 기각 — OOS에선 우량 아님(직전 "PROVE 최고"는 in-sample 누수)
+- [x] condition-records/2026-06-02-oos-validation-and-edge-analysis.md 기록
 
-## 다음 세션 검증 항목
+## 결론
 
-1. 실거래 1주 후 우량 시간대 실제 승률이 백테스트(50~58%)와 일치하는지 재집계
-2. **DOGE/PROVE 제외 해제안 재검증** — 현 파라미터에선 PROVE(+31,211)가 최고 마켓인데 제외 중. `excluded-markets`를 `KRW-TRAC,KRW-IRYS`로 축소 검토
-3. 시간대 화이트리스트 과최적화 여부 out-of-sample 검증
+현 pullback-bounce + TP/SL/trailing 구조는 비용 차감 후 검증된 엣지가 없다.
+**파라미터 튜닝은 답이 아님.** PAPER 유지, 실거래 금지.
+
+## 다음 작업 (우선순위)
+
+1. **청산 구조 재설계** — 현 trailing은 승자를 +1.1%로 캡. 승자 run 허용(넓은 TP/시간기반 청산)으로 평균 승폭 확대 실험 → train/test OOS 검증
+2. **신호 timeframe 재검토** — 1분봉 pullback은 노이즈. 5/15분봉 백테스트
+3. **비용 구조** — 거래 빈도 대폭 축소 또는 maker 주문 (gross edge가 0.1% 비용을 넘어야 함)
+4. (권장) `.env`: `STRATEGY_CANDIDATE_UPBIT_MIN_TRADE_AMOUNT_CHANGE_RATE=100` — 과매매·수수료 드래그 감소 (흑자 전환 아님, 손실 축소)
+5. 모든 변경은 train/test OOS로만 채택. backtest.py는 로컬(gitignored)
 
 ---
 

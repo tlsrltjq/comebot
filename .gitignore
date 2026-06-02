@@ -44,6 +44,7 @@ out/
 backtest.py
 backtest_*.json
 backtest_*.log
+bt_*.py
 .backtest_cache/
 
 ### Frontend ###
