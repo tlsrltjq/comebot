@@ -10,6 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * Scheduled runner for the legacy {@link com.giseop.comebot.trading.service.TradingFlowService}.
+ * Disabled by default via {@code trading.scheduler.enabled=false} (ADR-007).
+ *
+ * @deprecated Use {@link ScheduledCandidateExecutionRunner} and
+ *             {@link ScheduledPositionExitRunner} instead.
+ */
+@Deprecated(since = "2026-05-22")
 @Component
 public class ScheduledTradingFlowRunner {
 

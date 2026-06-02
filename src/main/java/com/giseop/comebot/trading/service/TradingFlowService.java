@@ -23,6 +23,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+/**
+ * Legacy per-market trading flow service.
+ * Superseded by {@link com.giseop.comebot.scheduler.CandidateSchedulerProperties candidate scheduler}
+ * and {@link com.giseop.comebot.scheduler.PositionExitSchedulerProperties exit scheduler}.
+ * Kept for {@code trading.scheduler.enabled=true} backward-compat; disabled by default (ADR-007).
+ *
+ * @deprecated Use candidate/exit scheduler instead.
+ */
+@Deprecated(since = "2026-05-22")
 @Service
 public class TradingFlowService {
 

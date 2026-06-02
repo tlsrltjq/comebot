@@ -43,7 +43,7 @@
 
 ## 검증 기준
 
-- Backend 변경: `./gradlew test`
+- Backend 변경: `./gradlew test checkstyleMain`
 - Frontend 변경: `npm run lint`, `npm run build`, `npm test`
 - Frontend 화면/반응형/위험 액션 변경: `npm run test:e2e`
 - 문서만 변경: `git diff --check`, 필요 시 `./gradlew test`

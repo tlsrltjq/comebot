@@ -1,7 +1,7 @@
 package com.giseop.comebot.market.service;
 
 import com.giseop.comebot.market.candle.domain.Candle;
-import com.giseop.comebot.market.candle.provider.UpbitCandleProvider;
+import com.giseop.comebot.market.candle.provider.CandleProvider;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -26,10 +26,10 @@ public class BtcTrendCacheService {
     private static final int EMA_LONG = 10;
     private static final int SCALE = 8;
 
-    private final UpbitCandleProvider candleProvider;
+    private final CandleProvider candleProvider;
     private final AtomicReference<BtcTrend> cached = new AtomicReference<>(BtcTrend.NEUTRAL);
 
-    public BtcTrendCacheService(UpbitCandleProvider candleProvider) {
+    public BtcTrendCacheService(CandleProvider candleProvider) {
         this.candleProvider = candleProvider;
     }
 

@@ -3,7 +3,6 @@ package com.giseop.comebot.risk.service;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderSide;
-import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.PositionLimitProperties;
 import com.giseop.comebot.risk.domain.RiskCheckResult;

@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  comebot Checkstyle configuration.
+  Focus: catch real bugs and enforce consistency without over-constraining style.
+  Line length cap: 200 (generous; real formatting is IDE/team convention).
+-->
+<module name="Checker">
+
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="error"/>
+  <property name="fileExtensions" value="java"/>
+
+  <!-- Suppress generated sources -->
+  <module name="BeforeExecutionExclusionFileFilter">
+    <property name="fileNamePattern" value="module\-info\.java$"/>
+  </module>
+
+  <!-- ─── File-level ─── -->
+  <module name="FileTabCharacter">
+    <property name="eachLine" value="true"/>
+  </module>
+
+  <module name="NewlineAtEndOfFile">
+    <property name="lineSeparator" value="lf"/>
+  </module>
+
+  <!-- Line length lives at Checker level -->
+  <module name="LineLength">
+    <property name="max" value="200"/>
+    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+  </module>
+
+  <!-- ─── Tree walker (per-file AST checks) ─── -->
+  <module name="TreeWalker">
+
+    <!-- Imports -->
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+    <module name="IllegalImport">
+      <!-- Block sun.* internal APIs -->
+      <property name="illegalPkgs" value="sun"/>
+    </module>
+
+    <!-- Naming -->
+    <!-- Allow lowercase 'log' / 'logger' as SLF4J logger constants (common Java convention) -->
+    <module name="ConstantName">
+      <property name="format" value="^(log|logger|[A-Z][A-Z0-9]*(_[A-Z0-9]+)*)$"/>
+    </module>
+    <module name="LocalVariableName"/>
+    <module name="MemberName"/>
+    <module name="MethodName"/>
+    <module name="PackageName"/>
+    <module name="ParameterName"/>
+    <module name="StaticVariableName"/>
+    <module name="TypeName"/>
+
+    <!-- Blocks -->
+    <module name="EmptyBlock">
+      <property name="option" value="text"/>
+    </module>
+    <module name="NeedBraces"/>
+    <module name="LeftCurly"/>
+    <module name="RightCurly"/>
+
+    <!-- Coding -->
+    <module name="EmptyStatement"/>
+    <module name="EqualsHashCode"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="StringLiteralEquality"/>
+    <module name="NoFinalizer"/>
+    <module name="OneStatementPerLine"/>
+    <module name="MultipleVariableDeclarations"/>
+    <module name="FallThrough"/>
+
+    <!-- Whitespace -->
+    <module name="GenericWhitespace"/>
+    <module name="MethodParamPad"/>
+    <module name="NoWhitespaceAfter"/>
+    <module name="NoWhitespaceBefore"/>
+    <module name="ParenPad"/>
+    <module name="TypecastParenPad"/>
+    <module name="WhitespaceAfter"/>
+    <module name="WhitespaceAround">
+      <!-- Allow empty bodies in records/interfaces/lambdas -->
+      <property name="allowEmptyConstructors" value="true"/>
+      <property name="allowEmptyMethods" value="true"/>
+      <property name="allowEmptyTypes" value="true"/>
+      <property name="allowEmptyLambdas" value="true"/>
+    </module>
+
+    <!-- Modifier order: public protected private abstract default static final … -->
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier"/>
+
+    <!-- Miscellaneous -->
+    <module name="ArrayTypeStyle"/>
+    <module name="UpperEll"/>
+
+    <!-- Suppress warnings on @SuppressWarnings("checkstyle:...") -->
+    <module name="SuppressWarningsHolder"/>
+
+  </module>
+
+  <module name="SuppressWarningsFilter"/>
+
+</module>

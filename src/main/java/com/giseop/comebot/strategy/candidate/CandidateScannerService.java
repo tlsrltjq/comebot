@@ -8,7 +8,6 @@ import com.giseop.comebot.market.candle.provider.CandleProvider;
 import com.giseop.comebot.market.candle.provider.UpbitCandleProvider;
 import com.giseop.comebot.market.service.BtcTrendCacheService;
 import com.giseop.comebot.market.service.MarketSelectionService;
-import com.giseop.comebot.strategy.indicator.MarketTrend;
 import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
 import com.giseop.comebot.strategy.indicator.VolatilitySnapshot;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;

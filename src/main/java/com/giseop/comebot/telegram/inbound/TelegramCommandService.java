@@ -25,7 +25,6 @@ import com.giseop.comebot.strategy.candidate.TradingCandidate;
 import com.giseop.comebot.telegram.TelegramProperties;
 import com.giseop.comebot.telegram.sender.TelegramApiClient;
 import com.giseop.comebot.telegram.sender.TelegramNotificationSender;
-import com.giseop.comebot.trading.service.TradingFlowResult;
 import com.giseop.comebot.trading.service.TradingFlowService;
 import java.time.Instant;
 import java.util.List;

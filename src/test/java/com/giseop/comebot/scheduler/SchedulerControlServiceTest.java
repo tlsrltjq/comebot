@@ -82,4 +82,35 @@ class SchedulerControlServiceTest {
         assertThatThrownBy(() -> service.update(true, 45000L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void restorePersistedSettingIgnoresInvalidDelayAndKeepsCurrentSettings() {
+        // Simulate a stale DB row with an unsupported delay value (e.g. 15000)
+        when(settingRepository.findById(SchedulerControlSettingEntity.DEFAULT_ID))
+                .thenReturn(Optional.of(new SchedulerControlSettingEntity(false, 15000, Instant.now())));
+        candidateSchedulerProperties.setEnabled(true);
+        candidateSchedulerProperties.setFixedDelayMs(60000);
+
+        // Should not throw; invalid value must be silently ignored
+        service.restorePersistedSetting();
+
+        // Settings must remain unchanged because the persisted value was invalid
+        org.assertj.core.api.Assertions.assertThat(candidateSchedulerProperties.isEnabled()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(candidateSchedulerProperties.getFixedDelayMs()).isEqualTo(60000);
+    }
+
+    @Test
+    void restorePersistedSettingDoesNothingWhenRepositoryIsNull() {
+        SchedulerControlService serviceWithoutRepo = new SchedulerControlService(
+                candidateSchedulerProperties, positionExitSchedulerProperties, (SpringDataSchedulerControlSettingJpaRepository) null
+        );
+        candidateSchedulerProperties.setEnabled(true);
+        candidateSchedulerProperties.setFixedDelayMs(60000);
+
+        // Must not throw
+        serviceWithoutRepo.restorePersistedSetting();
+
+        org.assertj.core.api.Assertions.assertThat(candidateSchedulerProperties.isEnabled()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(candidateSchedulerProperties.getFixedDelayMs()).isEqualTo(60000);
+    }
 }
