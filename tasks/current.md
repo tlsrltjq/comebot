@@ -1,6 +1,27 @@
 # tasks/current.md — 현재 작업 컨텍스트
 
-## 단계: 엣지 부재 확인 — 전략 재설계 필요
+## 단계: 전략 재설계 — 청산 완료, 진입 신호 차례
+
+## 2026-06-02 청산 재설계 (완료, ADR-011)
+
+- [x] ADR-011 기록 (파라미터 튜닝 중단, OOS 게이트)
+- [x] 청산 변형 × timeframe 실험 → 트레일링 제거 + 넓은 TP = 승자 run이 압도
+- [x] 채택: TP 2→4, SL -1.5→-2, 트레일링 OFF (OOS train 0.94 / test 1.02)
+- [x] .env + application.properties 기본값 반영, 봇 재기동
+- [x] condition-records/2026-06-02-exit-redesign-let-winners-run.md
+
+→ 현 상태: "손실 구조 → break-even". robust 흑자엔 진입 신호 개선 필요.
+
+## 다음 작업: 진입 신호(entry) 재설계 [2순위 레버]
+
+목표: train·test 모두 PF ≥ 1.05 (현 청산구조에선 train 0.94 / test 1.02)
+- 현 pullback 진입 외 가설 실험 (상위 timeframe 진입, 다른 신호)
+- bt_redesign.py 확장, OOS 게이트 동일 적용
+- 통과 시 ADR-012로 채택
+
+---
+
+## (이전) 엣지 부재 확인 기록
 
 ## 이번 세션 결과 (OOS 검증)
 

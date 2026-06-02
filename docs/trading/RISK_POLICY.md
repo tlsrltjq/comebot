@@ -58,7 +58,7 @@
 
 - 기본값은 `risk.position-exit-enabled=true`다.
 - 켜져 있을 때만 보유 포지션 기준 SELL 신호를 만든다.
-- 현재 PAPER 자동 실행 기본값은 `risk.take-profit-rate=1.5`, `risk.stop-loss-rate=-0.7`다.
+- 현재 기본값은 `risk.take-profit-rate=4.0`, `risk.stop-loss-rate=-2.0`다 (R:R 2:1, 2026-06-02 청산 재설계, ADR-011).
 - 미실현 수익률이 `risk.take-profit-rate` 이상이면 익절 SELL 신호를 만든다.
 - 미실현 수익률이 `risk.stop-loss-rate` 이하이면 손절 SELL 신호를 만든다.
 - 단일 현재가가 평균 매수가 대비 `risk.abnormal-exit-price-drop-rate` 이하로 급락한 것처럼 보이면 비정상 시세로 보고 자동 SELL 신호를 만들지 않는다. 기본값은 `-20`이다.
@@ -75,8 +75,8 @@
 - peak profit이 `risk.trailing-stop-activation-rate` 이상에 도달한 뒤,
   현재 수익률이 peak profit 대비 `risk.trailing-stop-trail-rate` 이상 하락하면 SELL 신호를 만든다.
 - application.properties 기본값: 비활성, 활성화율 0.5%, trail 0.3%.
-- 운영 `.env` 기준값: 활성, 활성화율 2.0%, trail 1.5%.
-- 트레일링 스톱은 일반 손절(`stop-loss-rate`)보다 먼저 평가하며, 트레일링 스톱이 발동되면 stop-loss는 중복 평가하지 않는다.
+- **2026-06-02 청산 재설계로 운영 `.env`에서도 비활성(`false`)으로 전환** — trailing이 승자를 평균 +1.1%로 캡해 R:R을 무너뜨림이 OOS로 확인됨 (condition-records/2026-06-02-exit-redesign-let-winners-run.md). 메커니즘은 튜닝 도구로 코드 유지.
+- 활성 시: 일반 손절(`stop-loss-rate`)보다 먼저 평가하며, 발동되면 stop-loss는 중복 평가하지 않는다.
 
 ## 일일 제한
 

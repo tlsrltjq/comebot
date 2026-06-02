@@ -16,15 +16,15 @@ Upbit(KRW)·Binance(USDT) 공개 시세를 수신해 눌림목 반등 롱 후보
 | 거래소 | Upbit (KRW) + Binance (USDT), 공개 API만 |
 | 전략 | PullbackBounce (ADR-010) — bean명 `VOLATILITY_BREAKOUT_LONG` |
 | 시드 | Upbit 500,000 KRW / Binance 200 USDT (운영 `.env`) |
-| 익절 / 손절 | +2.0% / -1.5% (운영 `.env`; 기본값 +1.5 / -0.7) |
-| 트레일링 스톱 | 활성, 활성화 +2%, trail 1.5% (운영 `.env`) |
+| 익절 / 손절 | +4.0% / -2.0% (R:R 2:1, 청산 재설계 ADR-011) |
+| 트레일링 스톱 | **비활성** (승자 run; trailing이 R:R 훼손 확인) |
 | candidate 주기 | 30초 (운영 `.env`; 기본 60초) |
 | exit 주기 | 1초 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 (운영 `.env`) |
 | 서버 포트 | 18080 (backend) / 5176 (frontend dev) |
 | DB | PostgreSQL 5433 (운영), InMemory (단기 smoke) |
-| 최근 작업 | Checkstyle 추가, BtcTrend DI 역전, per-exchange scanner override |
-| 다음 작업 | 운용 데이터 축적 후 pullback 파라미터 튜닝 |
+| 최근 작업 | 청산 재설계(승자 run, OOS train 0.94/test 1.02), OOS 검증 체계 |
+| 다음 작업 | 진입 신호(entry) 재설계 — robust 흑자(train·test≥1.05) 목표 |
 
 ---
 

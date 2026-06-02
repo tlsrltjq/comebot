@@ -5,6 +5,8 @@
 
 ---
 
+2026-06-02 | strategy | feat: exit redesign — let winners run (TP 2→4, SL -1.5→-2, trailing off); OOS-validated train 0.94/test 1.02 (ADR-011)
+2026-06-02 | strategy | docs: ADR-011 strategy redesign initiative (param tuning halted, OOS gate)
 2026-06-02 | strategy | chore: disable time-of-day filter by default (OOS train/test validation showed it overfits; mechanism kept as tunable tool)
 2026-06-02 | strategy | feat: add KST time-of-day entry filter (strategy.entry.allowed-hours-kst, default 0,12,17,21,23) + exclude KRW-IRYS
 2026-06-02 | harness | chore: 하네스 초기 구축 (CLAUDE.md, HARNESS.md, tasks/current.md, docs/decisions.md, docs/architecture.md, docs/spec.md)
