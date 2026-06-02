@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class PositionExitSchedulerProperties {
 
     private boolean enabled = true;
-    private long fixedDelayMs = 5000;
+    private long fixedDelayMs = 1000;
     private long perMarketDelayMs = 0;
     private boolean saveHoldHistory = false;
     private ExchangeMode exchange = ExchangeMode.UPBIT;
@@ -31,7 +31,7 @@ public class PositionExitSchedulerProperties {
     }
 
     public void setFixedDelayMs(long fixedDelayMs) {
-        this.fixedDelayMs = fixedDelayMs > 0 ? fixedDelayMs : 5000;
+        this.fixedDelayMs = fixedDelayMs > 0 ? fixedDelayMs : 1000;
     }
 
     public long getPerMarketDelayMs() {

@@ -92,6 +92,7 @@ SELL 신호는 보유 포지션에 대해서만 만든다.
 - 최근 캔들 수: 5 (1분 캔들)
 - 전체 KRW 중 24시간 거래대금 상위 20개 (`market.selection.top-krw-market-limit`)
 - 전체 USDT 중 24시간 거래대금 상위 30개 (`market.selection.top-usdt-symbol-limit`)
+- 스캔 제외 market: `KRW-DOGE`, `KRW-PROVE`, `KRW-TRAC` (`market.selection.excluded-markets`)
 - 최소 가격 변화율: 1.0
 - 최소 거래대금 변화율: 30
 - 최대 가격 변화율: 10
@@ -100,8 +101,9 @@ SELL 신호는 보유 포지션에 대해서만 만든다.
 - 최신 캔들 최소 거래대금(KRW): 10,000,000 (`min-latest-candle-trade-amount-krw`)
 - 최신 캔들 최소 거래대금(USDT): 50,000 (`min-latest-candle-trade-amount-usdt`)
 - 스케줄러 1회 최대 BUY: 2 (`trading.candidate-scheduler.max-buys-per-run`)
+- BTC 1h 트렌드 필터: EMA5 vs EMA10, DOWN이면 Upbit 진입 차단 (`BtcTrendCacheService`, 5분 주기 갱신)
 
-`.env.example`은 보수적인 로컬 테스트용 값이며 위 기본값과 다르다.
 로컬 `.env`에서 명시 설정한 값이 application.properties 기본값보다 우선 적용된다.
+운영 `.env` 기준 실제 적용값은 per-exchange override 섹션과 condition-records를 참고한다.
 
 조건 변경 후 운용 기록과 손익 스냅샷은 `docs/trading/condition-records/`에 남긴다.
