@@ -36,6 +36,12 @@
 - `risk.position-limit.total-max-positions`: 거래소 합산 포지션 상한 (기본 5)
 - 거래소 상한에 먼저 도달하면 `REJECTED`로 처리한다.
 - 거래소 상한을 통과하더라도 전체 상한에 도달하면 `REJECTED`로 처리한다.
+- 2026-05-27 운영 `.env`에서는 후보 관찰을 위해 상한을 완화했다.
+  - `RISK_POSITION_LIMIT_ENABLED=true`
+  - `RISK_POSITION_LIMIT_UPBIT_MAX_POSITIONS=8`
+  - `RISK_POSITION_LIMIT_BINANCE_MAX_POSITIONS=8`
+  - `RISK_POSITION_LIMIT_TOTAL_MAX_POSITIONS=12`
+  - 완전 해제가 아니라 stop-loss cooldown, 현금 검증, 주문 금액 제한은 계속 유지한다.
 
 ## PAPER 포트폴리오 검증
 

@@ -13,6 +13,7 @@ import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +79,91 @@ class CandidateScannerServiceTest {
         assertThat(upbitProvider.requestedMarkets).isEmpty();
         assertThat(binanceProvider.requestedMarkets).containsExactly("BTCUSDT");
     }
+
+    @Test
+    void exchangeSpecificCandleCountsAreUsed() {
+        StubCandleProvider upbitProvider = new StubCandleProvider();
+        StubCandleProvider binanceProvider = new StubCandleProvider();
+        upbitProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        binanceProvider.candles = List.of(
+                candle("BTCUSDT", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("BTCUSDT", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        CandidateScannerProperties properties = new CandidateScannerProperties();
+        CandidateScannerProperties.ExchangeSettings upbit = new CandidateScannerProperties.ExchangeSettings();
+        upbit.setCandleCount(20);
+        properties.setUpbit(upbit);
+        CandidateScannerProperties.ExchangeSettings binance = new CandidateScannerProperties.ExchangeSettings();
+        binance.setCandleCount(10);
+        properties.setBinance(binance);
+        CandidateScannerService exchangeAwareService = new CandidateScannerService(
+                tradingProperties,
+                properties,
+                upbitProvider,
+                binanceProvider,
+                new VolatilityIndicatorService(),
+                new StrategyMarketSettingsService(strategyProperties, properties, overrideProperties),
+                new com.giseop.comebot.market.service.MarketSelectionService(
+                        new com.giseop.comebot.market.service.UpbitKrwTickerStore(),
+                        new com.giseop.comebot.market.service.BinanceUsdtTickerStore()
+                ),
+                null
+        );
+
+        exchangeAwareService.scan(ExchangeMode.UPBIT, "KRW-BTC");
+        exchangeAwareService.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(upbitProvider.requestedCounts).containsExactly(20);
+        assertThat(binanceProvider.requestedCounts).containsExactly(10);
+    }
+
+    @Test
+    void exchangeSpecificLatestTradeAmountThresholdsAreUsed() {
+        StubCandleProvider upbitProvider = new StubCandleProvider();
+        StubCandleProvider binanceProvider = new StubCandleProvider();
+        upbitProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        binanceProvider.candles = List.of(
+                candle("BTCUSDT", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "1000"),
+                candle("BTCUSDT", "2026-04-30T00:01:00Z", "105", "125", "104", "120", "1200")
+        );
+        CandidateScannerProperties properties = new CandidateScannerProperties();
+        properties.setMinPriceChangeRate(new BigDecimal("1"));
+        properties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        properties.setMaxPriceChangeRate(new BigDecimal("30"));
+        properties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        CandidateScannerProperties.ExchangeSettings upbit = new CandidateScannerProperties.ExchangeSettings();
+        upbit.setMinLatestCandleTradeAmountKrw(new BigDecimal("1000"));
+        properties.setUpbit(upbit);
+        CandidateScannerProperties.ExchangeSettings binance = new CandidateScannerProperties.ExchangeSettings();
+        binance.setMinLatestCandleTradeAmountUsdt(new BigDecimal("2000"));
+        properties.setBinance(binance);
+        CandidateScannerService exchangeAwareService = new CandidateScannerService(
+                tradingProperties,
+                properties,
+                upbitProvider,
+                binanceProvider,
+                new VolatilityIndicatorService(),
+                new StrategyMarketSettingsService(strategyProperties, properties, overrideProperties),
+                new com.giseop.comebot.market.service.MarketSelectionService(
+                        new com.giseop.comebot.market.service.UpbitKrwTickerStore(),
+                        new com.giseop.comebot.market.service.BinanceUsdtTickerStore()
+                ),
+                null
+        );
+
+        TradingCandidate upbitCandidate = exchangeAwareService.scan(ExchangeMode.UPBIT, "KRW-BTC");
+        TradingCandidate binanceCandidate = exchangeAwareService.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(upbitCandidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+        assertThat(binanceCandidate.reason()).isEqualTo("Latest candle trade amount is below minimum threshold");
+    }
+
 
     @Test
     void zeroTradeAmountCandlesAreSkippedBeforeIndicatorCalculation() {
@@ -400,6 +486,26 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void incompleteLatestCandleIsIgnoredForEntryDecision() {
+        Instant currentMinute = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinLatestCandleTradeAmountKrw(new BigDecimal("1000"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", currentMinute.minusSeconds(120), "100", "110", "95", "105", "1000"),
+                candle("KRW-BTC", currentMinute.minusSeconds(60), "105", "125", "104", "120", "1200"),
+                candle("KRW-BTC", currentMinute, "120", "121", "119", "119", "1")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+        assertThat(candidate.currentPrice()).isEqualByComparingTo("120");
+    }
+
+    @Test
     void providerFailureIsReturnedAsSkippedCandidate() {
         candleProvider.failure = true;
 
@@ -418,9 +524,21 @@ class CandidateScannerServiceTest {
             String trade,
             String tradeAmount
     ) {
+        return candle(market, Instant.parse(time), open, high, low, trade, tradeAmount);
+    }
+
+    private Candle candle(
+            String market,
+            Instant time,
+            String open,
+            String high,
+            String low,
+            String trade,
+            String tradeAmount
+    ) {
         return new Candle(
                 market,
-                Instant.parse(time),
+                time,
                 new BigDecimal(open),
                 new BigDecimal(high),
                 new BigDecimal(low),
@@ -435,10 +553,12 @@ class CandidateScannerServiceTest {
         private List<Candle> candles = List.of();
         private boolean failure = false;
         private final List<String> requestedMarkets = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+        private final List<Integer> requestedCounts = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
 
         @Override
         public List<Candle> getRecentCandles(String market, int unitMinutes, int count) {
             requestedMarkets.add(market);
+            requestedCounts.add(count);
             if (failure) {
                 throw new IllegalStateException("failed");
             }

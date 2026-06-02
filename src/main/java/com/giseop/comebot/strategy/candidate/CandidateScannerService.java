@@ -13,6 +13,7 @@ import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
 import com.giseop.comebot.strategy.indicator.VolatilitySnapshot;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -179,10 +180,14 @@ public class CandidateScannerService {
         try {
             List<Candle> candles = candleProvider(exchange).getRecentCandles(
                     market,
-                    candidateScannerProperties.getCandleUnitMinutes(),
-                    candidateScannerProperties.getCandleCount()
+                    candidateScannerProperties.getCandleUnitMinutes(exchange),
+                    candidateScannerProperties.getCandleCount(exchange)
             );
-            List<Candle> validCandles = candles.stream()
+            List<Candle> completedCandles = removeIncompleteLatestCandle(
+                    candles,
+                    candidateScannerProperties.getCandleUnitMinutes(exchange)
+            );
+            List<Candle> validCandles = completedCandles.stream()
                     .filter(this::hasPositiveTradeAmount)
                     .toList();
             if (validCandles.size() < 2) {
@@ -213,6 +218,25 @@ public class CandidateScannerService {
         }
     }
 
+    private List<Candle> removeIncompleteLatestCandle(List<Candle> candles, int unitMinutes) {
+        if (candles == null || candles.size() <= 1) {
+            return candles == null ? List.of() : candles;
+        }
+        List<Candle> orderedCandles = candles.stream()
+                .filter(candle -> candle != null && candle.candleTime() != null)
+                .sorted(java.util.Comparator.comparing(Candle::candleTime))
+                .toList();
+        if (orderedCandles.size() <= 1) {
+            return orderedCandles;
+        }
+        Candle latest = orderedCandles.getLast();
+        Instant latestCloseTime = latest.candleTime().plus(Duration.ofMinutes(unitMinutes));
+        if (Instant.now().isBefore(latestCloseTime)) {
+            return orderedCandles.subList(0, orderedCandles.size() - 1);
+        }
+        return orderedCandles;
+    }
+
     private TradingCandidate skippedCandidate(String market, String reason) {
         return new TradingCandidate(
                 market,
@@ -229,9 +253,9 @@ public class CandidateScannerService {
 
     private BigDecimal minLatestCandleTradeAmount(ExchangeMode exchange) {
         if (exchange == ExchangeMode.BINANCE) {
-            return candidateScannerProperties.getMinLatestCandleTradeAmountUsdt();
+            return candidateScannerProperties.getMinLatestCandleTradeAmountUsdt(exchange);
         }
-        return candidateScannerProperties.getMinLatestCandleTradeAmountKrw();
+        return candidateScannerProperties.getMinLatestCandleTradeAmountKrw(exchange);
     }
 
     private boolean hasPositiveTradeAmount(Candle candle) {
@@ -281,12 +305,13 @@ public class CandidateScannerService {
             return skipped(snapshot, "High low range rate is overheated");
         }
         // Pullback zone: price must have pulled back from the high (not at the peak)
-        BigDecimal minDistFromHigh = candidateScannerProperties.getMinDistanceFromHighRate();
+        ExchangeMode exchange = exchangeOf(snapshot.market());
+        BigDecimal minDistFromHigh = candidateScannerProperties.getMinDistanceFromHighRate(exchange);
         if (minDistFromHigh.compareTo(BigDecimal.ZERO) > 0
                 && snapshot.distanceFromHighRate().compareTo(minDistFromHigh) < 0) {
             return skipped(snapshot, "Price has not pulled back sufficiently from high");
         }
-        BigDecimal maxDistFromHigh = candidateScannerProperties.getMaxDistanceFromHighRate();
+        BigDecimal maxDistFromHigh = candidateScannerProperties.getMaxDistanceFromHighRate(exchange);
         if (maxDistFromHigh.compareTo(BigDecimal.ZERO) > 0
                 && snapshot.distanceFromHighRate().compareTo(maxDistFromHigh) > 0) {
             return skipped(snapshot, "Price is too far below the recent high");
@@ -314,6 +339,13 @@ public class CandidateScannerService {
                 snapshot.lastCandleBullish(),
                 Instant.now()
         );
+    }
+
+    private ExchangeMode exchangeOf(String market) {
+        if (market != null && market.endsWith("USDT") && !market.startsWith("KRW-")) {
+            return ExchangeMode.BINANCE;
+        }
+        return ExchangeMode.UPBIT;
     }
 
     private TradingCandidate skipped(VolatilitySnapshot snapshot, String reason) {

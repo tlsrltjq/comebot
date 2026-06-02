@@ -45,6 +45,30 @@ class StrategyMarketSettingsServiceTest {
     }
 
     @Test
+    void exchangeSpecificScannerThresholdsAreApplied() {
+        CandidateScannerProperties scannerProperties = new CandidateScannerProperties();
+        CandidateScannerProperties.ExchangeSettings upbit = new CandidateScannerProperties.ExchangeSettings();
+        upbit.setMinPriceChangeRate(new BigDecimal("0.15"));
+        upbit.setMinTradeAmountChangeRate(new BigDecimal("0"));
+        scannerProperties.setUpbit(upbit);
+        CandidateScannerProperties.ExchangeSettings binance = new CandidateScannerProperties.ExchangeSettings();
+        binance.setMinPriceChangeRate(new BigDecimal("0.8"));
+        binance.setMinTradeAmountChangeRate(new BigDecimal("30"));
+        scannerProperties.setBinance(binance);
+
+        StrategyMarketSettingsService service = new StrategyMarketSettingsService(
+                new StrategyProperties(),
+                scannerProperties,
+                new StrategyMarketOverrideProperties()
+        );
+
+        assertThat(service.minPriceChangeRate("KRW-BTC")).isEqualByComparingTo("0.15");
+        assertThat(service.minTradeAmountChangeRate("KRW-BTC")).isEqualByComparingTo("0");
+        assertThat(service.minPriceChangeRate("BTCUSDT")).isEqualByComparingTo("0.8");
+        assertThat(service.minTradeAmountChangeRate("BTCUSDT")).isEqualByComparingTo("30");
+    }
+
+    @Test
     void returnsMarketOverrideValuesWhenConfigured() {
         StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
         override.setOrderQuantity(new BigDecimal("0.02"));

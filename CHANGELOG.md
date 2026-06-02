@@ -17,6 +17,10 @@
 2026-05-19 | sync  | docs: optimize docs — delete 5 stale plan files, trim completed history to CHANGELOG
 2026-05-19 | sync  | chore: align orderQuantity default, register WebSocket config, update HARNESS_STATUS next task
 2026-05-19 | sync  | docs: restructure harness — add HARNESS.md, CHANGELOG, decisions.md, tasks/current.md, GC_ROUTINE
+2026-05-27 | strategy | chore: relax PAPER entry filters for ordinary market conditions and document rollback values
+2026-05-27 | strategy | fix: ignore in-progress latest candle during candidate scan
+2026-05-27 | risk | chore: loosen PAPER position limits without disabling risk validation
+2026-05-28 | strategy | feat: split candidate scanner filters by exchange
 2026-05-15 | ops   | feat: guard candidate/exit scheduler on market data readiness (automationReady=false blocks run)
 2026-05-15 | ops   | chore: normalize paper run scripts — run-paper-jpa.* as primary, run-upbit-paper-jpa.* as alias
 2026-05-14 | analytics | feat: add strategy performance analytics — winRate, averageHoldingSeconds, profitLossRatio

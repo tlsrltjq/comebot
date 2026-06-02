@@ -48,28 +48,28 @@ public class StrategyMarketSettingsService {
         StrategyMarketOverrideProperties.MarketOverride override = strategyMarketOverrideProperties.get(market);
         return override != null && override.getMinPriceChangeRate() != null
                 ? override.getMinPriceChangeRate()
-                : candidateScannerProperties.getMinPriceChangeRate();
+                : candidateScannerProperties.getMinPriceChangeRate(exchangeOf(market));
     }
 
     public BigDecimal minTradeAmountChangeRate(String market) {
         StrategyMarketOverrideProperties.MarketOverride override = strategyMarketOverrideProperties.get(market);
         return override != null && override.getMinTradeAmountChangeRate() != null
                 ? override.getMinTradeAmountChangeRate()
-                : candidateScannerProperties.getMinTradeAmountChangeRate();
+                : candidateScannerProperties.getMinTradeAmountChangeRate(exchangeOf(market));
     }
 
     public BigDecimal maxPriceChangeRate(String market) {
         StrategyMarketOverrideProperties.MarketOverride override = strategyMarketOverrideProperties.get(market);
         return override != null && override.getMaxPriceChangeRate() != null
                 ? override.getMaxPriceChangeRate()
-                : candidateScannerProperties.getMaxPriceChangeRate();
+                : candidateScannerProperties.getMaxPriceChangeRate(exchangeOf(market));
     }
 
     public BigDecimal maxHighLowRangeRate(String market) {
         StrategyMarketOverrideProperties.MarketOverride override = strategyMarketOverrideProperties.get(market);
         return override != null && override.getMaxHighLowRangeRate() != null
                 ? override.getMaxHighLowRangeRate()
-                : candidateScannerProperties.getMaxHighLowRangeRate();
+                : candidateScannerProperties.getMaxHighLowRangeRate(exchangeOf(market));
     }
 
     private ExchangeMode exchangeOf(String market) {

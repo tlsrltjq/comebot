@@ -1,5 +1,6 @@
 package com.giseop.comebot.strategy.candidate;
 
+import com.giseop.comebot.exchange.ExchangeMode;
 import java.math.BigDecimal;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -18,9 +19,16 @@ public class CandidateScannerProperties {
     private BigDecimal minLatestCandleTradeAmountUsdt = BigDecimal.ZERO;
     private BigDecimal maxDistanceFromHighRate = BigDecimal.ZERO;
     private BigDecimal minDistanceFromHighRate = BigDecimal.ZERO;
+    private ExchangeSettings upbit = new ExchangeSettings();
+    private ExchangeSettings binance = new ExchangeSettings();
 
     public int getCandleUnitMinutes() {
         return candleUnitMinutes;
+    }
+
+    public int getCandleUnitMinutes(ExchangeMode exchange) {
+        Integer override = settings(exchange).getCandleUnitMinutes();
+        return override == null ? candleUnitMinutes : override;
     }
 
     public void setCandleUnitMinutes(int candleUnitMinutes) {
@@ -31,12 +39,22 @@ public class CandidateScannerProperties {
         return candleCount;
     }
 
+    public int getCandleCount(ExchangeMode exchange) {
+        Integer override = settings(exchange).getCandleCount();
+        return override == null ? candleCount : override;
+    }
+
     public void setCandleCount(int candleCount) {
         this.candleCount = candleCount;
     }
 
     public BigDecimal getMinPriceChangeRate() {
         return minPriceChangeRate;
+    }
+
+    public BigDecimal getMinPriceChangeRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMinPriceChangeRate();
+        return override == null ? minPriceChangeRate : override;
     }
 
     public void setMinPriceChangeRate(BigDecimal minPriceChangeRate) {
@@ -47,12 +65,22 @@ public class CandidateScannerProperties {
         return minTradeAmountChangeRate;
     }
 
+    public BigDecimal getMinTradeAmountChangeRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMinTradeAmountChangeRate();
+        return override == null ? minTradeAmountChangeRate : override;
+    }
+
     public void setMinTradeAmountChangeRate(BigDecimal minTradeAmountChangeRate) {
         this.minTradeAmountChangeRate = minTradeAmountChangeRate == null ? new BigDecimal("20") : minTradeAmountChangeRate;
     }
 
     public BigDecimal getMaxPriceChangeRate() {
         return maxPriceChangeRate;
+    }
+
+    public BigDecimal getMaxPriceChangeRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMaxPriceChangeRate();
+        return override == null ? maxPriceChangeRate : override;
     }
 
     public void setMaxPriceChangeRate(BigDecimal maxPriceChangeRate) {
@@ -63,12 +91,22 @@ public class CandidateScannerProperties {
         return maxHighLowRangeRate;
     }
 
+    public BigDecimal getMaxHighLowRangeRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMaxHighLowRangeRate();
+        return override == null ? maxHighLowRangeRate : override;
+    }
+
     public void setMaxHighLowRangeRate(BigDecimal maxHighLowRangeRate) {
         this.maxHighLowRangeRate = maxHighLowRangeRate == null ? new BigDecimal("20") : maxHighLowRangeRate;
     }
 
     public BigDecimal getMinLatestCandleTradeAmountKrw() {
         return minLatestCandleTradeAmountKrw;
+    }
+
+    public BigDecimal getMinLatestCandleTradeAmountKrw(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMinLatestCandleTradeAmountKrw();
+        return override == null ? minLatestCandleTradeAmountKrw : override;
     }
 
     public void setMinLatestCandleTradeAmountKrw(BigDecimal minLatestCandleTradeAmountKrw) {
@@ -79,12 +117,22 @@ public class CandidateScannerProperties {
         return minLatestCandleTradeAmountUsdt;
     }
 
+    public BigDecimal getMinLatestCandleTradeAmountUsdt(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMinLatestCandleTradeAmountUsdt();
+        return override == null ? minLatestCandleTradeAmountUsdt : override;
+    }
+
     public void setMinLatestCandleTradeAmountUsdt(BigDecimal minLatestCandleTradeAmountUsdt) {
         this.minLatestCandleTradeAmountUsdt = minLatestCandleTradeAmountUsdt == null ? BigDecimal.ZERO : minLatestCandleTradeAmountUsdt;
     }
 
     public BigDecimal getMaxDistanceFromHighRate() {
         return maxDistanceFromHighRate;
+    }
+
+    public BigDecimal getMaxDistanceFromHighRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMaxDistanceFromHighRate();
+        return override == null ? maxDistanceFromHighRate : override;
     }
 
     public void setMaxDistanceFromHighRate(BigDecimal maxDistanceFromHighRate) {
@@ -97,5 +145,124 @@ public class CandidateScannerProperties {
 
     public void setMinDistanceFromHighRate(BigDecimal minDistanceFromHighRate) {
         this.minDistanceFromHighRate = minDistanceFromHighRate == null ? BigDecimal.ZERO : minDistanceFromHighRate;
+    }
+
+    public BigDecimal getMinDistanceFromHighRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMinDistanceFromHighRate();
+        return override == null ? minDistanceFromHighRate : override;
+    }
+
+    public ExchangeSettings getUpbit() {
+        return upbit;
+    }
+
+    public void setUpbit(ExchangeSettings upbit) {
+        this.upbit = upbit == null ? new ExchangeSettings() : upbit;
+    }
+
+    public ExchangeSettings getBinance() {
+        return binance;
+    }
+
+    public void setBinance(ExchangeSettings binance) {
+        this.binance = binance == null ? new ExchangeSettings() : binance;
+    }
+
+    private ExchangeSettings settings(ExchangeMode exchange) {
+        return exchange == ExchangeMode.BINANCE ? binance : upbit;
+    }
+
+    public static class ExchangeSettings {
+
+        private Integer candleUnitMinutes;
+        private Integer candleCount;
+        private BigDecimal minPriceChangeRate;
+        private BigDecimal minTradeAmountChangeRate;
+        private BigDecimal maxPriceChangeRate;
+        private BigDecimal maxHighLowRangeRate;
+        private BigDecimal minLatestCandleTradeAmountKrw;
+        private BigDecimal minLatestCandleTradeAmountUsdt;
+        private BigDecimal maxDistanceFromHighRate;
+        private BigDecimal minDistanceFromHighRate;
+
+        public Integer getCandleUnitMinutes() {
+            return candleUnitMinutes;
+        }
+
+        public void setCandleUnitMinutes(Integer candleUnitMinutes) {
+            this.candleUnitMinutes = candleUnitMinutes;
+        }
+
+        public Integer getCandleCount() {
+            return candleCount;
+        }
+
+        public void setCandleCount(Integer candleCount) {
+            this.candleCount = candleCount;
+        }
+
+        public BigDecimal getMinPriceChangeRate() {
+            return minPriceChangeRate;
+        }
+
+        public void setMinPriceChangeRate(BigDecimal minPriceChangeRate) {
+            this.minPriceChangeRate = minPriceChangeRate;
+        }
+
+        public BigDecimal getMinTradeAmountChangeRate() {
+            return minTradeAmountChangeRate;
+        }
+
+        public void setMinTradeAmountChangeRate(BigDecimal minTradeAmountChangeRate) {
+            this.minTradeAmountChangeRate = minTradeAmountChangeRate;
+        }
+
+        public BigDecimal getMaxPriceChangeRate() {
+            return maxPriceChangeRate;
+        }
+
+        public void setMaxPriceChangeRate(BigDecimal maxPriceChangeRate) {
+            this.maxPriceChangeRate = maxPriceChangeRate;
+        }
+
+        public BigDecimal getMaxHighLowRangeRate() {
+            return maxHighLowRangeRate;
+        }
+
+        public void setMaxHighLowRangeRate(BigDecimal maxHighLowRangeRate) {
+            this.maxHighLowRangeRate = maxHighLowRangeRate;
+        }
+
+        public BigDecimal getMinLatestCandleTradeAmountKrw() {
+            return minLatestCandleTradeAmountKrw;
+        }
+
+        public void setMinLatestCandleTradeAmountKrw(BigDecimal minLatestCandleTradeAmountKrw) {
+            this.minLatestCandleTradeAmountKrw = minLatestCandleTradeAmountKrw;
+        }
+
+        public BigDecimal getMinLatestCandleTradeAmountUsdt() {
+            return minLatestCandleTradeAmountUsdt;
+        }
+
+        public void setMinLatestCandleTradeAmountUsdt(BigDecimal minLatestCandleTradeAmountUsdt) {
+            this.minLatestCandleTradeAmountUsdt = minLatestCandleTradeAmountUsdt;
+        }
+
+        public BigDecimal getMaxDistanceFromHighRate() {
+            return maxDistanceFromHighRate;
+        }
+
+        public void setMaxDistanceFromHighRate(BigDecimal maxDistanceFromHighRate) {
+            this.maxDistanceFromHighRate = maxDistanceFromHighRate;
+        }
+
+        public BigDecimal getMinDistanceFromHighRate() {
+            return minDistanceFromHighRate;
+        }
+
+        public void setMinDistanceFromHighRate(BigDecimal minDistanceFromHighRate) {
+            this.minDistanceFromHighRate = minDistanceFromHighRate;
+        }
     }
 }

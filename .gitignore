@@ -40,6 +40,12 @@ out/
 .env
 .claude/
 
+### Backtest ###
+backtest.py
+backtest_*.json
+backtest_*.log
+.backtest_cache/
+
 ### Frontend ###
 frontend/node_modules/
 frontend/dist/

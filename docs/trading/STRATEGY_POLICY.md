@@ -52,6 +52,23 @@
 - 최대 가격 변화율
 - 최대 고가/저가 범위
 
+2026-05-28부터 UPBIT과 BINANCE는 후보 스캔 필터를 분리한다.
+전역 `strategy.candidate-scanner.*` 값은 fallback으로 유지하되, 운영 `.env`에서는 아래 exchange별 override를 우선 사용한다.
+
+| 항목 | UPBIT | BINANCE |
+|---|---:|---:|
+| 캔들 수 | 20 | 10 |
+| 최소 가격 변화율 | 0.15% | 0.8% |
+| 최소 거래대금 변화율 | 0% | 30% |
+| 최신 캔들 최소 거래대금 | KRW 1,000,000 | USDT 50,000 |
+| 최근 고가 대비 최대 거리 | 5% | 2% |
+| 최근 고가 대비 최소 거리 | 0% | 0.5% |
+
+분리 이유:
+- UPBIT은 24시간 후보 `SELECTED`가 2건뿐이라 기존 조건이 지나치게 보수적이었다.
+- BINANCE는 24시간 후보 `SELECTED`가 2,657건, BUY 92건, SELL 80건으로 과매매와 반복 손절이 발생했다.
+- 따라서 UPBIT은 느슨하게, BINANCE는 보수적으로 운용한다.
+
 스케줄러 1회 실행당 신규 BUY 수는 `trading.candidate-scheduler.max-buys-per-run`(기본값 2)으로 제한한다.
 0으로 설정하면 제한 없음.
 
