@@ -76,14 +76,15 @@ export function MarketOverviewPage() {
           <div className="chart-wrap market-chart-wrap">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={26} />
-                <YAxis tickLine={false} axisLine={false} width={54} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#21262d" />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={26} tick={{ fill: '#8b949e', fontSize: 12 }} />
+                <YAxis tickLine={false} axisLine={false} width={54} unit="%" tick={{ fill: '#8b949e', fontSize: 12 }} />
                 <Tooltip
+                  contentStyle={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 5, color: '#c9d1d9', fontSize: 12 }}
                   formatter={(value, name) => (name === 'changeRate' ? [`${formatNumber(Number(value), 4)}%`, '등락률(Change)'] : [formatCurrency(value as number, currency), '가격(Price)'])}
                   labelFormatter={(_, payload) => (payload?.[0]?.payload?.time ? formatDateTime(payload[0].payload.time) : '')}
                 />
-                <Line type="monotone" dataKey="changeRate" stroke="#176b87" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="changeRate" stroke="#58a6ff" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#58a6ff' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

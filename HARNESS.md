@@ -23,7 +23,7 @@ Upbit(KRW)·Binance(USDT) 공개 시세를 수신해 눌림목 반등 롱 후보
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 (운영 `.env`) |
 | 서버 포트 | 18080 (backend) / 5176 (frontend dev) |
 | DB | PostgreSQL 5433 (운영), InMemory (단기 smoke) |
-| 최근 작업 | volumeCooldownRatio 진입 필터 추가 (기본값 비활성, ADR-012 후보) |
+| 최근 작업 | UI 전면 다크모드 리뉴얼 (트레이딩 콘솔 스타일) |
 | 다음 작업 | 로컬 bt_entry_redesign.py 실행 → OOS 게이트 통과 변형 채택 → ADR-012 기록 |
 
 ---

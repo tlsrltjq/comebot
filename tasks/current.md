@@ -1,6 +1,6 @@
 # tasks/current.md — 현재 작업 컨텍스트
 
-## 단계: 전략 재설계 — 청산 완료, 진입 신호 차례
+## 단계: 전략 재설계 — UI 리뉴얼 완료, 진입 신호 OOS 결과 대기
 
 ## 2026-06-02 청산 재설계 (완료, ADR-011)
 
@@ -26,6 +26,14 @@
 - [x] `minConsecutiveBullishCandles` 필터 (기본값 1, 환경변수: `STRATEGY_CANDIDATE_MIN_CONSECUTIVE_BULLISH_CANDLES`)
 - [x] `priceRecoveryRate` 지표 추가 ((close-low)/(high-low)×100)
 - [x] `minPriceRecoveryRate` 필터 (기본값 0=비활성, 환경변수: `STRATEGY_CANDIDATE_MIN_PRICE_RECOVERY_RATE`)
+
+### 완료 (2026-06-03)
+- [x] UI 전면 다크모드 리뉴얼 (트레이딩 콘솔 스타일)
+  - styles.css 전면 재작성: GitHub dark 팔레트, CSS 커스텀 프로퍼티 기반 토큰 체계
+  - 사이드바 compact (200px), 모노스페이스 숫자 (font-variant-numeric: tabular-nums)
+  - Recharts 차트 다크모드 색상 통일 (stroke/fill/tooltip/grid)
+  - nav 레이블 영문화, 테스트 업데이트
+  - 빌드/린트/유닛테스트 전부 통과
 
 ### 다음 단계
 - [ ] 로컬에서 `python3 bt_entry_redesign.py` 실행 (Upbit API 필요, 인터넷 접근 환경)
