@@ -15,6 +15,8 @@ public record VolatilitySnapshot(
         BigDecimal distanceFromHighRate,
         BigDecimal windowHighChangeRate,
         BigDecimal peakTradeAmountChangeRate,
-        BigDecimal volumeCooldownRatio
+        BigDecimal volumeCooldownRatio,
+        int consecutiveBullishCandles,
+        BigDecimal priceRecoveryRate
 ) {
 }

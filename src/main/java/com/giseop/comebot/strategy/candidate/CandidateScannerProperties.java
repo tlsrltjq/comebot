@@ -20,6 +20,8 @@ public class CandidateScannerProperties {
     private BigDecimal maxDistanceFromHighRate = BigDecimal.ZERO;
     private BigDecimal minDistanceFromHighRate = BigDecimal.ZERO;
     private BigDecimal maxVolumeCooldownRatio = BigDecimal.ZERO;
+    private int minConsecutiveBullishCandles = 1;
+    private BigDecimal minPriceRecoveryRate = BigDecimal.ZERO;
     private ExchangeSettings upbit = new ExchangeSettings();
     private ExchangeSettings binance = new ExchangeSettings();
 
@@ -166,6 +168,32 @@ public class CandidateScannerProperties {
         this.maxVolumeCooldownRatio = maxVolumeCooldownRatio == null ? BigDecimal.ZERO : maxVolumeCooldownRatio;
     }
 
+    public int getMinConsecutiveBullishCandles() {
+        return minConsecutiveBullishCandles;
+    }
+
+    public int getMinConsecutiveBullishCandles(ExchangeMode exchange) {
+        Integer override = settings(exchange).getMinConsecutiveBullishCandles();
+        return override == null ? minConsecutiveBullishCandles : override;
+    }
+
+    public void setMinConsecutiveBullishCandles(int minConsecutiveBullishCandles) {
+        this.minConsecutiveBullishCandles = Math.max(1, minConsecutiveBullishCandles);
+    }
+
+    public BigDecimal getMinPriceRecoveryRate() {
+        return minPriceRecoveryRate;
+    }
+
+    public BigDecimal getMinPriceRecoveryRate(ExchangeMode exchange) {
+        BigDecimal override = settings(exchange).getMinPriceRecoveryRate();
+        return override == null ? minPriceRecoveryRate : override;
+    }
+
+    public void setMinPriceRecoveryRate(BigDecimal minPriceRecoveryRate) {
+        this.minPriceRecoveryRate = minPriceRecoveryRate == null ? BigDecimal.ZERO : minPriceRecoveryRate;
+    }
+
     public ExchangeSettings getUpbit() {
         return upbit;
     }
@@ -199,6 +227,8 @@ public class CandidateScannerProperties {
         private BigDecimal maxDistanceFromHighRate;
         private BigDecimal minDistanceFromHighRate;
         private BigDecimal maxVolumeCooldownRatio;
+        private Integer minConsecutiveBullishCandles;
+        private BigDecimal minPriceRecoveryRate;
 
         public Integer getCandleUnitMinutes() {
             return candleUnitMinutes;
@@ -286,6 +316,22 @@ public class CandidateScannerProperties {
 
         public void setMaxVolumeCooldownRatio(BigDecimal maxVolumeCooldownRatio) {
             this.maxVolumeCooldownRatio = maxVolumeCooldownRatio;
+        }
+
+        public Integer getMinConsecutiveBullishCandles() {
+            return minConsecutiveBullishCandles;
+        }
+
+        public void setMinConsecutiveBullishCandles(Integer minConsecutiveBullishCandles) {
+            this.minConsecutiveBullishCandles = minConsecutiveBullishCandles;
+        }
+
+        public BigDecimal getMinPriceRecoveryRate() {
+            return minPriceRecoveryRate;
+        }
+
+        public void setMinPriceRecoveryRate(BigDecimal minPriceRecoveryRate) {
+            this.minPriceRecoveryRate = minPriceRecoveryRate;
         }
     }
 }

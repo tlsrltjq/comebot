@@ -549,6 +549,85 @@ class CandidateScannerServiceTest {
     }
 
     @Test
+    void insufficientConsecutiveBullishCandlesIsSkipped() {
+        // pump(bullish) → pullback(bearish) → bounce start(bullish): only 1 consecutive, filter requires 2
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinConsecutiveBullishCandles(2);
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95",  "105", "500"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "114", "2000"),
+                candle("KRW-BTC", "2026-04-30T00:02:00Z", "114", "116", "108", "109", "1200"),
+                candle("KRW-BTC", "2026-04-30T00:03:00Z", "109", "113", "108", "112", "600")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Not enough consecutive bullish candles");
+    }
+
+    @Test
+    void sufficientConsecutiveBullishCandlesIsSelected() {
+        // 2 consecutive bullish at end, filter requires 2
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinConsecutiveBullishCandles(2);
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "110", "95", "105", "500"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "105", "125", "104", "119", "2000"),
+                candle("KRW-BTC", "2026-04-30T00:02:00Z", "119", "122", "118", "121", "600")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
+    void lowPriceRecoveryRateIsSkipped() {
+        // window low=99, high=128, latest close=102 → recovery=(102-99)/(128-99)*100 ≈ 10.3% < threshold 50%
+        // overall trend positive: oldest.open=100, latest.close=102 → +2%
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinPriceRecoveryRate(new BigDecimal("50"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "125", "100", "102", "500"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "125", "128", "100", "102", "2000"),
+                candle("KRW-BTC", "2026-04-30T00:02:00Z", "100", "105", "99",  "102", "600")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Price recovery rate is below threshold");
+    }
+
+    @Test
+    void sufficientPriceRecoveryRateIsSelected() {
+        // low=90, high=125, latest close=115 → recovery=(115-90)/(125-90)*100 ≈ 71.4% > threshold 50%
+        scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));
+        scannerProperties.setMinTradeAmountChangeRate(new BigDecimal("10"));
+        scannerProperties.setMaxPriceChangeRate(new BigDecimal("30"));
+        scannerProperties.setMaxHighLowRangeRate(new BigDecimal("40"));
+        scannerProperties.setMinPriceRecoveryRate(new BigDecimal("50"));
+        candleProvider.candles = List.of(
+                candle("KRW-BTC", "2026-04-30T00:00:00Z", "100", "125", "90", "112", "500"),
+                candle("KRW-BTC", "2026-04-30T00:01:00Z", "112", "118", "111", "115", "2000")
+        );
+
+        TradingCandidate candidate = service.scan("KRW-BTC");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SELECTED);
+    }
+
+    @Test
     void volumeCooldownFilterIsSkippedWhenSetToZero() {
         // ratio > 0.5 but filter is disabled (maxVolumeCooldownRatio = 0)
         scannerProperties.setMinPriceChangeRate(new BigDecimal("1"));

@@ -3,6 +3,7 @@
 ## 형식
 `날짜 | 단계 | feat/fix/chore/docs: 내용`
 
+2026-06-03 | 진입 신호 재설계 | feat: consecutiveBullishCandles·priceRecoveryRate 진입 필터 추가 (기본값 비활성, ADR-012 후보)
 2026-06-02 | 진입 신호 재설계 | feat: volumeCooldownRatio 진입 필터 추가 (기본값 비활성, ADR-012 후보)
 
 ---

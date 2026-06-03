@@ -21,7 +21,11 @@
 - [x] `maxVolumeCooldownRatio` 필터 — CandidateScannerProperties + CandidateScannerService
   - 기본값 0 (비활성), 환경변수: `STRATEGY_CANDIDATE_MAX_VOLUME_COOLDOWN_RATIO`
   - per-exchange override: `STRATEGY_CANDIDATE_UPBIT_MAX_VOLUME_COOLDOWN_RATIO`
-- [x] `bt_entry_redesign.py` 작성 — 6개 변형(V0~V5) OOS 백테스트 스크립트
+- [x] `bt_entry_redesign.py` 작성 — 8개 변형(V0~V7) OOS 백테스트 스크립트
+- [x] `consecutiveBullishCandles` 지표 추가 (윈도우 끝 연속 양봉 수)
+- [x] `minConsecutiveBullishCandles` 필터 (기본값 1, 환경변수: `STRATEGY_CANDIDATE_MIN_CONSECUTIVE_BULLISH_CANDLES`)
+- [x] `priceRecoveryRate` 지표 추가 ((close-low)/(high-low)×100)
+- [x] `minPriceRecoveryRate` 필터 (기본값 0=비활성, 환경변수: `STRATEGY_CANDIDATE_MIN_PRICE_RECOVERY_RATE`)
 
 ### 다음 단계
 - [ ] 로컬에서 `python3 bt_entry_redesign.py` 실행 (Upbit API 필요, 인터넷 접근 환경)
@@ -36,8 +40,10 @@
 | V1 | 5분봉 × 10 | 비활성 |
 | V2 | 5분봉 × 6 | 비활성 |
 | V3 | 15분봉 × 6 | 비활성 |
-| V4 | 5분봉 × 10 | ≤ 0.5 |
-| V5 | 5분봉 × 10 | ≤ 0.3 |
+| V4 | 5분봉 × 10 | vcr ≤ 0.5 | - |
+| V5 | 5분봉 × 10 | vcr ≤ 0.3 | - |
+| V6 | 5분봉 × 10 | - | consec ≥ 2 |
+| V7 | 5분봉 × 10 | - | recovery ≥ 30% |
 
 ---
 

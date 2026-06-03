@@ -58,6 +58,12 @@ public class VolatilityIndicatorService {
                 ? latest.accumulatedTradePrice().divide(peakTradeAmount, RATE_SCALE, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
+        int consecutiveBullish = countConsecutiveBullish(orderedCandles);
+        BigDecimal range = highestPrice.subtract(lowestPrice);
+        BigDecimal priceRecoveryRate = range.compareTo(BigDecimal.ZERO) > 0
+                ? rate(latest.tradePrice().subtract(lowestPrice), range)
+                : BigDecimal.ZERO;
+
         return new VolatilitySnapshot(
                 latest.market(),
                 latest.tradePrice(),
@@ -71,8 +77,23 @@ public class VolatilityIndicatorService {
                 distanceFromHighRate,
                 windowHighChangeRate,
                 peakTradeAmountChangeRate,
-                volumeCooldownRatio
+                volumeCooldownRatio,
+                consecutiveBullish,
+                priceRecoveryRate
         );
+    }
+
+    private int countConsecutiveBullish(List<Candle> orderedCandles) {
+        int count = 0;
+        for (int i = orderedCandles.size() - 1; i >= 0; i--) {
+            Candle c = orderedCandles.get(i);
+            if (c.tradePrice().compareTo(c.openingPrice()) > 0) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        return count;
     }
 
     private void validateCandle(Candle candle) {
