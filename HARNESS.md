@@ -23,8 +23,9 @@ Upbit(KRW)·Binance(USDT) 공개 시세를 수신해 눌림목 반등 롱 후보
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 (운영 `.env`) |
 | 서버 포트 | 18080 (backend) / 5176 (frontend dev) |
 | DB | PostgreSQL 5433 (운영), InMemory (단기 smoke) |
-| 최근 작업 | UI 전면 다크모드 리뉴얼 (트레이딩 콘솔 스타일) |
-| 다음 작업 | 로컬 bt_entry_redesign.py 실행 → OOS 게이트 통과 변형 채택 → ADR-012 기록 |
+| 진입 방식 | **maker 지정가** (신호 캔들 close에 limit, 5분 유효) — ADR-013 보류/조건부, PAPER 관찰 단계 |
+| 최근 작업 | maker-entry 지정가 진입 구현 + 2차 감사 (firstCheckAt 제거, stale 가드, 단위테스트 6종) |
+| 다음 작업 | 봇 재기동 후 2~4주 PAPER 관찰 (fill_rate≥90% / 실 PF / same-candle 0건) → 백테스트 대조 |
 
 ---
 
@@ -35,7 +36,7 @@ Upbit(KRW)·Binance(USDT) 공개 시세를 수신해 눌림목 반등 롱 후보
 | **market** | Upbit/Binance WebSocket ticker + REST fallback; snapshot store; BTC 1h EMA 트렌드 캐시 |
 | **strategy** | PullbackBounce 후보 스캔 (BTC 트렌드·양봉·가격변화율·거래대금·눌림폭 필터); per-exchange override |
 | **risk** | 포지션 수 상한; 익절/손절/트레일링 스톱; stop-loss cooldown; 쏠림 차단; 비정상 시세 차단; kill switch |
-| **execution** | PAPER_TRADING 주문 실행 (체결·거절·실패) |
+| **execution** | PAPER_TRADING 주문 실행 (체결·거절·실패); maker 지정가 대기 주문 (PendingLimitOrderService — findFresh + capturedAt>createdAt 체결) |
 | **portfolio** | PAPER 현금·포지션·손익; exchange별 분리 |
 | **history** | 거래 이력 저장 (JPA / InMemory); exchange별 분리 |
 | **scanlog** | 모든 스캔 결과 append-only 기록 (`GET /api/candidate-scan-log`) |
