@@ -1,5 +1,6 @@
 # 변경 이력
 
+2026-06-04 | harness | docs: 토큰 절약을 위해 HARNESS.md와 tasks/current.md를 현재 상태 중심으로 압축
 2026-06-04 | entry | fix: 2차 감사 — firstCheckAt 과보수(i+2) 제거→capturedAt>createdAt, stale 체결 방지→findFresh, 단위테스트 6종 (ADR-013 보류/조건부)
 2026-06-04 | entry | fix: same-candle fill guard (firstCheckAt), ADR-013 검증 — maker-entry+taker-exit
 2026-06-04 | entry | feat: limit order entry (PendingLimitOrderService, fillLimitOrder)
