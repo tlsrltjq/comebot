@@ -9,13 +9,8 @@ import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.exchange.ExchangeMode;
-import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
-import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
-import com.giseop.comebot.execution.domain.OrderRequest;
-import com.giseop.comebot.execution.domain.OrderResult;
-import com.giseop.comebot.execution.domain.OrderSide;
 import com.giseop.comebot.execution.domain.OrderStatus;
-import com.giseop.comebot.execution.service.OrderExecutionService;
+import com.giseop.comebot.execution.service.PendingLimitOrderService;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
@@ -23,8 +18,9 @@ import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.safety.KillSwitchService;
 import com.giseop.comebot.scanlog.service.CandidateScanLogService;
 import com.giseop.comebot.strategy.indicator.MarketTrend;
-import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.PositionEntryGuardService;
+import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
+import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,7 +37,7 @@ class CandidateExecutionServiceTest {
     @Mock
     private CandidateScannerService candidateScannerService;
     @Mock
-    private OrderExecutionService orderExecutionService;
+    private PendingLimitOrderService pendingLimitOrderService;
     @Mock
     private TradingFlowHistoryService tradingFlowHistoryService;
     @Mock
@@ -66,56 +62,46 @@ class CandidateExecutionServiceTest {
         service = new CandidateExecutionService(
                 candidateScannerService,
                 strategyMarketSettingsService(),
-                new OrderRequestFactory(),
-                orderExecutionService,
                 tradingFlowHistoryService,
                 candidateScanLogService,
                 notificationProperties,
                 notificationPolicyService,
                 tradingFlowNotificationService,
                 killSwitchService,
-                positionEntryGuardService
+                positionEntryGuardService,
+                pendingLimitOrderService
         );
     }
 
     @Test
-    void selectedCandidateExecutesPaperBuyOrder() {
+    void selectedCandidatePlacesLimitOrder() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
-        when(orderExecutionService.execute(eq(ExchangeMode.UPBIT), any(OrderRequest.class))).thenReturn(new OrderResult(
-                "KRW-BTC",
-                OrderSide.BUY,
-                new BigDecimal("100.00000000"),
-                new BigDecimal("100"),
-                OrderStatus.FILLED,
-                "Paper trading order filled",
-                Instant.parse("2026-04-30T00:01:00Z")
-        ));
 
         TradingFlowResult result = service.execute("KRW-BTC");
 
         assertThat(result.signalType()).isEqualTo(com.giseop.comebot.strategy.domain.SignalType.BUY);
         assertThat(result.orderCreated()).isTrue();
-        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.REQUESTED);
         assertThat(result.currentPrice()).isEqualByComparingTo("100");
 
-        ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
-        verify(orderExecutionService).execute(eq(ExchangeMode.UPBIT), requestCaptor.capture());
-        assertThat(requestCaptor.getValue().market()).isEqualTo("KRW-BTC");
-        assertThat(requestCaptor.getValue().side()).isEqualTo(OrderSide.BUY);
-        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("100.00000000");
-        assertThat(requestCaptor.getValue().price()).isEqualByComparingTo("100");
+        ArgumentCaptor<BigDecimal> priceCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(pendingLimitOrderService).place(
+                eq(ExchangeMode.UPBIT), eq("KRW-BTC"),
+                priceCaptor.capture(), qtyCaptor.capture(), any());
+        assertThat(priceCaptor.getValue()).isEqualByComparingTo("100");
         verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
     }
 
     @Test
-    void skippedCandidateDoesNotExecuteOrder() {
+    void skippedCandidateDoesNotPlaceLimitOrder() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(skippedCandidate());
 
         TradingFlowResult result = service.execute("KRW-BTC");
 
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.message()).isEqualTo("Candidate was not selected");
-        verify(orderExecutionService, never()).execute(any(OrderRequest.class));
+        verify(pendingLimitOrderService, never()).place(any(), any(), any(), any(), any());
         verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
     }
 
@@ -128,22 +114,25 @@ class CandidateExecutionServiceTest {
 
         assertThat(result.orderCreated()).isFalse();
         assertThat(result.message()).isEqualTo("Candidate entry blocked by existing paper position");
-        verify(orderExecutionService, never()).execute(any(OrderRequest.class));
+        verify(pendingLimitOrderService, never()).place(any(), any(), any(), any(), any());
         verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
+    }
+
+    @Test
+    void pendingLimitOrderBlocksNewEntry() {
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
+        when(pendingLimitOrderService.hasPending(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(true);
+
+        TradingFlowResult result = service.execute("KRW-BTC");
+
+        assertThat(result.orderCreated()).isFalse();
+        assertThat(result.message()).isEqualTo("Candidate entry blocked by pending limit order");
+        verify(pendingLimitOrderService, never()).place(any(), any(), any(), any(), any());
     }
 
     @Test
     void selectedCandidateUsesConfiguredOrderAmount() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
-        when(orderExecutionService.execute(eq(ExchangeMode.UPBIT), any(OrderRequest.class))).thenReturn(new OrderResult(
-                "KRW-BTC",
-                OrderSide.BUY,
-                new BigDecimal("100.00000000"),
-                new BigDecimal("100"),
-                OrderStatus.FILLED,
-                "Paper trading order filled",
-                Instant.parse("2026-04-30T00:01:00Z")
-        ));
         StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
         override.setOrderQuantity(new BigDecimal("0.02"));
         StrategyMarketOverrideProperties overrideProperties = new StrategyMarketOverrideProperties();
@@ -151,22 +140,21 @@ class CandidateExecutionServiceTest {
         service = new CandidateExecutionService(
                 candidateScannerService,
                 new StrategyMarketSettingsService(strategyProperties, new CandidateScannerProperties(), overrideProperties),
-                new OrderRequestFactory(),
-                orderExecutionService,
                 tradingFlowHistoryService,
                 candidateScanLogService,
                 notificationProperties,
                 notificationPolicyService,
                 tradingFlowNotificationService,
                 killSwitchService,
-                positionEntryGuardService
+                positionEntryGuardService,
+                pendingLimitOrderService
         );
 
         service.execute("KRW-BTC");
 
-        ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
-        verify(orderExecutionService).execute(eq(ExchangeMode.UPBIT), requestCaptor.capture());
-        assertThat(requestCaptor.getValue().quantity()).isEqualByComparingTo("100.00000000");
+        ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(pendingLimitOrderService).place(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), qtyCaptor.capture(), any());
+        assertThat(qtyCaptor.getValue()).isEqualByComparingTo("100.00000000");
     }
 
     @Test
@@ -179,12 +167,12 @@ class CandidateExecutionServiceTest {
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.REJECTED);
         assertThat(result.message()).isEqualTo("Kill switch enabled: candidate execution blocked");
         verify(candidateScannerService, never()).scan(ExchangeMode.UPBIT, "KRW-BTC");
-        verify(orderExecutionService, never()).execute(any(OrderRequest.class));
+        verify(pendingLimitOrderService, never()).place(any(), any(), any(), any(), any());
         verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
     }
 
     @Test
-    void binanceCandidateUsesBinanceExecutionAndHistory() {
+    void binanceCandidatePlacesLimitOrderForBinanceExchange() {
         when(candidateScannerService.scan(ExchangeMode.BINANCE, "BTCUSDT")).thenReturn(new TradingCandidate(
                 "BTCUSDT",
                 CandidateDecision.SELECTED,
@@ -197,23 +185,12 @@ class CandidateExecutionServiceTest {
                 true,
                 Instant.parse("2026-04-30T00:00:00Z")
         ));
-        when(orderExecutionService.execute(eq(ExchangeMode.BINANCE), any(OrderRequest.class))).thenReturn(new OrderResult(
-                "BTCUSDT",
-                OrderSide.BUY,
-                new BigDecimal("0.20000000"),
-                new BigDecimal("50000"),
-                OrderStatus.FILLED,
-                "Paper trading order filled",
-                Instant.parse("2026-04-30T00:01:00Z")
-        ));
 
         TradingFlowResult result = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
 
         assertThat(result.market()).isEqualTo("BTCUSDT");
-        assertThat(result.orderStatus()).isEqualTo(OrderStatus.FILLED);
-        ArgumentCaptor<OrderRequest> requestCaptor = ArgumentCaptor.forClass(OrderRequest.class);
-        verify(orderExecutionService).execute(eq(ExchangeMode.BINANCE), requestCaptor.capture());
-        assertThat(requestCaptor.getValue().market()).isEqualTo("BTCUSDT");
+        assertThat(result.orderStatus()).isEqualTo(OrderStatus.REQUESTED);
+        verify(pendingLimitOrderService).place(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any());
         verify(tradingFlowHistoryService).save(ExchangeMode.BINANCE, result);
     }
 

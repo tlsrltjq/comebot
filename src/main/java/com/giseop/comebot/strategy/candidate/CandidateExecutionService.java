@@ -1,8 +1,7 @@
 package com.giseop.comebot.strategy.candidate;
 
-import com.giseop.comebot.execution.domain.OrderResult;
 import com.giseop.comebot.execution.domain.OrderStatus;
-import com.giseop.comebot.execution.service.OrderExecutionService;
+import com.giseop.comebot.execution.service.PendingLimitOrderService;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
 import com.giseop.comebot.notification.NotificationPolicyService;
@@ -11,8 +10,6 @@ import com.giseop.comebot.notification.TradingFlowNotificationService;
 import com.giseop.comebot.safety.KillSwitchService;
 import com.giseop.comebot.scanlog.service.CandidateScanLogService;
 import com.giseop.comebot.strategy.domain.SignalType;
-import com.giseop.comebot.strategy.domain.TradingSignal;
-import com.giseop.comebot.strategy.service.OrderRequestFactory;
 import com.giseop.comebot.strategy.service.PositionEntryGuardService;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import com.giseop.comebot.trading.service.TradingFlowResult;
@@ -28,8 +25,6 @@ public class CandidateExecutionService {
 
     private final CandidateScannerService candidateScannerService;
     private final StrategyMarketSettingsService strategyMarketSettingsService;
-    private final OrderRequestFactory orderRequestFactory;
-    private final OrderExecutionService orderExecutionService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
     private final CandidateScanLogService candidateScanLogService;
     private final NotificationProperties notificationProperties;
@@ -37,24 +32,22 @@ public class CandidateExecutionService {
     private final TradingFlowNotificationService tradingFlowNotificationService;
     private final KillSwitchService killSwitchService;
     private final PositionEntryGuardService positionEntryGuardService;
+    private final PendingLimitOrderService pendingLimitOrderService;
 
     public CandidateExecutionService(
             CandidateScannerService candidateScannerService,
             StrategyMarketSettingsService strategyMarketSettingsService,
-            OrderRequestFactory orderRequestFactory,
-            OrderExecutionService orderExecutionService,
             TradingFlowHistoryService tradingFlowHistoryService,
             CandidateScanLogService candidateScanLogService,
             NotificationProperties notificationProperties,
             NotificationPolicyService notificationPolicyService,
             TradingFlowNotificationService tradingFlowNotificationService,
             KillSwitchService killSwitchService,
-            PositionEntryGuardService positionEntryGuardService
+            PositionEntryGuardService positionEntryGuardService,
+            PendingLimitOrderService pendingLimitOrderService
     ) {
         this.candidateScannerService = candidateScannerService;
         this.strategyMarketSettingsService = strategyMarketSettingsService;
-        this.orderRequestFactory = orderRequestFactory;
-        this.orderExecutionService = orderExecutionService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
         this.candidateScanLogService = candidateScanLogService;
         this.notificationProperties = notificationProperties;
@@ -62,6 +55,7 @@ public class CandidateExecutionService {
         this.tradingFlowNotificationService = tradingFlowNotificationService;
         this.killSwitchService = killSwitchService;
         this.positionEntryGuardService = positionEntryGuardService;
+        this.pendingLimitOrderService = pendingLimitOrderService;
     }
 
     public TradingFlowResult execute(String market) {
@@ -109,39 +103,32 @@ public class CandidateExecutionService {
             ), exchange);
         }
 
-        TradingSignal signal = new TradingSignal(
+        if (pendingLimitOrderService.hasPending(exchange, candidate.market())) {
+            return save(new TradingFlowResult(
+                    candidate.market(),
+                    candidate.currentPrice(),
+                    SignalType.HOLD,
+                    "Limit order already pending",
+                    false,
+                    null,
+                    "Candidate entry blocked by pending limit order",
+                    candidate.scannedAt()
+            ), exchange);
+        }
+
+        java.math.BigDecimal limitPrice = candidate.currentPrice();
+        java.math.BigDecimal quantity = strategyMarketSettingsService.buyQuantity(candidate.market(), limitPrice);
+        pendingLimitOrderService.place(exchange, candidate.market(), limitPrice, quantity, candidate.reason());
+        return save(new TradingFlowResult(
                 candidate.market(),
+                limitPrice,
                 SignalType.BUY,
                 candidate.reason(),
-                candidate.currentPrice(),
-                strategyMarketSettingsService.buyQuantity(candidate.market(), candidate.currentPrice()),
-                candidate.scannedAt()
-        );
-
-        return orderRequestFactory.create(signal)
-                .map(request -> {
-                    OrderResult orderResult = orderExecutionService.execute(exchange, request);
-                    return save(new TradingFlowResult(
-                            candidate.market(),
-                            candidate.currentPrice(),
-                            SignalType.BUY,
-                            candidate.reason(),
-                            true,
-                            orderResult.status(),
-                            orderResult.message(),
-                            orderResult.executedAt()
-                    ), exchange);
-                })
-                .orElseGet(() -> save(new TradingFlowResult(
-                        candidate.market(),
-                        candidate.currentPrice(),
-                        SignalType.HOLD,
-                        candidate.reason(),
-                        false,
-                        null,
-                        "No order created",
-                        Instant.now()
-                ), exchange));
+                true,
+                OrderStatus.REQUESTED,
+                "Limit order placed at " + limitPrice,
+                Instant.now()
+        ), exchange);
     }
 
     private TradingFlowResult save(TradingFlowResult result) {

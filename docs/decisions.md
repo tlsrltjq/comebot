@@ -180,3 +180,31 @@
 - **재검토 조건**:
   OOS 게이트를 통과하는 구조가 나오면 ADR-012로 채택 기록.
   3개 레버 모두 실패하면 전략 자체를 폐기하고 신규 가설로 전환.
+
+---
+
+## ADR-012: 진입 신호 재설계 실험 결과 — OOS 게이트 전체 실패 (2026-06-04)
+
+- **실험 배경**: ADR-011에서 TP4/SL-2/no-trail 청산 구조 채택 후 진입 신호 개선 시도.
+  새 지표(volumeCooldownRatio, consecutiveBullishCandles, priceRecoveryRate) + timeframe 변경.
+
+- **실험 결과** (`bt_entry_redesign.py`, 2026-11-23~2026-05-22, train<2026-03-23 / test≥2026-03-23):
+  - V0 (1m×20 현행): train PF=0.937 / test PF=1.018 / gap=0.081 → test < 1.05 실패
+  - 5m/15m 리샘플링: test PF 오히려 하락 (0.926~0.954)
+  - volumeCooldown, consecutiveBullish, priceRecovery 필터 단독: test PF < 1.05
+  - 조합 필터 C1 (5m×10 vcr≤0.5+consec≥2): test PF=1.025 / gap=0.217 → gap 초과 실패
+  - **OOS 게이트 통과 변형 없음** (기준: test PF≥1.05 AND |train-test|<0.15)
+
+- **결정**:
+  1. 현행 진입 파라미터(1m×20, 기존 필터값)를 유지한다.
+  2. 새 필터(volumeCooldown 등)는 적용하지 않는다 — OOS 개선 없음.
+  3. 전략 전체 구조(눌림목 반등)를 재검토 대상으로 분류한다.
+
+- **근본 원인 재확인**:
+  train PF가 모든 변형에서 1.0 미만 → gross edge가 왕복 비용(~0.1%)을 넘지 못함.
+  파라미터 튜닝/필터 추가로는 해결 불가. 신호 구조 자체의 한계.
+
+- **다음 선택지** (우선순위 미정):
+  a. 신규 진입 가설 (다른 시장 구조 — 예: 브레이크아웃, 모멘텀 다이버전스)
+  b. 거래 비용 구조 변경 (빈도 대폭 축소, maker 주문 전환)
+  c. PAPER 운용 유지 + 데이터 축적 (현 전략이 OOS에서 점차 개선되는지 관찰)

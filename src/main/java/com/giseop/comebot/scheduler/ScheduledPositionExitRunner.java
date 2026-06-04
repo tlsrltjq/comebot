@@ -1,5 +1,6 @@
 package com.giseop.comebot.scheduler;
 
+import com.giseop.comebot.execution.service.PendingLimitOrderService;
 import com.giseop.comebot.market.service.MarketDataReadiness;
 import com.giseop.comebot.market.service.MarketDataReadinessService;
 import com.giseop.comebot.trading.service.PositionExitExecutionService;
@@ -19,6 +20,7 @@ public class ScheduledPositionExitRunner {
     private final PositionExitSchedulerProperties positionExitSchedulerProperties;
     private final PositionExitExecutionService positionExitExecutionService;
     private final MarketDataReadinessService marketDataReadinessService;
+    private final PendingLimitOrderService pendingLimitOrderService;
     private final AtomicBoolean running;
     private final AtomicLong lastMarketDataSkipLoggedAt;
 
@@ -26,20 +28,24 @@ public class ScheduledPositionExitRunner {
     public ScheduledPositionExitRunner(
             PositionExitSchedulerProperties positionExitSchedulerProperties,
             PositionExitExecutionService positionExitExecutionService,
-            MarketDataReadinessService marketDataReadinessService
+            MarketDataReadinessService marketDataReadinessService,
+            PendingLimitOrderService pendingLimitOrderService
     ) {
-        this(positionExitSchedulerProperties, positionExitExecutionService, marketDataReadinessService, new AtomicBoolean(false));
+        this(positionExitSchedulerProperties, positionExitExecutionService, marketDataReadinessService,
+                pendingLimitOrderService, new AtomicBoolean(false));
     }
 
     ScheduledPositionExitRunner(
             PositionExitSchedulerProperties positionExitSchedulerProperties,
             PositionExitExecutionService positionExitExecutionService,
             MarketDataReadinessService marketDataReadinessService,
+            PendingLimitOrderService pendingLimitOrderService,
             AtomicBoolean running
     ) {
         this.positionExitSchedulerProperties = positionExitSchedulerProperties;
         this.positionExitExecutionService = positionExitExecutionService;
         this.marketDataReadinessService = marketDataReadinessService;
+        this.pendingLimitOrderService = pendingLimitOrderService;
         this.running = running;
         this.lastMarketDataSkipLoggedAt = new AtomicLong(0);
     }
@@ -49,14 +55,14 @@ public class ScheduledPositionExitRunner {
             PositionExitExecutionService positionExitExecutionService,
             AtomicBoolean running
     ) {
-        this(positionExitSchedulerProperties, positionExitExecutionService, null, running);
+        this(positionExitSchedulerProperties, positionExitExecutionService, null, null, running);
     }
 
     ScheduledPositionExitRunner(
             PositionExitSchedulerProperties positionExitSchedulerProperties,
             PositionExitExecutionService positionExitExecutionService
     ) {
-        this(positionExitSchedulerProperties, positionExitExecutionService, null, new AtomicBoolean(false));
+        this(positionExitSchedulerProperties, positionExitExecutionService, null, null, new AtomicBoolean(false));
     }
 
     @Scheduled(fixedDelayString = "${trading.exit-scheduler.fixed-delay-ms:5000}")
@@ -81,6 +87,9 @@ public class ScheduledPositionExitRunner {
                     continue;
                 }
                 summary = summary.add(positionExitExecutionService.execute(exchange));
+                if (pendingLimitOrderService != null) {
+                    pendingLimitOrderService.checkAndFillAll(exchange);
+                }
             }
             if (summary.positionMarkets() > 0) {
                 log.info(

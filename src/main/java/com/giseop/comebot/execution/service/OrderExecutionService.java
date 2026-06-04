@@ -3,13 +3,16 @@ package com.giseop.comebot.execution.service;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.execution.domain.OrderRequest;
 import com.giseop.comebot.execution.domain.OrderResult;
+import com.giseop.comebot.execution.domain.OrderSide;
 import com.giseop.comebot.execution.domain.OrderStatus;
+import com.giseop.comebot.execution.domain.PendingLimitOrder;
 import com.giseop.comebot.execution.gateway.ExecutionGateway;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.risk.domain.RiskCheckResult;
 import com.giseop.comebot.risk.domain.RiskDecision;
 import com.giseop.comebot.risk.service.DailyRiskValidationService;
 import com.giseop.comebot.risk.service.RiskValidationService;
+import java.time.Instant;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -71,6 +74,27 @@ public class OrderExecutionService {
                 reason,
                 rejectedAt
         );
+    }
+
+    public OrderResult fillLimitOrder(ExchangeMode exchange, PendingLimitOrder order) {
+        OrderRequest request = new OrderRequest(
+                order.market(),
+                OrderSide.BUY,
+                order.quantity(),
+                order.limitPrice(),
+                Instant.now()
+        );
+        RiskCheckResult riskCheckResult = riskValidationService.validate(exchange, request);
+        if (riskCheckResult.decision() == RiskDecision.REJECTED) {
+            return rejected(request, riskCheckResult);
+        }
+        RiskCheckResult dailyRiskCheckResult = dailyRiskValidationService.validate(exchange);
+        if (dailyRiskCheckResult.decision() == RiskDecision.REJECTED) {
+            return rejected(request, dailyRiskCheckResult);
+        }
+        return paperPortfolioService.validate(exchange, request)
+                .map(reason -> rejected(request, reason))
+                .orElseGet(() -> executeAndApply(exchange, request));
     }
 
     private OrderResult executeAndApply(ExchangeMode exchange, OrderRequest request) {

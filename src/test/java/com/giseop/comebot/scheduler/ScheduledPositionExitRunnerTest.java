@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.giseop.comebot.exchange.ExchangeMode;
+import com.giseop.comebot.execution.service.PendingLimitOrderService;
 import com.giseop.comebot.market.service.MarketDataReadiness;
 import com.giseop.comebot.market.service.MarketDataReadinessService;
 import com.giseop.comebot.trading.service.PositionExitExecutionService;
@@ -85,6 +86,7 @@ class ScheduledPositionExitRunnerTest {
                 properties,
                 service,
                 readinessService,
+                mock(PendingLimitOrderService.class),
                 new AtomicBoolean(false)
         ).runOnce();
 
