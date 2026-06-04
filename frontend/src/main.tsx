@@ -92,6 +92,13 @@ const router = createBrowserRouter([
           return { Component: MarketSentimentPage };
         },
       },
+      {
+        path: 'trade-journal',
+        lazy: async () => {
+          const { TradeJournalPage } = await import('./features/trades/TradeJournalPage');
+          return { Component: TradeJournalPage };
+        },
+      },
     ],
   },
 ]);

@@ -12,6 +12,7 @@ import com.giseop.comebot.analytics.dto.AnalyticsPnlResponse;
 import com.giseop.comebot.analytics.dto.AnalyticsRange;
 import com.giseop.comebot.analytics.dto.AnalyticsSummaryResponse;
 import com.giseop.comebot.analytics.service.AnalyticsService;
+import com.giseop.comebot.analytics.service.MatchedTradeService;
 import com.giseop.comebot.exchange.ExchangeMode;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -30,6 +31,9 @@ class AnalyticsControllerTest {
 
     @MockitoBean
     private AnalyticsService analyticsService;
+
+    @MockitoBean
+    private MatchedTradeService matchedTradeService;
 
     @Test
     void summaryReturnsAnalyticsSummary() throws Exception {

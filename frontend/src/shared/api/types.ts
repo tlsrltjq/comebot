@@ -270,6 +270,18 @@ export interface BtcChangeChartResponse {
   points: BtcChangePointResponse[];
 }
 
+export interface MatchedTrade {
+  exchange: ExchangeMode;
+  market: string;
+  buyAt: string;
+  buyPrice: string;
+  sellAt: string;
+  sellPrice: string;
+  holdingSeconds: number;
+  profitRatePct: string;
+  exitReason: 'TAKE_PROFIT' | 'STOP_LOSS' | 'TRAILING_STOP' | 'MANUAL';
+}
+
 export interface SentimentSignal {
   name: string;
   value: string;

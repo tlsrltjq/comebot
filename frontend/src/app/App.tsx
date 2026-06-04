@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
 import {
-  Activity, BarChart3, BrainCircuit, Clock3, DollarSign,
+  Activity, BarChart3, BookOpen, BrainCircuit, Clock3, DollarSign,
   LineChart, MonitorCog, PieChart, Radar, Radio,
   ShieldCheck, ShieldX, TrendingUp, TriangleAlert, Wallet, Database,
 } from 'lucide-react';
@@ -30,6 +30,7 @@ const NAV_GROUPS = [
       { to: '/candidates', label: '매수 후보', icon: Radar },
       { to: '/portfolio', label: '포트폴리오', icon: PieChart },
       { to: '/history', label: '거래 이력', icon: Clock3 },
+      { to: '/trade-journal', label: '매매 일지', icon: BookOpen },
     ],
   },
   {

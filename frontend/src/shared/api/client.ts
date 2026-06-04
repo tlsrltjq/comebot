@@ -19,6 +19,7 @@ import type {
   TradingFlowHistoryResponse,
   MarketFlowSummary,
   MarketSentimentSnapshot,
+  MatchedTrade,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -88,6 +89,8 @@ export const api = {
     request<MarketFlowSummary>(`/api/market/fund-flow${query({ exchange: exchangeParam(exchange) })}`),
   sentiment: () =>
     request<MarketSentimentSnapshot>('/api/market/sentiment'),
+  matchedTrades: (exchange: ExchangeMode = 'UPBIT', limit = 100) =>
+    request<MatchedTrade[]>(`/api/analytics/matched-trades${query({ exchange: exchangeParam(exchange), limit })}`),
 };
 
 export const queryKeys = {
@@ -105,4 +108,5 @@ export const queryKeys = {
   btcChange: (range: BtcChangeRange, exchange: ExchangeMode = 'UPBIT') => ['btcChange', exchange, range] as const,
   fundFlow: (exchange: ExchangeMode = 'UPBIT') => ['fundFlow', exchange] as const,
   sentiment: () => ['sentiment'] as const,
+  matchedTrades: (exchange: ExchangeMode = 'UPBIT', limit = 100) => ['matchedTrades', exchange, limit] as const,
 };
