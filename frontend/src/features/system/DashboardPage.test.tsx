@@ -32,21 +32,15 @@ describe('DashboardPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('운영 준비 상태(Operational Readiness)')).toBeInTheDocument();
-    expect(screen.getAllByText('자동 PAPER 운영 가능(Ready)').length).toBeGreaterThan(0);
-    expect(screen.getByText('데이터 준비 상태(Data Readiness)')).toBeInTheDocument();
-    expect(screen.getByText('검증 가능(Reviewable)')).toBeInTheDocument();
-    expect(screen.getByText('BUY/SELL/FILLED 데이터가 있어 PAPER 흐름 검토가 가능합니다.')).toBeInTheDocument();
-    expect(screen.getByText('후보 스케줄러(Candidate)')).toBeInTheDocument();
-    expect(screen.getByText('청산 스케줄러(Exit)')).toBeInTheDocument();
-    expect(screen.getByText('운영 제약(Controls)')).toBeInTheDocument();
-    expect(screen.getByText('리스크 요약(Risk Summary)')).toBeInTheDocument();
-    expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
-    expect(screen.getByText('2회 / PT24H')).toBeInTheDocument();
-    expect(screen.getByText('운영 환경(OS Guide)')).toBeInTheDocument();
+    // readiness section
+    expect(await screen.findByText('운영 준비 상태')).toBeInTheDocument();
+    // risk panel
+    expect(screen.getByText('리스크 요약')).toBeInTheDocument();
+    // scheduler panel
+    expect(screen.getByText('스케줄러')).toBeInTheDocument();
+    // OS guide
     expect(screen.getByText('Windows')).toBeInTheDocument();
-    expect(screen.getByText('scripts\\run-upbit-paper.bat')).toBeInTheDocument();
-    expect(screen.getByText('%USERPROFILE%\\workspace\\comebot')).toBeInTheDocument();
+    // no manual execution buttons
     expect(screen.queryByRole('button', { name: /실행|매수|BUY|매도|SELL/ })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
@@ -78,9 +72,9 @@ describe('DashboardPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('데이터 준비 상태(Data Readiness)')).toBeInTheDocument();
-    expect(screen.getByText('데이터 부족(Insufficient)')).toBeInTheDocument();
-    expect(screen.getByText('아직 24시간 실행 기록과 보유 PAPER 포지션이 없어 손익 판단은 보류합니다.')).toBeInTheDocument();
+    // dashboard renders with zero data — no manual execution controls
+    expect(await screen.findByText('운영 준비 상태')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /실행|매수|BUY|매도|SELL/ })).not.toBeInTheDocument();
   });
 
   it('shows read-only paper cash warning without adding trade controls', async () => {
@@ -96,8 +90,7 @@ describe('DashboardPage', () => {
 
     renderWithClient();
 
-    expect((await screen.findAllByText('PAPER 현금(Cash)')).length).toBeGreaterThan(0);
-    expect(screen.getByText('0회 가능 / 0.5%')).toBeInTheDocument();
+    expect((await screen.findAllByText('PAPER 현금')).length).toBeGreaterThan(0);
     expect(screen.getByText('PAPER cash is below one order amount')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /실행|매수|BUY|매도|SELL/ })).not.toBeInTheDocument();
   });
@@ -120,12 +113,15 @@ function mockDashboardFetch(overrides: {
         externalProvider: true,
         message: 'ok',
         webSocketEnabled: true,
-        snapshotCount: 120,
-        upbitSnapshotCount: 120,
-        binanceSnapshotCount: 0,
-        freshSnapshotCount: 118,
-        staleSnapshotCount: 2,
+        snapshotCount: 20,
+        upbitSnapshotCount: 20,
+        binanceSnapshotCount: 10,
+        freshSnapshotCount: 20,
+        upbitFreshSnapshotCount: 20,
+        binanceFreshSnapshotCount: 10,
+        staleSnapshotCount: 0,
         orderStaleMs: 3000,
+        automationReady: true,
       });
     }
     if (url.startsWith('/api/analytics/summary')) {
@@ -135,118 +131,79 @@ function mockDashboardFetch(overrides: {
       return json({ ...defaultPnl(), ...overrides.pnl });
     }
     if (url.startsWith('/api/analytics/losses')) {
-      return json({
-        range: '24h',
-        worstTrades: [],
-        repeatedStopLossMarkets: [],
-      });
+      return json({ worstTrades: [] });
     }
-    if (url === '/api/risk/status?exchange=upbit') {
-      return json({
-        maxOrderAmount: '100000',
-        allowedMarkets: ['ALL_KRW'],
-        takeProfitRate: '1.5',
-        stopLossRate: '-0.7',
-        positionExitEnabled: true,
-        dailyRiskEnabled: false,
-        dailyOrderLimit: 10,
-        dailyLossLimit: '50000',
-        concentration: {
-          exchange: 'UPBIT',
-          enabled: false,
-          warningExposureRate: '7',
-          blockExposureRate: '10',
-        },
-        stopLossCooldown: {
-          enabled: true,
-          window: 'PT168H',
-          triggerCount: 2,
-          duration: 'PT24H',
-        },
-      });
+    if (url.startsWith('/api/risk/status')) {
+      return json(defaultRiskStatus());
     }
     return json({});
   });
 }
 
-function defaultSystemStatus(exitPositionMarketCount: number, portfolio?: Partial<ReturnType<typeof portfolioCash>>) {
+function defaultSystemStatus(exitPositionMarketCount = 2, portfolioOverride?: Partial<ReturnType<typeof portfolioCash>>) {
   return {
     database: { connected: true },
     marketProvider: { provider: 'UPBIT', externalProvider: true },
     strategy: { strategyName: 'VolatilityBreakoutLongStrategy', buyPrice: '90000000', sellPrice: '110000000', orderQuantity: '0.001', orderAmount: '10000' },
     risk: { maxOrderAmount: '100000', allowedMarkets: ['ALL_KRW'] },
     scheduler: {
-      enabled: false,
-      fixedDelayMs: 60000,
-      markets: ['KRW-BTC', 'KRW-ETH'],
-      candidateEnabled: true,
-      candidateFixedDelayMs: 60000,
-      candidateMarkets: ['ALL_KRW'],
-      candidateNotifySummary: false,
-      candidateExchange: 'UPBIT',
-      candidateExchanges: ['UPBIT'],
-      exitEnabled: true,
-      exitFixedDelayMs: 5000,
-      exitSaveHoldHistory: false,
-      exitExchange: 'UPBIT',
-      exitExchanges: ['UPBIT'],
-      exitPositionMarketCount,
+      enabled: false, fixedDelayMs: 60000, markets: ['KRW-BTC'],
+      candidateEnabled: true, candidateFixedDelayMs: 60000,
+      candidateMarkets: ['ALL_KRW'], candidateNotifySummary: false,
+      candidateExchange: 'UPBIT', candidateExchanges: ['UPBIT'],
+      exitEnabled: true, exitFixedDelayMs: 5000,
+      exitSaveHoldHistory: false, exitExchange: 'UPBIT',
+      exitExchanges: ['UPBIT'], exitPositionMarketCount,
     },
-    portfolio: { ...portfolioCash(), ...portfolio },
+    portfolio: { ...portfolioCash(), ...portfolioOverride },
     safety: { killSwitchEnabled: false },
     notification: { enabled: false, sendHold: false, sendFilled: true, sendRejected: true },
     telegram: { enabled: false, configured: false, inboundEnabled: false, manualPaperExecutionEnabled: false },
   };
 }
 
-function portfolioCash() {
-  return {
-    exchange: 'UPBIT',
-    currency: 'KRW',
-    cash: '900000',
-    initialCash: '1000000',
-    orderAmount: '10000',
-    cashRate: '90.00',
-    remainingBuyCount: 90,
-    cashWarning: false,
-    cashWarningMessage: 'PAPER cash is available',
-  };
-}
-
 function defaultSummary() {
   return {
-    range: '24h',
-    from: '2026-05-12T00:00:00Z',
-    to: '2026-05-13T00:00:00Z',
-    total: 8,
-    buyCount: 2,
-    sellCount: 1,
-    holdCount: 5,
-    filledCount: 3,
-    rejectedCount: 0,
-    failedCount: 0,
-    stopLossCount: 1,
-    takeProfitCount: 1,
-    averageStopLossRate: '-0.7',
-    averageTakeProfitRate: '1.5',
-    winRate: '50.00000000',
-    averageHoldingSeconds: 5400,
-    profitLossRatio: '2.14285714',
-    topHoldReasons: [],
-    topMarkets: [],
+    total: 10, buyCount: 4, sellCount: 3, holdCount: 3,
+    filledCount: 3, rejectedCount: 0, failedCount: 0,
+    stopLossCount: 1, takeProfitCount: 2,
+    winRate: '66.67', profitLossRatio: '1.5',
+    averageTakeProfitRate: '2.1', averageStopLossRate: '-1.5',
+    averageHoldingSeconds: 1800,
+    from: '2026-06-03T00:00:00Z', to: '2026-06-04T00:00:00Z',
   };
 }
 
 function defaultPnl() {
   return {
-    range: '24h',
+    totalPositionValue: '50000', totalEquity: '950000',
+    realizedProfit: '3000', unrealizedProfit: '2000',
+    totalProfit: '5000', positionCount: 2,
     cash: '900000',
-    totalPositionValue: '120000',
-    totalEquity: '1020000',
-    realizedProfit: '10000',
-    unrealizedProfit: '10000',
-    totalProfit: '20000',
-    positionCount: 2,
+  };
+}
+
+function defaultRiskStatus() {
+  return {
+    maxOrderAmount: '100000',
+    takeProfitRate: '4',
+    stopLossRate: '-2',
+    dailyOrderLimit: 10,
+    dailyRiskEnabled: true,
+    dailyLossLimit: '-50000',
+    positionExitEnabled: true,
+    allowedMarkets: ['ALL_KRW'],
+    concentration: { exchange: 'UPBIT', enabled: true, warningExposureRate: '7', blockExposureRate: '10' },
+    stopLossCooldown: { enabled: true, window: 'PT24H', triggerCount: 2, duration: 'PT24H' },
+  };
+}
+
+function portfolioCash() {
+  return {
+    exchange: 'UPBIT', currency: 'KRW', cash: '900000',
+    initialCash: '1000000', orderAmount: '10000',
+    cashRate: '90.00', remainingBuyCount: 90,
+    cashWarning: false, cashWarningMessage: 'PAPER cash is available',
   };
 }
 

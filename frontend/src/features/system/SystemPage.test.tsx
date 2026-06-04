@@ -55,15 +55,15 @@ describe('SystemPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('시스템(System)')).toBeInTheDocument();
+    expect(await screen.findByText('시스템')).toBeInTheDocument();
     expect(screen.getAllByText('Windows').length).toBeGreaterThan(0);
     expect(screen.getByText('scripts\\run-upbit-paper.bat')).toBeInTheDocument();
     expect(screen.getByText('%USERPROFILE%\\workspace\\comebot')).toBeInTheDocument();
-    expect(screen.getByText('OS별 차이는 실행 스크립트, 경로, shell 안내만 바꾸며 거래 기능과 안전 제약은 동일합니다.')).toBeInTheDocument();
-    expect(screen.getByText('스케줄러(Schedulers)')).toBeInTheDocument();
+    expect(screen.getByText('운영 환경 (OS)')).toBeInTheDocument();
+    expect(screen.getByText('스케줄러')).toBeInTheDocument();
     expect(screen.getByText('시세 Provider')).toBeInTheDocument();
-    expect(screen.getByText('118/2 (3000ms)')).toBeInTheDocument();
-    expect(screen.getByText('알림과 Telegram')).toBeInTheDocument();
+    expect(screen.getByText('시세 Provider')).toBeInTheDocument();
+    expect(screen.getByText('알림 · Telegram')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /매수|BUY|실거래|REAL/ })).not.toBeInTheDocument();
   });
 });

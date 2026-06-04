@@ -6,97 +6,131 @@ import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { BtcChangeRange } from '../../shared/api/types';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
 import { formatCurrency, formatDateTime, formatNumber } from '../../shared/format';
-import { Badge } from '../../shared/ui/Badge';
-import { EmptyState } from '../../shared/ui/EmptyState';
-import { ErrorPanel } from '../../shared/ui/ErrorPanel';
-import { LiveStatus } from '../../shared/ui/LiveStatus';
-import { MetricCard } from '../../shared/ui/MetricCard';
+import { cn } from '@/lib/utils';
 
-const ranges: BtcChangeRange[] = ['1h', '24h', '3d', '7d'];
+const RANGES: BtcChangeRange[] = ['1h', '24h', '3d', '7d'];
+
 export function MarketOverviewPage() {
   const { exchange } = useExchangeMode();
   const [range, setRange] = useState<BtcChangeRange>('24h');
   const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
+
   const { data, error, isLoading, isFetching, dataUpdatedAt } = useQuery({
     queryKey: queryKeys.btcChange(range, exchange),
     queryFn: () => api.btcChange(range, exchange),
     refetchInterval: POLLING_INTERVALS.marketChart,
   });
-  const chartData = (data?.points ?? []).map((point) => ({
-    time: point.time,
-    label: formatDateTime(point.time),
-    price: Number(point.price),
-    changeRate: Number(point.changeRate),
+
+  const chartData = (data?.points ?? []).map((p) => ({
+    time: p.time,
+    label: formatDateTime(p.time),
+    price: Number(p.price),
+    changeRate: Number(p.changeRate),
   }));
   const changeRate = Number(data?.changeRate ?? 0);
+  const positive = changeRate >= 0;
 
   return (
-    <section className="page">
-      <header className="page-header">
+    <div className="page">
+      <div className="page-header">
         <div>
-          <h1>시장 개요(Market Overview)</h1>
-          <p>선택 거래소 기준 비트코인 등락률을 조회 전용 그래프로 확인합니다.</p>
+          <h1 className="page-title">시장 차트</h1>
+          <p className="page-subtitle">BTC 등락률 — {exchange === 'BINANCE' ? 'BTCUSDT' : 'KRW-BTC'}</p>
         </div>
-        <Badge tone="info">{exchange}</Badge>
-        <LiveStatus updatedAt={dataUpdatedAt} isFetching={isFetching} intervalMs={POLLING_INTERVALS.marketChart} />
-      </header>
+        <div className="flex items-center gap-3">
+          <span className={cn('badge', positive ? 'badge-success' : 'badge-destructive')}>
+            {positive ? '▲' : '▼'} {formatNumber(changeRate, 4)}%
+          </span>
+          <div className="live-status">
+            <span className={cn('status-dot', isFetching ? 'warn' : 'live')} />
+            {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
+          </div>
+        </div>
+      </div>
 
-      <div className="segmented-row" aria-label="BTC 등락률 범위(BTC change range)">
-        {ranges.map((item) => (
+      {/* Range selector */}
+      <div className="mb-4 flex gap-1.5">
+        {RANGES.map((r) => (
           <button
-            key={item}
-            className={range === item ? 'button button-primary' : 'button button-secondary'}
+            key={r}
             type="button"
-            onClick={() => setRange(item)}
+            onClick={() => setRange(r)}
+            className={cn(
+              'rounded-md px-3 py-1 text-sm font-medium border transition-colors',
+              range === r
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background border-border text-muted-foreground hover:text-foreground hover:bg-muted',
+            )}
           >
-            {rangeLabel(item)}
+            {r}
           </button>
         ))}
       </div>
 
-      {error ? <ErrorPanel title="BTC 등락률 조회 실패(BTC chart failed)" error={error} /> : null}
+      {error && <div className="error-panel mb-4">BTC 차트 조회 실패</div>}
 
-      <div className="metric-grid">
-        <MetricCard label="현재가(Current)" value={formatCurrency(data?.latestPrice, currency)} detail={data?.market ?? btcMarket(exchange)} />
-        <MetricCard label="기간 등락률(Change)" value={`${formatNumber(data?.changeRate, 4)}%`} detail={`범위(Range) ${rangeLabel(range)}`} />
-        <MetricCard label="고가(High)" value={formatCurrency(data?.highPrice, currency)} detail={`시작가(Base) ${formatCurrency(data?.basePrice, currency)}`} />
-        <MetricCard label="저가(Low)" value={formatCurrency(data?.lowPrice, currency)} detail={changeRate >= 0 ? '상승 구간(Up)' : '하락 구간(Down)'} />
+      {/* Metrics */}
+      <div className="metric-grid mb-4">
+        <div className="metric-card">
+          <span>현재가</span>
+          <strong className="num">{formatCurrency(data?.latestPrice, currency)}</strong>
+          <small>{data?.market ?? (exchange === 'BINANCE' ? 'BTCUSDT' : 'KRW-BTC')}</small>
+        </div>
+        <div className="metric-card">
+          <span>기간 등락률</span>
+          <strong className={cn('num', positive ? 'pos' : 'neg')}>{formatNumber(changeRate, 4)}%</strong>
+          <small>기간 {range}</small>
+        </div>
+        <div className="metric-card">
+          <span>고가</span>
+          <strong className="num">{formatCurrency(data?.highPrice, currency)}</strong>
+          <small>시작가 {formatCurrency(data?.basePrice, currency)}</small>
+        </div>
+        <div className="metric-card">
+          <span>저가</span>
+          <strong className="num">{formatCurrency(data?.lowPrice, currency)}</strong>
+          <small>{positive ? '상승 구간' : '하락 구간'}</small>
+        </div>
       </div>
 
-      <article className="panel chart-panel">
-        <div className="panel-title-row">
-          <h2>{exchange === 'BINANCE' ? 'BTC 등락률(BTCUSDT Change)' : 'BTC 등락률(KRW-BTC Change)'}</h2>
-          <Badge tone={changeRate >= 0 ? 'good' : 'bad'}>{`${formatNumber(data?.changeRate, 4)}%`}</Badge>
-        </div>
-        {isLoading ? <EmptyState title="차트 불러오는 중(Loading chart)" description="BTC candle 데이터를 조회하고 있습니다." /> : null}
-        {!isLoading && chartData.length < 2 ? (
-          <EmptyState title="차트 데이터 없음(No chart data)" description="표시할 candle 데이터가 충분하지 않습니다." />
-        ) : null}
-        {chartData.length >= 2 ? (
-          <div className="chart-wrap market-chart-wrap">
+      {/* Chart */}
+      <div className="section">
+        <h2 className="section-title">등락률 차트</h2>
+        {isLoading && <div className="empty-state"><strong>차트 불러오는 중...</strong></div>}
+        {!isLoading && chartData.length < 2 && (
+          <div className="empty-state"><strong>데이터 없음</strong><span>캔들 데이터가 부족합니다.</span></div>
+        )}
+        {chartData.length >= 2 && (
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={26} />
-                <YAxis tickLine={false} axisLine={false} width={54} unit="%" />
+              <LineChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(220 13% 91%)" />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={30} tick={{ fontSize: 11 }} />
+                <YAxis tickLine={false} axisLine={false} width={52} unit="%" tick={{ fontSize: 11 }} />
                 <Tooltip
-                  formatter={(value, name) => (name === 'changeRate' ? [`${formatNumber(Number(value), 4)}%`, '등락률(Change)'] : [formatCurrency(value as number, currency), '가격(Price)'])}
-                  labelFormatter={(_, payload) => (payload?.[0]?.payload?.time ? formatDateTime(payload[0].payload.time) : '')}
+                  contentStyle={{ fontSize: 12, borderRadius: 6 }}
+                  formatter={(value, name) =>
+                    name === 'changeRate'
+                      ? [`${formatNumber(Number(value), 4)}%`, '등락률']
+                      : [formatCurrency(value as number, currency), '가격']
+                  }
+                  labelFormatter={(_, payload) =>
+                    payload?.[0]?.payload?.time ? formatDateTime(payload[0].payload.time) : ''
+                  }
                 />
-                <Line type="monotone" dataKey="changeRate" stroke="#176b87" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                <Line
+                  type="monotone"
+                  dataKey="changeRate"
+                  stroke={positive ? 'hsl(142 71% 45%)' : 'hsl(0 72% 51%)'}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        ) : null}
-      </article>
-    </section>
+        )}
+      </div>
+    </div>
   );
-}
-
-function rangeLabel(range: BtcChangeRange) {
-  return range;
-}
-
-function btcMarket(exchange: string) {
-  return exchange === 'BINANCE' ? 'BTCUSDT' : 'KRW-BTC';
 }

@@ -92,25 +92,24 @@ describe('CandidatesPage', () => {
     renderWithClient();
 
     expect(await screen.findByText('KRW-BTC')).toBeInTheDocument();
-    expect(screen.getByText('조회 후보(Scanned)')).toBeInTheDocument();
-    expect(screen.getByText('선택됨(Selected)')).toBeInTheDocument();
-    expect(screen.getByText('제외됨(Skipped)')).toBeInTheDocument();
-    expect(screen.getByText('보유 포지션(Held)')).toBeInTheDocument();
-    expect(screen.getByText('리스크 경고(Risk)')).toBeInTheDocument();
-    expect(screen.getByText('쏠림 1 / cooldown 0')).toBeInTheDocument();
-    expect(screen.getByText('제외 사유 TOP 5(Skipped Reasons)')).toBeInTheDocument();
-    expect(screen.getByText('조회 전용(Read-only)')).toBeInTheDocument();
-    expect(screen.getByText('후보 화면은 자동 스케줄러 판단 결과만 보여주며 수동 BUY나 후보 실행 버튼을 제공하지 않습니다.')).toBeInTheDocument();
+    expect(screen.getByText('총 후보')).toBeInTheDocument();
+    expect(screen.getByText('선택됨')).toBeInTheDocument();
+    expect(screen.getByText('제외됨')).toBeInTheDocument();
+    expect(screen.getByText('보유 마켓')).toBeInTheDocument();
+    expect(screen.getByText('리스크 경고')).toBeInTheDocument();
+    expect(screen.getByText(/쏠림.*cooldown/)).toBeInTheDocument();
+    expect(screen.getByText('제외 사유 TOP 5')).toBeInTheDocument();
+    // audit strip removed in redesign — check page title instead
+    expect(screen.getByText('매수 후보')).toBeInTheDocument();
     expect(screen.getAllByText('Trend is not UP').length).toBeGreaterThan(0);
-    expect(screen.getByText('쏠림(Concentration)')).toBeInTheDocument();
-    expect(screen.getByText('CONCENTRATION_RISK')).toBeInTheDocument();
-    expect(screen.getByText('RISK 1')).toBeInTheDocument();
-    expect(screen.getByText('보유(Held)')).toBeInTheDocument();
-    expect(screen.getAllByText('없음(None)').length).toBeGreaterThan(0);
+    expect(screen.getByText('CONCENTRATION')).toBeInTheDocument();
+    expect(screen.getAllByText('보유').length).toBeGreaterThan(0);
+    // position badge shows '-' for non-held markets
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0);
     expect(screen.getAllByText('SELECTED').length).toBeGreaterThan(0);
     expect(screen.getAllByText('SKIPPED').length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole('button', { name: /선택 후보만/ }));
+    await user.click(screen.getByRole('button', { name: /선택만/ }));
     expect(screen.queryByText('KRW-ETH')).not.toBeInTheDocument();
     expect(screen.queryByText('KRW-XRP')).not.toBeInTheDocument();
     expect(screen.getByText('KRW-BTC')).toBeInTheDocument();
@@ -118,7 +117,7 @@ describe('CandidatesPage', () => {
     await user.click(screen.getByRole('button', { name: '50' }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=upbit&limit=50', expect.anything()));
 
-    await user.type(screen.getByLabelText('마켓(Market)'), 'KRW-SOL');
+    await user.type(screen.getByPlaceholderText(/KRW-BTC/), 'KRW-SOL');
     expect(fetchMock).not.toHaveBeenCalledWith('/api/candidates?exchange=upbit&market=KRW-SOL', expect.anything());
     await user.click(screen.getByRole('button', { name: /조회/ }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/candidates?exchange=upbit&market=KRW-SOL', expect.anything()));

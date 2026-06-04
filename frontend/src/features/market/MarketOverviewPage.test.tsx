@@ -52,7 +52,7 @@ describe('MarketOverviewPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('시장 개요(Market Overview)')).toBeInTheDocument();
+    expect(await screen.findByText('시장 차트')).toBeInTheDocument();
     expect(await screen.findByText('KRW-BTC')).toBeInTheDocument();
     expect((await screen.findAllByText('3%')).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: /매수|BUY|매도|SELL/ })).not.toBeInTheDocument();
