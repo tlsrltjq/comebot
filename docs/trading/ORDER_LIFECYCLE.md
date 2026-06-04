@@ -1,6 +1,38 @@
 # Order Lifecycle
 
-## 기본 흐름
+## 진입(BUY) 흐름 — maker 지정가 (ADR-013)
+
+BUY 진입은 즉시 시장가 체결이 아니라 **지정가(maker) 대기 주문**으로 처리한다.
+
+```text
+[candidate 스케줄러]
+RUN_REQUESTED
+-> KILL_SWITCH_CHECKED
+-> SIGNAL_DETECTED (closed candle 기반 스캔)
+-> PENDING_LIMIT_PLACED        (limit = 신호 캔들 close, 5분 유효)
+
+[exit 스케줄러 — 매 tick, readiness.ready()인 exchange만]
+-> SNAPSHOT_FRESHNESS_CHECKED  (findFresh + capturedAt > createdAt)
+-> LIMIT_FILL_CHECKED          (fresh price <= limit 이면 체결)
+-> RISK_CHECKED
+-> PAPER_ORDER_EXECUTED
+-> PORTFOLIO_UPDATED
+-> HISTORY_SAVED
+-> OPTIONAL_NOTIFICATION_SENT
+   (5분 내 미체결 시 → EXPIRED, 주문 취소, 다음 스캔에서 재생성 가능)
+```
+
+핵심 불변식:
+
+- **same-candle fill 금지**: 신호는 closed candle 기반이라 `createdAt`은 신호 캔들 close 이후다.
+  체결은 `capturedAt > createdAt`인 snapshot에서만 일어나므로 신호 캔들 자신의 가격으로는 절대 체결되지 않는다.
+- **stale price 체결 금지**: `findFresh(orderStaleDuration)` + 스케줄러 `readiness.ready()` 이중 가드.
+- **중복 방지**: 같은 exchange+market에 이미 pending 주문이 있으면 새 진입을 막는다.
+- 앱 재시작 시 in-memory pending은 소실된다. PAPER에서는 다음 스캔(candidate 주기)에 재생성되므로 허용.
+
+## 청산(SELL) 흐름 — 즉시 체결
+
+청산(익절/손절)은 기존대로 즉시 시장가 체결(taker)이다.
 
 ```text
 RUN_REQUESTED
@@ -73,6 +105,8 @@ HOLD는 주문 실행으로 이어지면 안 된다.
 - 정상 주문은 `FILLED`
 - 잘못된 요청은 `FAILED` 또는 `REJECTED`
 - 실제 거래소 주문 API 호출 금지
+- BUY 진입은 `PendingLimitOrderService.fillLimitOrder()` 경로로 들어와 동일하게 risk + portfolio 검증을 거친 뒤 체결된다.
+  pending 등록 시점에는 history에 `REQUESTED`로 기록되고, 실제 체결 시 `FILLED`로 별도 기록된다.
 
 ## PORTFOLIO_UPDATED
 

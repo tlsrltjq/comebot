@@ -152,13 +152,22 @@
 
 | 신호 | 조건 | 결과 |
 |---|---|---|
-| `BUY` | CandidateScannerService → SELECTED | PAPER 매수 주문 |
-| `SELL` (익절) | 미실현 수익률 ≥ take-profit-rate | PAPER 매도 주문 |
-| `SELL` (손절) | 미실현 수익률 ≤ stop-loss-rate | PAPER 매도 주문 |
-| `SELL` (trailing) | peak profit 달성 후 trail만큼 하락 | PAPER 매도 주문 |
+| `BUY` | CandidateScannerService → SELECTED | PAPER **지정가(maker) 대기 주문** 등록 (limit=신호 캔들 close, 5분 유효) |
+| `SELL` (익절) | 미실현 수익률 ≥ take-profit-rate | PAPER 매도 주문 (즉시 시장가) |
+| `SELL` (손절) | 미실현 수익률 ≤ stop-loss-rate | PAPER 매도 주문 (즉시 시장가) |
+| `SELL` (trailing) | peak profit 달성 후 trail만큼 하락 | PAPER 매도 주문 (즉시 시장가) |
 | `HOLD` | 위 조건 미달 | 포트폴리오 변경 없음 |
 | `REJECTED` | 리스크 검증 실패 | 포트폴리오 변경 없음, history 기록 |
 | `FAILED` | 실행 오류 | 포트폴리오 변경 없음, history 기록 |
+
+### 4-1. BUY 지정가(maker) 진입 (ADR-013, 보류/조건부)
+
+- 진입은 즉시 시장가가 아니라 **지정가 대기 주문**으로 처리한다 (taker 수수료가 gross edge를 잠식하는 문제 해결 목적).
+- limit 가격 = 신호 캔들 close. 유효 5분. 5분 내 미체결 시 만료·취소.
+- 체결 조건: `findFresh(orderStaleDuration)` fresh snapshot, `capturedAt > createdAt`, price ≤ limit.
+- same-candle fill 0건 보장: 체결 가격은 항상 신호 캔들 close 이후 관측값.
+- 백테스트(maker-entry+taker-exit): train PF 1.047 / test PF 1.076 / 체결률 96.8% → **검증된 엣지 아님, PAPER 관찰 단계**.
+- 실거래 미전환: maker 체결 보장 없음 + train PF가 strict 기준(1.05) 미달.
 
 ---
 

@@ -28,11 +28,11 @@ web
 - `strategy.indicator`: 캔들 기반 변동성 지표 계산 (VolatilitySnapshot: priceChangeRate, highLowRangeRate, tradeAmountChangeRate, trend, lastCandleBullish, latestCandleTradeAmount, distanceFromHighRate)
 - `strategy.candidate`: 롱 후보 스캔 (진입 필터: trend, lastCandleBullish, priceChangeRate, tradeAmountChangeRate, 과열 회피, distanceFromHigh, minTradeAmount)
 - `strategy.controller`: 후보 조회 API
-- `strategy.candidate.CandidateExecutionService`: 선택 후보 PAPER 주문 실행
+- `strategy.candidate.CandidateExecutionService`: 선택 후보 → PAPER 지정가(maker) 대기 주문 등록 (ADR-013)
 - `scanlog`: 모든 스캔 결과(SELECTED/SKIPPED) append-only 기록. `GET /api/candidate-scan-log`
 - `safety`: kill switch 차단
 - `risk`: 주문 실행 전 리스크 검증 (포지션 수 상한, 쏠림, stop-loss cooldown, 일일 제한)
-- `execution`: PAPER_TRADING 주문 실행
+- `execution`: PAPER_TRADING 주문 실행. `PendingLimitOrderService`가 maker 지정가 대기 주문을 보관하고 exit 스케줄러 tick마다 fresh snapshot으로 체결 판정 (same-candle·stale 가드)
 - `portfolio`: PAPER 현금, 포지션, 손익 관리
 - `history`: 트레이딩 플로우 결과 저장
 - `analytics`: history와 PAPER 포트폴리오 기반 운영 집계 API

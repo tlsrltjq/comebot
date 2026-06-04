@@ -16,6 +16,8 @@
 
 ## 최근 완료 (상세 이력: CHANGELOG.md)
 
+- **maker 지정가 진입 (ADR-013, 보류/조건부)** — BUY를 즉시 시장가 → 지정가 대기 주문으로 교체. `PendingLimitOrderService`: limit=신호 캔들 close, 5분 유효, `findFresh`+`capturedAt>createdAt` 체결 (same-candle·stale 가드). 백테스트 train PF 1.047 / test 1.076 / 체결률 96.8% → 검증된 엣지 아님, PAPER 관찰 단계
+- ADR-012 — 진입 신호 재설계 OOS 전체 실패, 현행 1m×20 유지 (근본원인: taker 비용 > gross edge)
 - KST 시간대 진입 필터 메커니즘 — `strategy.entry.allowed-hours-kst` (기본 **비활성**: OOS 검증서 과최적화 확인, 튜닝 도구로만 유지)
 - KRW-IRYS 스캔 제외 추가 (OOS에서도 견고하게 최악 마켓)
 - ⚠️ OOS 검증 결론: 현 전략은 비용 차감 후 검증된 엣지 없음 — 청산구조/timeframe 재설계 필요 (condition-records/2026-06-02-oos-validation-and-edge-analysis.md)
@@ -42,7 +44,8 @@
 
 ## 다음 작업
 
-1. 운용 데이터 축적 후 pullback bounce 전략 파라미터 튜닝 (per-exchange 기준값 개선)
+1. **maker 지정가 진입 PAPER 관찰 (2~4주)** — 실 fill_rate(≥90%) / 실체결 PF / same-candle fill 0건 / stale skip 빈도를 백테스트(96.8%/1.076)와 대조. 중단 기준: fill_rate<80% OR 누적 PF<0.95 OR same-candle fill 1건 발생
+2. 관찰 결과에 따라 ADR-013 채택/폐기 결정 (실거래 전환은 별도 판단, 현 단계 금지)
 
 ## 검증 기준
 

@@ -37,6 +37,7 @@ src/main/java/com/giseop/comebot/
 │   └── domain/                      RiskCheckResult, RiskDecision, PositionExitPolicy
 │
 ├── execution/                       PaperTradingExecutionGateway (PAPER 전용, 실제 주문 없음)
+│                                    PendingLimitOrderService (maker 지정가 대기 주문, ADR-013)
 │
 ├── portfolio/                       PaperPortfolioService (현금·포지션·손익)
 │                                    PaperPortfolioValuationService (현재가 기반 평가)
