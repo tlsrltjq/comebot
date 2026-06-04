@@ -84,14 +84,14 @@ describe('TradePage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('제어 범위(Control scope)')).toBeInTheDocument();
-    expect(screen.getByText('후보 BUY와 보유 PAPER SELL 평가 중')).toBeInTheDocument();
-    expect(screen.getByText('PAPER 전용(Paper only)')).toBeInTheDocument();
-    expect(screen.getByText('전략 스케줄러(Legacy Trading Scheduler)')).toBeInTheDocument();
-    expect(screen.getByText('청산 스케줄러(Exit Scheduler)')).toBeInTheDocument();
-    expect(screen.getByText('최근 결과(Latest)')).toBeInTheDocument();
-    expect(screen.getByText('KRW-BTC / FILLED')).toBeInTheDocument();
-    expect(screen.getAllByText('켜짐(Enabled)').length).toBeGreaterThan(0);
+    expect(await screen.findByText('자동매매 제어')).toBeInTheDocument();
+    // scheduler steps visible
+    expect(screen.getByText('PAPER 전용')).toBeInTheDocument();
+    expect(screen.getByText('전략 스케줄러 (구버전)')).toBeInTheDocument();
+    expect(screen.getByText('청산 스케줄러')).toBeInTheDocument();
+    // recent history row
+    expect(screen.getByText('KRW-BTC')).toBeInTheDocument();
+    expect(screen.getAllByText('켜짐').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());

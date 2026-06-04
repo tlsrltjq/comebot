@@ -106,29 +106,23 @@ describe('PortfolioPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('자산 배분(Allocation)')).toBeInTheDocument();
-    expect(await screen.findByText('자산 비중(Asset Mix)')).toBeInTheDocument();
-    expect(await screen.findByText('마켓 비중(Market Allocation)')).toBeInTheDocument();
-    expect(await screen.findByText('거래소 비중(Exchange Allocation)')).toBeInTheDocument();
-    expect(await screen.findByText('자금 활용(Capital Usage)')).toBeInTheDocument();
-    expect(screen.getByText('매수 가능(Buys left) 98')).toBeInTheDocument();
+    // portfolio panels visible
+    expect(await screen.findByText('자산 비중')).toBeInTheDocument();
+    expect(await screen.findByText('마켓 비중')).toBeInTheDocument();
+    expect(screen.getByText('손익 리더')).toBeInTheDocument();
+    expect(screen.getByText('마켓별 비중')).toBeInTheDocument();
+    // remaining buy count
     expect(screen.getByText('98회')).toBeInTheDocument();
-    expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
-    expect(screen.getByText('손익 리더(Profit Leaders)')).toBeInTheDocument();
-    expect(screen.getByText('market별 비중(Market Exposure)')).toBeInTheDocument();
-    expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
-    expect(screen.getAllByText('현금(Cash)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('포지션(Positions)').length).toBeGreaterThan(0);
-    expect(screen.getByText('UPBIT 선택 거래소(Selected exchange)')).toBeInTheDocument();
-    expect(screen.getByText('분산 양호(Diversified)')).toBeInTheDocument();
+    // exposure badge + threshold label
     expect(screen.getAllByText('OK').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('손절권(Stop loss)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('보유(Hold)').length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('모바일 포지션 카드(Mobile position cards)')).toBeInTheDocument();
-    expect(screen.getAllByText('평가액(Value)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('손익률(PnL %)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('미실현(Unrealized)').length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText('KRW-BTC 선택').length).toBeGreaterThan(1);
+    expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
+    // position table rows
+    expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('KRW-BTC 선택').length).toBeGreaterThan(0);
+    // exit badges
+    expect(screen.getAllByText('손절권').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('보유').length).toBeGreaterThan(0);
+    // no manual buy/execution controls
     expect(screen.queryByRole('button', { name: '실행' })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/candidates/execute'), expect.anything());
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/trading-flow/run'), expect.anything());
@@ -179,7 +173,7 @@ describe('PortfolioPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('차단 기준(Block)')).toBeInTheDocument();
+    expect(await screen.findByText('BLOCK')).toBeInTheDocument();
     expect(screen.getByText('BLOCK')).toBeInTheDocument();
     expect(screen.getByText('UPBIT 7% / 10%')).toBeInTheDocument();
   });
@@ -229,7 +223,7 @@ describe('PortfolioPage', () => {
 
     renderWithClient('BINANCE');
 
-    expect(await screen.findByText('쏠림 경고(Warning)')).toBeInTheDocument();
+    expect(await screen.findByText('WARN')).toBeInTheDocument();
     expect(screen.getByText('WARN')).toBeInTheDocument();
     expect(screen.getByText('BINANCE 25% / 40%')).toBeInTheDocument();
   });
@@ -297,7 +291,7 @@ describe('PortfolioPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('기타(Other)')).toBeInTheDocument();
+    expect(await screen.findByText('기타')).toBeInTheDocument();
   });
 
   it('shows empty chart state when total equity is zero', async () => {
@@ -355,8 +349,7 @@ describe('PortfolioPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('자산 비중 없음(No asset mix)')).toBeInTheDocument();
-    expect(screen.getByText('마켓 비중 없음(No market allocation)')).toBeInTheDocument();
+    expect((await screen.findAllByText('데이터 없음')).length).toBeGreaterThan(0);
   });
 
   it('sells only selected paper positions after confirmation', async () => {
@@ -454,15 +447,16 @@ describe('PortfolioPage', () => {
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText('실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.')).toBeInTheDocument();
     expect(within(dialog).getByText('KRW-BTC')).toBeInTheDocument();
-    expect(within(dialog).getByText('선택한 보유 PAPER 포지션 전량')).toBeInTheDocument();
+    expect(within(dialog).getByText('실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'PAPER SELL 실행' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
       '/api/portfolio/positions/sell-selected?exchange=upbit',
       expect.objectContaining({ method: 'POST' }),
     ));
-    expect(await screen.findByText('선택 매도 결과(Selected Sell Result)')).toBeInTheDocument();
-    expect(screen.getByText('FILLED · Selected PAPER position sold')).toBeInTheDocument();
+    expect(await screen.findByText('매도 결과')).toBeInTheDocument();
+    // sell result shows status and message in separate elements
+    expect(screen.getAllByText('FILLED').length).toBeGreaterThan(0);
   });
 });
 

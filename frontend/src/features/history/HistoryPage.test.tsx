@@ -98,18 +98,18 @@ describe('HistoryPage', () => {
 
     renderWithClient();
 
-    expect(await screen.findByText('반복 HOLD 사유(Top Hold Reasons)')).toBeInTheDocument();
-    expect(screen.getByText('주문 상태 요약(Order Lifecycle)')).toBeInTheDocument();
-    expect(screen.getByText('거절/실패(REJ/FAIL)')).toBeInTheDocument();
-    expect(screen.getByText('손실 원인(Loss Review)')).toBeInTheDocument();
+    expect(await screen.findByText('반복 HOLD 사유 TOP 5')).toBeInTheDocument();
+    expect(screen.getByText('주문 상태 분포')).toBeInTheDocument();
+    expect(screen.getByText('거절 / 실패')).toBeInTheDocument();
+    expect(screen.getByText('손실 원인')).toBeInTheDocument();
     expect((await screen.findAllByText('Trend is not UP')).length).toBeGreaterThan(0);
-    expect(screen.getByText('체결(FILLED)')).toBeInTheDocument();
-    expect(screen.getByText('주문 없음(NO_ORDER)')).toBeInTheDocument();
-    expect(screen.getByText('손절(Stop loss)')).toBeInTheDocument();
+    expect(screen.getAllByText('FILLED').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('NO_ORDER').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('손절').length).toBeGreaterThan(0);
     expect((await screen.findAllByText('KRW-ETH')).length).toBeGreaterThan(0);
     expect(fetchMock).toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&limit=50', expect.anything());
 
-    await userEvent.click(screen.getByRole('button', { name: '손절(SL)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'SL' }));
 
     expect(screen.getAllByText('KRW-BTC').length).toBeGreaterThan(0);
     expect(screen.queryByText('KRW-ETH')).not.toBeInTheDocument();
@@ -117,7 +117,7 @@ describe('HistoryPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '200' }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&limit=200', expect.anything()));
 
-    await userEvent.type(screen.getByLabelText('마켓(Market)'), 'KRW-SOL');
+    await userEvent.type(screen.getByPlaceholderText(/KRW-BTC/), 'KRW-SOL');
     expect(fetchMock).not.toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&limit=200&market=KRW-SOL', expect.anything());
     await userEvent.click(screen.getByRole('button', { name: /조회/ }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/trading-flow/history?exchange=upbit&market=KRW-SOL&limit=200', expect.anything()));

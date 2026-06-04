@@ -1,663 +1,377 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDownAZ, CircleDollarSign, Gauge, PieChart as PieIcon, Radar, ShieldCheck, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import {
+  ArrowDownAZ, CircleDollarSign, PieChart as PieIcon,
+  Radar, ShieldCheck, TrendingDown, TrendingUp, Wallet,
+} from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { api, queryKeys } from '../../shared/api/client';
 import { POLLING_INTERVALS } from '../../shared/api/polling';
 import type { PositionValuationResponse, SelectedPaperSellResponse } from '../../shared/api/types';
-import { Badge } from '../../shared/ui/Badge';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
-import { EmptyState } from '../../shared/ui/EmptyState';
 import { ErrorPanel } from '../../shared/ui/ErrorPanel';
-import { LiveStatus } from '../../shared/ui/LiveStatus';
-import { MetricCard } from '../../shared/ui/MetricCard';
 import { formatCurrency, formatNumber } from '../../shared/format';
 import { useExchangeMode } from '../../shared/exchange/ExchangeModeContext';
+import { cn } from '@/lib/utils';
 
 type SortKey = 'value' | 'profitRate' | 'market';
-type AllocationSlice = {
-  id: string;
-  label: string;
-  value: number;
-  rate: number;
-  color: string;
-};
+type AllocationSlice = { id: string; label: string; value: number; rate: number; color: string; };
 
-const TAKE_PROFIT_RATE = 1.5;
-const STOP_LOSS_RATE = -0.7;
-const MARKET_COLORS = ['#176b87', '#1f8a70', '#b7791f', '#8c5a2b', '#5d6d7e', '#bd3d2f'];
-const CASH_COLOR = '#1f8a70';
-const POSITION_COLOR = '#176b87';
-const OTHER_COLOR = '#7b8794';
+const TP = 1.5; const SL = -0.7;
+const COLORS = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#dc2626', '#0891b2'];
+
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
   const [selectedMarkets, setSelectedMarkets] = useState<Set<string>>(() => new Set());
-  const [confirmSellOpen, setConfirmSellOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [sellSummary, setSellSummary] = useState<SelectedPaperSellResponse | null>(null);
   const { exchange } = useExchangeMode();
   const queryClient = useQueryClient();
-  const statusQuery = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
-  const positionsQuery = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
-  const valuationQuery = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
-  const systemQuery = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: POLLING_INTERVALS.system });
-  const riskQuery = useQuery({ queryKey: queryKeys.riskStatus(exchange), queryFn: () => api.riskStatus(exchange), refetchInterval: POLLING_INTERVALS.risk });
 
-  const positions = useMemo(
-    () => sortPositions(valuationQuery.data?.positions ?? [], sortKey),
-    [sortKey, valuationQuery.data?.positions],
-  );
-  const totalEquity = Number(valuationQuery.data?.totalEquity ?? 0);
-  const cash = Number(valuationQuery.data?.cash ?? statusQuery.data?.cash ?? 0);
-  const currency = valuationQuery.data?.currency ?? statusQuery.data?.currency ?? (exchange === 'BINANCE' ? 'USDT' : 'KRW');
-  const money = (value: string | number | null | undefined) => formatCurrency(value, currency);
-  const positionValue = Number(valuationQuery.data?.totalPositionValue ?? 0);
-  const orderAmount = Number(systemQuery.data?.strategy.orderAmount ?? 0);
+  const statusQ = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
+  const posQ = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
+  const valQ = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
+  const sysQ = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: POLLING_INTERVALS.system });
+  const riskQ = useQuery({ queryKey: queryKeys.riskStatus(exchange), queryFn: () => api.riskStatus(exchange), refetchInterval: POLLING_INTERVALS.risk });
+
+  const positions = useMemo(() => sortPositions(valQ.data?.positions ?? [], sortKey), [sortKey, valQ.data?.positions]);
+  const totalEquity = Number(valQ.data?.totalEquity ?? 0);
+  const cash = Number(valQ.data?.cash ?? statusQ.data?.cash ?? 0);
+  const currency = valQ.data?.currency ?? statusQ.data?.currency ?? (exchange === 'BINANCE' ? 'USDT' : 'KRW');
+  const money = (v: string | number | null | undefined) => formatCurrency(v, currency);
+  const positionValue = Number(valQ.data?.totalPositionValue ?? 0);
+  const orderAmount = Number(sysQ.data?.strategy.orderAmount ?? 0);
   const cashRate = totalEquity > 0 ? (cash / totalEquity) * 100 : 0;
   const positionRate = totalEquity > 0 ? (positionValue / totalEquity) * 100 : 0;
-  const capitalUseRate = totalEquity > 0 ? (positionValue / totalEquity) * 100 : 0;
-  const remainingBuyCount = orderAmount > 0 ? Math.floor(cash / orderAmount) : 0;
-  const reservedCashAfterBuys = orderAmount > 0 ? cash - remainingBuyCount * orderAmount : cash;
-  const exposureRows = useMemo(() => buildExposureRows(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
-  const concentration = riskQuery.data?.concentration;
-  const warningExposureRate = Number(concentration?.warningExposureRate ?? (exchange === 'BINANCE' ? 25 : 7));
-  const blockExposureRate = Number(concentration?.blockExposureRate ?? (exchange === 'BINANCE' ? 40 : 10));
-  const assetMixSlices = useMemo(() => buildAssetMixSlices(cash, positionValue, totalEquity), [cash, positionValue, totalEquity]);
-  const marketAllocationSlices = useMemo(() => buildMarketAllocationSlices(valuationQuery.data?.positions ?? [], totalEquity), [valuationQuery.data?.positions, totalEquity]);
-  const exchangeAllocationSlices = useMemo(() => buildExchangeAllocationSlices(exchange, totalEquity), [exchange, totalEquity]);
-  const largestExposureRate = exposureRows[0]?.exposureRate ?? 0;
-  const bestPosition = positions.reduce<PositionValuationResponse | null>(
-    (best, position) => (best === null || Number(position.unrealizedProfitRate) > Number(best.unrealizedProfitRate) ? position : best),
-    null,
-  );
-  const worstPosition = positions.reduce<PositionValuationResponse | null>(
-    (worst, position) => (worst === null || Number(position.unrealizedProfitRate) < Number(worst.unrealizedProfitRate) ? position : worst),
-    null,
-  );
-  const selectedVisibleMarkets = positions.map((position) => position.market).filter((market) => selectedMarkets.has(market));
-  const selectedPositions = positions.filter((position) => selectedMarkets.has(position.market));
-  const selectedCount = selectedVisibleMarkets.length;
-  const selectedPositionValue = selectedPositions.reduce((sum, position) => sum + Number(position.positionValue), 0);
-  const selectedUnrealizedProfit = selectedPositions.reduce((sum, position) => sum + Number(position.unrealizedProfit), 0);
-  const displayedSellSummary = sellSummary?.exchange === exchange ? sellSummary : null;
-  const sellSelectedMutation = useMutation({
+  const remainingBuys = orderAmount > 0 ? Math.floor(cash / orderAmount) : 0;
+  const exposureRows = useMemo(() => buildExposureRows(valQ.data?.positions ?? [], totalEquity), [valQ.data?.positions, totalEquity]);
+  const concentration = riskQ.data?.concentration;
+  const warnRate = Number(concentration?.warningExposureRate ?? (exchange === 'BINANCE' ? 25 : 7));
+  const blockRate = Number(concentration?.blockExposureRate ?? (exchange === 'BINANCE' ? 40 : 10));
+  const assetSlices = useMemo(() => buildAssetSlices(cash, positionValue, totalEquity), [cash, positionValue, totalEquity]);
+  const marketSlices = useMemo(() => buildMarketSlices(valQ.data?.positions ?? [], totalEquity), [valQ.data?.positions, totalEquity]);
+  const largestExposure = exposureRows[0]?.exposureRate ?? 0;
+  const best = positions.reduce<PositionValuationResponse | null>((b, p) => !b || Number(p.unrealizedProfitRate) > Number(b.unrealizedProfitRate) ? p : b, null);
+  const worst = positions.reduce<PositionValuationResponse | null>((w, p) => !w || Number(p.unrealizedProfitRate) < Number(w.unrealizedProfitRate) ? p : w, null);
+  const selectedVisible = positions.map((p) => p.market).filter((m) => selectedMarkets.has(m));
+  const selectedPositions = positions.filter((p) => selectedMarkets.has(p.market));
+  const selectedValue = selectedPositions.reduce((s, p) => s + Number(p.positionValue), 0);
+  const selectedPnl = selectedPositions.reduce((s, p) => s + Number(p.unrealizedProfit), 0);
+  const displaySell = sellSummary?.exchange === exchange ? sellSummary : null;
+
+  const sellMutation = useMutation({
     mutationFn: (markets: string[]) => api.sellSelectedPositions(exchange, { markets }),
-    onSuccess: (response) => {
-      setSellSummary(response);
+    onSuccess: (res) => {
+      setSellSummary(res);
       setSelectedMarkets(new Set());
-      void queryClient.invalidateQueries({ queryKey: queryKeys.portfolioStatus(exchange) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.positions(exchange) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.portfolioValuation(exchange) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.history(exchange) });
+      [queryKeys.portfolioStatus(exchange), queryKeys.positions(exchange), queryKeys.portfolioValuation(exchange), queryKeys.history(exchange)]
+        .forEach((k) => void queryClient.invalidateQueries({ queryKey: k }));
     },
   });
 
-  const toggleMarket = (market: string) => {
-    setSelectedMarkets((current) => {
-      const next = new Set(current);
-      if (next.has(market)) {
-        next.delete(market);
-      } else {
-        next.add(market);
-      }
-      return next;
-    });
-  };
-
-  const sellSelected = () => {
-    const markets = selectedVisibleMarkets;
-    if (markets.length === 0) {
-      return;
-    }
-    setConfirmSellOpen(false);
-    sellSelectedMutation.mutate(markets);
-  };
+  const toggle = (m: string) => setSelectedMarkets((cur) => { const n = new Set(cur); n.has(m) ? n.delete(m) : n.add(m); return n; });
 
   return (
-    <section className="page">
-      <header className="page-header">
+    <div className="page">
+      {/* Header */}
+      <div className="page-header">
         <div>
-          <h1>포트폴리오(Portfolio)</h1>
-          <p>자동 PAPER 거래의 현금, 포지션, 평가 손익을 확인합니다.</p>
+          <h1 className="page-title">포트폴리오</h1>
+          <p className="page-subtitle">PAPER 현금 · 포지션 · 평가 손익</p>
         </div>
-        <LiveStatus updatedAt={valuationQuery.dataUpdatedAt} isFetching={statusQuery.isFetching || positionsQuery.isFetching || valuationQuery.isFetching} intervalMs={POLLING_INTERVALS.portfolio} />
-      </header>
-
-      {statusQuery.error ? <ErrorPanel title="포트폴리오 상태 조회 실패(Portfolio status failed)" error={statusQuery.error} /> : null}
-      {valuationQuery.error ? <ErrorPanel title="포트폴리오 평가 조회 실패(Portfolio valuation failed)" error={valuationQuery.error} /> : null}
-      {systemQuery.error ? <ErrorPanel title="시스템 상태 조회 실패(System status failed)" error={systemQuery.error} /> : null}
-      {riskQuery.error ? <ErrorPanel title="리스크 상태 조회 실패(Risk status failed)" error={riskQuery.error} /> : null}
-      {sellSelectedMutation.error ? <ErrorPanel title="선택 매도 실패(Selected sell failed)" error={sellSelectedMutation.error} /> : null}
-
-      <div className="metric-grid">
-        <MetricCard label="현금(Cash)" value={money(valuationQuery.data?.cash ?? statusQuery.data?.cash)} detail={`${currency} ${formatNumber(cashRate, 1)}%`} />
-        <MetricCard label="포지션 가치(Position Value)" value={money(valuationQuery.data?.totalPositionValue)} detail={`${formatNumber(positionRate, 1)}%`} />
-        <MetricCard label="자금 사용률(Capital Used)" value={`${formatNumber(capitalUseRate, 1)}%`} detail={`매수 가능(Buys left) ${formatNumber(remainingBuyCount)}`} />
-        <MetricCard label="총손익(Total Profit)" value={money(valuationQuery.data?.totalProfit)} detail={`실현(Realized) ${money(valuationQuery.data?.realizedProfit)}`} />
+        <div className="live-status">
+          <span className={cn('status-dot', (statusQ.isFetching || valQ.isFetching) ? 'warn' : 'live')} />
+          {valQ.dataUpdatedAt ? new Date(valQ.dataUpdatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
+        </div>
       </div>
 
-      <div className="portfolio-chart-grid">
-        <AllocationPiePanel
-          currency={currency}
-          emptyDescription="평가 가능한 자산이 생기면 현금과 포지션 비중이 표시됩니다."
-          emptyTitle="자산 비중 없음(No asset mix)"
-          slices={assetMixSlices}
-          title="자산 비중(Asset Mix)"
-        />
-        <AllocationPiePanel
-          currency={currency}
-          emptyDescription="보유 포지션이 생기면 market별 비중이 표시됩니다."
-          emptyTitle="마켓 비중 없음(No market allocation)"
-          slices={marketAllocationSlices}
-          title="마켓 비중(Market Allocation)"
-        />
-        <AllocationPiePanel
-          currency={currency}
-          emptyDescription="선택 거래소의 평가 자산이 생기면 거래소 비중이 표시됩니다."
-          emptyTitle="거래소 비중 없음(No exchange allocation)"
-          slices={exchangeAllocationSlices}
-          title="거래소 비중(Exchange Allocation)"
-        />
+      {statusQ.error && <ErrorPanel title="포트폴리오 조회 실패" error={statusQ.error} />}
+      {valQ.error && <ErrorPanel title="평가 조회 실패" error={valQ.error} />}
+      {sellMutation.error && <ErrorPanel title="선택 매도 실패" error={sellMutation.error} />}
+
+      {/* KPI */}
+      <div className="metric-grid mb-4">
+        <div className="metric-card"><span>현금</span><strong className="num">{money(valQ.data?.cash ?? statusQ.data?.cash)}</strong><small>{currency} {formatNumber(cashRate, 1)}%</small></div>
+        <div className="metric-card"><span>포지션 가치</span><strong className="num">{money(valQ.data?.totalPositionValue)}</strong><small>{formatNumber(positionRate, 1)}%</small></div>
+        <div className="metric-card"><span>매수 가능</span><strong>{remainingBuys}회</strong><small>1회 {money(orderAmount)}</small></div>
+        <div className="metric-card">
+          <span>총 손익</span>
+          <strong className={cn('num', Number(valQ.data?.totalProfit ?? 0) >= 0 ? 'pos' : 'neg')}>{money(valQ.data?.totalProfit)}</strong>
+          <small>실현 {money(valQ.data?.realizedProfit)}</small>
+        </div>
       </div>
 
-      <div className="portfolio-overview">
-        <article className="panel">
-          <div className="panel-title-row">
-            <h2>자산 배분(Allocation)</h2>
-            <PieIcon size={20} />
-          </div>
-          <div className="allocation-bars">
-            <AllocationBar icon={<Wallet size={17} />} label="현금(Cash)" value={cashRate} />
-            <AllocationBar icon={<CircleDollarSign size={17} />} label="포지션(Positions)" value={positionRate} />
-          </div>
-        </article>
+      {/* Pie charts + allocation */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 mb-4">
+        <PiePanel title="자산 비중" currency={currency} slices={assetSlices} />
+        <PiePanel title="마켓 비중" currency={currency} slices={marketSlices} />
 
-        <article className="panel">
-          <div className="panel-title-row">
-            <h2>자금 활용(Capital Usage)</h2>
-            <Gauge size={20} />
-          </div>
-          <div className="allocation-bars">
-            <AllocationBar icon={<CircleDollarSign size={17} />} label="사용 중(Used)" value={capitalUseRate} />
-            <AllocationBar icon={<Wallet size={17} />} label="대기 현금(Idle cash)" value={cashRate} />
-          </div>
-          <dl className="definition-list capital-list">
-            <dt>1회 매수(Order)</dt>
-            <dd>{money(orderAmount)}</dd>
-            <dt>매수 가능(Buys left)</dt>
-            <dd>{formatNumber(remainingBuyCount)}회</dd>
-            <dt>단위 미만 현금(Residual cash)</dt>
-            <dd>{money(reservedCashAfterBuys)}</dd>
-          </dl>
-        </article>
+        {/* Allocation bars */}
+        <div className="section">
+          <div className="flex items-center gap-2 mb-3"><PieIcon size={15} className="text-muted-foreground" /><h2 className="section-title mb-0">자산 배분</h2></div>
+          <Bar icon={<Wallet size={14} />} label="현금" value={cashRate} color="#16a34a" />
+          <Bar icon={<CircleDollarSign size={14} />} label="포지션" value={positionRate} color="#2563eb" />
+        </div>
 
-        <article className="panel">
-          <div className="panel-title-row">
-            <h2>손익 리더(Profit Leaders)</h2>
-            <Badge tone={positions.length ? 'info' : 'neutral'}>{positions.length} positions</Badge>
-          </div>
-          <div className="leader-grid">
-            <LeaderItem title="최고 수익(Best)" position={bestPosition} currency={currency} positive />
-            <LeaderItem title="최대 손실(Worst)" position={worstPosition} currency={currency} />
-          </div>
-        </article>
+        {/* Leaders */}
+        <div className="section">
+          <div className="flex items-center gap-2 mb-3"><TrendingUp size={15} className="text-muted-foreground" /><h2 className="section-title mb-0">손익 리더</h2></div>
+          <LeaderItem title="최고 수익" pos={best} currency={currency} positive />
+          <LeaderItem title="최대 손실" pos={worst} currency={currency} />
+        </div>
+      </div>
 
-        <article className="panel">
-          <div className="panel-title-row">
-            <h2>market별 비중(Market Exposure)</h2>
-            <Radar size={20} />
+      {/* Exposure */}
+      <div className="section mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2"><Radar size={15} className="text-muted-foreground" /><h2 className="section-title mb-0">마켓별 비중</h2></div>
+          <div className="flex items-center gap-2">
+            <span className={cn('badge', largestExposure >= blockRate ? 'badge-destructive' : largestExposure >= warnRate ? 'badge-warning' : 'badge-success')}>
+              {largestExposure >= blockRate ? 'BLOCK' : largestExposure >= warnRate ? 'WARN' : 'OK'}
+            </span>
+            <span className="text-xs text-muted-foreground">{exchange} {formatNumber(warnRate, 0)}% / {formatNumber(blockRate, 0)}%</span>
           </div>
-          <div className="exposure-summary">
-            <Badge tone={exposureTone(largestExposureRate, warningExposureRate, blockExposureRate)}>
-              {exposureLabel(largestExposureRate, warningExposureRate, blockExposureRate)}
-            </Badge>
-            <span>{exchange} {formatNumber(warningExposureRate, 0)}% / {formatNumber(blockExposureRate, 0)}%</span>
-          </div>
-          <div className="exposure-list">
-            {exposureRows.slice(0, 5).map((row) => (
-              <div className="exposure-item" key={row.market}>
-                <div className="exposure-item-main">
-                  <strong>{row.market}</strong>
-                  <span>{money(row.positionValue)}</span>
-                  <Badge tone={exposureTone(row.exposureRate, warningExposureRate, blockExposureRate)}>
-                    {exposureShortLabel(row.exposureRate, warningExposureRate, blockExposureRate)}
-                  </Badge>
-                  <small className={profitClass(row.unrealizedProfitRate)}>{formatNumber(row.unrealizedProfitRate, 2)}%</small>
+        </div>
+        {exposureRows.length === 0
+          ? <p className="text-sm text-muted-foreground">보유 포지션 없음</p>
+          : exposureRows.slice(0, 5).map((row) => (
+            <div key={row.market} className="mb-2">
+              <div className="flex items-center justify-between text-sm mb-0.5">
+                <span className="font-medium">{row.market}</span>
+                <div className="flex items-center gap-2">
+                  <span className="num text-xs">{money(row.positionValue)}</span>
+                  <span className={cn(row.unrealizedProfitRate >= 0 ? 'pos' : 'neg', 'num text-xs')}>{formatNumber(row.unrealizedProfitRate, 2)}%</span>
+                  <span className="num text-xs text-muted-foreground">{formatNumber(row.exposureRate, 1)}%</span>
                 </div>
-                <div className="allocation-track">
-                  <span style={{ width: `${Math.max(0, Math.min(100, row.exposureRate))}%` }} />
-                </div>
-                <small>{formatNumber(row.exposureRate, 2)}% of equity</small>
               </div>
-            ))}
-            {exposureRows.length === 0 ? <EmptyState title="비중 데이터 없음(No exposure)" description="보유 포지션이 생기면 market별 비중이 표시됩니다." /> : null}
-          </div>
-        </article>
+              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <div className={cn('h-full rounded-full transition-all',
+                  row.exposureRate >= blockRate ? 'bg-destructive' : row.exposureRate >= warnRate ? 'bg-amber-500' : 'bg-primary')}
+                  style={{ width: `${Math.min(100, row.exposureRate / blockRate * 100)}%` }} />
+              </div>
+            </div>
+          ))}
       </div>
 
-      <div className="toolbar portfolio-toolbar" aria-label="포트폴리오 정렬(Portfolio sort)">
-        <span>정렬(Sort)</span>
-        <button className={sortKey === 'profitRate' ? 'button button-primary' : 'button button-secondary'} type="button" onClick={() => setSortKey('profitRate')}>
-          <TrendingDown size={16} />
-          손익률(PnL %)
-        </button>
-        <button className={sortKey === 'value' ? 'button button-primary' : 'button button-secondary'} type="button" onClick={() => setSortKey('value')}>
-          <CircleDollarSign size={16} />
-          평가액(Value)
-        </button>
-        <button className={sortKey === 'market' ? 'button button-primary' : 'button button-secondary'} type="button" onClick={() => setSortKey('market')}>
-          <ArrowDownAZ size={16} />
-          마켓(Market)
-        </button>
+      {/* Sort toolbar */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-sm text-muted-foreground">정렬</span>
+        {([['profitRate', <TrendingDown size={13} />, '손익률'], ['value', <CircleDollarSign size={13} />, '평가액'], ['market', <ArrowDownAZ size={13} />, '마켓']] as const).map(([key, icon, label]) => (
+          <button key={key} type="button" onClick={() => setSortKey(key as SortKey)}
+            className={cn('flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors',
+              sortKey === key ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-background hover:bg-muted')}>
+            {icon}{label}
+          </button>
+        ))}
       </div>
 
-      {selectedCount > 0 ? (
-        <div className="selected-sell-bar" aria-label="선택 PAPER 매도(Selected PAPER sell)">
+      {/* Selected sell bar */}
+      {selectedVisible.length > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
           <div>
-            <span>선택 PAPER SELL</span>
-            <strong>{selectedCount} positions · {money(selectedPositionValue)}</strong>
-            <small className={profitClass(selectedUnrealizedProfit)}>현재 손익(Current PnL) {money(selectedUnrealizedProfit)}</small>
+            <p className="text-sm font-semibold">선택 PAPER SELL — {selectedVisible.length}개 포지션</p>
+            <p className="text-sm text-muted-foreground">{money(selectedValue)} · 손익 <span className={cn(selectedPnl >= 0 ? 'pos' : 'neg')}>{money(selectedPnl)}</span></p>
           </div>
-          <button className="button button-danger" type="button" onClick={() => setConfirmSellOpen(true)} disabled={sellSelectedMutation.isPending}>
-            <ShieldCheck size={16} />
-            선택 매도(Sell selected)
+          <button type="button" disabled={sellMutation.isPending}
+            onClick={() => setConfirmOpen(true)}
+            className="flex items-center gap-1.5 rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive/90 disabled:opacity-50">
+            <ShieldCheck size={14} />선택 매도
           </button>
         </div>
-      ) : null}
+      )}
 
-      {displayedSellSummary ? (
-        <article className="panel">
-          <div className="panel-title-row">
-            <h2>선택 매도 결과(Selected Sell Result)</h2>
-            <Badge tone={displayedSellSummary.failedCount > 0 ? 'warn' : 'good'}>
-              {displayedSellSummary.succeededCount}/{displayedSellSummary.requestedCount}
-            </Badge>
+      {/* Sell result */}
+      {displaySell && (
+        <div className="section mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="section-title mb-0">매도 결과</h2>
+            <span className={cn('badge', displaySell.failedCount > 0 ? 'badge-warning' : 'badge-success')}>
+              {displaySell.succeededCount}/{displaySell.requestedCount}
+            </span>
           </div>
-          <div className="definition-list">
-            {displayedSellSummary.results.map((result) => (
-              <div key={result.market}>
-                <dt>{result.market}</dt>
-                <dd>{result.orderStatus} · {result.message}</dd>
-              </div>
-            ))}
-          </div>
-        </article>
-      ) : null}
-
-      <div className="position-card-list" aria-label="모바일 포지션 카드(Mobile position cards)">
-        {positions.map((position) => (
-          <article className="position-card" key={position.market}>
-            <div className="position-card-head">
-              <label className="position-select">
-                <input
-                  aria-label={`${position.market} 선택`}
-                  checked={selectedMarkets.has(position.market)}
-                  disabled={sellSelectedMutation.isPending}
-                  type="checkbox"
-                  onChange={() => toggleMarket(position.market)}
-                />
-                <span>{position.market}</span>
-              </label>
-              <ExitBadge rate={Number(position.unrealizedProfitRate)} />
-            </div>
-            <div className="position-card-value">
-              <span>평가액(Value)</span>
-              <strong>{money(position.positionValue)}</strong>
-            </div>
-            <dl className="position-card-metrics">
-              <div>
-                <dt>손익률(PnL %)</dt>
-                <dd className={profitClass(position.unrealizedProfitRate)}>{formatNumber(position.unrealizedProfitRate, 2)}%</dd>
-              </div>
-              <div>
-                <dt>미실현(Unrealized)</dt>
-                <dd className={profitClass(position.unrealizedProfit)}>{money(position.unrealizedProfit)}</dd>
-              </div>
-              <div>
-                <dt>수량(Quantity)</dt>
-                <dd>{formatNumber(position.quantity, 8)}</dd>
-              </div>
-              <div>
-                <dt>현재가(Current)</dt>
-                <dd>{money(position.currentPrice)}</dd>
-              </div>
-              <div>
-                <dt>평균매수가(Avg Buy)</dt>
-                <dd>{money(position.averageBuyPrice)}</dd>
-              </div>
-              <div>
-                <dt>비중(Exposure)</dt>
-                <dd>{formatNumber(exposureRate(position, totalEquity), 2)}%</dd>
-              </div>
-              <div>
-                <dt>청산 거리(Exit Gap)</dt>
-                <dd>{exitDistance(Number(position.unrealizedProfitRate))}</dd>
-              </div>
-            </dl>
-          </article>
-        ))}
-        {!valuationQuery.isLoading && positions.length === 0 ? (
-          <EmptyState title="보유 포지션 없음(No positions)" description="자동 PAPER 매수가 체결되면 여기에 표시됩니다." />
-        ) : null}
-      </div>
-
-      <div className="table-wrap portfolio-position-table">
-        <table>
-          <thead>
-            <tr>
-              <th>선택(Select)</th>
-              <th>마켓(Market)</th>
-              <th>수량(Quantity)</th>
-              <th>평균매수가(Avg Buy)</th>
-              <th>현재가(Current)</th>
-              <th>가치(Value)</th>
-              <th>미실현손익(Unrealized)</th>
-              <th>수익률(Rate)</th>
-              <th>비중(Exposure)</th>
-              <th>리스크(Risk)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {positions.map((position) => (
-              <tr key={position.market}>
-                <td>
-                  <input
-                    aria-label={`${position.market} 선택`}
-                    checked={selectedMarkets.has(position.market)}
-                    disabled={sellSelectedMutation.isPending}
-                    type="checkbox"
-                    onChange={() => toggleMarket(position.market)}
-                  />
-                </td>
-                <td><strong>{position.market}</strong></td>
-                <td>{formatNumber(position.quantity, 8)}</td>
-                <td>{money(position.averageBuyPrice)}</td>
-                <td>{money(position.currentPrice)}</td>
-                <td>{money(position.positionValue)}</td>
-                <td className={profitClass(position.unrealizedProfit)}>{money(position.unrealizedProfit)}</td>
-                <td>
-                  <span className={`profit-rate ${profitClass(position.unrealizedProfitRate)}`}>
-                    {Number(position.unrealizedProfitRate) >= 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
-                    {formatNumber(position.unrealizedProfitRate, 2)}%
-                  </span>
-                </td>
-                <td>{formatNumber(exposureRate(position, totalEquity), 2)}%</td>
-                <td>
-                  <ExitBadge rate={Number(position.unrealizedProfitRate)} />
-                  <small className="risk-distance">{exitDistance(Number(position.unrealizedProfitRate))}</small>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!valuationQuery.isLoading && positions.length === 0 ? (
-          <EmptyState title="보유 포지션 없음(No positions)" description="자동 PAPER 매수가 체결되면 여기에 표시됩니다." />
-        ) : null}
-      </div>
-
-      {positionsQuery.data && positions.length === 0 && positionsQuery.data.length > 0 ? (
-        <article className="panel">
-          <h2>평가 불가 포지션(Unpriced positions)</h2>
-          <p>현재가 평가 API가 실패했지만 보유 포지션은 존재합니다.</p>
-        </article>
-      ) : null}
-
-      <ConfirmDialog
-        open={confirmSellOpen}
-        title="선택 PAPER SELL 확인"
-        confirmLabel="PAPER SELL 실행"
-        busy={sellSelectedMutation.isPending}
-        onCancel={() => setConfirmSellOpen(false)}
-        onConfirm={sellSelected}
-        description={(
-          <div className="confirm-copy">
-            <p>실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.</p>
-            <dl className="definition-list">
-              <dt>선택 포지션</dt>
-              <dd>{selectedVisibleMarkets.join(', ')}</dd>
-              <dt>예상 평가액</dt>
-              <dd>{money(selectedPositionValue)}</dd>
-              <dt>현재 손익</dt>
-              <dd className={profitClass(selectedUnrealizedProfit)}>{money(selectedUnrealizedProfit)}</dd>
-              <dt>처리 범위</dt>
-              <dd>선택한 보유 PAPER 포지션 전량</dd>
-            </dl>
-          </div>
-        )}
-      />
-    </section>
-  );
-}
-
-function buildAssetMixSlices(cash: number, positionValue: number, totalEquity: number): AllocationSlice[] {
-  if (totalEquity <= 0) {
-    return [];
-  }
-  return [
-    { id: 'cash', label: '현금(Cash)', value: Math.max(0, cash), rate: (Math.max(0, cash) / totalEquity) * 100, color: CASH_COLOR },
-    { id: 'positions', label: '포지션(Positions)', value: Math.max(0, positionValue), rate: (Math.max(0, positionValue) / totalEquity) * 100, color: POSITION_COLOR },
-  ].filter((slice) => slice.value > 0);
-}
-
-function buildMarketAllocationSlices(positions: PositionValuationResponse[], totalEquity: number): AllocationSlice[] {
-  if (totalEquity <= 0 || positions.length === 0) {
-    return [];
-  }
-  const sorted = positions
-    .map((position) => ({
-      id: position.market,
-      label: position.market,
-      value: Math.max(0, Number(position.positionValue)),
-    }))
-    .filter((slice) => slice.value > 0)
-    .sort((left, right) => right.value - left.value);
-  const top = sorted.slice(0, 5);
-  const otherValue = sorted.slice(5).reduce((sum, slice) => sum + slice.value, 0);
-  const slices = otherValue > 0
-    ? [...top, { id: 'other', label: '기타(Other)', value: otherValue }]
-    : top;
-
-  return slices.map((slice, index) => ({
-    ...slice,
-    rate: (slice.value / totalEquity) * 100,
-    color: slice.id === 'other' ? OTHER_COLOR : MARKET_COLORS[index % MARKET_COLORS.length],
-  }));
-}
-
-function buildExchangeAllocationSlices(exchange: string, totalEquity: number): AllocationSlice[] {
-  if (totalEquity <= 0) {
-    return [];
-  }
-  return [{
-    id: exchange,
-    label: `${exchange} 선택 거래소(Selected exchange)`,
-    value: totalEquity,
-    rate: 100,
-    color: exchange === 'BINANCE' ? '#b7791f' : '#176b87',
-  }];
-}
-
-function AllocationPiePanel({
-  currency,
-  emptyDescription,
-  emptyTitle,
-  slices,
-  title,
-}: {
-  currency: string;
-  emptyDescription: string;
-  emptyTitle: string;
-  slices: AllocationSlice[];
-  title: string;
-}) {
-  return (
-    <article className="panel portfolio-chart-panel">
-      <div className="panel-title-row">
-        <h2>{title}</h2>
-        <PieIcon size={20} />
-      </div>
-      {slices.length === 0 ? (
-        <EmptyState title={emptyTitle} description={emptyDescription} />
-      ) : (
-        <div className="portfolio-chart-layout">
-          <div className="portfolio-pie-wrap" aria-label={title}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={slices} dataKey="value" nameKey="label" innerRadius="54%" outerRadius="82%" paddingAngle={2}>
-                  {slices.map((slice) => (
-                    <Cell key={slice.id} fill={slice.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(typeof value === 'number' || typeof value === 'string' ? value : null, currency)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="pie-legend">
-            {slices.map((slice) => (
-              <div className="pie-legend-item" key={slice.id}>
-                <span style={{ background: slice.color }} />
-                <strong>{slice.label}</strong>
-                <small>{formatCurrency(slice.value, currency)} · {formatNumber(slice.rate, 1)}%</small>
+          <div className="space-y-1">
+            {displaySell.results.map((r) => (
+              <div key={r.market} className="flex items-center gap-2 text-sm">
+                <span className="font-medium">{r.market}</span>
+                <span className="badge badge-outline">{r.orderStatus}</span>
+                <span className="text-muted-foreground text-xs">{r.message}</span>
               </div>
             ))}
           </div>
         </div>
       )}
-    </article>
+
+      {/* Position table */}
+      <div className="section overflow-x-auto">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>선택</th><th>마켓</th><th>수량</th><th>평균매수가</th>
+              <th>현재가</th><th>평가액</th><th>미실현 손익</th><th>수익률</th><th>비중</th><th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            {positions.map((p) => {
+              const rate = Number(p.unrealizedProfitRate);
+              const expRate = totalEquity > 0 ? Number(p.positionValue) / totalEquity * 100 : 0;
+              return (
+                <tr key={p.market}>
+                  <td>
+                    <input type="checkbox" aria-label={`${p.market} 선택`}
+                      checked={selectedMarkets.has(p.market)} disabled={sellMutation.isPending}
+                      onChange={() => toggle(p.market)} className="rounded" />
+                  </td>
+                  <td className="font-semibold">{p.market}</td>
+                  <td className="num text-sm">{formatNumber(p.quantity, 8)}</td>
+                  <td className="num text-sm">{money(p.averageBuyPrice)}</td>
+                  <td className="num text-sm">{money(p.currentPrice)}</td>
+                  <td className="num text-sm font-medium">{money(p.positionValue)}</td>
+                  <td className={cn('num text-sm', rate >= 0 ? 'pos' : 'neg')}>{money(p.unrealizedProfit)}</td>
+                  <td>
+                    <span className={cn('flex items-center gap-0.5 num text-sm font-semibold', rate >= 0 ? 'pos' : 'neg')}>
+                      {rate >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                      {formatNumber(rate, 2)}%
+                    </span>
+                  </td>
+                  <td className="num text-sm">{formatNumber(expRate, 2)}%</td>
+                  <td><ExitBadge rate={rate} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!valQ.isLoading && positions.length === 0 && (
+          <div className="empty-state"><strong>보유 포지션 없음</strong><span>자동 PAPER 매수가 체결되면 여기에 표시됩니다.</span></div>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="선택 PAPER SELL 확인"
+        confirmLabel="PAPER SELL 실행"
+        busy={sellMutation.isPending}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => { setConfirmOpen(false); sellMutation.mutate(selectedVisible); }}
+        description={(
+          <div>
+            <p className="text-sm mb-2">실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.</p>
+            <dl className="space-y-1 text-sm">
+              <div className="flex gap-2"><dt className="text-muted-foreground w-24">선택 포지션</dt><dd>{selectedVisible.join(', ')}</dd></div>
+              <div className="flex gap-2"><dt className="text-muted-foreground w-24">예상 평가액</dt><dd>{money(selectedValue)}</dd></div>
+              <div className="flex gap-2"><dt className="text-muted-foreground w-24">현재 손익</dt><dd className={selectedPnl >= 0 ? 'pos' : 'neg'}>{money(selectedPnl)}</dd></div>
+            </dl>
+          </div>
+        )}
+      />
+    </div>
   );
 }
 
-function sortPositions(positions: PositionValuationResponse[], sortKey: SortKey) {
-  return [...positions].sort((left, right) => {
-    if (sortKey === 'market') {
-      return left.market.localeCompare(right.market);
-    }
-    if (sortKey === 'value') {
-      return Number(right.positionValue) - Number(left.positionValue);
-    }
-    return Number(left.unrealizedProfitRate) - Number(right.unrealizedProfitRate);
-  });
-}
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
-function buildExposureRows(positions: PositionValuationResponse[], totalEquity: number) {
-  return [...positions]
-    .map((position) => ({
-      market: position.market,
-      positionValue: Number(position.positionValue),
-      unrealizedProfitRate: Number(position.unrealizedProfitRate),
-      exposureRate: totalEquity > 0 ? (Number(position.positionValue) / totalEquity) * 100 : 0,
-    }))
-    .sort((left, right) => right.positionValue - left.positionValue);
-}
-
-function exposureTone(exposureRate: number, warningRate: number, blockRate: number) {
-  if (exposureRate >= blockRate) {
-    return 'bad';
-  }
-  if (exposureRate >= warningRate) {
-    return 'warn';
-  }
-  return 'good';
-}
-
-function exposureLabel(exposureRate: number, warningRate: number, blockRate: number) {
-  if (exposureRate >= blockRate) {
-    return '차단 기준(Block)';
-  }
-  if (exposureRate >= warningRate) {
-    return '쏠림 경고(Warning)';
-  }
-  return '분산 양호(Diversified)';
-}
-
-function exposureShortLabel(exposureRate: number, warningRate: number, blockRate: number) {
-  if (exposureRate >= blockRate) {
-    return 'BLOCK';
-  }
-  if (exposureRate >= warningRate) {
-    return 'WARN';
-  }
-  return 'OK';
-}
-
-function profitClass(value: string | number) {
-  return Number(value) >= 0 ? 'tone-positive' : 'tone-negative';
-}
-
-function exposureRate(position: PositionValuationResponse, totalEquity: number) {
-  return totalEquity > 0 ? (Number(position.positionValue) / totalEquity) * 100 : 0;
-}
-
-function exitDistance(rate: number) {
-  const takeProfitGap = TAKE_PROFIT_RATE - rate;
-  const stopLossGap = rate - STOP_LOSS_RATE;
-  if (takeProfitGap <= 0) {
-    return '익절 조건 충족(TP reached)';
-  }
-  if (stopLossGap <= 0) {
-    return '손절 조건 충족(SL reached)';
-  }
-  return `TP ${formatNumber(takeProfitGap, 2)}% / SL ${formatNumber(stopLossGap, 2)}%`;
-}
-
-function AllocationBar({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
+function PiePanel({ title, currency, slices }: { title: string; currency: string; slices: AllocationSlice[] }) {
   return (
-    <div className="allocation-row">
-      <div className="allocation-label">
-        {icon}
-        <span>{label}</span>
+    <div className="section">
+      <div className="flex items-center gap-2 mb-2"><PieIcon size={15} className="text-muted-foreground" /><h2 className="section-title mb-0">{title}</h2></div>
+      {slices.length === 0
+        ? <p className="text-sm text-muted-foreground py-4 text-center">데이터 없음</p>
+        : (
+          <div className="flex gap-3">
+            <div className="h-28 w-28 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={slices} dataKey="value" innerRadius="50%" outerRadius="80%" paddingAngle={2}>
+                    {slices.map((s) => <Cell key={s.id} fill={s.color} />)}
+                  </Pie>
+                  <Tooltip formatter={(v) => formatCurrency(v as number, currency)} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1 flex-1 min-w-0">
+              {slices.map((s) => (
+                <div key={s.id} className="flex items-center gap-1.5 text-xs">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                  <span className="truncate text-muted-foreground">{s.label}</span>
+                  <span className="ml-auto shrink-0 font-medium">{formatNumber(s.rate, 1)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+    </div>
+  );
+}
+
+function Bar({ icon, label, value, color }: { icon: ReactNode; label: string; value: number; color: string }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-center justify-between text-sm mb-1">
+        <div className="flex items-center gap-1.5 text-muted-foreground">{icon}{label}</div>
         <strong>{formatNumber(value, 1)}%</strong>
       </div>
-      <div className="allocation-track">
-        <span style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${Math.min(100, value)}%`, background: color }} />
       </div>
     </div>
   );
 }
 
-function LeaderItem({
-  title,
-  position,
-  currency,
-  positive = false,
-}: {
-  title: string;
-  position: PositionValuationResponse | null;
-  currency: string;
-  positive?: boolean;
-}) {
-  if (!position) {
-    return (
-      <div className="leader-item">
-        <span>{title}</span>
-        <strong>-</strong>
-        <small>보유 없음(No position)</small>
-      </div>
-    );
-  }
-
+function LeaderItem({ title, pos, currency, positive = false }: { title: string; pos: PositionValuationResponse | null; currency: string; positive?: boolean }) {
   return (
-    <div className="leader-item">
-      <span>{title}</span>
-      <strong>{position.market}</strong>
-      <small className={positive ? 'tone-positive' : profitClass(position.unrealizedProfitRate)}>
-        {formatNumber(position.unrealizedProfitRate, 2)}% / {formatCurrency(position.unrealizedProfit, currency)}
-      </small>
+    <div className="mb-3">
+      <p className="text-xs text-muted-foreground mb-0.5">{title}</p>
+      {pos ? (
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-semibold">{pos.market}</span>
+          <span className={cn(positive || Number(pos.unrealizedProfitRate) >= 0 ? 'pos' : 'neg', 'num text-xs')}>
+            {formatNumber(pos.unrealizedProfitRate, 2)}% / {formatCurrency(pos.unrealizedProfit, currency)}
+          </span>
+        </div>
+      ) : <p className="text-sm text-muted-foreground">-</p>}
     </div>
   );
 }
 
 function ExitBadge({ rate }: { rate: number }) {
-  if (rate >= TAKE_PROFIT_RATE) {
-    return <Badge tone="good">익절권(Take profit)</Badge>;
-  }
-  if (rate <= STOP_LOSS_RATE) {
-    return <Badge tone="bad">손절권(Stop loss)</Badge>;
-  }
-  if (TAKE_PROFIT_RATE - rate <= 0.3) {
-    return <Badge tone="info">익절 근접(Near TP)</Badge>;
-  }
-  if (rate - STOP_LOSS_RATE <= 0.3) {
-    return <Badge tone="warn">손절 근접(Near SL)</Badge>;
-  }
-  return <Badge>보유(Hold)</Badge>;
+  if (rate >= TP) return <span className="badge badge-success">익절권</span>;
+  if (rate <= SL) return <span className="badge badge-destructive">손절권</span>;
+  if (TP - rate <= 0.3) return <span className="badge badge-default">익절 근접</span>;
+  if (rate - SL <= 0.3) return <span className="badge badge-warning">손절 근접</span>;
+  return <span className="badge badge-outline">보유</span>;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function sortPositions(positions: PositionValuationResponse[], key: SortKey) {
+  return [...positions].sort((a, b) =>
+    key === 'market' ? a.market.localeCompare(b.market)
+      : key === 'value' ? Number(b.positionValue) - Number(a.positionValue)
+        : Number(a.unrealizedProfitRate) - Number(b.unrealizedProfitRate));
+}
+
+function buildExposureRows(positions: PositionValuationResponse[], totalEquity: number) {
+  return [...positions].map((p) => ({
+    market: p.market,
+    positionValue: Number(p.positionValue),
+    unrealizedProfitRate: Number(p.unrealizedProfitRate),
+    exposureRate: totalEquity > 0 ? Number(p.positionValue) / totalEquity * 100 : 0,
+  })).sort((a, b) => b.positionValue - a.positionValue);
+}
+
+function buildAssetSlices(cash: number, posVal: number, total: number): AllocationSlice[] {
+  if (total <= 0) return [];
+  return [
+    { id: 'cash', label: '현금', value: Math.max(0, cash), rate: Math.max(0, cash) / total * 100, color: '#16a34a' },
+    { id: 'pos', label: '포지션', value: Math.max(0, posVal), rate: Math.max(0, posVal) / total * 100, color: '#2563eb' },
+  ].filter((s) => s.value > 0);
+}
+
+function buildMarketSlices(positions: PositionValuationResponse[], total: number): AllocationSlice[] {
+  if (total <= 0 || positions.length === 0) return [];
+  const sorted = positions.map((p) => ({ id: p.market, label: p.market, value: Math.max(0, Number(p.positionValue)) }))
+    .filter((s) => s.value > 0).sort((a, b) => b.value - a.value);
+  const top = sorted.slice(0, 5);
+  const other = sorted.slice(5).reduce((s, x) => s + x.value, 0);
+  const slices = other > 0 ? [...top, { id: 'other', label: '기타', value: other }] : top;
+  return slices.map((s, i) => ({ ...s, rate: s.value / total * 100, color: s.id === 'other' ? '#94a3b8' : COLORS[i % COLORS.length] }));
 }
