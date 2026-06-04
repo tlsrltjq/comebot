@@ -206,5 +206,44 @@
 
 - **다음 선택지** (우선순위 미정):
   a. 신규 진입 가설 (다른 시장 구조 — 예: 브레이크아웃, 모멘텀 다이버전스)
-  b. 거래 비용 구조 변경 (빈도 대폭 축소, maker 주문 전환)
-  c. PAPER 운용 유지 + 데이터 축적 (현 전략이 OOS에서 점차 개선되는지 관찰)
+  b. 거래 비용 구조 변경 (빈도 대폭 축소, maker 주문 전환) → ADR-013에서 채택
+
+---
+
+## ADR-013: 지정가(Limit) 진입 구현 — OOS 검증 통과 (2026-06-04)
+
+- **배경**: ADR-012에서 taker 수수료(~0.1% 왕복)가 gross edge(~0.066%)를 잡아먹는다는 것을 확인.
+  maker 비용 가정(fee=0%)으로 V0를 재실행한 결과 OOS gate 통과 → 신호 자체는 살아있음.
+
+- **검증 결과** (maker-entry 0% + taker-exit 0.05%, 2025-11-23~2026-05-22, train<2026-03-23):
+
+  | 항목 | 수치 |
+  |---|---|
+  | 시그널 수 | 1,307개 |
+  | 체결 | 1,265개 (fill_rate 96.8%) |
+  | 만료 | 42개 (fill_window=5분) |
+  | train PF | 1.047 |
+  | test PF | 1.076 |
+  | train-test gap | 0.028 (< 0.15 ✅) |
+  | test PF ≥ 1.05 | ✅ |
+  | MDD (test) | 67.8% |
+
+- **구현 내용** (`feat: limit order entry` 커밋):
+  - `PendingLimitOrder` — 대기 주문 도메인 (exchange, market, limitPrice, firstCheckAt, expiresAt)
+  - `PendingLimitOrderService` — ConcurrentHashMap 보관, `checkAndFillAll()` per tick
+  - `OrderExecutionService.fillLimitOrder()` — 체결 시 full risk + portfolio 검증
+  - `CandidateExecutionService` — 즉시 체결 → limit 등록으로 교체
+  - `ScheduledPositionExitRunner` — 매 tick마다 fill 체크 추가
+
+- **검증된 안전 장치**:
+  1. **same-candle fill 없음**: `firstCheckAt = createdAt + candleUnitMinutes`. 신호 캔들 자신은 체결 대상에서 제외.
+  2. **미완성 캔들 제외**: `removeIncompleteLatestCandle()`로 closed candle만 사용.
+  3. **체결 판정 = 다음 캔들부터**: `wait >= 1` 조건, 신호 캔들 close 이후 첫 tick부터 체결 검사.
+  4. **5분 만료**: 미체결 시 자동 취소, 다음 신호 사이클 재진입 가능.
+
+- **한계 및 전제**:
+  - 실거래 전환 시 maker 주문 체결 보장은 없음 (adverse selection 위험). PAPER에서는 항상 체결.
+  - MDD 67.8%는 높음. 포지션 크기 관리(기존 리스크 정책) 필수.
+  - REAL_TRADING 미구현. 실제 주문 API 없음.
+
+- **재검토 조건**: 2~4주 PAPER 운용 후 fill_rate, 실제 PF를 측정하여 백테스트 수치와 대조.

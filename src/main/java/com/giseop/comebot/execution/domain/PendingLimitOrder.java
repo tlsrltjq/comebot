@@ -11,6 +11,7 @@ public record PendingLimitOrder(
         BigDecimal quantity,
         String reason,
         Instant createdAt,
+        Instant firstCheckAt,
         Instant expiresAt
 ) {
 }
