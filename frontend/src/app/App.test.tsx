@@ -49,8 +49,8 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'BINANCE' })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByLabelText('운영 상태 바(Operation status bar)')).toBeInTheDocument();
     expect(screen.getAllByText('PAPER_TRADING').length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /Risk/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /System/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /리스크/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /시스템/ })).toBeInTheDocument();
   });
 
   it('reads and updates exchange mode from the URL query', async () => {

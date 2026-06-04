@@ -223,11 +223,11 @@ export function DashboardPage() {
           <div className="chart-wrap">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={signalChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#21262d" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: '#8b949e', fontSize: 12 }} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tick={{ fill: '#8b949e', fontSize: 12 }} />
-                <Tooltip contentStyle={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 5, color: '#c9d1d9', fontSize: 12 }} />
-                <Bar dataKey="count" fill="#58a6ff" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={36} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#176b87" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

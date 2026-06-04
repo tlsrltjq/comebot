@@ -9,14 +9,14 @@ import { ExchangeModeContext, exchangeParam } from '../shared/exchange/ExchangeM
 import { LiveStatus } from '../shared/ui/LiveStatus';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: Activity },
-  { to: '/market', label: 'Markets', icon: TrendingUp },
-  { to: '/candidates', label: 'Candidates', icon: Radar },
-  { to: '/portfolio', label: 'Portfolio', icon: PieChart },
-  { to: '/history', label: 'History', icon: Clock3 },
-  { to: '/risk', label: 'Risk', icon: TriangleAlert },
-  { to: '/system', label: 'System', icon: MonitorCog },
-  { to: '/trade', label: 'Auto Run', icon: LineChart },
+  { to: '/', label: '대시보드(Dashboard)', icon: Activity },
+  { to: '/market', label: '시장(Markets)', icon: TrendingUp },
+  { to: '/candidates', label: '후보(Candidates)', icon: Radar },
+  { to: '/portfolio', label: '포트폴리오(Portfolio)', icon: PieChart },
+  { to: '/history', label: '이력(History)', icon: Clock3 },
+  { to: '/risk', label: '리스크(Risk)', icon: TriangleAlert },
+  { to: '/system', label: '시스템(System)', icon: MonitorCog },
+  { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
 ];
 
 export function App() {

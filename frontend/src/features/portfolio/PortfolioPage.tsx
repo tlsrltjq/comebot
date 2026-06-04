@@ -25,10 +25,10 @@ type AllocationSlice = {
 
 const TAKE_PROFIT_RATE = 1.5;
 const STOP_LOSS_RATE = -0.7;
-const MARKET_COLORS = ['#58a6ff', '#3fb950', '#e3b341', '#f85149', '#a371f7', '#fd8c73'];
-const CASH_COLOR = '#3fb950';
-const POSITION_COLOR = '#58a6ff';
-const OTHER_COLOR = '#8b949e';
+const MARKET_COLORS = ['#176b87', '#1f8a70', '#b7791f', '#8c5a2b', '#5d6d7e', '#bd3d2f'];
+const CASH_COLOR = '#1f8a70';
+const POSITION_COLOR = '#176b87';
+const OTHER_COLOR = '#7b8794';
 export function PortfolioPage() {
   const [sortKey, setSortKey] = useState<SortKey>('profitRate');
   const [selectedMarkets, setSelectedMarkets] = useState<Set<string>>(() => new Set());
@@ -507,7 +507,7 @@ function AllocationPiePanel({
                     <Cell key={slice.id} fill={slice.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 5, color: '#c9d1d9', fontSize: 12 }} formatter={(value) => formatCurrency(typeof value === 'number' || typeof value === 'string' ? value : null, currency)} />
+                <Tooltip formatter={(value) => formatCurrency(typeof value === 'number' || typeof value === 'string' ? value : null, currency)} />
               </PieChart>
             </ResponsiveContainer>
           </div>
