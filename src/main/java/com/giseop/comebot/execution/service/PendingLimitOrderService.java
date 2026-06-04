@@ -5,37 +5,58 @@ import com.giseop.comebot.execution.domain.OrderStatus;
 import com.giseop.comebot.execution.domain.PendingLimitOrder;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.history.service.TradingFlowHistoryService;
+import com.giseop.comebot.market.domain.TickerSnapshot;
 import com.giseop.comebot.market.service.TickerSnapshotStore;
+import com.giseop.comebot.market.websocket.MarketWebSocketProperties;
 import com.giseop.comebot.notification.NotificationPolicyService;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.notification.TradingFlowNotificationService;
-import com.giseop.comebot.strategy.candidate.CandidateScannerProperties;
 import com.giseop.comebot.strategy.domain.SignalType;
 import com.giseop.comebot.trading.service.TradingFlowResult;
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+/**
+ * Maker-style limit entry for PAPER trading.
+ *
+ * <p>Lifecycle: a BUY signal places a limit order at the signal candle's close price.
+ * The order fills only when a <em>fresh</em> ticker snapshot whose price is at or below
+ * the limit arrives <em>after</em> the order was created. It expires unfilled after
+ * {@link #EXPIRY}.
+ *
+ * <p>Two invariants guarantee backtest parity and safety:
+ * <ol>
+ *   <li><b>No same-candle fill.</b> The signal is computed from closed candles, so
+ *       {@code createdAt} is strictly after the signal candle's close. We only fill on a
+ *       snapshot with {@code capturedAt > createdAt}, i.e. a price observed in candle i+1
+ *       or later — never the signal candle itself.</li>
+ *   <li><b>No stale-price fill.</b> We require {@link TickerSnapshotStore#findFresh} within
+ *       the websocket order-stale window, so a disconnected/old feed cannot trigger a fill.</li>
+ * </ol>
+ */
 @Service
 public class PendingLimitOrderService {
 
     private static final Logger log = LoggerFactory.getLogger(PendingLimitOrderService.class);
     private static final Duration EXPIRY = Duration.ofMinutes(5);
+    private static final Duration DEFAULT_STALE = Duration.ofSeconds(30);
 
     private final ConcurrentHashMap<String, PendingLimitOrder> pending = new ConcurrentHashMap<>();
 
-    // stats counters (reset on each fill/expire cycle, used for logging)
     private final AtomicLong totalSignals = new AtomicLong(0);
     private final AtomicLong totalFills   = new AtomicLong(0);
     private final AtomicLong totalExpired = new AtomicLong(0);
+    private final AtomicLong totalSameCandleSkips = new AtomicLong(0);
+    private final AtomicLong totalStaleSkips = new AtomicLong(0);
 
-    private final CandidateScannerProperties candidateScannerProperties;
     private final TickerSnapshotStore tickerSnapshotStore;
+    private final MarketWebSocketProperties marketWebSocketProperties;
     private final OrderExecutionService orderExecutionService;
     private final TradingFlowHistoryService tradingFlowHistoryService;
     private final TradingFlowNotificationService tradingFlowNotificationService;
@@ -43,16 +64,16 @@ public class PendingLimitOrderService {
     private final NotificationPolicyService notificationPolicyService;
 
     public PendingLimitOrderService(
-            CandidateScannerProperties candidateScannerProperties,
             TickerSnapshotStore tickerSnapshotStore,
+            MarketWebSocketProperties marketWebSocketProperties,
             OrderExecutionService orderExecutionService,
             TradingFlowHistoryService tradingFlowHistoryService,
             TradingFlowNotificationService tradingFlowNotificationService,
             NotificationProperties notificationProperties,
             NotificationPolicyService notificationPolicyService
     ) {
-        this.candidateScannerProperties = candidateScannerProperties;
         this.tickerSnapshotStore = tickerSnapshotStore;
+        this.marketWebSocketProperties = marketWebSocketProperties;
         this.orderExecutionService = orderExecutionService;
         this.tradingFlowHistoryService = tradingFlowHistoryService;
         this.tradingFlowNotificationService = tradingFlowNotificationService;
@@ -60,34 +81,23 @@ public class PendingLimitOrderService {
         this.notificationPolicyService = notificationPolicyService;
     }
 
-    /**
-     * Place a limit buy order at limitPrice.
-     * Fill check is deferred by one candle unit to prevent same-candle fill —
-     * signal fires after candle i closes; fill can only happen on candle i+1 or later.
-     */
-    public void place(ExchangeMode exchange, String market, BigDecimal limitPrice, BigDecimal quantity, String reason) {
+    public void place(ExchangeMode exchange, String market, java.math.BigDecimal limitPrice,
+                      java.math.BigDecimal quantity, String reason) {
         Instant now = Instant.now();
-        int candleUnitMinutes = candidateScannerProperties.getCandleUnitMinutes(exchange);
-        Instant firstCheckAt = now.plus(Duration.ofSeconds(candleUnitMinutes * 60L));
-        Instant expiresAt    = now.plus(EXPIRY);
         pending.put(key(exchange, market),
-                new PendingLimitOrder(exchange, market, limitPrice, quantity, reason,
-                        now, firstCheckAt, expiresAt));
+                new PendingLimitOrder(exchange, market, limitPrice, quantity, reason, now, now.plus(EXPIRY)));
         totalSignals.incrementAndGet();
-        log.info("[LIMIT-ENTRY] PLACED market={} limitPrice={} firstCheckAt={}s candleUnit={}m",
-                market, limitPrice, candleUnitMinutes * 60, candleUnitMinutes);
+        log.info("[LIMIT-ENTRY] PLACED market={} limitPrice={} expiresInSec={}",
+                market, limitPrice, EXPIRY.toSeconds());
     }
 
     public boolean hasPending(ExchangeMode exchange, String market) {
         return pending.containsKey(key(exchange, market));
     }
 
-    /**
-     * Called each exit-scheduler tick.
-     * Skips fill check before firstCheckAt (same-candle fill guard).
-     */
     public void checkAndFillAll(ExchangeMode exchange) {
         Instant now = Instant.now();
+        Duration staleAfter = staleAfter();
         for (var entry : pending.entrySet()) {
             PendingLimitOrder order = entry.getValue();
             if (order.exchange() != exchange) {
@@ -96,30 +106,34 @@ public class PendingLimitOrderService {
             if (now.isAfter(order.expiresAt())) {
                 pending.remove(entry.getKey());
                 totalExpired.incrementAndGet();
-                log.info("[LIMIT-ENTRY] EXPIRED  market={} limitPrice={} signals={} fills={} expired={} fillRate={:.1f}%",
-                        order.market(), order.limitPrice(),
-                        totalSignals.get(), totalFills.get(), totalExpired.get(), fillRate());
+                log.info("[LIMIT-ENTRY] EXPIRED market={} limitPrice={} {}",
+                        order.market(), order.limitPrice(), stats());
                 continue;
             }
-            // Same-candle fill guard: do not check fill until one candle unit has elapsed
-            if (now.isBefore(order.firstCheckAt())) {
+            Optional<TickerSnapshot> fresh = tickerSnapshotStore.findFresh(exchange, order.market(), staleAfter, now);
+            if (fresh.isEmpty()) {
+                // No fresh snapshot — stale feed or no data. Do not fill (safe).
+                totalStaleSkips.incrementAndGet();
                 continue;
             }
-            tickerSnapshotStore.find(exchange, order.market()).ifPresent(snap -> {
-                if (snap.tradePrice().compareTo(order.limitPrice()) <= 0) {
-                    pending.remove(entry.getKey());
-                    fill(exchange, order);
-                }
-            });
+            TickerSnapshot snap = fresh.get();
+            // Same-candle guard: only accept a price observed strictly after the order was created.
+            if (!snap.capturedAt().isAfter(order.createdAt())) {
+                totalSameCandleSkips.incrementAndGet();
+                continue;
+            }
+            if (snap.tradePrice().compareTo(order.limitPrice()) <= 0) {
+                pending.remove(entry.getKey());
+                fill(exchange, order, snap.capturedAt());
+            }
         }
     }
 
-    private void fill(ExchangeMode exchange, PendingLimitOrder order) {
+    private void fill(ExchangeMode exchange, PendingLimitOrder order, Instant filledAtPriceTime) {
         OrderResult result = orderExecutionService.fillLimitOrder(exchange, order);
         totalFills.incrementAndGet();
-        log.info("[LIMIT-ENTRY] FILLED  market={} price={} status={} signals={} fills={} expired={} fillRate={:.1f}%",
-                order.market(), order.limitPrice(), result.status(),
-                totalSignals.get(), totalFills.get(), totalExpired.get(), fillRate());
+        log.info("[LIMIT-ENTRY] FILLED market={} limitPrice={} priceTime={} status={} {}",
+                order.market(), order.limitPrice(), filledAtPriceTime, result.status(), stats());
         TradingFlowResult flowResult = new TradingFlowResult(
                 order.market(),
                 order.limitPrice(),
@@ -140,9 +154,21 @@ public class PendingLimitOrderService {
         }
     }
 
-    private double fillRate() {
+    private Duration staleAfter() {
+        if (marketWebSocketProperties == null) {
+            return DEFAULT_STALE;
+        }
+        Duration d = marketWebSocketProperties.orderStaleDuration();
+        return d == null ? DEFAULT_STALE : d;
+    }
+
+    private String stats() {
         long settled = totalFills.get() + totalExpired.get();
-        return settled == 0 ? 0.0 : totalFills.get() * 100.0 / settled;
+        double fillRate = settled == 0 ? 0.0 : totalFills.get() * 100.0 / settled;
+        return String.format(
+                "signals=%d fills=%d expired=%d fillRate=%.1f%% sameCandleSkips=%d staleSkips=%d",
+                totalSignals.get(), totalFills.get(), totalExpired.get(), fillRate,
+                totalSameCandleSkips.get(), totalStaleSkips.get());
     }
 
     private static String key(ExchangeMode exchange, String market) {

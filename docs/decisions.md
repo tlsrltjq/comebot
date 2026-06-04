@@ -210,40 +210,63 @@
 
 ---
 
-## ADR-013: 지정가(Limit) 진입 구현 — OOS 검증 통과 (2026-06-04)
+## ADR-013: 지정가(Limit) 진입 구현 — 조건부 채택, PAPER 관찰 단계 (2026-06-04)
 
 - **배경**: ADR-012에서 taker 수수료(~0.1% 왕복)가 gross edge(~0.066%)를 잡아먹는다는 것을 확인.
-  maker 비용 가정(fee=0%)으로 V0를 재실행한 결과 OOS gate 통과 → 신호 자체는 살아있음.
+  maker 비용 가정으로 재실행 시 신호가 살아남아, 지정가(maker) 진입을 PAPER에 구현하고 검증.
 
-- **검증 결과** (maker-entry 0% + taker-exit 0.05%, 2025-11-23~2026-05-22, train<2026-03-23):
+- **후보 비교** (maker-entry + taker-exit 0.05%, 2025-11-23~2026-05-22, train<2026-03-23):
 
-  | 항목 | 수치 |
-  |---|---|
-  | 시그널 수 | 1,307개 |
-  | 체결 | 1,265개 (fill_rate 96.8%) |
-  | 만료 | 42개 (fill_window=5분) |
-  | train PF | 1.047 |
-  | test PF | 1.076 |
-  | train-test gap | 0.028 (< 0.15 ✅) |
-  | test PF ≥ 1.05 | ✅ |
-  | MDD (test) | 67.8% |
+  | 조건 | train PF | test PF | gap | 거래(tr/te) | 체결률 | 판단 |
+  |---|---|---|---|---|---|---|
+  | 1 taker entry/exit | 0.942 | 1.009 | 0.067 | 876/380 | 100% | FAIL |
+  | 2 maker@close w1 | 1.041 | 1.071 | 0.030 | 861/389 | 91.8% | 보류 |
+  | 3 maker@close w3 | 1.043 | 1.064 | 0.020 | 874/388 | 95.8% | 보류 |
+  | **4 maker@close w5** | **1.047** | **1.076** | **0.028** | **869/388** | **96.8%** | **보류(선택)** |
+  | 5 maker@-0.1% w3 | 0.936 | 1.045 | 0.109 | 844/381 | 48.8% | FAIL |
+  | 6 maker@-0.1% w5 | 0.972 | 1.034 | 0.063 | 853/375 | 58.9% | FAIL |
+  | 7 maker@-0.2% w5 | 1.009 | 1.076 | 0.067 | 806/346 | 32.2% | 보류 |
 
-- **구현 내용** (`feat: limit order entry` 커밋):
-  - `PendingLimitOrder` — 대기 주문 도메인 (exchange, market, limitPrice, firstCheckAt, expiresAt)
-  - `PendingLimitOrderService` — ConcurrentHashMap 보관, `checkAndFillAll()` per tick
+- **정직한 판정 — 보류(조건부), PASS 아님**:
+  - strict 기준(train PF ≥ 1.05 AND test PF ≥ 1.05)을 깨끗이 통과하는 후보는 **없음**.
+  - 선택한 maker@close w5는 train PF=1.047로 1.05 바로 **아래** (0.003 미달). test/gap/체결률은 양호.
+  - 따라서 "검증된 엣지"가 아니라 **"break-even 대비 구조적 개선이 확인된, PAPER 관찰 대상"** 으로 판정.
+
+- **선택: maker@close, 5분 유효 (후보 4)**. 가장 높은 수익이 아니라 **가장 덜 의심스러운** 조건이라서:
+  - 체결률 96.8% (의미 있는 후보 중 최고) → adverse selection 노출 최소
+  - 거래 수 충분 (869/388), gap 0.028로 train/test 안정
+  - 규칙 단순: limit = 신호 캔들 close, 5분 유효 (추가 필터 없음)
+  - offset(-0.1%/-0.2%) 후보는 체결률 급락(32~59%)·불안정 → 탈락
+
+- **taker 대비 개선점**: train PF 0.942→1.047, test PF 1.009→1.076, train MDD 190%→101%.
+  손실 구조(taker)에서 marginal 흑자 구조로 이동. 단, 흑자 폭은 얇음.
+
+- **구현/감사 수정 내용**:
+  - `PendingLimitOrder(exchange, market, limitPrice, quantity, reason, createdAt, expiresAt)`
+  - `PendingLimitOrderService` — ConcurrentHashMap 보관, `checkAndFillAll()` per exit tick
   - `OrderExecutionService.fillLimitOrder()` — 체결 시 full risk + portfolio 검증
-  - `CandidateExecutionService` — 즉시 체결 → limit 등록으로 교체
-  - `ScheduledPositionExitRunner` — 매 tick마다 fill 체크 추가
+  - `CandidateExecutionService` — 즉시 체결 → limit 등록 (동일 마켓 중복 pending 방지)
+  - `ScheduledPositionExitRunner` — readiness OK인 exchange에 한해 fill 체크
 
-- **검증된 안전 장치**:
-  1. **same-candle fill 없음**: `firstCheckAt = createdAt + candleUnitMinutes`. 신호 캔들 자신은 체결 대상에서 제외.
-  2. **미완성 캔들 제외**: `removeIncompleteLatestCandle()`로 closed candle만 사용.
-  3. **체결 판정 = 다음 캔들부터**: `wait >= 1` 조건, 신호 캔들 close 이후 첫 tick부터 체결 검사.
-  4. **5분 만료**: 미체결 시 자동 취소, 다음 신호 사이클 재진입 가능.
+- **2차 감사에서 수정한 버그**:
+  1. **firstCheckAt 과보수 버그 제거**: 이전 `firstCheckAt = now + candleUnit`은 첫 체결을 candle i+2로 밀어
+     백테스트(i+1)와 불일치. → 제거하고 `capturedAt > createdAt` 조건으로 대체.
+  2. **stale price 체결 위험 제거**: `find()` → `findFresh(orderStaleDuration)`로 교체.
 
-- **한계 및 전제**:
-  - 실거래 전환 시 maker 주문 체결 보장은 없음 (adverse selection 위험). PAPER에서는 항상 체결.
-  - MDD 67.8%는 높음. 포지션 크기 관리(기존 리스크 정책) 필수.
-  - REAL_TRADING 미구현. 실제 주문 API 없음.
+- **검증된 안전 불변식**:
+  1. **same-candle fill 0건**: 신호는 closed candle 기반 → `createdAt`은 신호 캔들 close 이후.
+     체결은 `capturedAt > createdAt`인 snapshot에서만 → 신호 캔들 가격으로는 절대 체결 불가.
+  2. **stale 방지**: `findFresh` + 스케줄러 `readiness.ready()` 이중 가드.
+  3. **미완성 캔들 제외**: `removeIncompleteLatestCandle()`로 closed candle만 신호에 사용.
 
-- **재검토 조건**: 2~4주 PAPER 운용 후 fill_rate, 실제 PF를 측정하여 백테스트 수치와 대조.
+- **한계 및 아직 실거래가 아닌 이유**:
+  - train PF가 1.05 미달 → 통계적으로 "확정 엣지" 아님. 더 많은 OOS 데이터 필요.
+  - 실거래 maker 주문은 **체결 보장 없음** (adverse selection). PAPER는 fresh snapshot이면 항상 체결 → 낙관 편향 가능.
+  - MDD 100%+ (train) → 포지션 크기·동시 노출 관리 필수. 기존 일일 손실·쏠림 리스크 정책 유지.
+  - 앱 재시작 시 in-memory pending 소실 → PAPER에선 다음 스캔(60초)에 재생성되므로 허용. 실거래 전 영속화 필요.
+  - REAL_TRADING / 실제 주문 API 미구현 (불변).
+
+- **다음 PAPER 관찰 항목 / 중단 기준**:
+  - 관찰: 실제 fill_rate(목표 ≥ 90%), 실체결 PF, same-candle fill 0건 유지, stale skip 빈도.
+  - 중단: 실 fill_rate < 80%, 또는 누적 PF < 0.95, 또는 same-candle fill 1건이라도 발생 시 차단·재분석.
+  - 재검토: 2~4주 후 실 PAPER 수치 vs 백테스트(96.8% / 1.076) 대조하여 채택/폐기 결정.

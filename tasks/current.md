@@ -1,6 +1,29 @@
 # tasks/current.md — 현재 작업 컨텍스트
 
-## 단계: 전략 재설계 — UI 리뉴얼 완료, 진입 신호 OOS 결과 대기
+## 단계: 지정가(maker) 진입 구현 완료 → PAPER 관찰 대기 (ADR-013, 보류/조건부)
+
+### 2026-06-04 maker-entry 지정가 진입 (ADR-013)
+- [x] PendingLimitOrder / PendingLimitOrderService 구현 (limit@close, 5분 유효)
+- [x] CandidateExecutionService: 즉시 시장가 → limit 등록으로 교체
+- [x] OrderExecutionService.fillLimitOrder: 체결 시 full risk+portfolio 검증
+- [x] ScheduledPositionExitRunner: readiness OK exchange만 fill 체크
+- [x] 2차 감사 버그 수정: firstCheckAt 과보수(i+2) 제거 → capturedAt>createdAt;
+      stale price 체결 위험 제거 → findFresh(orderStaleDuration)
+- [x] 단위 테스트 6종 (same-candle 0건/stale 거부/정상 체결/중복 방지/교차 격리)
+- [x] 후보 7종 비교 → maker@close w5 선택 (train 1.047 / test 1.076 / 체결률 96.8%)
+
+**판정: 보류(조건부)** — strict 기준(train PF≥1.05) 미달(1.047). 검증된 엣지 아님,
+"break-even 대비 구조적 개선이 확인된 PAPER 관찰 대상".
+
+### 다음: PAPER 운용 관찰 (2~4주)
+- [ ] 봇 재기동 후 실제 fill_rate / 실체결 PF / same-candle fill 0건 / stale skip 관찰
+- [ ] 중단 기준: fill_rate<80% OR 누적 PF<0.95 OR same-candle fill 1건이라도 발생
+- [ ] 2~4주 후 실 PAPER 수치 vs 백테스트(96.8%/1.076) 대조 → 채택/폐기 결정
+- 실거래 전환은 하지 않음 (train PF 미달 + maker 체결 보장 없음)
+
+---
+
+## (이전) 진입 신호 OOS 결과 대기
 
 ## 2026-06-02 청산 재설계 (완료, ADR-011)
 

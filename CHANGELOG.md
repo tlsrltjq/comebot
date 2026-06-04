@@ -1,7 +1,8 @@
 # 변경 이력
 
-2026-06-04 | entry | fix: same-candle fill guard (firstCheckAt), ADR-013 검증 통과 — maker-entry+taker-exit OOS ✅
-2026-06-04 | entry | feat: limit order entry (PendingLimitOrderService, fillLimitOrder, firstCheckAt guard)
+2026-06-04 | entry | fix: 2차 감사 — firstCheckAt 과보수(i+2) 제거→capturedAt>createdAt, stale 체결 방지→findFresh, 단위테스트 6종 (ADR-013 보류/조건부)
+2026-06-04 | entry | fix: same-candle fill guard (firstCheckAt), ADR-013 검증 — maker-entry+taker-exit
+2026-06-04 | entry | feat: limit order entry (PendingLimitOrderService, fillLimitOrder)
 2026-06-04 | strategy | docs: ADR-012 — 진입 신호 재설계 OOS 전체 실패, 현행 1m×20 유지 결정
 2026-06-03 | ui | feat: UI 전면 다크모드 리뉴얼 — 트레이딩 콘솔 스타일 (GitHub dark 팔레트, 고밀도 레이아웃, 모노스페이스 숫자, Recharts 다크모드 색상 통일)
 
