@@ -18,6 +18,7 @@ import type {
   TradingCandidateResponse,
   TradingFlowHistoryResponse,
   MarketFlowSummary,
+  MarketSentimentSnapshot,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -85,6 +86,8 @@ export const api = {
     request<BtcChangeChartResponse>(`/api/market/btc-change${query({ exchange: exchangeParam(exchange), range })}`),
   fundFlow: (exchange: ExchangeMode = 'UPBIT') =>
     request<MarketFlowSummary>(`/api/market/fund-flow${query({ exchange: exchangeParam(exchange) })}`),
+  sentiment: () =>
+    request<MarketSentimentSnapshot>('/api/market/sentiment'),
 };
 
 export const queryKeys = {
@@ -101,4 +104,5 @@ export const queryKeys = {
   analyticsLosses: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsLosses', exchange, range] as const,
   btcChange: (range: BtcChangeRange, exchange: ExchangeMode = 'UPBIT') => ['btcChange', exchange, range] as const,
   fundFlow: (exchange: ExchangeMode = 'UPBIT') => ['fundFlow', exchange] as const,
+  sentiment: () => ['sentiment'] as const,
 };

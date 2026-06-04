@@ -85,6 +85,13 @@ const router = createBrowserRouter([
           return { Component: MarketFundFlowPage };
         },
       },
+      {
+        path: 'sentiment',
+        lazy: async () => {
+          const { MarketSentimentPage } = await import('./features/market/MarketSentimentPage');
+          return { Component: MarketSentimentPage };
+        },
+      },
     ],
   },
 ]);

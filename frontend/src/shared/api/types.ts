@@ -270,6 +270,33 @@ export interface BtcChangeChartResponse {
   points: BtcChangePointResponse[];
 }
 
+export interface SentimentSignal {
+  name: string;
+  value: string;
+  note: string;
+  score: number;
+  direction: 'BULLISH' | 'NEUTRAL' | 'BEARISH';
+}
+
+export interface MarketSentimentSnapshot {
+  refreshedAt: string;
+  totalMarketCapBillionUsd: number;
+  totalMarketCapChange24hPct: number;
+  btcDominancePct: number;
+  stablecoinMarketCapBillionUsd: number;
+  stablecoinChange24hPct: number;
+  btcFundingRatePct: number;
+  ethFundingRatePct: number;
+  btcOpenInterestBillionUsd: number;
+  btcOiChange4hPct: number;
+  btcLongShortRatio: number;
+  exchangeFlowNote: string;
+  liquidationNote: string;
+  riskScore: number;
+  riskLabel: 'RISK_ON' | 'NEUTRAL' | 'RISK_OFF';
+  signals: SentimentSignal[];
+}
+
 export interface MarketFlowEntry {
   market: string;
   rank: number;
