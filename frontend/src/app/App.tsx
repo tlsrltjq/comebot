@@ -1,36 +1,60 @@
 import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
-import { Activity, BarChart3, BrainCircuit, Clock3, Database, DollarSign, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert, Wallet } from 'lucide-react';
+import {
+  Activity, BarChart3, BrainCircuit, Clock3, DollarSign,
+  LineChart, MonitorCog, PieChart, Radar, Radio,
+  ShieldCheck, ShieldX, TrendingUp, TriangleAlert, Wallet, Database,
+} from 'lucide-react';
 import { api, queryKeys } from '../shared/api/client';
 import { POLLING_INTERVALS } from '../shared/api/polling';
 import type { ExchangeMode } from '../shared/api/types';
 import { ExchangeModeContext, exchangeParam } from '../shared/exchange/ExchangeModeContext';
-import { LiveStatus } from '../shared/ui/LiveStatus';
+import { cn } from '@/lib/utils';
 
-const navItems = [
-  { to: '/', label: '대시보드(Dashboard)', icon: Activity },
-  { to: '/market', label: '시장(Markets)', icon: TrendingUp },
-  { to: '/fund-flow', label: '자금흐름(Flow)', icon: DollarSign },
-  { to: '/sentiment', label: '시장심리(Risk)', icon: BrainCircuit },
-  { to: '/candidates', label: '후보(Candidates)', icon: Radar },
-  { to: '/portfolio', label: '포트폴리오(Portfolio)', icon: PieChart },
-  { to: '/history', label: '이력(History)', icon: Clock3 },
-  { to: '/risk', label: '리스크(Risk)', icon: TriangleAlert },
-  { to: '/system', label: '시스템(System)', icon: MonitorCog },
-  { to: '/trade', label: '자동 실행(Auto Run)', icon: LineChart },
+// ── nav ──────────────────────────────────────────────────────────────────────
+
+const NAV_GROUPS = [
+  {
+    label: '시장',
+    items: [
+      { to: '/', label: '대시보드', icon: Activity },
+      { to: '/market', label: '시장 차트', icon: TrendingUp },
+      { to: '/fund-flow', label: '자금 흐름', icon: DollarSign },
+      { to: '/sentiment', label: '시장 심리', icon: BrainCircuit },
+    ],
+  },
+  {
+    label: '전략',
+    items: [
+      { to: '/candidates', label: '매수 후보', icon: Radar },
+      { to: '/portfolio', label: '포트폴리오', icon: PieChart },
+      { to: '/history', label: '거래 이력', icon: Clock3 },
+    ],
+  },
+  {
+    label: '운영',
+    items: [
+      { to: '/risk', label: '리스크', icon: TriangleAlert },
+      { to: '/system', label: '시스템', icon: MonitorCog },
+      { to: '/trade', label: '자동 실행', icon: LineChart },
+    ],
+  },
 ];
+
+// ── App ───────────────────────────────────────────────────────────────────────
 
 export function App() {
   const [searchParams, setSearchParams] = useSearchParams();
   const exchange = parseExchange(searchParams.get('exchange'));
+
   const exchangeContext = useMemo(
     () => ({
       exchange,
-      setExchange: (nextExchange: ExchangeMode) => {
-        const nextParams = new URLSearchParams(searchParams);
-        nextParams.set('exchange', exchangeParam(nextExchange));
-        setSearchParams(nextParams, { replace: true });
+      setExchange: (next: ExchangeMode) => {
+        const p = new URLSearchParams(searchParams);
+        p.set('exchange', exchangeParam(next));
+        setSearchParams(p, { replace: true });
       },
     }),
     [exchange, searchParams, setSearchParams],
@@ -38,116 +62,127 @@ export function App() {
 
   return (
     <ExchangeModeContext.Provider value={exchangeContext}>
-      <div className="shell">
+      <div className="app-shell">
+        {/* ── Sidebar ── */}
         <aside className="sidebar">
-          <div className="brand">
-            <BarChart3 size={26} aria-hidden />
+          {/* Brand */}
+          <div className="sidebar-brand">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+              <BarChart3 size={16} />
+            </div>
             <div>
               <strong>Comebot</strong>
               <span>PAPER_TRADING</span>
             </div>
           </div>
-          <div className="exchange-switch" aria-label="거래소 모드(Exchange mode)">
-            {(['UPBIT', 'BINANCE'] as const).map((item) => (
+
+          {/* Exchange toggle */}
+          <div className="exchange-switch">
+            {(['UPBIT', 'BINANCE'] as const).map((ex) => (
               <button
-                key={item}
+                key={ex}
                 type="button"
-                className={exchange === item ? 'active' : ''}
-                onClick={() => exchangeContext.setExchange(item)}
-                aria-pressed={exchange === item}
+                aria-pressed={exchange === ex}
+                className={exchange === ex ? 'active' : ''}
+                onClick={() => exchangeContext.setExchange(ex)}
               >
-                {item}
+                {ex}
               </button>
             ))}
           </div>
-          <nav className="nav" aria-label="주요 메뉴">
-            {navItems.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={{ pathname: to, search: `?exchange=${exchangeParam(exchange)}` }}
-                end={to === '/'}
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                <Icon size={18} aria-hidden />
-                {label}
-              </NavLink>
+
+          {/* Navigation */}
+          <nav className="sidebar-nav">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label} className="mb-3">
+                <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  {group.label}
+                </div>
+                {group.items.map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={{ pathname: to, search: `?exchange=${exchangeParam(exchange)}` }}
+                    end={to === '/'}
+                    className={({ isActive }) => cn('nav-item', isActive && 'active')}
+                  >
+                    <Icon size={15} aria-hidden />
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
             ))}
           </nav>
+
+          {/* Footer */}
+          <div className="sidebar-footer">
+            v{new Date().getFullYear()} · PAPER only
+          </div>
         </aside>
-        <div className="workspace">
-          <TopStatusBar exchange={exchange} />
-          <main className="content">
-            <Outlet />
-          </main>
+
+        {/* ── Main ── */}
+        <div className="main-content">
+          <StatusBar exchange={exchange} />
+          <Outlet />
         </div>
       </div>
     </ExchangeModeContext.Provider>
   );
 }
 
-function TopStatusBar({ exchange }: { exchange: ExchangeMode }) {
-  const systemQuery = useQuery({
+// ── Status bar ────────────────────────────────────────────────────────────────
+
+function StatusBar({ exchange }: { exchange: ExchangeMode }) {
+  const { data: system, isLoading: sysLoading } = useQuery({
     queryKey: queryKeys.system(exchange),
     queryFn: () => api.systemStatus(exchange),
     refetchInterval: POLLING_INTERVALS.status,
   });
-  const providerQuery = useQuery({
+  const { data: provider, isLoading: provLoading } = useQuery({
     queryKey: queryKeys.marketProviderStatus(),
     queryFn: api.marketProviderStatus,
     refetchInterval: POLLING_INTERVALS.status,
   });
-  const system = systemQuery.data;
-  const provider = providerQuery.data;
+
+  const loading = sysLoading || provLoading;
   const snapshotCount = exchange === 'BINANCE' ? provider?.binanceSnapshotCount : provider?.upbitSnapshotCount;
   const priceReady = Boolean(provider?.externalProvider && (snapshotCount ?? 0) > 0);
-  const candidateReady = Boolean(system?.scheduler.candidateEnabled);
-  const exitReady = Boolean(system?.scheduler.exitEnabled);
-  const killSwitchEnabled = Boolean(system?.safety.killSwitchEnabled);
-  const databaseReady = Boolean(system?.database.connected);
-  const cashWarning = Boolean(system?.portfolio.cashWarning);
-  const updatedAt = Math.max(systemQuery.dataUpdatedAt, providerQuery.dataUpdatedAt);
+  const killOn = Boolean(system?.safety.killSwitchEnabled);
+  const dbOk = Boolean(system?.database.connected);
+  const cashWarn = Boolean(system?.portfolio.cashWarning);
 
   return (
-    <header className="top-status-bar" aria-label="운영 상태 바(Operation status bar)">
-      <div className="top-status-main">
-        <strong>{exchange}</strong>
-        <span>PAPER_TRADING</span>
+    <header aria-label="운영 상태 바(Operation status bar)" className="flex items-center gap-3 border-b border-border bg-card px-5 py-2.5 text-xs">
+      {/* exchange badge */}
+      <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+        {exchange}
+      </span>
+
+      <div className="flex items-center gap-4 ml-1">
+        <Pill icon={<Database size={12} />} label="DB" ok={dbOk} text={loading ? '…' : dbOk ? '연결' : '오류'} />
+        <Pill icon={<Radio size={12} />} label="시세" ok={priceReady} text={loading ? '…' : priceReady ? `${snapshotCount}` : '없음'} />
+        <Pill icon={<Activity size={12} />} label="후보" ok={Boolean(system?.scheduler.candidateEnabled)}
+          text={loading ? '…' : system?.scheduler.candidateEnabled ? `${(system.scheduler.candidateFixedDelayMs ?? 0) / 1000}s` : 'OFF'} />
+        <Pill icon={<TrendingUp size={12} />} label="청산" ok={Boolean(system?.scheduler.exitEnabled)}
+          text={loading ? '…' : system?.scheduler.exitEnabled ? `${(system.scheduler.exitFixedDelayMs ?? 0) / 1000}s` : 'OFF'} />
+        <Pill icon={<Wallet size={12} />} label="현금" ok={!cashWarn && !sysLoading}
+          text={loading ? '…' : `${system?.portfolio.remainingBuyCount ?? 0}회`} />
+        <Pill
+          icon={killOn ? <ShieldX size={12} /> : <ShieldCheck size={12} />}
+          label="Kill" ok={!killOn} text={killOn ? 'ON' : 'OFF'}
+        />
       </div>
-      <div className="top-status-grid">
-        <TopStatusItem icon={<Database size={15} />} label="DB" value={databaseReady ? '연결' : statusFallback(systemQuery.isLoading)} good={databaseReady} />
-        <TopStatusItem icon={<Radio size={15} />} label="시세" value={priceReady ? `${provider?.provider ?? '-'} ${snapshotCount ?? 0}` : statusFallback(providerQuery.isLoading)} good={priceReady} />
-        <TopStatusItem icon={<Activity size={15} />} label="후보" value={candidateReady ? `${(system?.scheduler.candidateFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={candidateReady} />
-        <TopStatusItem icon={<TrendingUp size={15} />} label="청산" value={exitReady ? `${(system?.scheduler.exitFixedDelayMs ?? 0) / 1000}s` : statusFallback(systemQuery.isLoading)} good={exitReady} />
-        <TopStatusItem icon={<Wallet size={15} />} label="현금" value={system ? `${system.portfolio.remainingBuyCount}회` : statusFallback(systemQuery.isLoading)} good={!cashWarning && !systemQuery.isError} />
-        <TopStatusItem icon={killSwitchEnabled ? <ShieldX size={15} /> : <ShieldCheck size={15} />} label="Kill" value={killSwitchEnabled ? 'ON' : 'OFF'} good={!killSwitchEnabled && !systemQuery.isError} />
-      </div>
-      <LiveStatus updatedAt={updatedAt} isFetching={systemQuery.isFetching || providerQuery.isFetching} intervalMs={POLLING_INTERVALS.status} />
     </header>
   );
 }
 
-function TopStatusItem({
-  icon,
-  label,
-  value,
-  good,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  good: boolean;
-}) {
+function Pill({ icon, label, ok, text }: { icon: ReactNode; label: string; ok: boolean; text: string }) {
   return (
-    <div className={`top-status-item ${good ? 'top-status-item-good' : 'top-status-item-warn'}`}>
-      {icon}
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className="flex items-center gap-1.5">
+      <span className={cn('text-xs', ok ? 'text-green-600' : 'text-destructive')}>{icon}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className={cn('font-medium', ok ? 'text-foreground' : 'text-destructive')}>{text}</span>
     </div>
   );
-}
-
-function statusFallback(isLoading: boolean) {
-  return isLoading ? '확인 중' : '점검';
 }
 
 function parseExchange(value: string | null): ExchangeMode {
