@@ -10,15 +10,17 @@
 
 ---
 
-## 세션 종료 체크리스트
+## 세션 종료 시 필수 작업 (사람이 "세션 종료" 지시 후 자동 실행)
 
 다음 순서를 **반드시** 지킨다. 하나라도 실패하면 중단하고 사용자에게 알린다.
 
 1. `./gradlew test checkstyleMain` 통과 확인
-2. `HARNESS.md` → `## 현재 상태` 갱신 (바뀐 설정값·완료 항목 반영)
-3. `CHANGELOG.md` 맨 위에 한 줄 추가 (`YYYY-MM-DD | 단계 | feat/fix/chore/docs: 내용`)
-4. `tasks/current.md` 갱신 (다음 세션 시작점, 미완료 항목, 주의사항)
-5. `git add -A && git commit -m "..." && git push origin master`
+2. `HARNESS.md` "현재 상태" 섹션 갱신
+3. `CHANGELOG.md` 한 줄 추가 (형식: `YYYY-MM-DD | 단계 | feat/fix/chore/docs: 내용`)
+4. `tasks/current.md` "이전 세션에서 멈춘 곳" 갱신
+5. 변경 사항 git commit & push (`origin/main`)
+6. 도커 재빌드 및 재기동: `docker compose build --no-cache app && docker compose up -d app`
+
 
 ---
 
