@@ -1,7 +1,12 @@
 # 변경 이력
 
+2026-06-03 | ui | feat: UI 전면 다크모드 리뉴얼 — 트레이딩 콘솔 스타일 (GitHub dark 팔레트, 고밀도 레이아웃, 모노스페이스 숫자, Recharts 다크모드 색상 통일)
+
 ## 형식
 `날짜 | 단계 | feat/fix/chore/docs: 내용`
+
+2026-06-03 | 진입 신호 재설계 | feat: consecutiveBullishCandles·priceRecoveryRate 진입 필터 추가 (기본값 비활성, ADR-012 후보)
+2026-06-02 | 진입 신호 재설계 | feat: volumeCooldownRatio 진입 필터 추가 (기본값 비활성, ADR-012 후보)
 
 ---
 
