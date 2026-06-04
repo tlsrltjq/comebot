@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
-import { Activity, BarChart3, Clock3, Database, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert, Wallet } from 'lucide-react';
+import { Activity, BarChart3, Clock3, Database, DollarSign, LineChart, MonitorCog, PieChart, Radar, Radio, ShieldCheck, ShieldX, TrendingUp, TriangleAlert, Wallet } from 'lucide-react';
 import { api, queryKeys } from '../shared/api/client';
 import { POLLING_INTERVALS } from '../shared/api/polling';
 import type { ExchangeMode } from '../shared/api/types';
@@ -11,6 +11,7 @@ import { LiveStatus } from '../shared/ui/LiveStatus';
 const navItems = [
   { to: '/', label: '대시보드(Dashboard)', icon: Activity },
   { to: '/market', label: '시장(Markets)', icon: TrendingUp },
+  { to: '/fund-flow', label: '자금흐름(Flow)', icon: DollarSign },
   { to: '/candidates', label: '후보(Candidates)', icon: Radar },
   { to: '/portfolio', label: '포트폴리오(Portfolio)', icon: PieChart },
   { to: '/history', label: '이력(History)', icon: Clock3 },

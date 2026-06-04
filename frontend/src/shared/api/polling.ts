@@ -9,4 +9,5 @@ export const POLLING_INTERVALS = {
   risk: 30_000,
   system: 30_000,
   autoRun: 5_000,
+  fundFlow: 30_000,
 } as const;

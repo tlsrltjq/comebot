@@ -269,3 +269,21 @@ export interface BtcChangeChartResponse {
   lowPrice: string;
   points: BtcChangePointResponse[];
 }
+
+export interface MarketFlowEntry {
+  market: string;
+  rank: number;
+  prevRank: number;
+  rankChange: number;
+  tradePrice: string;
+  accTradePrice24h: string;
+  volumeSharePct: number;
+  selectedCount24h: number;
+}
+
+export interface MarketFlowSummary {
+  exchange: ExchangeMode;
+  btcDominancePct: number;
+  top10VolumePct: number;
+  markets: MarketFlowEntry[];
+}

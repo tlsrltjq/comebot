@@ -78,6 +78,13 @@ const router = createBrowserRouter([
           return { Component: SystemPage };
         },
       },
+      {
+        path: 'fund-flow',
+        lazy: async () => {
+          const { MarketFundFlowPage } = await import('./features/market/MarketFundFlowPage');
+          return { Component: MarketFundFlowPage };
+        },
+      },
     ],
   },
 ]);

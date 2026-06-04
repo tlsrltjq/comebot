@@ -17,6 +17,7 @@ import type {
   SystemStatusResponse,
   TradingCandidateResponse,
   TradingFlowHistoryResponse,
+  MarketFlowSummary,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -82,6 +83,8 @@ export const api = {
     request<AnalyticsLossResponse>(`/api/analytics/losses${query({ exchange: exchangeParam(exchange), range })}`),
   btcChange: (range: BtcChangeRange, exchange: ExchangeMode = 'UPBIT') =>
     request<BtcChangeChartResponse>(`/api/market/btc-change${query({ exchange: exchangeParam(exchange), range })}`),
+  fundFlow: (exchange: ExchangeMode = 'UPBIT') =>
+    request<MarketFlowSummary>(`/api/market/fund-flow${query({ exchange: exchangeParam(exchange) })}`),
 };
 
 export const queryKeys = {
@@ -97,4 +100,5 @@ export const queryKeys = {
   analyticsPnl: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsPnl', exchange, range] as const,
   analyticsLosses: (range: AnalyticsRange, exchange: ExchangeMode = 'UPBIT') => ['analyticsLosses', exchange, range] as const,
   btcChange: (range: BtcChangeRange, exchange: ExchangeMode = 'UPBIT') => ['btcChange', exchange, range] as const,
+  fundFlow: (exchange: ExchangeMode = 'UPBIT') => ['fundFlow', exchange] as const,
 };
