@@ -1,5 +1,8 @@
 # 변경 이력
 
+2026-06-05 | backtest | docs: 세션 종료 — V1 풀백군 전면 진단 결론(모든 레버 gross 0.94~0.97, 엣지 없음) HARNESS/tasks 갱신, 다음=전략 전환/데이터 재검토 등록
+2026-06-05 | backtest | feat: 다중 TF 확인(MultiTimeframeTest) — 코인 1h 정렬 M1이 OOS 최선이나 gross 0.97<1.05, 필터 스택 OOS 붕괴 재확인
+2026-06-05 | backtest | feat: 레짐 필터(RegimeAnalysisTest, EntryGate, RegimeContext) — V1 손실 BTC 하락 집중 확인, F1(BTC≠DOWN) 최선이나 ≥1.05 미달, 결합 감산
 2026-06-05 | backtest | test: 결정론적 엔진 단위테스트(DeterministicBacktestEngineTest) 6종 — maker 체결·만료·시장가 진입·TP/SL 임계 청산·gross/net 비용 산술 (캐시 불필요, 기본 suite 상시)
 2026-06-05 | backtest | feat: 진입 신호 스윕(EntrySweepTest) — 풀백 전략군 수익 구간 없음 확인, V1 눌림폭 하한만 리드(gross 0.91→0.97, 여전히 <1.0)
 2026-06-05 | backtest | feat: 청산 구조 스윕(ParameterSweepTest) — TP×SL 12칸 전부 train gross<1.0, 신호 문제 확정
