@@ -42,6 +42,7 @@ tasks.named('test') {
     // Pass through the opt-in flags + cache dir for the parity backtest harness.
     systemProperty 'backtest.run', System.getProperty('backtest.run', 'false')
     systemProperty 'backtest.sweep', System.getProperty('backtest.sweep', 'false')
+    systemProperty 'backtest.entrysweep', System.getProperty('backtest.entrysweep', 'false')
     if (System.getProperty('backtest.cacheDir') != null) {
         systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
     }

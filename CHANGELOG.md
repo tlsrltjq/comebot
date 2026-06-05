@@ -1,5 +1,7 @@
 # 변경 이력
 
+2026-06-05 | backtest | feat: 진입 신호 스윕(EntrySweepTest) — 풀백 전략군 수익 구간 없음 확인, V1 눌림폭 하한만 리드(gross 0.91→0.97, 여전히 <1.0)
+2026-06-05 | backtest | feat: 청산 구조 스윕(ParameterSweepTest) — TP×SL 12칸 전부 train gross<1.0, 신호 문제 확정
 2026-06-05 | backtest | feat: 운영 Java 엔진 리플레이 parity 백테스트 하니스(src/test/.../backtest) + gross/net PF·maker vs market 진단 — 현행 설정 gross PF<1.0(신호 문제) 발견, 연구 로그 기록
 2026-06-04 | ui      | feat: 매매 일지 — BUY→SELL FIFO 매칭 API(/api/analytics/matched-trades) + /trade-journal 페이지 (매수/매도 시각·가격, 보유시간, 수익률, 청산방식)
 2026-06-04 | harness | docs: 토큰 절약을 위해 HARNESS.md와 tasks/current.md를 현재 상태 중심으로 압축

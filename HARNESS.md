@@ -18,8 +18,8 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 주기 | candidate 30초(운영 `.env`; 기본 60초), exit 1초 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | 매매 일지 기능 추가: BUY→SELL FIFO 매칭 API + `/trade-journal` 프론트 페이지 |
-| 다음 단계 | 봇 재기동 후 2~4주 PAPER 관찰: fill_rate, 실 PF, same-candle 0건, stale skip |
+| 최근 작업 | Java parity 백테스트 하니스(`src/test/.../backtest`) — 운영 엔진 리플레이 + gross/net PF·TP/SL·진입 스윕 |
+| 다음 단계 | 진입 신호 한계 확인(풀백군 gross<1.0). 새 피처 탐색(V1 눌림폭 하한 출발점) 또는 전략 전환 |
 
 ## 구현 요약
 
