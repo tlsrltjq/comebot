@@ -222,6 +222,31 @@ final class CandleSeries {
         return new CandleSeries(market, unitMinutes, timeSec, open, high, low, close, accAmt, accVol, n);
     }
 
+    /** Builds a series from in-memory {@link Candle}s — used by deterministic engine tests. */
+    static CandleSeries ofCandles(String market, int unitMinutes, List<Candle> candles) {
+        int n = candles.size();
+        int cap = Math.max(1, n);
+        long[] timeSec = new long[cap];
+        double[] open = new double[cap];
+        double[] high = new double[cap];
+        double[] low = new double[cap];
+        double[] close = new double[cap];
+        double[] accAmt = new double[cap];
+        double[] accVol = new double[cap];
+        for (int i = 0; i < n; i++) {
+            Candle candle = candles.get(i);
+            timeSec[i] = candle.candleTime().getEpochSecond();
+            open[i] = candle.openingPrice().doubleValue();
+            high[i] = candle.highPrice().doubleValue();
+            low[i] = candle.lowPrice().doubleValue();
+            close[i] = candle.tradePrice().doubleValue();
+            accAmt[i] = candle.accumulatedTradePrice().doubleValue();
+            accVol[i] = candle.accumulatedTradeVolume().doubleValue();
+        }
+        sortByTimeAscending(timeSec, open, high, low, close, accAmt, accVol, n);
+        return new CandleSeries(market, unitMinutes, timeSec, open, high, low, close, accAmt, accVol, n);
+    }
+
     private static long parseUtcSeconds(String text) {
         return LocalDateTime.parse(text, UTC_FORMAT).toInstant(ZoneOffset.UTC).getEpochSecond();
     }

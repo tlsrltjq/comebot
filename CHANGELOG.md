@@ -1,5 +1,6 @@
 # 변경 이력
 
+2026-06-05 | backtest | test: 결정론적 엔진 단위테스트(DeterministicBacktestEngineTest) 6종 — maker 체결·만료·시장가 진입·TP/SL 임계 청산·gross/net 비용 산술 (캐시 불필요, 기본 suite 상시)
 2026-06-05 | backtest | feat: 진입 신호 스윕(EntrySweepTest) — 풀백 전략군 수익 구간 없음 확인, V1 눌림폭 하한만 리드(gross 0.91→0.97, 여전히 <1.0)
 2026-06-05 | backtest | feat: 청산 구조 스윕(ParameterSweepTest) — TP×SL 12칸 전부 train gross<1.0, 신호 문제 확정
 2026-06-05 | backtest | feat: 운영 Java 엔진 리플레이 parity 백테스트 하니스(src/test/.../backtest) + gross/net PF·maker vs market 진단 — 현행 설정 gross PF<1.0(신호 문제) 발견, 연구 로그 기록
