@@ -104,6 +104,10 @@ class RegimeAnalysisTest {
             double r = rc.btcReturnPct(t, RETURN_HOURS);
             return !(v >= medianVol && r < 0);
         });
+        // Two independently-stable signals (BTC direction + cross-sectional breadth).
+        filters.put("F5 breadth >= 50%", (m, t) -> !(rc.breadthUp(t) < 0.5));
+        filters.put("F6 BTC!=DOWN & breadth>=50%",
+                (m, t) -> rc.btcTrend(t) != RegimeContext.Trend.DOWN && !(rc.breadthUp(t) < 0.5));
 
         // ============================== STEP 3: SINGLE-FILTER EXPERIMENTS =================
         System.out.println("\n==================== SINGLE REGIME-FILTER EXPERIMENTS (one at a time) ============");
