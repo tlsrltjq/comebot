@@ -65,6 +65,14 @@ final class BacktestReport {
         return profitFactor;
     }
 
+    double grossProfitFactor() {
+        return grossProfitFactor;
+    }
+
+    double winRatePct() {
+        return winRatePct;
+    }
+
     static BacktestReport of(String label, List<ClosedTrade> trades, double initialCapital) {
         int n = trades.size();
         int wins = 0;

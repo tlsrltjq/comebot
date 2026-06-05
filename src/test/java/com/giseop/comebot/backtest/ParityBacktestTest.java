@@ -21,9 +21,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
@@ -50,32 +48,10 @@ class ParityBacktestTest {
         Path cacheDir = Paths.get(System.getProperty("backtest.cacheDir", ".backtest_cache"));
         assumeTrue(Files.isDirectory(cacheDir), "candle cache not found: " + cacheDir.toAbsolutePath());
 
-        ReplayCandleProvider provider = new ReplayCandleProvider();
-        List<CandleSeries> minuteSeries = new ArrayList<>();
-        long globalEndSec = Long.MIN_VALUE;
-
-        try (Stream<Path> files = Files.list(cacheDir)) {
-            for (Path file : files.sorted().toList()) {
-                String name = file.getFileName().toString();
-                if (!name.endsWith(".json")) {
-                    continue;
-                }
-                if (name.contains("_1m_")) {
-                    String market = name.substring(0, name.indexOf("_1m_"));
-                    CandleSeries s = CandleSeries.loadFromCache(file, market, 1);
-                    if (s.size() == 0) {
-                        continue;
-                    }
-                    provider.register(s);
-                    minuteSeries.add(s);
-                    globalEndSec = Math.max(globalEndSec, s.closeTimeSec(s.size() - 1));
-                } else if (name.contains("_60m_")) {
-                    String market = name.substring(0, name.indexOf("_60m_"));
-                    provider.register(CandleSeries.loadFromCache(file, market, 60));
-                }
-            }
-        }
-
+        BacktestCache cache = BacktestCache.load(cacheDir);
+        ReplayCandleProvider provider = cache.provider();
+        List<CandleSeries> minuteSeries = cache.minuteSeries();
+        long globalEndSec = cache.globalEndSec();
         assumeTrue(!minuteSeries.isEmpty(), "no 1m candle series in cache");
 
         CandidateScannerProperties scannerProps = upbitOperatingScannerProps();
