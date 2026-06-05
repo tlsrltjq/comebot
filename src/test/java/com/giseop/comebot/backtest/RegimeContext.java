@@ -1,6 +1,8 @@
 package com.giseop.comebot.backtest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Computes market-regime features at a given timestamp from cached candles, for
@@ -26,10 +28,61 @@ final class RegimeContext {
 
     private final CandleSeries btc;
     private final List<CandleSeries> markets;
+    private final Map<String, CandleSeries> marketByName = new HashMap<>();
 
     RegimeContext(CandleSeries btcHourly, List<CandleSeries> markets) {
         this.btc = btcHourly;
         this.markets = markets;
+        for (CandleSeries s : markets) {
+            marketByName.put(s.market(), s);
+        }
+    }
+
+    /**
+     * Higher-timeframe trend of the traded coin itself: EMA5 vs EMA10 over the last
+     * 20 hourly-sampled closes of {@code market} (a multi-timeframe confirmation of the
+     * 1m pullback — buying a dip inside a higher-TF uptrend vs a falling knife).
+     */
+    Trend coinHourlyTrend(String market, long timeSec) {
+        CandleSeries s = marketByName.get(market);
+        if (s == null) {
+            return Trend.NEUTRAL;
+        }
+        double[] closes = new double[TREND_WINDOW];
+        int n = 0;
+        for (int k = TREND_WINDOW - 1; k >= 0; k--) { // oldest first
+            int idx = s.lastClosedIndex(timeSec - (long) k * HOUR_SEC);
+            if (idx >= 0) {
+                closes[n++] = s.close(idx);
+            }
+        }
+        if (n < EMA_LONG) {
+            return Trend.NEUTRAL;
+        }
+        double emaShort = emaArray(closes, n, EMA_SHORT);
+        double emaLong = emaArray(closes, n, EMA_LONG);
+        if (emaShort > emaLong) {
+            return Trend.UP;
+        }
+        if (emaShort < emaLong) {
+            return Trend.DOWN;
+        }
+        return Trend.NEUTRAL;
+    }
+
+    /** % change of the coin's own close over the last {@code minutes}, NaN if unavailable. */
+    double coinReturnPct(String market, long timeSec, int minutes) {
+        CandleSeries s = marketByName.get(market);
+        if (s == null) {
+            return Double.NaN;
+        }
+        int now = s.lastClosedIndex(timeSec);
+        int prev = s.lastClosedIndex(timeSec - (long) minutes * 60L);
+        if (now < 0 || prev < 0 || now == prev) {
+            return Double.NaN;
+        }
+        double then = s.close(prev);
+        return then == 0 ? Double.NaN : (s.close(now) - then) / then * 100.0;
     }
 
     Trend btcTrend(long timeSec) {
@@ -111,6 +164,15 @@ final class RegimeContext {
         double e = btc.close(from);
         for (int i = from + 1; i <= to; i++) {
             e = btc.close(i) * k + e * (1 - k);
+        }
+        return e;
+    }
+
+    private static double emaArray(double[] vals, int n, int period) {
+        double k = 2.0 / (period + 1);
+        double e = vals[0];
+        for (int i = 1; i < n; i++) {
+            e = vals[i] * k + e * (1 - k);
         }
         return e;
     }
