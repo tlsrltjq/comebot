@@ -17,11 +17,18 @@ final class BacktestCache {
 
     private final ReplayCandleProvider provider;
     private final List<CandleSeries> minuteSeries;
+    private final CandleSeries btcHourly;
     private final long globalEndSec;
 
-    private BacktestCache(ReplayCandleProvider provider, List<CandleSeries> minuteSeries, long globalEndSec) {
+    private BacktestCache(
+            ReplayCandleProvider provider,
+            List<CandleSeries> minuteSeries,
+            CandleSeries btcHourly,
+            long globalEndSec
+    ) {
         this.provider = provider;
         this.minuteSeries = minuteSeries;
+        this.btcHourly = btcHourly;
         this.globalEndSec = globalEndSec;
     }
 
@@ -33,6 +40,11 @@ final class BacktestCache {
         return minuteSeries;
     }
 
+    /** KRW-BTC 60m series, used for regime (trend/return/volatility) features. May be null. */
+    CandleSeries btcHourly() {
+        return btcHourly;
+    }
+
     long globalEndSec() {
         return globalEndSec;
     }
@@ -41,6 +53,7 @@ final class BacktestCache {
     static BacktestCache load(Path cacheDir) throws IOException {
         ReplayCandleProvider provider = new ReplayCandleProvider();
         List<CandleSeries> minuteSeries = new ArrayList<>();
+        CandleSeries btcHourly = null;
         long globalEndSec = Long.MIN_VALUE;
 
         try (Stream<Path> files = Files.list(cacheDir)) {
@@ -60,10 +73,14 @@ final class BacktestCache {
                     globalEndSec = Math.max(globalEndSec, s.closeTimeSec(s.size() - 1));
                 } else if (name.contains("_60m_")) {
                     String market = name.substring(0, name.indexOf("_60m_"));
-                    provider.register(CandleSeries.loadFromCache(file, market, 60));
+                    CandleSeries hourly = CandleSeries.loadFromCache(file, market, 60);
+                    provider.register(hourly);
+                    if ("KRW-BTC".equals(market)) {
+                        btcHourly = hourly;
+                    }
                 }
             }
         }
-        return new BacktestCache(provider, minuteSeries, globalEndSec);
+        return new BacktestCache(provider, minuteSeries, btcHourly, globalEndSec);
     }
 }

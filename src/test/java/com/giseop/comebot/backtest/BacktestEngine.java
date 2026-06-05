@@ -50,6 +50,7 @@ final class BacktestEngine {
     private final ReplayCandleProvider provider;
     private final StrategyMarketSettingsService settings;
     private final BacktestConfig config;
+    private final EntryGate entryGate;
 
     BacktestEngine(
             List<CandleSeries> series,
@@ -61,6 +62,21 @@ final class BacktestEngine {
             StrategyMarketSettingsService settings,
             BacktestConfig config
     ) {
+        this(series, scanner, exitSignalService, portfolioService, btcTrendCache,
+                provider, settings, config, EntryGate.ALLOW_ALL);
+    }
+
+    BacktestEngine(
+            List<CandleSeries> series,
+            CandidateScannerService scanner,
+            PositionExitSignalService exitSignalService,
+            PaperPortfolioService portfolioService,
+            BtcTrendCacheService btcTrendCache,
+            ReplayCandleProvider provider,
+            StrategyMarketSettingsService settings,
+            BacktestConfig config,
+            EntryGate entryGate
+    ) {
         this.series = series;
         this.scanner = scanner;
         this.exitSignalService = exitSignalService;
@@ -69,6 +85,7 @@ final class BacktestEngine {
         this.provider = provider;
         this.settings = settings;
         this.config = config;
+        this.entryGate = entryGate;
     }
 
     Result run() {
@@ -139,6 +156,9 @@ final class BacktestEngine {
                 TradingCandidate candidate = scanner.scan(EXCHANGE, market);
                 if (candidate.decision() != CandidateDecision.SELECTED) {
                     continue;
+                }
+                if (!entryGate.allows(market, s.closeTimeSec(pointer[m]))) {
+                    continue; // blocked by regime filter
                 }
                 stats[0]++;
                 if (config.marketEntry()) {

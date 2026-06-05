@@ -73,6 +73,14 @@ final class BacktestReport {
         return winRatePct;
     }
 
+    double netPnl() {
+        return netPnl;
+    }
+
+    double maxDrawdownPct() {
+        return maxDrawdownPct;
+    }
+
     static BacktestReport of(String label, List<ClosedTrade> trades, double initialCapital) {
         int n = trades.size();
         int wins = 0;

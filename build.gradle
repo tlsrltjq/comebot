@@ -43,6 +43,7 @@ tasks.named('test') {
     systemProperty 'backtest.run', System.getProperty('backtest.run', 'false')
     systemProperty 'backtest.sweep', System.getProperty('backtest.sweep', 'false')
     systemProperty 'backtest.entrysweep', System.getProperty('backtest.entrysweep', 'false')
+    systemProperty 'backtest.regime', System.getProperty('backtest.regime', 'false')
     if (System.getProperty('backtest.cacheDir') != null) {
         systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
     }
