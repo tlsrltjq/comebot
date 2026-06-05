@@ -1,5 +1,6 @@
 # 변경 이력
 
+2026-06-05 | backtest | feat: 운영 Java 엔진 리플레이 parity 백테스트 하니스(src/test/.../backtest) + gross/net PF·maker vs market 진단 — 현행 설정 gross PF<1.0(신호 문제) 발견, 연구 로그 기록
 2026-06-04 | ui      | feat: 매매 일지 — BUY→SELL FIFO 매칭 API(/api/analytics/matched-trades) + /trade-journal 페이지 (매수/매도 시각·가격, 보유시간, 수익률, 청산방식)
 2026-06-04 | harness | docs: 토큰 절약을 위해 HARNESS.md와 tasks/current.md를 현재 상태 중심으로 압축
 2026-06-04 | entry | fix: 2차 감사 — firstCheckAt 과보수(i+2) 제거→capturedAt>createdAt, stale 체결 방지→findFresh, 단위테스트 6종 (ADR-013 보류/조건부)

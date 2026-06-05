@@ -38,6 +38,12 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    maxHeapSize = '2g'
+    // Pass through the opt-in flag + cache dir for the parity backtest harness.
+    systemProperty 'backtest.run', System.getProperty('backtest.run', 'false')
+    if (System.getProperty('backtest.cacheDir') != null) {
+        systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
+    }
 }
 
 checkstyle {
