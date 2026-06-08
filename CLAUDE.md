@@ -19,7 +19,7 @@
 3. `CHANGELOG.md` 한 줄 추가 (형식: `YYYY-MM-DD | 단계 | feat/fix/chore/docs: 내용`)
 4. `tasks/current.md` "이전 세션에서 멈춘 곳" 갱신
 5. 변경 사항 git commit & push (`origin/main`)
-6. 도커 재빌드 및 재기동: `docker compose build --no-cache app && docker compose up -d app`
+6. 도커 재빌드 및 재기동: `docker compose build --no-cache app web && docker compose up -d app web`
 
 
 ---
