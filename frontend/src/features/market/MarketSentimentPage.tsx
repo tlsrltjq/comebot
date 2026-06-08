@@ -14,10 +14,6 @@ function fmtB(b: number) {
   return `$${b.toFixed(0)}B`;
 }
 
-function fmtChange(v: number) {
-  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
-}
-
 function fmtPct(v: number, digits = 4) {
   return `${v >= 0 ? '+' : ''}${v.toFixed(digits)}%`;
 }

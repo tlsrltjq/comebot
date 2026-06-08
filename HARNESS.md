@@ -18,8 +18,8 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 주기 | candidate 30초(운영 `.env`; 기본 60초), exit 1초 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | parity 백테스트 하니스로 V1 풀백군 전면 진단(청산·진입·레짐·다중TF 스윕) + 결정론적 엔진 단위테스트 |
-| 다음 단계 | V1 풀백군 엣지 없음 확정(모든 레버 gross 0.94~0.97). 다른 전략 가설 또는 데이터 범위 재검토로 전환 |
+| 최근 작업 | 유실 `.env` 복구(`POSTGRES_PASSWORD=comebot`, Telegram off), 프론트 lint/E2E 보정, Docker app/web 재빌드 검증 |
+| 다음 단계 | V1 풀백군 엣지 없음 확정. 전략 전환 또는 데이터 범위 재검토 시작 전 운영 UI 상태만 유지 |
 
 ## 구현 요약
 

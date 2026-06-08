@@ -8,19 +8,19 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('operations UI regression', () => {
   const routes = [
-    { path: '/', heading: '운영 대시보드(Dashboard)' },
-    { path: '/market?exchange=upbit', heading: '시장 개요(Market Overview)' },
-    { path: '/candidates?exchange=upbit', heading: '후보 모니터링(Candidate Monitoring)' },
-    { path: '/portfolio?exchange=upbit', heading: '포트폴리오(Portfolio)' },
-    { path: '/history?exchange=upbit', heading: '실행 이력(History)' },
-    { path: '/risk?exchange=upbit', heading: '리스크(Risk)' },
-    { path: '/system?exchange=upbit', heading: '시스템(System)' },
+    { path: '/', heading: '운영 대시보드' },
+    { path: '/market?exchange=upbit', heading: '시장 차트' },
+    { path: '/candidates?exchange=upbit', heading: '매수 후보' },
+    { path: '/portfolio?exchange=upbit', heading: '포트폴리오' },
+    { path: '/history?exchange=upbit', heading: '거래 이력' },
+    { path: '/risk?exchange=upbit', heading: '리스크' },
+    { path: '/system?exchange=upbit', heading: '시스템' },
   ];
 
   for (const route of routes) {
     test(`${route.heading} renders without layout overflow`, async ({ page }) => {
       await page.goto(route.path);
-      await expect(page.getByRole('heading', { name: route.heading })).toBeVisible();
+      await expect(page.getByRole('heading', { name: route.heading, exact: true })).toBeVisible();
       await expect(page.getByLabel('운영 상태 바(Operation status bar)')).toBeVisible();
       await expect(page.getByText('PAPER_TRADING').first()).toBeVisible();
       await expect(page.getByRole('button', { name: /매수 실행|BUY 실행|수동.*BUY|실거래|REAL_TRADING/ })).toHaveCount(0);

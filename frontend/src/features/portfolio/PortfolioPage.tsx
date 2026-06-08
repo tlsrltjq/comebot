@@ -29,7 +29,6 @@ export function PortfolioPage() {
   const queryClient = useQueryClient();
 
   const statusQ = useQuery({ queryKey: queryKeys.portfolioStatus(exchange), queryFn: () => api.portfolioStatus(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
-  const posQ = useQuery({ queryKey: queryKeys.positions(exchange), queryFn: () => api.positions(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
   const valQ = useQuery({ queryKey: queryKeys.portfolioValuation(exchange), queryFn: () => api.portfolioValuation(exchange), refetchInterval: POLLING_INTERVALS.portfolio });
   const sysQ = useQuery({ queryKey: queryKeys.system(exchange), queryFn: () => api.systemStatus(exchange), refetchInterval: POLLING_INTERVALS.system });
   const riskQ = useQuery({ queryKey: queryKeys.riskStatus(exchange), queryFn: () => api.riskStatus(exchange), refetchInterval: POLLING_INTERVALS.risk });
@@ -69,7 +68,15 @@ export function PortfolioPage() {
     },
   });
 
-  const toggle = (m: string) => setSelectedMarkets((cur) => { const n = new Set(cur); n.has(m) ? n.delete(m) : n.add(m); return n; });
+  const toggle = (m: string) => setSelectedMarkets((cur) => {
+    const next = new Set(cur);
+    if (next.has(m)) {
+      next.delete(m);
+    } else {
+      next.add(m);
+    }
+    return next;
+  });
 
   return (
     <div className="page">
@@ -255,6 +262,7 @@ export function PortfolioPage() {
         description={(
           <div>
             <p className="text-sm mb-2">실제 거래소 주문이 아닌 선택 보유 포지션의 PAPER SELL만 실행합니다.</p>
+            <p className="text-sm mb-2 font-medium">선택한 보유 PAPER 포지션 전량</p>
             <dl className="space-y-1 text-sm">
               <div className="flex gap-2"><dt className="text-muted-foreground w-24">선택 포지션</dt><dd>{selectedVisible.join(', ')}</dd></div>
               <div className="flex gap-2"><dt className="text-muted-foreground w-24">예상 평가액</dt><dd>{money(selectedValue)}</dd></div>

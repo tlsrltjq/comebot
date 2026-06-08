@@ -152,13 +152,13 @@ function StatusBar({ exchange }: { exchange: ExchangeMode }) {
   const cashWarn = Boolean(system?.portfolio.cashWarning);
 
   return (
-    <header aria-label="운영 상태 바(Operation status bar)" className="flex items-center gap-3 border-b border-border bg-card px-5 py-2.5 text-xs">
+    <header aria-label="운영 상태 바(Operation status bar)" className="flex items-center gap-3 overflow-x-auto border-b border-border bg-card px-5 py-2.5 text-xs">
       {/* exchange badge */}
       <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
         {exchange}
       </span>
 
-      <div className="flex items-center gap-4 ml-1">
+      <div className="ml-1 flex shrink-0 items-center gap-4">
         <Pill icon={<Database size={12} />} label="DB" ok={dbOk} text={loading ? '…' : dbOk ? '연결' : '오류'} />
         <Pill icon={<Radio size={12} />} label="시세" ok={priceReady} text={loading ? '…' : priceReady ? `${snapshotCount}` : '없음'} />
         <Pill icon={<Activity size={12} />} label="후보" ok={Boolean(system?.scheduler.candidateEnabled)}
@@ -178,7 +178,7 @@ function StatusBar({ exchange }: { exchange: ExchangeMode }) {
 
 function Pill({ icon, label, ok, text }: { icon: ReactNode; label: string; ok: boolean; text: string }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex shrink-0 items-center gap-1.5">
       <span className={cn('text-xs', ok ? 'text-green-600' : 'text-destructive')}>{icon}</span>
       <span className="text-muted-foreground">{label}</span>
       <span className={cn('font-medium', ok ? 'text-foreground' : 'text-destructive')}>{text}</span>

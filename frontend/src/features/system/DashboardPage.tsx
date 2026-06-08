@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  Activity, CheckCircle2, MonitorCog, ShieldAlert, ShieldCheck, ShieldX,
+  CheckCircle2, MonitorCog, ShieldAlert,
   TrendingDown, TrendingUp, AlertCircle,
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -55,7 +55,6 @@ export function DashboardPage() {
 
   const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW';
   const money = (v: string | number | null | undefined) => formatCurrency(v, currency);
-  const snapshotCount = exchange === 'BINANCE' ? providerQuery.data?.binanceSnapshotCount : providerQuery.data?.upbitSnapshotCount;
   const freshCount = exchange === 'BINANCE' ? providerQuery.data?.binanceFreshSnapshotCount : providerQuery.data?.upbitFreshSnapshotCount;
   const priceReady = providerQuery.data?.automationReady ?? Boolean(providerQuery.data?.externalProvider && (freshCount ?? 0) > 0);
   const schedulerReady = data.scheduler.candidateEnabled && data.scheduler.exitEnabled;
