@@ -23,7 +23,7 @@ BINANCE_BASE = "https://api.binance.com"
 UNITS = (1, 3, 5, 15)
 UPBIT_LIMIT = 200
 BINANCE_LIMIT = 1000
-MAX_HTTP_ATTEMPTS = 5
+MAX_HTTP_ATTEMPTS = 10
 
 
 def main() -> int:
@@ -114,7 +114,10 @@ def log(message: str) -> None:
 
 
 def request_json(url: str) -> object:
-    request = urllib.request.Request(url, headers={"User-Agent": "comebot-backtest-collector/1.0"})
+    request = urllib.request.Request(url, headers={
+        "User-Agent": "comebot-backtest-collector/1.0",
+        "Connection": "close",
+    })
     last_error = None
     for attempt in range(1, MAX_HTTP_ATTEMPTS + 1):
         try:
@@ -126,7 +129,7 @@ def request_json(url: str) -> object:
                 raise
             if attempt == MAX_HTTP_ATTEMPTS:
                 break
-            sleep_sec = min(8.0, 0.5 * (2 ** (attempt - 1)))
+            sleep_sec = min(60.0, 1.0 * (2 ** (attempt - 1)))
             print(f"request failed attempt={attempt}/{MAX_HTTP_ATTEMPTS}; retrying in {sleep_sec:.1f}s: {exc}", file=sys.stderr)
             time.sleep(sleep_sec)
     raise RuntimeError(f"request failed after {MAX_HTTP_ATTEMPTS} attempts: {url}") from last_error
@@ -178,10 +181,12 @@ def chunks(values: list[str], size: int) -> list[list[str]]:
 def fetch_upbit_candles(market: str, unit: int, since_ms: int, until_ms: int, delay_sec: float) -> list[dict[str, object]]:
     candles = []
     cursor = until_ms
+    requests = 0
     while cursor > since_ms:
         to = urllib.parse.quote(datetime.fromtimestamp(cursor / 1000, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"))
         url = f"{UPBIT_BASE}/v1/candles/minutes/{unit}?market={market}&count={UPBIT_LIMIT}&to={to}"
         rows = request_json(url)
+        requests += 1
         if not rows:
             break
         oldest_ms = cursor
@@ -191,9 +196,13 @@ def fetch_upbit_candles(market: str, unit: int, since_ms: int, until_ms: int, de
             if since_ms <= candle_ms < until_ms:
                 candles.append(normalize_upbit(row))
         next_cursor = oldest_ms - 1
-        if next_cursor >= cursor:
+        min_progress_ms = unit * 60 * 1000
+        if next_cursor >= cursor or cursor - next_cursor < min_progress_ms:
+            log(f"stop upbit {market} {unit}m: no older candle page before {iso_utc(cursor)}")
             break
         cursor = next_cursor
+        if requests % 100 == 0:
+            log(f"progress upbit {market} {unit}m requests={requests} candles={len(candles)} cursor={iso_utc(cursor)}")
         time.sleep(delay_sec)
     return sorted(unique_by_time(candles), key=lambda row: row["candle_date_time_utc"])
 
@@ -202,6 +211,7 @@ def fetch_binance_candles(symbol: str, unit: int, since_ms: int, until_ms: int, 
     candles = []
     interval = f"{unit}m"
     cursor = since_ms
+    requests = 0
     while cursor < until_ms:
         query = urllib.parse.urlencode({
             "symbol": symbol,
@@ -211,6 +221,7 @@ def fetch_binance_candles(symbol: str, unit: int, since_ms: int, until_ms: int, 
             "endTime": until_ms,
         })
         rows = request_json(f"{BINANCE_BASE}/api/v3/klines?{query}")
+        requests += 1
         if not rows:
             break
         for row in rows:
@@ -221,6 +232,8 @@ def fetch_binance_candles(symbol: str, unit: int, since_ms: int, until_ms: int, 
         if next_cursor <= cursor:
             break
         cursor = next_cursor
+        if requests % 100 == 0:
+            log(f"progress binance {symbol} {unit}m requests={requests} candles={len(candles)} cursor={iso_utc(cursor)}")
         time.sleep(delay_sec)
     return sorted(unique_by_time(candles), key=lambda row: row["candle_date_time_utc"])
 

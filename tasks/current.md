@@ -35,6 +35,8 @@
 - 과매도 평균회귀 1차 실험: BTC/ETH 시드 기준 216개 조합 모두 탈락, 생존 후보 0
 - 유니버스 확장 기준 고정: Upbit KRW 24h 거래대금 상위 30 + Binance spot USDT quote volume 상위 30
 - BTC/마켓 레짐 모멘텀 1차 실험: BTC/ETH 시드 기준 432개 조합 모두 탈락, 생존 후보 0
+- 상위 30 확장 수집 시작: 기존 BTC/ETH 16개 + `KRW-WLD` 4개 완료, 총 20개 JSON. `KRW-XRP` 1m 진행 중 중단되어 미저장
+- 수집기 안정화: 진행률 로그, Upbit 상장 이전 cursor 가드, HTTP 재시도 10회, `Connection: close`, 최대 60초 backoff 추가
 - maker 지정가 진입 구현: pending order 생성, fresh fill, risk+portfolio 검증
 - 2차 감사 수정: `firstCheckAt` 과보수 제거, stale price 체결 가드 추가
 - 단위 테스트 6종: same-candle 0건, stale 거부, 정상 체결, 중복 방지, 교차 격리
@@ -44,7 +46,7 @@
 
 ## 다음 액션 (나중에 할 일 — 등록됨)
 
-1. 거래대금 상위 30 고정 유니버스로 Upbit/Binance 1년치 1m/3m/5m/15m 원본 캔들을 확장 수집.
+1. 거래대금 상위 30 고정 유니버스 수집을 재개한다. `KRW-XRP` 1m부터 다시 시작되며 완료 파일은 skip된다.
 2. 종목 랭킹 기반 로테이션 전략 후보를 정의하고 리더보드 산출.
 3. 다섯 후보 공통 탈락 패턴(train gross edge 부족, ETH 편중, OOS 표본 부족)을 확장 유니버스에서 재검증.
 
@@ -77,4 +79,9 @@
   - 모바일 root overflow를 막도록 shell/status bar/page 공통 CSS 보정.
   - Portfolio 선택 PAPER SELL 확인 문구와 lint 미사용 항목 정리.
 - 검증 통과: `./gradlew test checkstyleMain`, frontend `lint/build/test/test:e2e`.
-다음 세션: 거래대금 상위 30 고정 유니버스를 수집하고 종목 랭킹 기반 로테이션 후보를 구현.
+2026-06-12 — 거래대금 상위 30 고정 유니버스 수집 중간 중단.
+- 완료 캐시: 기존 BTC/ETH 16개 + `KRW-WLD` 1m/3m/5m/15m 4개 = 총 20개 JSON, `.backtest_cache` 약 955MB.
+- 미완료: `KRW-XRP` 1m 수집 중 중단. 파일 단위 저장 전이므로 다음 실행 때 처음부터 다시 받는다.
+- 다음 재개 명령:
+  `python3 scripts/collect-backtest-candles.py --since 2025-06-12T00:00:00Z --until 2026-06-12T00:00:00Z --units 1,3,5,15 --upbit-markets ALL_KRW --binance-symbols ALL_USDT --upbit-top 30 --binance-top 30 --request-delay-sec 0.5`
+- 재개 후 완료 파일은 자동 skip된다. 전체 수집 완료 전 `manifest.json`은 이전 시드 상태일 수 있다.

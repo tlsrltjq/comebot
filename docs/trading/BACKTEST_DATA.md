@@ -108,6 +108,37 @@ ls -lh .backtest_cache | head
 - 크기: 약 866MB, 16개 캔들 파일 + `manifest.json`
 - 검증: Binance는 기준봉 간격 연속. Upbit는 일부 gap 존재 확인.
 
+## 현재 확장 수집 상태
+
+2026-06-12에 거래대금 상위 30 고정 유니버스 수집을 시작했으나, 장시간 작업이라 중간 중단했다.
+
+- 수집 대상: Upbit KRW 24h 거래대금 상위 30 + Binance spot USDT quote volume 상위 30
+- 기간: 2025-06-12T00:00:00Z ~ 2026-06-12T00:00:00Z
+- 기준봉: 1m, 3m, 5m, 15m
+- 완료 파일: 기존 BTC/ETH 16개 + `KRW-WLD` 4개 = 총 20개 JSON
+- 진행 중 중단: `KRW-XRP` 1m. 파일 단위 저장 전 중단했으므로 다음 실행 때 처음부터 다시 받는다.
+- `manifest.json`은 전체 수집 완료 전까지 이전 시드 상태일 수 있다.
+- 수집기 보강:
+  - 진행률 로그 출력
+  - Upbit 상장 이전 구간에서 cursor가 충분히 이동하지 않으면 중단
+  - HTTP 재시도 10회, `Connection: close`, 최대 60초 backoff
+
+재개 명령:
+
+```bash
+python3 scripts/collect-backtest-candles.py \
+  --since 2025-06-12T00:00:00Z \
+  --until 2026-06-12T00:00:00Z \
+  --units 1,3,5,15 \
+  --upbit-markets ALL_KRW \
+  --binance-symbols ALL_USDT \
+  --upbit-top 30 \
+  --binance-top 30 \
+  --request-delay-sec 0.5
+```
+
+이미 완료된 파일은 자동으로 skip된다.
+
 ## 운영 자동매매 정책
 
 새 전략 후보가 나오기 전까지 기본 실행 경로의 candidate/exit scheduler는 꺼 둔다.

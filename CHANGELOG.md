@@ -68,6 +68,7 @@
 2026-06-12 | research | feat: add candle cache, backtest leaderboard, and three rejected strategy candidates
 2026-06-12 | research | feat: add rejected oversold mean-reversion strategy candidate
 2026-06-12 | research | feat: add rejected BTC market regime strategy candidate and fixed top-30 universe policy
+2026-06-12 | research | chore: harden candle collector and document partial top-30 universe collection
 2026-05-14 | ux    | chore: reduce frontend API polling load, stop background tab polling
 2026-05-14 | docs  | docs: align Risk and System page docs with code
 2026-05-14 | ux    | test: add Playwright UI regression tests (desktop/mobile)
