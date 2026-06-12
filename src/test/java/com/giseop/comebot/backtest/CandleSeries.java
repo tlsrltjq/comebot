@@ -100,6 +100,17 @@ final class CandleSeries {
         return close[index];
     }
 
+    double accTradePrice(int index) {
+        return accTradePrice[index];
+    }
+
+    double highLowRangePct(int index) {
+        if (close[index] <= 0) {
+            return 0;
+        }
+        return (high[index] - low[index]) / close[index] * 100.0;
+    }
+
     /**
      * The last {@code count} candles whose close-time is at or before {@code cursor},
      * mirroring {@code CandleProvider.getRecentCandles}. Incomplete (still-open) candles
@@ -183,12 +194,12 @@ final class CandleSeries {
                     parser.nextToken();
                     switch (field) {
                         case "candle_date_time_utc" -> t = parseUtcSeconds(parser.getText());
-                        case "opening_price" -> o = parser.getDoubleValue();
-                        case "high_price" -> h = parser.getDoubleValue();
-                        case "low_price" -> l = parser.getDoubleValue();
-                        case "trade_price" -> c = parser.getDoubleValue();
-                        case "candle_acc_trade_price" -> amt = parser.getDoubleValue();
-                        case "candle_acc_trade_volume" -> vol = parser.getDoubleValue();
+                        case "opening_price" -> o = doubleValue(parser);
+                        case "high_price" -> h = doubleValue(parser);
+                        case "low_price" -> l = doubleValue(parser);
+                        case "trade_price" -> c = doubleValue(parser);
+                        case "candle_acc_trade_price" -> amt = doubleValue(parser);
+                        case "candle_acc_trade_volume" -> vol = doubleValue(parser);
                         default -> {
                             // skip nested structures if any
                             if (parser.currentToken().isStructStart()) {
@@ -249,6 +260,13 @@ final class CandleSeries {
 
     private static long parseUtcSeconds(String text) {
         return LocalDateTime.parse(text, UTC_FORMAT).toInstant(ZoneOffset.UTC).getEpochSecond();
+    }
+
+    private static double doubleValue(JsonParser parser) {
+        if (parser.currentToken() == JsonToken.VALUE_STRING) {
+            return Double.parseDouble(parser.getText());
+        }
+        return parser.getDoubleValue();
     }
 
     private static void sortByTimeAscending(

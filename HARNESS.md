@@ -12,14 +12,15 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 |---|---|
 | 거래 모드 | `PAPER_TRADING` 전용 |
 | 거래소 | Upbit(KRW) + Binance(USDT), 공개 API만 |
-| 전략 | PullbackBounce / bean `VOLATILITY_BREAKOUT_LONG` |
-| 진입 | maker 지정가: 신호 캔들 close 가격, 5분 유효 (ADR-013 보류/조건부) |
+| 운영 전략 | 기존 PullbackBounce / bean `VOLATILITY_BREAKOUT_LONG`은 관찰 대상. 새 후보 생존 전까지 자동 진입 중지 |
+| 리서치 전략 | Relative Strength Momentum, Volume Surge Continuation, Volatility Contraction Breakout 모두 BTC/ETH 시드 1차 실험 생존 후보 0 |
+| 진입 | 운영 엔진은 maker 지정가: 신호 캔들 close 가격, 5분 유효 (ADR-013 보류/조건부). 리서치 후보는 next open 모델 |
 | 청산 | TP +4.0%, SL -2.0%, trailing off (ADR-011) |
-| 주기 | candidate 30초(운영 `.env`; 기본 60초), exit 1초 |
+| 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | 유실 `.env` 복구(`POSTGRES_PASSWORD=comebot`, Telegram off), 프론트 lint/E2E 보정, Docker app/web 재빌드 검증 |
-| 다음 단계 | V1 풀백군 엣지 없음 확정. 전략 전환 또는 데이터 범위 재검토 시작 전 운영 UI 상태만 유지 |
+| 최근 작업 | 1년치 Upbit/Binance BTC/ETH 1m/3m/5m/15m 원본 캔들 수집, 리더보드/판정 정책 추가, 세 전략 후보 1차 검증 |
+| 다음 단계 | 과매도 평균회귀 후보 구현 후 리더보드 산출. 동시에 상위 유니버스 확장 기준 고정 |
 
 ## 구현 요약
 
@@ -29,6 +30,7 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 - Strategy/Risk: per-exchange scanner override, 포지션 상한, 손절 cooldown, 비정상 시세 차단, kill switch
 - Execution: PAPER 주문 실행 + `PendingLimitOrderService` maker 지정가 체결(`capturedAt > createdAt`, fresh price only)
 - Storage/UI: history, scanlog, analytics, React 운영 화면, 조회 전용 Telegram
+- Backtest: `.backtest_cache` 원본 캔들, last-60d OOS split, 공통 리더보드 CSV/Markdown, 전략별 운용 기록
 - 자세한 구조와 정책은 `docs/architecture.md`, `docs/spec.md`, `docs/decisions.md` 참조
 
 ## 불변 규칙

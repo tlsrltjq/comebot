@@ -40,9 +40,6 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @EnabledIfSystemProperty(named = "backtest.run", matches = "true")
 class ParityBacktestTest {
 
-    private static final long SECONDS_PER_DAY = 86_400L;
-    private static final int TEST_WINDOW_DAYS = 60;
-
     @Test
     void replayOperatingEngineOverCachedCandles() throws IOException {
         Path cacheDir = Paths.get(System.getProperty("backtest.cacheDir", ".backtest_cache"));
@@ -70,12 +67,13 @@ class ParityBacktestTest {
                 btcTrend,
                 null);       // StrategyEntryProperties — time-of-day filter disabled in ops
 
-        long splitSec = globalEndSec - (long) TEST_WINDOW_DAYS * SECONDS_PER_DAY;
+        long splitSec = BacktestSplitPolicy.splitSec(globalEndSec);
 
         System.out.println("\n==================== PARITY BACKTEST (operating Java engine) ====================");
         System.out.println("entry filters: current .env Upbit (1m×20, minPriceChg 0.15, dist 0-5%, minAmt 1M)");
         System.out.println("exit: TP+4.0% / SL-2.0% / trailing off (ADR-011)   costs: maker 0.05% + taker 0.05% + slip 0.05%");
         System.out.println("PFgross = pre-cost (signal edge);  PFnet = after fees+slippage (real)\n");
+        System.out.println("split: " + BacktestSplitPolicy.description() + "\n");
 
         // Same entry signal + exit + risk caps; only the entry FILL model differs.
         // Maker-limit is current ops (ADR-013); market-at-next-open is backtest.py's model.

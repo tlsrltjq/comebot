@@ -91,12 +91,13 @@ PUT /api/scheduler/control
 Content-Type: application/json
 
 {
-  "autoTradingEnabled": true,
+  "autoTradingEnabled": false,
   "candidateFixedDelayMs": 30000
 }
 ```
 
 - `autoTradingEnabled`는 candidate scheduler와 exit scheduler를 함께 켜거나 끈다.
+- V1 풀백군 엣지 없음 결론 이후 기본 운영은 관찰/대시보드 전용이며, 새 전략 후보가 게이트를 통과하기 전까지 `false`를 유지한다.
 - `candidateFixedDelayMs`는 `30000` 또는 `60000`만 허용한다.
 - 후보 스케줄러는 30초마다 상태를 확인하고, 설정값이 60초이면 내부에서 다음 실행을 건너뛰어 런타임 변경을 반영한다.
 - 변경된 자동매매 설정은 `scheduler_control_setting` 테이블에 저장되고, 백엔드 재시작 시 환경변수 기본값보다 우선 적용된다.

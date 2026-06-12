@@ -43,8 +43,6 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @EnabledIfSystemProperty(named = "backtest.entrysweep", matches = "true")
 class EntrySweepTest {
 
-    private static final long SECONDS_PER_DAY = 86_400L;
-    private static final int TEST_WINDOW_DAYS = 60;
     private static final double TAKE_PROFIT = 3.0;
     private static final double STOP_LOSS = -2.0;
 
@@ -77,11 +75,12 @@ class EntrySweepTest {
 
         BacktestCache cache = BacktestCache.load(cacheDir);
         assumeTrue(!cache.minuteSeries().isEmpty(), "no 1m candle series in cache");
-        long splitSec = cache.globalEndSec() - (long) TEST_WINDOW_DAYS * SECONDS_PER_DAY;
+        long splitSec = BacktestSplitPolicy.splitSec(cache.globalEndSec());
         BtcTrendCacheService btcTrend = new BtcTrendCacheService(cache.provider());
 
         System.out.println("\n==================== ENTRY-SIGNAL SWEEP (market entry, exit TP+3/SL-2) ==========");
         System.out.println("hunting: train PFgross lift toward >=1.15 without trade-count collapse");
+        System.out.println("decision policy: " + BacktestSplitPolicy.description());
         System.out.printf(Locale.US, "%-34s | %7s | %-13s | %-13s | %5s%n",
                 "variant", "signals", "PFgross tr/te", "PFnet  tr/te", "winTe");
         System.out.println("--------------------------------------------------------------------------------------");

@@ -41,12 +41,8 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @EnabledIfSystemProperty(named = "backtest.sweep", matches = "true")
 class ParameterSweepTest {
 
-    private static final long SECONDS_PER_DAY = 86_400L;
-    private static final int TEST_WINDOW_DAYS = 60;
-
     private static final double[] TAKE_PROFITS = {2.0, 3.0, 4.0, 6.0};
     private static final double[] STOP_LOSSES = {-1.5, -2.0, -3.0};
-    private static final double GROSS_EDGE_GATE = 1.15; // cost-absorbing gross PF
 
     @Test
     void sweepExitStructureForGrossEdge() throws IOException {
@@ -55,7 +51,7 @@ class ParameterSweepTest {
 
         BacktestCache cache = BacktestCache.load(cacheDir);
         assumeTrue(!cache.minuteSeries().isEmpty(), "no 1m candle series in cache");
-        long splitSec = cache.globalEndSec() - (long) TEST_WINDOW_DAYS * SECONDS_PER_DAY;
+        long splitSec = BacktestSplitPolicy.splitSec(cache.globalEndSec());
 
         CandidateScannerProperties scannerProps = upbitOperatingScannerProps();
         StrategyMarketSettingsService settings = new StrategyMarketSettingsService(
@@ -66,7 +62,9 @@ class ParameterSweepTest {
                 new VolatilityIndicatorService(), settings, null, btcTrend, null);
 
         System.out.println("\n==================== EXIT-STRUCTURE SWEEP (market entry, current entry filters) ====");
-        System.out.println("gross edge gate = test PFgross >= " + GROSS_EDGE_GATE + " AND |train-test| < 0.15");
+        System.out.println("decision policy: " + BacktestSplitPolicy.description());
+        System.out.println("gross edge gate = train PFgross >= " + BacktestDecisionPolicy.MIN_GROSS_EDGE
+                + " (strong >= " + BacktestDecisionPolicy.STRONG_GROSS_EDGE + ")");
         System.out.printf(Locale.US, "%4s %5s | %6s | %-13s | %-13s | %5s | %s%n",
                 "TP", "SL", "trades", "PFgross tr/te", "PFnet  tr/te", "winTe", "flag");
         System.out.println("------------------------------------------------------------------------------------");
@@ -79,10 +77,7 @@ class ParameterSweepTest {
                 BacktestEngine.Result r = runConfig(cache, scanner, btcTrend, settings, splitSec, tp, sl);
                 BacktestReport train = r.train();
                 BacktestReport test = r.test();
-                boolean grossEdge = test.grossProfitFactor() >= GROSS_EDGE_GATE
-                        && Math.abs(train.grossProfitFactor() - test.grossProfitFactor()) < 0.15;
-                boolean profitable = test.profitFactor() >= 1.0;
-                String flag = profitable ? "*** NET-PROFITABLE ***" : grossEdge ? "gross-edge" : "";
+                String flag = BacktestDecisionPolicy.decide(r);
                 System.out.printf(Locale.US, "%+4.1f %5.1f | %6d | %6.3f/%6.3f | %6.3f/%6.3f | %4.1f%% | %s%n",
                         tp, sl, r.full().trades(),
                         train.grossProfitFactor(), test.grossProfitFactor(),

@@ -46,6 +46,8 @@ backtest_*.json
 backtest_*.log
 bt_*.py
 .backtest_cache/
+__pycache__/
+*.py[cod]
 
 ### Frontend ###
 frontend/node_modules/

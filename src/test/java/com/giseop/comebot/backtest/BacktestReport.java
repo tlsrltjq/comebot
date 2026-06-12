@@ -73,6 +73,22 @@ final class BacktestReport {
         return winRatePct;
     }
 
+    double avgReturnPct() {
+        return avgReturnPct;
+    }
+
+    double avgWinPct() {
+        return avgWinPct;
+    }
+
+    double avgLossPct() {
+        return avgLossPct;
+    }
+
+    double avgHoldMinutes() {
+        return avgHoldMinutes;
+    }
+
     double netPnl() {
         return netPnl;
     }

@@ -42,8 +42,6 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @EnabledIfSystemProperty(named = "backtest.regime", matches = "true")
 class RegimeAnalysisTest {
 
-    private static final long SECONDS_PER_DAY = 86_400L;
-    private static final int TEST_WINDOW_DAYS = 60;
     private static final double TAKE_PROFIT = 3.0;
     private static final double STOP_LOSS = -2.0;
     private static final int RETURN_HOURS = 6;
@@ -58,7 +56,7 @@ class RegimeAnalysisTest {
         BacktestCache cache = BacktestCache.load(cacheDir);
         assumeTrue(!cache.minuteSeries().isEmpty(), "no 1m candle series in cache");
         assumeTrue(cache.btcHourly() != null, "no KRW-BTC 60m series in cache");
-        splitSec = cache.globalEndSec() - (long) TEST_WINDOW_DAYS * SECONDS_PER_DAY;
+        splitSec = BacktestSplitPolicy.splitSec(cache.globalEndSec());
 
         RegimeContext rc = new RegimeContext(cache.btcHourly(), cache.minuteSeries());
         CandidateScannerProperties props = v1ScannerProps();
@@ -76,8 +74,8 @@ class RegimeAnalysisTest {
 
         // ============================== STEP 1: DECOMPOSITION ==============================
         System.out.println("\n==================== V1 TRADE DECOMPOSITION BY REGIME (market entry, TP3/SL2) ====");
-        System.out.printf("baseline trades=%d  (train/test split = last %dd)  medianBTCvol(%dh)=%.3f%%%n",
-                trades.size(), TEST_WINDOW_DAYS, VOL_HOURS, medianVol);
+        System.out.printf("baseline trades=%d  (%s)  medianBTCvol(%dh)=%.3f%%%n",
+                trades.size(), BacktestSplitPolicy.description(), VOL_HOURS, medianVol);
 
         decompose("BTC 1h trend", trades, t -> rc.btcTrend(t.entryTimeSec()).name());
         decompose("BTC " + RETURN_HOURS + "h return", trades, t -> {
