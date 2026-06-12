@@ -48,6 +48,7 @@ tasks.named('test') {
     systemProperty 'backtest.rsmomentum', System.getProperty('backtest.rsmomentum', 'false')
     systemProperty 'backtest.volumesurge', System.getProperty('backtest.volumesurge', 'false')
     systemProperty 'backtest.vcbreakout', System.getProperty('backtest.vcbreakout', 'false')
+    systemProperty 'backtest.oversoldmr', System.getProperty('backtest.oversoldmr', 'false')
     if (System.getProperty('backtest.cacheDir') != null) {
         systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
     }
