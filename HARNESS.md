@@ -13,14 +13,14 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 거래 모드 | `PAPER_TRADING` 전용 |
 | 거래소 | Upbit(KRW) + Binance(USDT), 공개 API만 |
 | 운영 전략 | 기존 PullbackBounce / bean `VOLATILITY_BREAKOUT_LONG`은 관찰 대상. 새 후보 생존 전까지 자동 진입 중지 |
-| 리서치 전략 | Relative Strength Momentum, Volume Surge Continuation, Volatility Contraction Breakout, Oversold Mean Reversion 모두 BTC/ETH 시드 1차 실험 생존 후보 0 |
+| 리서치 전략 | Relative Strength Momentum, Volume Surge Continuation, Volatility Contraction Breakout, Oversold Mean Reversion, BTC Market Regime Momentum 모두 BTC/ETH 시드 1차 실험 생존 후보 0 |
 | 진입 | 운영 엔진은 maker 지정가: 신호 캔들 close 가격, 5분 유효 (ADR-013 보류/조건부). 리서치 후보는 next open 모델 |
 | 청산 | TP +4.0%, SL -2.0%, trailing off (ADR-011) |
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | 1년치 Upbit/Binance BTC/ETH 1m/3m/5m/15m 원본 캔들 수집, 리더보드/판정 정책 추가, 네 전략 후보 1차 검증 |
-| 다음 단계 | 상위 유니버스 확장 기준 고정 후 BTC/마켓 레짐 기반 조건부 후보 구현 |
+| 최근 작업 | 1년치 Upbit/Binance BTC/ETH 1m/3m/5m/15m 원본 캔들 수집, 리더보드/판정 정책 추가, 다섯 전략 후보 1차 검증, 상위 30 고정 유니버스 기준 확정 |
+| 다음 단계 | 거래대금 상위 30 고정 유니버스 수집 후 종목 랭킹 기반 로테이션 후보 구현 |
 
 ## 구현 요약
 

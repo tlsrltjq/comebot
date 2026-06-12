@@ -33,6 +33,8 @@
 - 거래대금 추세 지속 1차 실험: BTC/ETH 시드 기준 216개 조합 모두 탈락, 생존 후보 0
 - 변동성 수축 후 돌파 1차 실험: BTC/ETH 시드 기준 216개 조합 모두 탈락, 생존 후보 0
 - 과매도 평균회귀 1차 실험: BTC/ETH 시드 기준 216개 조합 모두 탈락, 생존 후보 0
+- 유니버스 확장 기준 고정: Upbit KRW 24h 거래대금 상위 30 + Binance spot USDT quote volume 상위 30
+- BTC/마켓 레짐 모멘텀 1차 실험: BTC/ETH 시드 기준 432개 조합 모두 탈락, 생존 후보 0
 - maker 지정가 진입 구현: pending order 생성, fresh fill, risk+portfolio 검증
 - 2차 감사 수정: `firstCheckAt` 과보수 제거, stale price 체결 가드 추가
 - 단위 테스트 6종: same-candle 0건, stale 거부, 정상 체결, 중복 방지, 교차 격리
@@ -42,9 +44,9 @@
 
 ## 다음 액션 (나중에 할 일 — 등록됨)
 
-1. 상위 유니버스 확장 수집 범위와 거래대금 상위 유니버스 산정 방식을 고정.
-2. BTC/마켓 레짐 기반 조건부 전략 후보를 정의하고 리더보드 산출.
-3. 네 후보 공통 탈락 패턴(train gross edge 부족, ETH 편중, OOS 표본 부족)을 다음 후보 설계에 반영.
+1. 거래대금 상위 30 고정 유니버스로 Upbit/Binance 1년치 1m/3m/5m/15m 원본 캔들을 확장 수집.
+2. 종목 랭킹 기반 로테이션 전략 후보를 정의하고 리더보드 산출.
+3. 다섯 후보 공통 탈락 패턴(train gross edge 부족, ETH 편중, OOS 표본 부족)을 확장 유니버스에서 재검증.
 
 ## 중단/탈락 기준 (전략 실험)
 
@@ -75,4 +77,4 @@
   - 모바일 root overflow를 막도록 shell/status bar/page 공통 CSS 보정.
   - Portfolio 선택 PAPER SELL 확인 문구와 lint 미사용 항목 정리.
 - 검증 통과: `./gradlew test checkstyleMain`, frontend `lint/build/test/test:e2e`.
-다음 세션: 상위 유니버스 확장 기준을 고정하고 BTC/마켓 레짐 기반 조건부 후보를 구현.
+다음 세션: 거래대금 상위 30 고정 유니버스를 수집하고 종목 랭킹 기반 로테이션 후보를 구현.
