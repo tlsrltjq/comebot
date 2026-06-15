@@ -167,8 +167,8 @@ python3 scripts/collect-backtest-candles.py \
 - PAPER 후보가 확정되면 전체 캐시를 계속 보관하지 않고 후보 검증에 필요한 최소 기준봉/마켓만 남기는 prune을 검토한다.
 - 현재 1순위 후보 기준 최소 보관 후보:
   - Binance 15m: 신호 생성용
-  - Binance 5m/1m: 실제 5분 유효 maker 체결 감사용
-  - no-pegged/no-event 적용 후 남는 Binance 후보 유니버스
+  - Binance 5m 또는 1m: 실제 5분 유효 maker 체결 감사용
+  - no-event 또는 no-pegged 적용 후 남는 Binance 후보 유니버스
 - prune 또는 삭제 전에는 `manifest.json`, 관련 리더보드 CSV/Markdown, `docs/trading/condition-records/` 기록이 남아 있어야 한다.
 - 전체 삭제가 필요하면 `.backtest_cache`는 재수집 명령으로 복구 가능하다. 단, 거래소 API 상태와 상장/거래중지 변화에 따라 완전히 동일한 재현이 보장되지는 않는다.
 

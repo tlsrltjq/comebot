@@ -55,6 +55,7 @@ tasks.named('test') {
     systemProperty 'backtest.sessionvolatility', System.getProperty('backtest.sessionvolatility', 'false')
     systemProperty 'backtest.sessionvolatility.robustness', System.getProperty('backtest.sessionvolatility.robustness', 'false')
     systemProperty 'backtest.sessionvolatility.maker', System.getProperty('backtest.sessionvolatility.maker', 'false')
+    systemProperty 'backtest.sessionvolatility.submaker', System.getProperty('backtest.sessionvolatility.submaker', 'false')
     if (System.getProperty('backtest.cacheDir') != null) {
         systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
     }

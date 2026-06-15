@@ -1,5 +1,6 @@
 # 변경 이력
 
+2026-06-15 | backtest | test: session volatility 하위 캔들 maker 감사 — 15m 신호+5m/1m 300초 유효성 통과, no-event/no-pegged stress 후보 유지
 2026-06-15 | backtest | test: session volatility maker 1차 감사 — 15m coarse 지정가 모델 통과, 5m/1m 실제 5분 체결 감사 필요
 2026-06-15 | backtest | test: session volatility 정밀 검증 — 후보 13개 비용/유니버스 156개 시나리오, Binance 15m UTC 06-12 stress 후보 유지
 2026-06-15 | backtest | feat: session volatility breakout 하니스 추가 — 확장 유니버스 640개 조합, Binance 중심 PAPER 후보 12개 + Upbit 약한 후보 1개 산출
