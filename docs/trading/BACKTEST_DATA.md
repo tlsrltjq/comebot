@@ -110,20 +110,39 @@ ls -lh .backtest_cache | head
 
 ## 현재 확장 수집 상태
 
-2026-06-12에 거래대금 상위 30 고정 유니버스 수집을 시작했으나, 장시간 작업이라 중간 중단했다.
+2026-06-15에 거래대금 상위 30 고정 유니버스 수집을 완료했다.
 
 - 수집 대상: Upbit KRW 24h 거래대금 상위 30 + Binance spot USDT quote volume 상위 30
 - 기간: 2025-06-12T00:00:00Z ~ 2026-06-12T00:00:00Z
 - 기준봉: 1m, 3m, 5m, 15m
-- 완료 파일: 기존 BTC/ETH 16개 + `KRW-WLD` 4개 = 총 20개 JSON
-- 진행 중 중단: `KRW-XRP` 1m. 파일 단위 저장 전 중단했으므로 다음 실행 때 처음부터 다시 받는다.
-- `manifest.json`은 전체 수집 완료 전까지 이전 시드 상태일 수 있다.
+- 완료 파일: 240개 JSON
+- 크기: 약 9.0GB
+- 수집 완료 시각: 2026-06-15T00:58:53Z
+- manifest: `.backtest_cache/manifest.json`
 - 수집기 보강:
   - 진행률 로그 출력
   - Upbit 상장 이전 구간에서 cursor가 충분히 이동하지 않으면 중단
   - HTTP 재시도 10회, `Connection: close`, 최대 60초 backoff
 
-재개 명령:
+Upbit 30개:
+
+- `KRW-WLD`, `KRW-BTC`, `KRW-MEGA`, `KRW-TRUMP`, `KRW-XRP`
+- `KRW-USDT`, `KRW-ETH`, `KRW-TAO`, `KRW-ZKP`, `KRW-SAHARA`
+- `KRW-ONDO`, `KRW-NEAR`, `KRW-VVV`, `KRW-IRYS`, `KRW-DOGE`
+- `KRW-XLM`, `KRW-B3`, `KRW-AXL`, `KRW-SOL`, `KRW-AKT`
+- `KRW-ENSO`, `KRW-SUI`, `KRW-OPEN`, `KRW-XPL`, `KRW-ZKC`
+- `KRW-CHIP`, `KRW-IP`, `KRW-ID`, `KRW-ZK`, `KRW-JTO`
+
+Binance 30개:
+
+- `USDCUSDT`, `BTCUSDT`, `ETHUSDT`, `WLDUSDT`, `XAUTUSDT`
+- `USD1USDT`, `SOLUSDT`, `TAOUSDT`, `ZECUSDT`, `XRPUSDT`
+- `NEARUSDT`, `BNBUSDT`, `TRUMPUSDT`, `DOGEUSDT`, `NIGHTUSDT`
+- `MEGAUSDT`, `FETUSDT`, `BABYUSDT`, `RIFUSDT`, `TRXUSDT`
+- `SUIUSDT`, `STGUSDT`, `ENAUSDT`, `PEPEUSDT`, `USDEUSDT`
+- `XPLUSDT`, `ICPUSDT`, `ADAUSDT`, `TONUSDT`, `DEXEUSDT`
+
+재수집 명령:
 
 ```bash
 python3 scripts/collect-backtest-candles.py \
@@ -137,7 +156,7 @@ python3 scripts/collect-backtest-candles.py \
   --request-delay-sec 0.5
 ```
 
-이미 완료된 파일은 자동으로 skip된다.
+이미 완료된 파일은 자동으로 skip된다. 같은 기간/기준봉을 강제로 다시 받을 때만 `--overwrite`를 붙인다.
 
 ## 운영 자동매매 정책
 
