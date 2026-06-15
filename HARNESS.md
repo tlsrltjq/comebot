@@ -13,14 +13,14 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 거래 모드 | `PAPER_TRADING` 전용 |
 | 거래소 | Upbit(KRW) + Binance(USDT), 공개 API만 |
 | 운영 전략 | 기존 PullbackBounce / bean `VOLATILITY_BREAKOUT_LONG`은 관찰 대상. 새 후보 생존 전까지 자동 진입 중지 |
-| 리서치 전략 | 기존 5개 BTC/ETH 시드 후보 생존 0. Ranked Rotation은 비용 스트레스 net weak. Session Volatility Breakout은 Binance 15m UTC 06-12 후보가 비용/유니버스 스트레스 통과 |
+| 리서치 전략 | 기존 5개 BTC/ETH 시드 후보 생존 0. Session Volatility Breakout Binance 15m UTC 06-12 후보가 비용/유니버스 + 15m coarse maker 감사 통과 |
 | 진입 | 운영 엔진은 maker 지정가: 신호 캔들 close 가격, 5분 유효 (ADR-013 보류/조건부). 리서치 후보는 next open 모델 |
 | 청산 | TP +4.0%, SL -2.0%, trailing off (ADR-011) |
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | Session Volatility Breakout 정밀 검증. 후보 13개 x 비용 3종 x 유니버스 4종에서 stress 비용 후보 7개 유지 |
-| 다음 단계 | PAPER 구현 전 maker 지정가 체결 지연/미체결 모델로 Binance 15m UTC 06-12 대표 후보를 재검증 |
+| 최근 작업 | Session Volatility Breakout 1순위 후보를 신호 close 지정가/다음 15m 캔들 체결 모델로 감사. stress + no-pegged-event test PFnet 1.154 유지 |
+| 다음 단계 | 5m/1m 하위 캔들로 실제 5분 유효 maker 체결 감사 후 PAPER 전략 구현/캐시 정리 여부 결정 |
 
 ## 구현 요약
 
