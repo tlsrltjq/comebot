@@ -50,6 +50,7 @@ tasks.named('test') {
     systemProperty 'backtest.vcbreakout', System.getProperty('backtest.vcbreakout', 'false')
     systemProperty 'backtest.oversoldmr', System.getProperty('backtest.oversoldmr', 'false')
     systemProperty 'backtest.btcmarketregime', System.getProperty('backtest.btcmarketregime', 'false')
+    systemProperty 'backtest.rankedrotation', System.getProperty('backtest.rankedrotation', 'false')
     if (System.getProperty('backtest.cacheDir') != null) {
         systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
     }

@@ -26,10 +26,14 @@ final class BacktestSeriesLoader {
 
     private static boolean matchesExchange(String fileName, String exchange) {
         String market = fileName.substring(0, fileName.indexOf('_'));
+        return matchesExchangeName(market, exchange);
+    }
+
+    static boolean matchesExchangeName(String market, String exchange) {
         if ("UPBIT".equals(exchange)) {
             return market.startsWith("KRW-");
         }
-        return market.endsWith("USDT");
+        return !market.startsWith("KRW-") && market.endsWith("USDT");
     }
 
     private static String market(String fileName, int unit) {
