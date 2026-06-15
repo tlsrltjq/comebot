@@ -22,7 +22,7 @@
 - 운영 상태: 새 전략 후보 전까지 candidate/exit scheduler 기본값 OFF, 관찰/대시보드 전용
 - 확장 유니버스 생존 후보:
   - Ranked Rotation: 기본 비용에서는 후보가 있으나, 보수 비용/슬리피지 스트레스에서는 전부 net weak로 강등.
-  - Session Volatility Breakout: Binance 중심 후보 12개 + Upbit 약한 후보 1개. 정밀 검증 전이라 PAPER 전환 보류.
+  - Session Volatility Breakout: Binance 15m UTC 06-12 대표 후보가 no-pegged/no-event/stress 비용에서도 생존. PAPER 구현 전 maker 체결 현실성 검증 필요.
 
 ## 완료된 최근 작업
 
@@ -43,6 +43,7 @@
 - 백테스트 로더 보정: Binance 유니버스에 Upbit `KRW-USDT`가 섞이지 않도록 exchange 필터 회귀 테스트 추가
 - Ranked Rotation 정밀 검증: 후보 6개를 비용 3종 x 유니버스 4종으로 재검증. 기본 비용에서는 16개 후보/관찰 후보가 남지만, 보수/스트레스 비용에서는 모든 조합이 `watch:*net-weak` 또는 탈락
 - Session Volatility Breakout: 확장 유니버스 640개 조합 중 `candidate:paper-observation` 6개, `candidate:weak-paper-observation` 7개. 핵심 구간은 Binance 15m UTC 06-12, Binance 3m UTC 12-18/18-24
+- Session Volatility Breakout 정밀 검증: 후보 13개 x 비용 3종 x 유니버스 4종 총 156개 시나리오. stress 비용에서도 candidate 7개 유지, 핵심은 Binance 15m UTC 06-12
 - 수집기 안정화: 진행률 로그, Upbit 상장 이전 cursor 가드, HTTP 재시도 10회, `Connection: close`, 최대 60초 backoff 추가
 - maker 지정가 진입 구현: pending order 생성, fresh fill, risk+portfolio 검증
 - 2차 감사 수정: `firstCheckAt` 과보수 제거, stale price 체결 가드 추가
@@ -53,9 +54,9 @@
 
 ## 다음 액션 (나중에 할 일 — 등록됨)
 
-1. Session Volatility Breakout 후보 정밀 검증: 비용/슬리피지, no-pegged/no-event 유니버스, 세션별 안정성, maker 체결 지연/미체결 모델.
-2. 정밀 검증 통과 시 PAPER 자동매매 후보로 별도 전략 구현을 검토한다.
-3. 통과하지 못하면 강한 코인 선별 후 pullback 진입 하이브리드 전략으로 진행한다.
+1. Session Volatility Breakout 대표 후보에 maker 지정가 체결 지연/미체결 모델을 적용한다.
+2. maker 모델 통과 시 PAPER 자동매매 후보 전략 구현 범위와 운영 기준을 확정한다.
+3. maker 모델에서 붕괴하면 강한 코인 선별 후 pullback 진입 하이브리드 전략으로 진행한다.
 
 ## 중단/탈락 기준 (전략 실험)
 
@@ -102,4 +103,6 @@
 - 시간대/세션별 변동성 돌파 후보 구현 및 리더보드 산출.
 - 산출: 640개 조합 중 후보 13개. Binance 15m UTC 06-12, Binance 3m UTC 12-18/18-24에 집중.
 - 대표 후보: Binance 3m UTC 12-18 breakout=60,avg=20,minRangeRatio=1.5,minVolRatio=3.0, full PFgross/PFnet 1.263/1.040, train 1.216/1.000, test 1.497/1.234, trades 569, topMarket TRXUSDT 10.5%.
-- 다음 세션: Session Volatility Breakout 후보 정밀 검증부터 시작.
+- 정밀 검증: 156개 비용/유니버스 시나리오 산출. 보수 비용 후보 10개, stress 비용 후보 7개 유지.
+- 1순위 후보: Binance 15m UTC 06-12, breakout=20,avg=60,minRangeRatio=2.5,minVolRatio=1.5. no-pegged-event + stress에서도 full PFgross/PFnet 1.207/0.873, train 1.120/0.807, test 1.576/1.153.
+- 다음 세션: maker 지정가 체결 지연/미체결 모델로 1순위 후보를 재검증.

@@ -53,6 +53,7 @@ tasks.named('test') {
     systemProperty 'backtest.rankedrotation', System.getProperty('backtest.rankedrotation', 'false')
     systemProperty 'backtest.rankedrotation.robustness', System.getProperty('backtest.rankedrotation.robustness', 'false')
     systemProperty 'backtest.sessionvolatility', System.getProperty('backtest.sessionvolatility', 'false')
+    systemProperty 'backtest.sessionvolatility.robustness', System.getProperty('backtest.sessionvolatility.robustness', 'false')
     if (System.getProperty('backtest.cacheDir') != null) {
         systemProperty 'backtest.cacheDir', System.getProperty('backtest.cacheDir')
     }
