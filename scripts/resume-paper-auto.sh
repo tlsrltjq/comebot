@@ -24,8 +24,15 @@ require_command() {
 require_command curl
 
 echo "Checking comebot backend: $API_BASE"
-if ! curl --silent --fail --max-time 5 "$API_BASE/api/system/status" >/dev/null; then
+system_status="$(curl --silent --fail --max-time 5 "$API_BASE/api/system/status" || true)"
+if [[ -z "$system_status" ]]; then
   echo "Backend is not reachable. Start it with scripts/run-local-dev.sh first."
+  exit 1
+fi
+echo "System status: $system_status"
+if [[ "$system_status" != *'"candidateReadinessWarnings":[]'* ]]; then
+  echo "Candidate scheduler readiness warnings are present. Auto PAPER remains disabled."
+  echo "Fix /api/system/status scheduler.candidateReadinessWarnings before resuming."
   exit 1
 fi
 

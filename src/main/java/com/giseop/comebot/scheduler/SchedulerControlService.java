@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,16 +21,19 @@ public class SchedulerControlService {
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final PositionExitSchedulerProperties positionExitSchedulerProperties;
     private final SpringDataSchedulerControlSettingJpaRepository settingRepository;
+    private final boolean restoreEnabled;
 
     @Autowired
     public SchedulerControlService(
             CandidateSchedulerProperties candidateSchedulerProperties,
             PositionExitSchedulerProperties positionExitSchedulerProperties,
-            ObjectProvider<SpringDataSchedulerControlSettingJpaRepository> settingRepository
+            ObjectProvider<SpringDataSchedulerControlSettingJpaRepository> settingRepository,
+            @Value("${scheduler.control.restore-enabled:true}") boolean restoreEnabled
     ) {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.positionExitSchedulerProperties = positionExitSchedulerProperties;
         this.settingRepository = settingRepository.getIfAvailable();
+        this.restoreEnabled = restoreEnabled;
     }
 
     SchedulerControlService(
@@ -37,13 +41,26 @@ public class SchedulerControlService {
             PositionExitSchedulerProperties positionExitSchedulerProperties,
             SpringDataSchedulerControlSettingJpaRepository settingRepository
     ) {
+        this(candidateSchedulerProperties, positionExitSchedulerProperties, settingRepository, true);
+    }
+
+    SchedulerControlService(
+            CandidateSchedulerProperties candidateSchedulerProperties,
+            PositionExitSchedulerProperties positionExitSchedulerProperties,
+            SpringDataSchedulerControlSettingJpaRepository settingRepository,
+            boolean restoreEnabled
+    ) {
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.positionExitSchedulerProperties = positionExitSchedulerProperties;
         this.settingRepository = settingRepository;
+        this.restoreEnabled = restoreEnabled;
     }
 
     @PostConstruct
     public void restorePersistedSetting() {
+        if (!restoreEnabled) {
+            return;
+        }
         if (settingRepository == null) {
             return;
         }

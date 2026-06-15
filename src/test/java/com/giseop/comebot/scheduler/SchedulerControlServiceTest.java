@@ -56,6 +56,27 @@ class SchedulerControlServiceTest {
     }
 
     @Test
+    void restorePersistedSettingCanBeDisabledForSafeObservationStartup() {
+        SchedulerControlService disabledRestoreService = new SchedulerControlService(
+                candidateSchedulerProperties,
+                positionExitSchedulerProperties,
+                settingRepository,
+                false
+        );
+        when(settingRepository.findById(SchedulerControlSettingEntity.DEFAULT_ID))
+                .thenReturn(Optional.of(new SchedulerControlSettingEntity(true, 30000, Instant.now())));
+        candidateSchedulerProperties.setEnabled(false);
+        positionExitSchedulerProperties.setEnabled(false);
+        candidateSchedulerProperties.setFixedDelayMs(60000);
+
+        disabledRestoreService.restorePersistedSetting();
+
+        org.assertj.core.api.Assertions.assertThat(candidateSchedulerProperties.isEnabled()).isFalse();
+        org.assertj.core.api.Assertions.assertThat(positionExitSchedulerProperties.isEnabled()).isFalse();
+        org.assertj.core.api.Assertions.assertThat(candidateSchedulerProperties.getFixedDelayMs()).isEqualTo(60000);
+    }
+
+    @Test
     void updateAppliesAndPersistsValues() {
         service.update(false, 30000L);
 

@@ -66,6 +66,28 @@ scripts\run-paper-jpa.bat
 기존 `scripts/run-upbit-paper-jpa.*` 이름은 호환용 alias로만 유지한다.
 실제 주문 API와 `REAL_TRADING`은 사용하지 않는다.
 
+Session Volatility Breakout PAPER 관찰 실행:
+
+```bash
+scripts/run-session-volatility-paper-jpa.sh
+```
+
+Windows:
+
+```bat
+scripts\run-session-volatility-paper-jpa.bat
+```
+
+이 프로필은 `.env`를 수정하지 않고 런타임 환경만 다음처럼 제한한다.
+
+- `STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT`
+- candidate scheduler: 시작 시 OFF, `BINANCE`, `ALL_USDT`, `max-buys-per-run=1`
+- exit scheduler: 시작 시 OFF, `BINANCE`
+- persisted scheduler control restore 비활성화
+
+백엔드가 뜬 뒤 `/api/system/status`의 `scheduler.candidateReadinessWarnings`가 빈 배열인지 확인하고,
+문제가 없을 때만 `scripts/resume-paper-auto.sh`로 candidate/exit scheduler를 함께 켠다.
+
 Binance PAPER 후보 스모크 테스트 절차:
 
 - `docs/operations/BINANCE_PAPER_SMOKE_TEST.md`
@@ -168,6 +190,7 @@ scripts\resume-paper-auto.bat
 ```
 
 - 이 스크립트는 백엔드 reachable 여부, 공개 시세 네트워크 진단, `/api/market-provider/status.automationReady`를 모두 확인한 뒤 scheduler를 켠다.
+- `/api/system/status`의 `scheduler.candidateReadinessWarnings`가 비어 있지 않으면 scheduler를 켜지 않는다.
 - 하나라도 실패하면 candidate/exit scheduler를 켜지 않고 종료한다.
 - 후보 주기는 `CANDIDATE_INTERVAL_MS=30000` 또는 `60000`으로 지정할 수 있다.
 - 네트워크 진단을 별도로 이미 완료한 경우에만 `SKIP_NETWORK_DIAG=true`를 사용할 수 있다.

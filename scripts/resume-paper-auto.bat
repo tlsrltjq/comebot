@@ -20,11 +20,23 @@ if errorlevel 1 (
 )
 
 echo Checking comebot backend: %COMEBOT_API_BASE%
-curl --silent --fail --max-time 5 "%COMEBOT_API_BASE%/api/system/status" >nul
+set "SYSTEM_FILE=%TEMP%\comebot-system-%RANDOM%.json"
+curl --silent --fail --max-time 5 "%COMEBOT_API_BASE%/api/system/status" > "%SYSTEM_FILE%"
 if errorlevel 1 (
+    del "%SYSTEM_FILE%" >nul 2>&1
     echo Backend is not reachable. Start it with scripts\run-local-dev.bat first.
     exit /b 1
 )
+type "%SYSTEM_FILE%"
+echo.
+findstr /C:"\"candidateReadinessWarnings\":[]" "%SYSTEM_FILE%" >nul
+if errorlevel 1 (
+    del "%SYSTEM_FILE%" >nul 2>&1
+    echo Candidate scheduler readiness warnings are present. Auto PAPER remains disabled.
+    echo Fix /api/system/status scheduler.candidateReadinessWarnings before resuming.
+    exit /b 1
+)
+del "%SYSTEM_FILE%" >nul 2>&1
 
 if /i not "%SKIP_NETWORK_DIAG%"=="true" (
     echo Running market network diagnostics before enabling automation...
