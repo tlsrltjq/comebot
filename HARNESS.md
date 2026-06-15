@@ -13,14 +13,14 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 거래 모드 | `PAPER_TRADING` 전용 |
 | 거래소 | Upbit(KRW) + Binance(USDT), 공개 API만 |
 | 운영 전략 | 기존 PullbackBounce / bean `VOLATILITY_BREAKOUT_LONG`은 관찰 대상. 새 후보 생존 전까지 자동 진입 중지 |
-| 리서치 전략 | 기존 5개 BTC/ETH 시드 후보 생존 0. Ranked Rotation은 기본 비용에서 후보가 있으나 보수 비용 스트레스에서 전부 net weak |
+| 리서치 전략 | 기존 5개 BTC/ETH 시드 후보 생존 0. Ranked Rotation은 비용 스트레스 net weak. Session Volatility Breakout은 Binance 중심 후보 12개 + Upbit 약한 후보 1개 |
 | 진입 | 운영 엔진은 maker 지정가: 신호 캔들 close 가격, 5분 유효 (ADR-013 보류/조건부). 리서치 후보는 next open 모델 |
 | 청산 | TP +4.0%, SL -2.0%, trailing off (ADR-011) |
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | Ranked Rotation 후보 정밀 검증: 기본 비용에서는 ZEC 제외 후에도 일부 후보 유지, 보수 비용/슬리피지에서는 전부 `watch:*net-weak` |
-| 다음 단계 | Ranked Rotation은 PAPER 자동매매 보류. maker 체결 지연/미체결 모델 또는 시간대/세션별 변동성 후보로 다음 실험 진행 |
+| 최근 작업 | 시간대/세션별 변동성 돌파 후보 구현. 확장 유니버스 640개 조합 중 `candidate:paper-observation` 6개, `candidate:weak-paper-observation` 7개 |
+| 다음 단계 | Session Volatility Breakout 후보 정밀 검증: 비용/슬리피지, no-pegged/no-event 유니버스, 세션별 안정성, maker 체결 현실성 확인 |
 
 ## 구현 요약
 
