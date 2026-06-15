@@ -20,7 +20,7 @@
 - 최선 방어 필터(수익 전환 아님): M1(coin1h==UP)·F1(BTC≠DOWN) — MDD 5.0→2.5% 반감
 - 운영 봇: `PAPER_TRADING` 전용 유지, 실제 주문 API/`REAL_TRADING` 금지 불변
 - 운영 상태: 새 전략 후보 전까지 candidate/exit scheduler 기본값 OFF, 관찰/대시보드 전용
-- 확장 유니버스 1차 생존 후보: Ranked Rotation. Binance 15m, rankCount=1, rebalance=20 조합 6개가 `candidate:weak-paper-observation`.
+- 확장 유니버스 1차 생존 후보: Ranked Rotation. 기본 비용에서는 Binance 15m 후보가 있으나, 보수 비용/슬리피지 스트레스에서는 전부 net weak로 강등.
 
 ## 완료된 최근 작업
 
@@ -39,6 +39,7 @@
 - 상위 30 확장 수집 완료: Upbit 30 + Binance 30, 1m/3m/5m/15m 원본 캔들 총 240개 JSON, `.backtest_cache` 약 9.0GB
 - 종목 랭킹 기반 로테이션: 확장 유니버스 288개 조합 중 Binance 15m 6개 약한 PAPER 관찰 후보 산출. Upbit은 train gross edge 부족으로 전부 탈락
 - 백테스트 로더 보정: Binance 유니버스에 Upbit `KRW-USDT`가 섞이지 않도록 exchange 필터 회귀 테스트 추가
+- Ranked Rotation 정밀 검증: 후보 6개를 비용 3종 x 유니버스 4종으로 재검증. 기본 비용에서는 16개 후보/관찰 후보가 남지만, 보수/스트레스 비용에서는 모든 조합이 `watch:*net-weak` 또는 탈락
 - 수집기 안정화: 진행률 로그, Upbit 상장 이전 cursor 가드, HTTP 재시도 10회, `Connection: close`, 최대 60초 backoff 추가
 - maker 지정가 진입 구현: pending order 생성, fresh fill, risk+portfolio 검증
 - 2차 감사 수정: `firstCheckAt` 과보수 제거, stale price 체결 가드 추가
@@ -49,9 +50,9 @@
 
 ## 다음 액션 (나중에 할 일 — 등록됨)
 
-1. Ranked Rotation 후보 정밀 검증: 비용/슬리피지 민감도, ZECUSDT 편중, stable/신규상장 제외, 15m top1 파라미터 안정성 확인.
-2. PAPER 자동매매로 켜기 전 운영 기준을 확정한다: 최소 관찰 기간, 최대 동시 포지션, 재밸런싱/강제청산 정책, 거래소별 허용 마켓.
-3. 위 후보가 기준을 통과하지 못하면 시간대/세션별 변동성 전략 후보로 진행한다.
+1. Ranked Rotation을 PAPER 자동매매로 바로 켜지 않는다. 운영 전환은 maker 체결 지연/미체결 모델을 통과할 때만 재검토한다.
+2. 다음 전략 실험은 시간대/세션별 변동성 후보로 진행한다.
+3. 병행 후보로 강한 코인 선별 후 pullback 진입 하이브리드 전략을 준비한다.
 
 ## 중단/탈락 기준 (전략 실험)
 
@@ -94,4 +95,5 @@
 - 종목 랭킹 기반 로테이션 후보 구현 및 리더보드 산출.
 - 산출: 288개 조합 중 Binance 15m rankCount=1/rebalance=20 조합 6개가 `candidate:weak-paper-observation`.
 - 대표 후보: lookback=60,minReturn=0.5, full PFgross/PFnet 1.163/1.009, train 1.116/0.968, test 1.282/1.114, full trades 2415, topMarket ZECUSDT 14.7%.
-- 다음 세션: PAPER 전환 전 Ranked Rotation 후보 정밀 검증부터 시작.
+- 정밀 검증: 72개 비용/유니버스 시나리오 산출. 기본 비용에서는 no-zec 조합도 후보가 남지만, 보수 비용에서는 전부 net weak로 강등.
+- 다음 세션: 시간대/세션별 변동성 전략 후보 구현부터 시작.

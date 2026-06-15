@@ -1,5 +1,6 @@
 # 변경 이력
 
+2026-06-15 | backtest | test: ranked rotation 정밀 검증 — 비용/유니버스 72개 시나리오, 보수 비용에서 전부 net weak로 PAPER 전환 보류
 2026-06-15 | backtest | feat: ranked rotation 확장 유니버스 하니스 추가 — Binance 15m 약한 PAPER 관찰 후보 6개 산출, exchange 필터 회귀 보정
 2026-06-05 | backtest | docs: 세션 종료 — V1 풀백군 전면 진단 결론(모든 레버 gross 0.94~0.97, 엣지 없음) HARNESS/tasks 갱신, 다음=전략 전환/데이터 재검토 등록
 2026-06-05 | backtest | feat: 다중 TF 확인(MultiTimeframeTest) — 코인 1h 정렬 M1이 OOS 최선이나 gross 0.97<1.05, 필터 스택 OOS 붕괴 재확인
