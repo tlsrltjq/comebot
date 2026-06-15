@@ -12,6 +12,7 @@ public record SchedulerStatusResponse(
         boolean candidateNotifySummary,
         String candidateExchange,
         List<String> candidateExchanges,
+        List<String> candidateReadinessWarnings,
         boolean exitEnabled,
         long exitFixedDelayMs,
         boolean exitSaveHoldHistory,

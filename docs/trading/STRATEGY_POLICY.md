@@ -54,6 +54,17 @@ Session Volatility Breakout 기본 조건:
 - limit price: 신호 캔들 close
 - 기본 제외 market: `USD1USDT`, `USDCUSDT`, `USDEUSDT`, `XAUTUSDT`
 
+PAPER 관찰 권장 scheduler scope:
+
+- candidate exchanges: `BINANCE`
+- candidate markets: `ALL_USDT` 또는 USDT 심볼만
+- candidate max buys per run: 초기 관찰은 `1`
+- candidate scheduler ON 시 exit scheduler도 ON
+- exit scheduler exchanges: `BINANCE` 포함
+
+`/api/scheduler/status`와 `/api/system/status`의 `candidateReadinessWarnings`는
+위 범위에서 벗어난 설정을 경고한다.
+
 후보가 `SKIPPED`이면 HOLD 신호를 만든다.
 
 현재 기본값에서는 같은 market PAPER 포지션을 보유 중이어도 추가 진입을 허용한다.

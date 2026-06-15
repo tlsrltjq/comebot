@@ -11,6 +11,7 @@ import com.giseop.comebot.market.provider.MarketPriceProviderType;
 import com.giseop.comebot.notification.NotificationProperties;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
+import com.giseop.comebot.scheduler.SchedulerObservationReadinessService;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.portfolio.PaperPortfolioProperties;
@@ -43,6 +44,7 @@ public class SystemStatusController {
     private final TradingSchedulerProperties tradingSchedulerProperties;
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final PositionExitSchedulerProperties positionExitSchedulerProperties;
+    private final SchedulerObservationReadinessService readinessService;
     private final PaperPortfolioService paperPortfolioService;
     private final PaperPortfolioProperties paperPortfolioProperties;
     private final SafetyProperties safetyProperties;
@@ -59,6 +61,7 @@ public class SystemStatusController {
             TradingSchedulerProperties tradingSchedulerProperties,
             CandidateSchedulerProperties candidateSchedulerProperties,
             PositionExitSchedulerProperties positionExitSchedulerProperties,
+            SchedulerObservationReadinessService readinessService,
             PaperPortfolioService paperPortfolioService,
             PaperPortfolioProperties paperPortfolioProperties,
             SafetyProperties safetyProperties,
@@ -74,6 +77,7 @@ public class SystemStatusController {
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.positionExitSchedulerProperties = positionExitSchedulerProperties;
+        this.readinessService = readinessService;
         this.paperPortfolioService = paperPortfolioService;
         this.paperPortfolioProperties = paperPortfolioProperties;
         this.safetyProperties = safetyProperties;
@@ -116,6 +120,7 @@ public class SystemStatusController {
                         candidateSchedulerProperties.isNotifySummary(),
                         candidateSchedulerProperties.getExchange().name(),
                         names(candidateSchedulerProperties.getExchanges()),
+                        readinessService.candidateWarnings(),
                         positionExitSchedulerProperties.isEnabled(),
                         positionExitSchedulerProperties.getFixedDelayMs(),
                         positionExitSchedulerProperties.isSaveHoldHistory(),

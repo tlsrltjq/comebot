@@ -22,6 +22,7 @@ import com.giseop.comebot.portfolio.domain.PaperPosition;
 import com.giseop.comebot.portfolio.service.PaperPortfolioService;
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
+import com.giseop.comebot.scheduler.SchedulerObservationReadinessService;
 import com.giseop.comebot.safety.SafetyProperties;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.telegram.TelegramProperties;
@@ -63,6 +64,9 @@ class SystemStatusControllerTest {
 
     @MockitoBean
     private PositionExitSchedulerProperties positionExitSchedulerProperties;
+
+    @MockitoBean
+    private SchedulerObservationReadinessService readinessService;
 
     @MockitoBean
     private PaperPortfolioService paperPortfolioService;
@@ -107,6 +111,7 @@ class SystemStatusControllerTest {
                 .andExpect(jsonPath("$.scheduler.candidateNotifySummary").value(false))
                 .andExpect(jsonPath("$.scheduler.candidateExchange").value("UPBIT"))
                 .andExpect(jsonPath("$.scheduler.candidateExchanges[0]").value("UPBIT"))
+                .andExpect(jsonPath("$.scheduler.candidateReadinessWarnings").isEmpty())
                 .andExpect(jsonPath("$.scheduler.exitEnabled").value(true))
                 .andExpect(jsonPath("$.scheduler.exitFixedDelayMs").value(5000))
                 .andExpect(jsonPath("$.scheduler.exitExchanges[0]").value("UPBIT"))
@@ -237,6 +242,8 @@ class SystemStatusControllerTest {
                 .thenReturn(ExchangeMode.UPBIT);
         org.mockito.Mockito.when(candidateSchedulerProperties.getExchanges())
                 .thenReturn(List.of(ExchangeMode.UPBIT));
+        org.mockito.Mockito.when(readinessService.candidateWarnings())
+                .thenReturn(List.of());
         org.mockito.Mockito.when(positionExitSchedulerProperties.isEnabled())
                 .thenReturn(true);
         org.mockito.Mockito.when(positionExitSchedulerProperties.getFixedDelayMs())

@@ -82,6 +82,8 @@ GET /api/scheduler/status
 
 `/api/scheduler/status`는 기존 trading flow scheduler와 candidate scheduler 상태를 함께 보여준다.
 candidate scheduler의 `candidateExchanges` 값으로 현재 후보 실행 거래소 목록을 확인한다.
+`candidateReadinessWarnings`는 선택 전략과 scheduler 설정이 맞지 않을 때 경고를 반환한다.
+`SESSION_VOLATILITY_BREAKOUT` 관찰 운영 전에는 이 배열이 비어 있어야 한다.
 운영 중 장애와 이상 사례는 `docs/operations/INCIDENT_LOG.md`에 기록한다.
 
 자동 PAPER 매매 런타임 제어:
@@ -191,6 +193,20 @@ TRADING_CANDIDATE_SCHEDULER_EXCHANGES=UPBIT,BINANCE
 TRADING_EXIT_SCHEDULER_ENABLED=true
 TRADING_EXIT_SCHEDULER_EXCHANGES=UPBIT,BINANCE
 ```
+
+Session Volatility Breakout PAPER 관찰 권장값:
+
+```properties
+STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT
+TRADING_CANDIDATE_SCHEDULER_EXCHANGES=BINANCE
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_MAX_BUYS_PER_RUN=1
+TRADING_EXIT_SCHEDULER_EXCHANGES=BINANCE
+```
+
+초기 관찰에서는 candidate/exit scheduler를 동시에 켜고, `/api/scheduler/status`의
+`candidateReadinessWarnings`가 빈 배열인지 먼저 확인한다. 이 값은 설정 경고만 제공하며
+자동으로 scheduler를 켜거나 끄지는 않는다.
 
 ## 트레이딩 플로우
 

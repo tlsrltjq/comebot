@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.giseop.comebot.scheduler.CandidateSchedulerProperties;
 import com.giseop.comebot.scheduler.PositionExitSchedulerProperties;
 import com.giseop.comebot.scheduler.SchedulerControlService;
+import com.giseop.comebot.scheduler.SchedulerObservationReadinessService;
 import com.giseop.comebot.scheduler.TradingSchedulerProperties;
 import com.giseop.comebot.exchange.ExchangeMode;
 import com.giseop.comebot.portfolio.domain.PaperPosition;
@@ -38,6 +39,9 @@ class SchedulerStatusControllerTest {
 
     @MockitoBean
     private SchedulerControlService schedulerControlService;
+
+    @MockitoBean
+    private SchedulerObservationReadinessService readinessService;
 
     @MockitoBean
     private PaperPortfolioService paperPortfolioService;
@@ -73,6 +77,7 @@ class SchedulerStatusControllerTest {
                 .andExpect(jsonPath("$.candidateNotifySummary").value(false))
                 .andExpect(jsonPath("$.candidateExchange").value("UPBIT"))
                 .andExpect(jsonPath("$.candidateExchanges[0]").value("UPBIT"))
+                .andExpect(jsonPath("$.candidateReadinessWarnings").isEmpty())
                 .andExpect(jsonPath("$.exitEnabled").value(true))
                 .andExpect(jsonPath("$.exitFixedDelayMs").value(5000))
                 .andExpect(jsonPath("$.exitSaveHoldHistory").value(false))
@@ -151,6 +156,7 @@ class SchedulerStatusControllerTest {
         when(candidateSchedulerProperties.isNotifySummary()).thenReturn(false);
         when(candidateSchedulerProperties.getExchange()).thenReturn(ExchangeMode.UPBIT);
         when(candidateSchedulerProperties.getExchanges()).thenReturn(List.of(ExchangeMode.UPBIT));
+        when(readinessService.candidateWarnings()).thenReturn(List.of());
     }
 
     private void exitSchedulerProperties(boolean enabled, long fixedDelayMs, boolean saveHoldHistory, ExchangeMode exchange) {

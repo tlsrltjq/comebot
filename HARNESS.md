@@ -20,8 +20,8 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | Session Volatility Breakout을 운영 후보 스캐너에 연결. `STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT` 선택 시 후보 조회/실행 경로가 새 스캐너로 위임 |
-| 다음 단계 | PAPER 관찰 운영 전 설정값과 스케줄러 ON 범위 확정. 후보 실행은 Binance no-pegged 유니버스부터 보수적으로 시작 |
+| 최근 작업 | Session Volatility Breakout 운영 후보 스캐너와 scheduler readiness 경고 추가 |
+| 다음 단계 | 실제 PAPER 관찰 운영 설정 적용 전 `candidateReadinessWarnings=[]` 확인 후 candidate/exit scheduler 제한 ON |
 
 ## 구현 요약
 

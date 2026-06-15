@@ -20,6 +20,7 @@ public class SchedulerStatusController {
     private final CandidateSchedulerProperties candidateSchedulerProperties;
     private final PositionExitSchedulerProperties positionExitSchedulerProperties;
     private final SchedulerControlService schedulerControlService;
+    private final com.giseop.comebot.scheduler.SchedulerObservationReadinessService readinessService;
     private final PaperPortfolioService paperPortfolioService;
 
     public SchedulerStatusController(
@@ -27,12 +28,14 @@ public class SchedulerStatusController {
             CandidateSchedulerProperties candidateSchedulerProperties,
             PositionExitSchedulerProperties positionExitSchedulerProperties,
             SchedulerControlService schedulerControlService,
+            com.giseop.comebot.scheduler.SchedulerObservationReadinessService readinessService,
             PaperPortfolioService paperPortfolioService
     ) {
         this.tradingSchedulerProperties = tradingSchedulerProperties;
         this.candidateSchedulerProperties = candidateSchedulerProperties;
         this.positionExitSchedulerProperties = positionExitSchedulerProperties;
         this.schedulerControlService = schedulerControlService;
+        this.readinessService = readinessService;
         this.paperPortfolioService = paperPortfolioService;
     }
 
@@ -65,6 +68,7 @@ public class SchedulerStatusController {
                 candidateSchedulerProperties.isNotifySummary(),
                 candidateSchedulerProperties.getExchange().name(),
                 names(candidateSchedulerProperties.getExchanges()),
+                readinessService.candidateWarnings(),
                 positionExitSchedulerProperties.isEnabled(),
                 positionExitSchedulerProperties.getFixedDelayMs(),
                 positionExitSchedulerProperties.isSaveHoldHistory(),
