@@ -8,6 +8,7 @@
 
 - `SIMPLE_THRESHOLD`: 기본값, 테스트용 가격 기준 전략
 - `VOLATILITY_BREAKOUT_LONG`: 후보 스캔 결과로 BUY 신호 생성
+- `SESSION_VOLATILITY_BREAKOUT`: Binance 15m UTC 06-12 세션 변동성 돌파 PAPER 후보
 
 설정은 `STRATEGY_SELECTED`로 선택한다.
 
@@ -35,6 +36,23 @@
 후보 실행 API와 Telegram 후보 실행은 `SELECTED` 후보만 PAPER BUY로 연결한다.
 
 `VOLATILITY_BREAKOUT_LONG`은 `CandidateScannerService` 결과가 `SELECTED`일 때만 BUY 신호를 만든다.
+
+`SESSION_VOLATILITY_BREAKOUT`을 선택하면 `CandidateScannerService`가 별도 세션 변동성 스캐너로 위임한다.
+후보 조회 API, 후보 실행 API, candidate scheduler는 같은 스캐너 결과를 사용한다.
+기본 application 설정은 변경하지 않았으므로 외부 설정으로 선택하기 전까지 운영 동작은 바뀌지 않는다.
+
+Session Volatility Breakout 기본 조건:
+
+- 거래소: Binance 전용
+- 기준봉: 15m
+- 세션: UTC 06:00 이상 12:00 미만
+- 돌파: 현재 close가 직전 20개 15m 캔들 high를 초과
+- 평균 기준: 직전 60개 15m 캔들
+- range ratio: 현재 range% / 평균 range% >= 2.5
+- volume ratio: 현재 거래대금 / 평균 거래대금 >= 1.5
+- close location: (close-low)/(high-low) >= 70%
+- limit price: 신호 캔들 close
+- 기본 제외 market: `USD1USDT`, `USDCUSDT`, `USDEUSDT`, `XAUTUSDT`
 
 후보가 `SKIPPED`이면 HOLD 신호를 만든다.
 

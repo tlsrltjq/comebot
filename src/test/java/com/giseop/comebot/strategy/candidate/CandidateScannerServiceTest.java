@@ -1,7 +1,11 @@
 package com.giseop.comebot.strategy.candidate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.giseop.comebot.config.StrategySelectionProperties;
 import com.giseop.comebot.config.TradingProperties;
 import com.giseop.comebot.config.StrategyProperties;
 import com.giseop.comebot.exchange.ExchangeMode;
@@ -12,6 +16,7 @@ import com.giseop.comebot.strategy.indicator.VolatilityIndicatorService;
 import com.giseop.comebot.strategy.service.StrategyEntryProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketOverrideProperties;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
+import com.giseop.comebot.strategy.service.StrategyType;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -81,6 +86,49 @@ class CandidateScannerServiceTest {
         assertThat(candidate.market()).isEqualTo("BTCUSDT");
         assertThat(upbitProvider.requestedMarkets).isEmpty();
         assertThat(binanceProvider.requestedMarkets).containsExactly("BTCUSDT");
+    }
+
+    @Test
+    void sessionVolatilityBreakoutSelectionDelegatesToSessionScanner() {
+        StrategySelectionProperties selectionProperties = new StrategySelectionProperties();
+        selectionProperties.setSelected(StrategyType.SESSION_VOLATILITY_BREAKOUT);
+        SessionVolatilityBreakoutScannerService sessionScanner = mock(SessionVolatilityBreakoutScannerService.class);
+        TradingCandidate selected = new TradingCandidate(
+                "BTCUSDT",
+                CandidateDecision.SELECTED,
+                "Session volatility breakout selected: Binance 15m UTC06-12 close-limit",
+                new BigDecimal("109"),
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                MarketTrend.UP,
+                true,
+                Instant.parse("2026-06-15T06:15:00Z")
+        );
+        when(sessionScanner.scan(ExchangeMode.BINANCE, "BTCUSDT")).thenReturn(selected);
+        CandidateScannerService selectedStrategyService = new CandidateScannerService(
+                tradingProperties,
+                scannerProperties,
+                candleProvider,
+                candleProvider,
+                new VolatilityIndicatorService(),
+                new StrategyMarketSettingsService(strategyProperties, scannerProperties, overrideProperties),
+                new com.giseop.comebot.market.service.MarketSelectionService(
+                        new com.giseop.comebot.market.service.UpbitKrwTickerStore(),
+                        new com.giseop.comebot.market.service.BinanceUsdtTickerStore()
+                ),
+                null,
+                null,
+                selectionProperties,
+                sessionScanner,
+                CLOCK_AT_KST_14
+        );
+
+        TradingCandidate candidate = selectedStrategyService.scan(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(candidate).isEqualTo(selected);
+        verify(sessionScanner).scan(ExchangeMode.BINANCE, "BTCUSDT");
+        assertThat(candleProvider.requestedMarkets).isEmpty();
     }
 
     @Test

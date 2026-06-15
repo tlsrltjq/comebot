@@ -106,3 +106,4 @@
 2026-04-27 | tg    | feat: add Telegram notification sender
 2026-04-27 | db    | feat: add JPA history repository, PostgreSQL docker setup
 2026-04-27 | mvp   | feat: initial PAPER trading MVP — strategy, execution, portfolio, history, notification
+2026-06-15 | paper | feat: add Binance session volatility breakout PAPER candidate scanner

@@ -32,4 +32,13 @@ class StrategySelectionPropertiesTest {
 
         assertThat(properties.getStrategyName()).isEqualTo("VolatilityBreakoutLongStrategy");
     }
+
+    @Test
+    void sessionVolatilityBreakoutNameIsExposed() {
+        StrategySelectionProperties properties = new StrategySelectionProperties();
+
+        properties.setSelected(StrategyType.SESSION_VOLATILITY_BREAKOUT);
+
+        assertThat(properties.getStrategyName()).isEqualTo("SessionVolatilityBreakoutStrategy");
+    }
 }

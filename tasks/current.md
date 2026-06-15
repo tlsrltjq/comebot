@@ -2,12 +2,12 @@
 
 ## 단계
 
-전략 리서치 — V1 풀백 반등군 엣지 없음 결론 이후, 공격적 수익률 탐색을 위한 데이터 확장/전략 후보 실험으로 전환.
+PAPER 후보 전략 구현 — Session Volatility Breakout을 운영 후보 스캐너에 연결하고 관찰 운영 준비 단계로 전환.
 
 ## 현재 목표
 
-`tasks/strategy-research-plan.md` 기준으로 Upbit/Binance 확장 유니버스에서 생존 후보를 찾고,
-생존 후보가 나오면 PAPER 자동매매 전 비용/편중/운영 현실성을 정밀 검증한다.
+Binance 15m UTC 06-12 Session Volatility Breakout 후보를 `PAPER_TRADING` 경로에서 조회/실행 가능하게 만들고,
+스케줄러 기본 OFF 상태에서 관찰 운영 전 설정/문서/테스트를 정리한다.
 
 ## 현재 상태 요약
 
@@ -23,6 +23,11 @@
 - 확장 유니버스 생존 후보:
   - Ranked Rotation: 기본 비용에서는 후보가 있으나, 보수 비용/슬리피지 스트레스에서는 전부 net weak로 강등.
   - Session Volatility Breakout: Binance 15m UTC 06-12 대표 후보가 15m 신호 + 5m/1m 5분 유효 maker 감사 통과. no-pegged-event는 train gross < 1.10으로 탈락, no-event/no-pegged는 stress 비용에서도 후보 유지.
+- 운영 코드 반영:
+  - `SESSION_VOLATILITY_BREAKOUT` 전략 선택값 추가.
+  - 선택 시 `CandidateScannerService`가 Session Volatility Breakout 스캐너로 위임하므로 후보 API/후보 실행/스케줄러 실행 경로가 같은 조건을 사용한다.
+  - 기본 설정값은 변경하지 않았다. 실제 활성화는 `STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT` 같은 외부 설정으로만 수행한다.
+  - candidate/exit scheduler는 계속 OFF가 기본이다.
 
 ## 완료된 최근 작업
 
@@ -46,6 +51,7 @@
 - Session Volatility Breakout 정밀 검증: 후보 13개 x 비용 3종 x 유니버스 4종 총 156개 시나리오. stress 비용에서도 candidate 7개 유지, 핵심은 Binance 15m UTC 06-12
 - Session Volatility Breakout maker 1차 감사: 신호 close 지정가, 다음 15m 캔들 low 체결, 1 candle 유효 모델에서 12개 시나리오 모두 후보 유지. no-pegged-event + stress test PFnet 1.154, 체결률 100%
 - Session Volatility Breakout 하위 캔들 maker 감사: 15m 신호 후 300초 안에 5m/1m low가 limit price를 터치하는지 검증. 5m/1m 결과 동일, fillRate 98.8~99.2%, no-event + stress weak 후보, no-pegged + stress paper 후보 유지
+- Session Volatility Breakout 운영 후보 스캐너 구현: Binance 전용, 15m 신호, UTC 06-12, breakout=20, average=60, minRangeRatio=2.5, minVolumeRatio=1.5, minCloseLocation=70.0, no-pegged 기본 제외. `./gradlew test checkstyleMain` 통과
 - 수집기 안정화: 진행률 로그, Upbit 상장 이전 cursor 가드, HTTP 재시도 10회, `Connection: close`, 최대 60초 backoff 추가
 - maker 지정가 진입 구현: pending order 생성, fresh fill, risk+portfolio 검증
 - 2차 감사 수정: `firstCheckAt` 과보수 제거, stale price 체결 가드 추가
@@ -56,8 +62,8 @@
 
 ## 다음 액션 (나중에 할 일 — 등록됨)
 
-1. Session Volatility Breakout PAPER 자동매매 후보 전략 구현 범위를 확정한다: Binance 전용, 15m 신호, UTC 06-12, maker close limit 5분 유효, no-event 또는 no-pegged 유니버스.
-2. 운영 전략 코드 구현 전 현재 스캐너/전략 구조에 새 전략을 어떻게 꽂을지 확인하고, 설정/문서/테스트 범위를 정한다.
+1. PAPER 관찰 운영 전 설정값을 확정한다: `STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT`, Binance 전용 market 목록, candidate scheduler ON 여부/최대 BUY 수.
+2. 후보 실행 전 no-pegged 기본 제외 목록이 현재 Binance 상장/운영 관점에서 충분한지 점검한다.
 3. PAPER 후보 구현 후 `.backtest_cache` prune/delete 범위를 정한다.
 
 ## 중단/탈락 기준 (전략 실험)
@@ -112,3 +118,10 @@
 - no-pegged-event는 test PFnet은 좋지만 train PFgross 1.082로 `reject:weak-train-gross-edge`.
 - 캐시 상태: `.backtest_cache` 8.9GB, JSON 240개 + manifest. PAPER 후보 구현 후 prune/delete 계획 실행.
 - 다음 세션: Session Volatility Breakout PAPER 전략 구현 범위 확정 및 코드 구현 시작.
+2026-06-15 — Session Volatility Breakout PAPER 후보 스캐너 구현.
+- 코드 연결: `StrategyType.SESSION_VOLATILITY_BREAKOUT`, `SessionVolatilityBreakoutScannerService`, `SessionVolatilityBreakoutProperties` 추가.
+- 선택 전략이 `SESSION_VOLATILITY_BREAKOUT`이면 `CandidateScannerService`가 새 스캐너로 위임한다. 후보 조회 API, 후보 실행, 스케줄러 실행 경로가 같은 조건을 사용한다.
+- 기본 조건: Binance 전용, 15m, UTC 06-12, breakout=20, avg=60, minRangeRatio=2.5, minVolumeRatio=1.5, minCloseLocation=70.0, no-pegged(`USD1USDT`,`USDCUSDT`,`USDEUSDT`,`XAUTUSDT`) 제외.
+- 기본값은 바꾸지 않음: `STRATEGY_SELECTED` 기본은 `SIMPLE_THRESHOLD`, candidate/exit scheduler 기본 OFF.
+- 검증: `./gradlew test checkstyleMain` 통과.
+- 다음 세션: PAPER 관찰 운영 설정값 확정 후 스케줄러 ON 범위/시장 목록을 제한적으로 적용.
