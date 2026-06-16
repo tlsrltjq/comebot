@@ -20,8 +20,8 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | Session Volatility Breakout 전용 PAPER JPA 실행 프로필과 resume 전 readiness 가드 추가 |
-| 다음 단계 | 전용 프로필로 백엔드 기동 후 `candidateReadinessWarnings=[]`/market provider ready 확인, candidate/exit scheduler 제한 ON |
+| 최근 작업 | Session Volatility Breakout PAPER 관찰 운영 시작. candidate 30초 / exit 5초, Binance 전용, readiness 경고 없음 |
+| 다음 단계 | 첫 24시간 후보/체결/손익 관찰 기록을 condition-records에 추가하고 계속 운용 여부 판단 |
 
 ## 구현 요약
 
