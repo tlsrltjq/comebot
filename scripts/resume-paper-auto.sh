@@ -45,7 +45,7 @@ if [[ "$SKIP_NETWORK_DIAG" != "true" ]]; then
     echo "Market network diagnostics failed. Auto PAPER remains disabled."
     exit 1
   }
-  if grep -E "(DNS_FAIL|TLS_FAIL|HTTPS_FAIL|WSS_TLS_FAIL)" "$diag_file" >/dev/null 2>&1; then
+  if grep -E "^(DNS_FAIL|TLS_FAIL|HTTPS_FAIL|WSS_TLS_FAIL)" "$diag_file" >/dev/null 2>&1; then
     cat "$diag_file"
     rm -f "$diag_file"
     echo "Market network diagnostics found failures. Auto PAPER remains disabled."

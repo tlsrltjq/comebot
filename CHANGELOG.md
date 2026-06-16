@@ -109,3 +109,4 @@
 2026-06-15 | paper | feat: add Binance session volatility breakout PAPER candidate scanner
 2026-06-15 | ops | feat: expose scheduler readiness warnings for PAPER observation
 2026-06-15 | ops | feat: add session volatility PAPER observation run profile
+2026-06-16 | ops | chore: tune session volatility observation scheduler intervals

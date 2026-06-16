@@ -82,7 +82,7 @@ scripts\run-session-volatility-paper-jpa.bat
 
 - `STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT`
 - candidate scheduler: 시작 시 OFF, `BINANCE`, `ALL_USDT`, `max-buys-per-run=1`
-- exit scheduler: 시작 시 OFF, `BINANCE`
+- exit scheduler: 시작 시 OFF, `BINANCE`, 5초 주기
 - persisted scheduler control restore 비활성화
 
 백엔드가 뜬 뒤 `/api/system/status`의 `scheduler.candidateReadinessWarnings`가 빈 배열인지 확인하고,
@@ -224,6 +224,7 @@ STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT
 TRADING_CANDIDATE_SCHEDULER_EXCHANGES=BINANCE
 TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_USDT
 TRADING_CANDIDATE_SCHEDULER_MAX_BUYS_PER_RUN=1
+TRADING_EXIT_SCHEDULER_FIXED_DELAY_MS=5000
 TRADING_EXIT_SCHEDULER_EXCHANGES=BINANCE
 ```
 

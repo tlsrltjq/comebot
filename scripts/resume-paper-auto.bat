@@ -48,7 +48,7 @@ if /i not "%SKIP_NETWORK_DIAG%"=="true" (
         echo Market network diagnostics failed. Auto PAPER remains disabled.
         exit /b 1
     )
-    findstr /R /C:"DNS_FAIL" /C:"TLS_FAIL" /C:"HTTPS_FAIL" /C:"WSS_TLS_FAIL" "%DIAG_FILE%" >nul
+    findstr /R /C:"^DNS_FAIL" /C:"^TLS_FAIL" /C:"^HTTPS_FAIL" /C:"^WSS_TLS_FAIL" "%DIAG_FILE%" >nul
     if not errorlevel 1 (
         type "%DIAG_FILE%"
         del "%DIAG_FILE%" >nul 2>&1
