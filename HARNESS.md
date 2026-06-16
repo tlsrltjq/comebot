@@ -20,8 +20,8 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | Session Volatility Breakout PAPER 관찰 운영 시작. candidate 30초 / exit 5초, Binance 전용, readiness 경고 없음 |
-| 다음 단계 | 첫 24시간 후보/체결/손익 관찰 기록을 condition-records에 추가하고 계속 운용 여부 판단 |
+| 최근 작업 | Session Volatility Breakout PAPER 관찰 운영 시작. Docker Compose도 Binance 전용 관찰 프로필 환경변수로 재기동 가능 |
+| 다음 단계 | candidate 30초 / exit 5초 / Binance 전용 상태로 PAPER 데이터를 쌓고 첫 24시간 후보·체결·손익 기록을 condition-records에 추가 |
 
 ## 구현 요약
 

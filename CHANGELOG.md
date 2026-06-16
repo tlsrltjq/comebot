@@ -111,3 +111,4 @@
 2026-06-15 | ops | feat: add session volatility PAPER observation run profile
 2026-06-16 | ops | chore: tune session volatility observation scheduler intervals
 2026-06-16 | ops | docs: record session volatility PAPER observation startup
+2026-06-16 | ops | chore: allow Docker Compose session volatility observation profile overrides

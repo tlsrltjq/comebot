@@ -88,6 +88,20 @@ scripts\run-session-volatility-paper-jpa.bat
 백엔드가 뜬 뒤 `/api/system/status`의 `scheduler.candidateReadinessWarnings`가 빈 배열인지 확인하고,
 문제가 없을 때만 `scripts/resume-paper-auto.sh`로 candidate/exit scheduler를 함께 켠다.
 
+Docker Compose로 같은 관찰 프로필을 띄울 때도 `.env`를 수정하지 않고 환경변수를 명령 앞에 붙인다.
+
+```bash
+STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT \
+TRADING_ALLOWED_MARKETS=ALL_USDT \
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_USDT \
+TRADING_CANDIDATE_SCHEDULER_EXCHANGES=BINANCE \
+TRADING_CANDIDATE_SCHEDULER_MAX_BUYS_PER_RUN=1 \
+TRADING_EXIT_SCHEDULER_FIXED_DELAY_MS=5000 \
+TRADING_EXIT_SCHEDULER_EXCHANGES=BINANCE \
+SCHEDULER_CONTROL_RESTORE_ENABLED=false \
+docker compose up -d app web
+```
+
 Binance PAPER 후보 스모크 테스트 절차:
 
 - `docs/operations/BINANCE_PAPER_SMOKE_TEST.md`
