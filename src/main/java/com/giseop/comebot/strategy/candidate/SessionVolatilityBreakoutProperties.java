@@ -23,6 +23,7 @@ public class SessionVolatilityBreakoutProperties {
             "USD1USDT",
             "USDCUSDT",
             "USDEUSDT",
+            "FDUSDUSDT",
             "XAUTUSDT"
     ));
 

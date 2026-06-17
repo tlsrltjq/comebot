@@ -58,6 +58,15 @@ class SessionVolatilityBreakoutScannerServiceTest {
     }
 
     @Test
+    void skipsFdusdPeggedMarket() {
+        TradingCandidate candidate = service.scan(ExchangeMode.BINANCE, "FDUSDUSDT");
+
+        assertThat(candidate.decision()).isEqualTo(CandidateDecision.SKIPPED);
+        assertThat(candidate.reason()).isEqualTo("Market is excluded from session volatility universe");
+        assertThat(candleProvider.requestedMarkets).isEmpty();
+    }
+
+    @Test
     void skipsNonBinanceExchange() {
         TradingCandidate candidate = service.scan(ExchangeMode.UPBIT, "KRW-BTC");
 

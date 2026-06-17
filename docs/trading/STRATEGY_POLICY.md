@@ -52,7 +52,7 @@ Session Volatility Breakout 기본 조건:
 - volume ratio: 현재 거래대금 / 평균 거래대금 >= 1.5
 - close location: (close-low)/(high-low) >= 70%
 - limit price: 신호 캔들 close
-- 기본 제외 market: `USD1USDT`, `USDCUSDT`, `USDEUSDT`, `XAUTUSDT`
+- 기본 제외 market: `USD1USDT`, `USDCUSDT`, `USDEUSDT`, `FDUSDUSDT`, `XAUTUSDT`
 
 PAPER 관찰 권장 scheduler scope:
 

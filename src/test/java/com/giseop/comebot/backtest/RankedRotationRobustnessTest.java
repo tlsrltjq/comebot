@@ -37,7 +37,7 @@ class RankedRotationRobustnessTest {
     private static final Path LEADERBOARD_DIR = Paths.get("build/backtest-leaderboard");
 
     private static final Set<String> PEGGED_OR_STABLE = Set.of(
-            "USD1USDT", "USDCUSDT", "USDEUSDT", "XAUTUSDT");
+            "USD1USDT", "USDCUSDT", "USDEUSDT", "FDUSDUSDT", "XAUTUSDT");
     private static final Set<String> RECENT_OR_EVENT_DRIVEN = Set.of(
             "BABYUSDT", "MEGAUSDT", "NIGHTUSDT", "TRUMPUSDT");
 
