@@ -74,4 +74,27 @@ This produced repeated PAPER BUY fills during the session. It is PAPER only, but
 
 ## Decision
 
-Do not resume Session Volatility PAPER automation until the `FDUSDUSDT` PAPER position handling is decided.
+The `FDUSDUSDT` PAPER position was closed through the selected PAPER SELL path:
+
+- SELL time: 2026-06-17 12:54:27 UTC
+- Quantity: 280.140070000000000000
+- Sell price: 0.999000000000000000
+- Gross amount: 279.859929930000000000 USDT
+- Realized profit: -0.140070035000000000 USDT
+
+Post-cleanup Binance PAPER state:
+
+- Cash: 986.962324904955400000 USDT
+- Realized profit: 16.962325968703575300 USDT
+- Remaining position: `DASHUSDT` only
+
+Automation was resumed after readiness checks passed:
+
+- `candidateEnabled=true`
+- `candidateFixedDelayMs=30000`
+- `candidateMarkets=[ALL_USDT]`
+- `candidateExchanges=[BINANCE]`
+- `exitEnabled=true`
+- `exitFixedDelayMs=5000`
+- `exitExchanges=[BINANCE]`
+- `candidateReadinessWarnings=[]`
