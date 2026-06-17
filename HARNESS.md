@@ -21,7 +21,7 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
 | 최근 작업 | Session Volatility Breakout PAPER 관찰 운영 시작. Docker Compose도 Binance 전용 관찰 프로필 환경변수로 재기동 가능 |
-| 다음 단계 | candidate 30초 / exit 5초 / Binance 전용 상태로 PAPER 데이터를 쌓고 첫 24시간 후보·체결·손익 기록을 condition-records에 추가 |
+| 다음 단계 | Binance PAPER 관찰은 유지하고, 주식 PAPER 확장 계획(`tasks/stock-expansion-plan.md`) 기준으로 데이터 provider/모델링을 검토 |
 
 ## 구현 요약
 
@@ -32,6 +32,7 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 - Execution: PAPER 주문 실행 + `PendingLimitOrderService` maker 지정가 체결(`capturedAt > createdAt`, fresh price only)
 - Storage/UI: history, scanlog, analytics, React 운영 화면, 조회 전용 Telegram
 - Backtest: `.backtest_cache` 원본 캔들, last-60d OOS split, 공통 리더보드 CSV/Markdown, 전략별 운용 기록
+- Stock expansion: 기존 코인 기능 유지, 미국 주식 PAPER 리서치 라인부터 검토
 - 자세한 구조와 정책은 `docs/architecture.md`, `docs/spec.md`, `docs/decisions.md` 참조
 
 ## 불변 규칙

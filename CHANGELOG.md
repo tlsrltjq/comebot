@@ -112,3 +112,4 @@
 2026-06-16 | ops | chore: tune session volatility observation scheduler intervals
 2026-06-16 | ops | docs: record session volatility PAPER observation startup
 2026-06-16 | ops | chore: allow Docker Compose session volatility observation profile overrides
+2026-06-17 | research | docs: add stock PAPER expansion plan
