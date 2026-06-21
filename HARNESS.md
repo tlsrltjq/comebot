@@ -20,8 +20,8 @@ Upbit(KRW)·Binance(USDT) 공개 시세로 눌림목 반등 롱 후보를 스캔
 | 주기 | candidate/exit scheduler 기본 OFF, 관찰 대시보드 전용 |
 | 포지션 상한 | Upbit 8 / Binance 8 / 합계 12 |
 | 포트 | backend 18080 / frontend dev 5176 / PostgreSQL 5433 |
-| 최근 작업 | `FDUSDUSDT` 반복 BUY 원인 제거, PAPER 포지션 SELL 정리 후 Session Volatility automation 재개 |
-| 다음 단계 | 다음 KST 15:00-21:00 신규 세션에서 `FDUSDUSDT` 재진입 없음과 유효 후보/체결 여부 확인 |
+| 최근 작업 | Session Volatility 재진입 방지 설정 강제, BNB 오염 포지션 정리 후 automation 재개 |
+| 다음 단계 | 다음 KST 15:00-21:00 신규 세션에서 same-market 반복 BUY 차단 여부 확인 |
 
 ## 구현 요약
 

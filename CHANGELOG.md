@@ -115,3 +115,5 @@
 2026-06-17 | research | docs: add stock PAPER expansion plan
 2026-06-17 | paper | fix: exclude FDUSD from session volatility PAPER universe
 2026-06-17 | paper | chore: close FDUSD PAPER position and resume observation
+2026-06-22 | paper | fix: require re-entry guard for session volatility observation
+2026-06-22 | paper | chore: close BNB contaminated PAPER position and resume observation
