@@ -117,3 +117,4 @@
 2026-06-17 | paper | chore: close FDUSD PAPER position and resume observation
 2026-06-22 | paper | fix: require re-entry guard for session volatility observation
 2026-06-22 | paper | chore: close BNB contaminated PAPER position and resume observation
+2026-06-24 | paper | fix: prevent duplicate pending limit entries and add log retention summary

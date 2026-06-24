@@ -130,7 +130,13 @@ class PendingLimitOrderServiceTest {
 
     @Test
     void duplicatePendingPreventedByHasPending() {
-        service.place(ExchangeMode.UPBIT, "KRW-BTC", new BigDecimal("100"), new BigDecimal("1"), "reason");
+        boolean firstPlaced = service.tryPlace(
+                ExchangeMode.UPBIT, "KRW-BTC", new BigDecimal("100"), new BigDecimal("1"), "reason");
+        boolean duplicatePlaced = service.tryPlace(
+                ExchangeMode.UPBIT, "KRW-BTC", new BigDecimal("90"), new BigDecimal("1"), "reason");
+
+        assertThat(firstPlaced).isTrue();
+        assertThat(duplicatePlaced).isFalse();
         assertThat(service.hasPending(ExchangeMode.UPBIT, "KRW-BTC")).isTrue();
         assertThat(service.hasPending(ExchangeMode.UPBIT, "KRW-ETH")).isFalse();
     }

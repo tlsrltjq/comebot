@@ -83,12 +83,23 @@ public class PendingLimitOrderService {
 
     public void place(ExchangeMode exchange, String market, java.math.BigDecimal limitPrice,
                       java.math.BigDecimal quantity, String reason) {
+        tryPlace(exchange, market, limitPrice, quantity, reason);
+    }
+
+    public boolean tryPlace(ExchangeMode exchange, String market, java.math.BigDecimal limitPrice,
+                            java.math.BigDecimal quantity, String reason) {
         Instant now = Instant.now();
-        pending.put(key(exchange, market),
-                new PendingLimitOrder(exchange, market, limitPrice, quantity, reason, now, now.plus(EXPIRY)));
+        PendingLimitOrder order = new PendingLimitOrder(exchange, market, limitPrice, quantity, reason, now, now.plus(EXPIRY));
+        PendingLimitOrder previous = pending.putIfAbsent(key(exchange, market), order);
+        if (previous != null) {
+            log.info("[LIMIT-ENTRY] SKIPPED_DUPLICATE market={} limitPrice={} existingLimitPrice={}",
+                    market, limitPrice, previous.limitPrice());
+            return false;
+        }
         totalSignals.incrementAndGet();
         log.info("[LIMIT-ENTRY] PLACED market={} limitPrice={} expiresInSec={}",
                 market, limitPrice, EXPIRY.toSeconds());
+        return true;
     }
 
     public boolean hasPending(ExchangeMode exchange, String market) {

@@ -118,7 +118,18 @@ public class CandidateExecutionService {
 
         java.math.BigDecimal limitPrice = candidate.currentPrice();
         java.math.BigDecimal quantity = strategyMarketSettingsService.buyQuantity(candidate.market(), limitPrice);
-        pendingLimitOrderService.place(exchange, candidate.market(), limitPrice, quantity, candidate.reason());
+        if (!pendingLimitOrderService.tryPlace(exchange, candidate.market(), limitPrice, quantity, candidate.reason())) {
+            return save(new TradingFlowResult(
+                    candidate.market(),
+                    candidate.currentPrice(),
+                    SignalType.HOLD,
+                    "Limit order already pending",
+                    false,
+                    null,
+                    "Candidate entry blocked by pending limit order",
+                    candidate.scannedAt()
+            ), exchange);
+        }
         return save(new TradingFlowResult(
                 candidate.market(),
                 limitPrice,

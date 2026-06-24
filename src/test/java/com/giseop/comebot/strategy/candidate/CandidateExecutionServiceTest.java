@@ -76,6 +76,8 @@ class CandidateExecutionServiceTest {
     @Test
     void selectedCandidatePlacesLimitOrder() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
+        when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), any(), any()))
+                .thenReturn(true);
 
         TradingFlowResult result = service.execute("KRW-BTC");
 
@@ -86,7 +88,7 @@ class CandidateExecutionServiceTest {
 
         ArgumentCaptor<BigDecimal> priceCaptor = ArgumentCaptor.forClass(BigDecimal.class);
         ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
-        verify(pendingLimitOrderService).place(
+        verify(pendingLimitOrderService).tryPlace(
                 eq(ExchangeMode.UPBIT), eq("KRW-BTC"),
                 priceCaptor.capture(), qtyCaptor.capture(), any());
         assertThat(priceCaptor.getValue()).isEqualByComparingTo("100");
@@ -131,6 +133,19 @@ class CandidateExecutionServiceTest {
     }
 
     @Test
+    void concurrentPendingLimitOrderPlacementBlocksNewEntry() {
+        when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
+        when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), any(), any()))
+                .thenReturn(false);
+
+        TradingFlowResult result = service.execute("KRW-BTC");
+
+        assertThat(result.orderCreated()).isFalse();
+        assertThat(result.message()).isEqualTo("Candidate entry blocked by pending limit order");
+        verify(tradingFlowHistoryService).save(ExchangeMode.UPBIT, result);
+    }
+
+    @Test
     void selectedCandidateUsesConfiguredOrderAmount() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
         StrategyMarketOverrideProperties.MarketOverride override = new StrategyMarketOverrideProperties.MarketOverride();
@@ -150,10 +165,14 @@ class CandidateExecutionServiceTest {
                 pendingLimitOrderService
         );
 
+        when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), any(), any()))
+                .thenReturn(true);
+
         service.execute("KRW-BTC");
 
         ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
-        verify(pendingLimitOrderService).place(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), qtyCaptor.capture(), any());
+        verify(pendingLimitOrderService).tryPlace(
+                eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), qtyCaptor.capture(), any());
         assertThat(qtyCaptor.getValue()).isEqualByComparingTo("100.00000000");
     }
 
@@ -185,12 +204,14 @@ class CandidateExecutionServiceTest {
                 true,
                 Instant.parse("2026-04-30T00:00:00Z")
         ));
+        when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any()))
+                .thenReturn(true);
 
         TradingFlowResult result = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
 
         assertThat(result.market()).isEqualTo("BTCUSDT");
         assertThat(result.orderStatus()).isEqualTo(OrderStatus.REQUESTED);
-        verify(pendingLimitOrderService).place(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any());
+        verify(pendingLimitOrderService).tryPlace(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any());
         verify(tradingFlowHistoryService).save(ExchangeMode.BINANCE, result);
     }
 

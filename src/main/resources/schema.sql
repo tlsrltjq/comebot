@@ -94,6 +94,23 @@ CREATE INDEX IF NOT EXISTS idx_candidate_scan_log_exchange_scanned_at
 CREATE INDEX IF NOT EXISTS idx_candidate_scan_log_exchange_decision_scanned_at
     ON candidate_scan_log (exchange, decision, scanned_at DESC);
 
+CREATE TABLE IF NOT EXISTS candidate_scan_daily_summary (
+    summary_date DATE NOT NULL,
+    exchange VARCHAR(20) NOT NULL,
+    market VARCHAR(50) NOT NULL,
+    decision VARCHAR(20) NOT NULL,
+    reason VARCHAR(500) NOT NULL DEFAULT '',
+    scan_count BIGINT NOT NULL,
+    selected_count BIGINT NOT NULL,
+    first_scanned_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    last_scanned_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (summary_date, exchange, market, decision, reason)
+);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_scan_daily_summary_exchange_date
+    ON candidate_scan_daily_summary (exchange, summary_date DESC);
+
 CREATE TABLE IF NOT EXISTS scheduler_control_setting (
     id VARCHAR(50) PRIMARY KEY,
     auto_trading_enabled BOOLEAN NOT NULL,

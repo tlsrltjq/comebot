@@ -72,3 +72,10 @@ bash scripts/run-local-dev.sh    # backend 18080, frontend 5176
 ```
 
 문서만 변경한 경우 `git diff --check`로 공백 오류를 확인한다.
+
+## Current Status Update (2026-06-24)
+
+- Backend host port is `18082`, web UI is `5176`, and PostgreSQL host port is `5434`.
+- PAPER observation remains scoped to Binance Session Volatility Breakout; candidate and exit automation should be verified after Docker restart.
+- Pending limit entry placement now uses an atomic pending-order guard so duplicate same-market candidate runs are rejected before overwriting an existing pending order.
+- Candidate scan logs now have a daily summary retention path: detailed candidate scan logs keep 30 days by default, trading flow history keeps 90 days by default, and older candidate rows are summarized into `candidate_scan_daily_summary`.
