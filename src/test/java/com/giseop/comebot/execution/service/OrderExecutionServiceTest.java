@@ -160,6 +160,51 @@ class OrderExecutionServiceTest {
     }
 
     @Test
+    void executePaperPositionExitBypassesEntryMarketAllowListForHeldSell() {
+        PaperPortfolioService portfolioService = paperPortfolioService();
+        portfolioService.apply(new OrderResult(
+                "KRW-XRP",
+                OrderSide.BUY,
+                new BigDecimal("2"),
+                new BigDecimal("100"),
+                OrderStatus.FILLED,
+                "filled",
+                Instant.now()
+        ));
+        TradingProperties tradingProperties = new TradingProperties();
+        tradingProperties.setMaxOrderAmount(new BigDecimal("100"));
+        tradingProperties.setAllowedMarkets(List.of("KRW-BTC"));
+        orderExecutionService = new OrderExecutionService(
+                executionGateway,
+                new RiskValidationService(tradingProperties),
+                dailyRiskValidationService(portfolioService),
+                portfolioService
+        );
+
+        OrderResult result = orderExecutionService.executePaperPositionExit(ExchangeMode.UPBIT, new OrderRequest(
+                "KRW-XRP",
+                OrderSide.SELL,
+                new BigDecimal("2"),
+                new BigDecimal("120"),
+                Instant.now()
+        ));
+
+        assertThat(result.status()).isEqualTo(OrderStatus.FILLED);
+        assertThat(executionGateway.callCount).isEqualTo(1);
+        assertThat(portfolioService.findPosition(ExchangeMode.UPBIT, "KRW-XRP").orElseThrow().quantity())
+                .isEqualByComparingTo("0");
+    }
+
+    @Test
+    void executePaperPositionExitRejectsBuyOrders() {
+        OrderResult result = orderExecutionService.executePaperPositionExit(ExchangeMode.UPBIT, orderRequest("KRW-BTC", "1", "100"));
+
+        assertThat(result.status()).isEqualTo(OrderStatus.REJECTED);
+        assertThat(result.message()).isEqualTo("Paper position exit only supports SELL orders");
+        assertThat(executionGateway.callCount).isZero();
+    }
+
+    @Test
     void constructorRejectsNonPaperExecutionGateway() {
         TradingProperties tradingProperties = new TradingProperties();
         tradingProperties.setAllowedMarkets(List.of("KRW-BTC"));

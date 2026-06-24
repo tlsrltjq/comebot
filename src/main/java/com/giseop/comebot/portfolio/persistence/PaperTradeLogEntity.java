@@ -85,4 +85,16 @@ public class PaperTradeLogEntity {
                 tradeLog.executedAt()
         );
     }
+
+    public PaperTradeLog toDomain() {
+        return new PaperTradeLog(
+                market,
+                side,
+                quantity,
+                price,
+                grossAmount,
+                realizedProfit,
+                executedAt
+        );
+    }
 }

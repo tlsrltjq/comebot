@@ -69,6 +69,14 @@ public class JpaPaperPortfolioRepository implements PaperPortfolioRepository {
     }
 
     @Override
+    public List<PaperTradeLog> findTradeLogsSince(ExchangeMode exchange, Instant from) {
+        return tradeLogRepository.findByExchangeAndExecutedAtGreaterThanEqualOrderByExecutedAtDesc(exchangeOf(exchange), from)
+                .stream()
+                .map(PaperTradeLogEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<PaperRealizedProfit> findRealizedProfitsSince(ExchangeMode exchange, Instant from) {
         return realizedProfitEventRepository.findByExchangeAndRealizedAtGreaterThanEqualOrderByRealizedAtDesc(exchangeOf(exchange), from)
                 .stream()

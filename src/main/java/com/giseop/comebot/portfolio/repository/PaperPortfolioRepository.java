@@ -48,6 +48,12 @@ public interface PaperPortfolioRepository {
 
     void saveTradeLog(ExchangeMode exchange, PaperTradeLog tradeLog);
 
+    default List<PaperTradeLog> findTradeLogsSince(Instant from) {
+        return findTradeLogsSince(ExchangeMode.UPBIT, from);
+    }
+
+    List<PaperTradeLog> findTradeLogsSince(ExchangeMode exchange, Instant from);
+
     default List<PaperRealizedProfit> findRealizedProfitsSince(Instant from) {
         return findRealizedProfitsSince(ExchangeMode.UPBIT, from);
     }

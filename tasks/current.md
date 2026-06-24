@@ -175,3 +175,17 @@ Binance 15m UTC 06-12 Session Volatility Breakout 후보를 `PAPER_TRADING` 경�
 - Backend port is `18082` via local environment, PostgreSQL host port remains `5434`, and web UI remains `5176`.
 - Validation completed with `./gradlew test checkstyleMain`.
 - Next step after rebuild: verify Docker app readiness and confirm Binance-only PAPER automation status.
+
+## Previous Session Stop Point (2026-06-24, journal/profile fix)
+
+- Upbit contaminated PAPER positions were closed through selected PAPER SELL; current nonzero PAPER positions are zero.
+- `OrderExecutionService.executePaperPositionExit(...)` allows SELL-only PAPER position exit without applying new-entry allowed-market checks.
+- Docker scheduler restore default is now `false`, and `scripts/restart-session-volatility-docker.bat/.sh` restarts app/web with Binance Session Volatility PAPER profile.
+- Matched trade journal now uses `paper_trade_log` SELL rows and realized profit instead of `trading_flow_history` FIFO matching.
+- Validation completed with `./gradlew test checkstyleMain`; deployed app confirmed `DEXEUSDT` stop-loss example now reports negative profit rate with `STOP_LOSS`.
+
+## Previous Session Stop Point (2026-06-24, session end)
+
+- Source and docs are aligned for trade journal realized-PnL calculation, selected PAPER cleanup, and Binance Docker restart operation.
+- Validation completed with `./gradlew.bat test checkstyleMain`.
+- Next step: continue Binance Session Volatility PAPER observation during the next UTC 06:00-12:00 window and review newly generated `candidate_scan_log`/`paper_trade_log` rows.

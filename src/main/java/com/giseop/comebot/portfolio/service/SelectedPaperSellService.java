@@ -103,7 +103,7 @@ public class SelectedPaperSellService {
                     marketPrice.currentPrice(),
                     Instant.now()
             );
-            OrderResult orderResult = orderExecutionService.execute(exchange, request);
+            OrderResult orderResult = orderExecutionService.executePaperPositionExit(exchange, request);
             return save(exchange, new TradingFlowResult(
                     market,
                     marketPrice.currentPrice(),

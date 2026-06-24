@@ -53,6 +53,14 @@ public class InMemoryPaperPortfolioRepository implements PaperPortfolioRepositor
     }
 
     @Override
+    public List<PaperTradeLog> findTradeLogsSince(ExchangeMode exchange, Instant from) {
+        return state(exchange).tradeLogs.stream()
+                .filter(log -> !log.executedAt().isBefore(from))
+                .sorted(Comparator.comparing(PaperTradeLog::executedAt).reversed())
+                .toList();
+    }
+
+    @Override
     public List<PaperRealizedProfit> findRealizedProfitsSince(ExchangeMode exchange, Instant from) {
         return state(exchange).realizedProfitEvents.stream()
                 .filter(event -> !event.realizedAt().isBefore(from))

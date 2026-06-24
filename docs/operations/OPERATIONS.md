@@ -369,3 +369,84 @@ SELECT exchange, cash, realized_profit FROM paper_portfolio_state ORDER BY excha
 ```
 
 재시작 후 같은 API와 SQL 결과가 유지되면 JPA 누적 조건을 만족한다.
+## Current Operations Notes (2026-06-24)
+
+### Binance Session Volatility Docker Restart
+
+Use the dedicated restart script instead of plain `docker compose up -d app web` when continuing the Binance Session Volatility PAPER observation:
+
+```powershell
+scripts\restart-session-volatility-docker.bat
+```
+
+```bash
+scripts/restart-session-volatility-docker.sh
+```
+
+The script starts app/web with:
+
+```properties
+STRATEGY_SELECTED=SESSION_VOLATILITY_BREAKOUT
+TRADING_ALLOWED_MARKETS=ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_MARKETS=ALL_USDT
+TRADING_CANDIDATE_SCHEDULER_EXCHANGES=BINANCE
+TRADING_CANDIDATE_SCHEDULER_MAX_BUYS_PER_RUN=1
+TRADING_EXIT_SCHEDULER_FIXED_DELAY_MS=5000
+TRADING_EXIT_SCHEDULER_EXCHANGES=BINANCE
+SCHEDULER_CONTROL_RESTORE_ENABLED=false
+```
+
+Schedulers start disabled after restart. Check readiness first:
+
+```http
+GET /api/system/status
+GET /api/market-provider/status
+```
+
+Then enable PAPER observation:
+
+```http
+PUT /api/scheduler/control
+{"autoTradingEnabled":true,"candidateFixedDelayMs":30000}
+```
+
+### Trade Journal Verification
+
+The trade journal uses `paper_trade_log` as the source of truth for realized PnL. Do not infer PnL from `trading_flow_history` BUY/SELL FIFO pairs.
+
+Useful SQL checks:
+
+```sql
+SELECT exchange, market, side, quantity, price, gross_amount, realized_profit, executed_at
+FROM paper_trade_log
+WHERE exchange = 'BINANCE'
+ORDER BY executed_at DESC
+LIMIT 30;
+```
+
+For a SELL row:
+
+```sql
+SELECT
+  market,
+  realized_profit,
+  gross_amount,
+  realized_profit / NULLIF(gross_amount - realized_profit, 0) * 100 AS profit_rate_pct
+FROM paper_trade_log
+WHERE side = 'SELL'
+ORDER BY executed_at DESC
+LIMIT 20;
+```
+
+If `realized_profit` is negative, the journal should show a negative profit rate and `STOP_LOSS`. If it is positive, the journal should show a positive profit rate and `TAKE_PROFIT`.
+
+### Selected PAPER Position Cleanup
+
+Use selected PAPER SELL to close contaminated or legacy PAPER positions:
+
+```http
+POST /api/portfolio/positions/sell-selected?exchange=UPBIT
+{"markets":["KRW-ARX","KRW-BORA"]}
+```
+
+This is a PAPER-only exit path. It accepts SELL only, checks held quantity, records `trading_flow_history`, and writes `paper_trade_log`.

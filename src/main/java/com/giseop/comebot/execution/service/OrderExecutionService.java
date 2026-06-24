@@ -56,6 +56,16 @@ public class OrderExecutionService {
                 .orElseGet(() -> executeAndApply(exchange, request));
     }
 
+    public OrderResult executePaperPositionExit(ExchangeMode exchange, OrderRequest request) {
+        String validationMessage = validatePaperExitRequest(exchange, request);
+        if (validationMessage != null) {
+            return rejected(request, validationMessage);
+        }
+        return paperPortfolioService.validate(exchange, request)
+                .map(reason -> rejected(request, reason))
+                .orElseGet(() -> executeAndApply(exchange, request));
+    }
+
     private OrderResult rejected(OrderRequest request, RiskCheckResult riskCheckResult) {
         return rejected(request, riskCheckResult.reason(), riskCheckResult.checkedAt());
     }
@@ -74,6 +84,28 @@ public class OrderExecutionService {
                 reason,
                 rejectedAt
         );
+    }
+
+    private String validatePaperExitRequest(ExchangeMode exchange, OrderRequest request) {
+        if (request == null) {
+            return "Order request must not be null";
+        }
+        if (request.side() != OrderSide.SELL) {
+            return "Paper position exit only supports SELL orders";
+        }
+        if (request.market() == null || request.market().isBlank()) {
+            return "Market must not be blank";
+        }
+        if (request.quantity() == null || request.quantity().signum() <= 0) {
+            return "Quantity must be greater than zero";
+        }
+        if (request.price() == null || request.price().signum() <= 0) {
+            return "Price must be greater than zero";
+        }
+        if (exchange == ExchangeMode.BINANCE && !request.market().endsWith("USDT")) {
+            return "Binance PAPER orders only support USDT spot symbols";
+        }
+        return null;
     }
 
     public OrderResult fillLimitOrder(ExchangeMode exchange, PendingLimitOrder order) {

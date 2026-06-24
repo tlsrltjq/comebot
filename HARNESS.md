@@ -79,3 +79,17 @@ bash scripts/run-local-dev.sh    # backend 18080, frontend 5176
 - PAPER observation remains scoped to Binance Session Volatility Breakout; candidate and exit automation should be verified after Docker restart.
 - Pending limit entry placement now uses an atomic pending-order guard so duplicate same-market candidate runs are rejected before overwriting an existing pending order.
 - Candidate scan logs now have a daily summary retention path: detailed candidate scan logs keep 30 days by default, trading flow history keeps 90 days by default, and older candidate rows are summarized into `candidate_scan_daily_summary`.
+
+## Current Status Update (2026-06-24, trade journal)
+
+- Trade journal matched trades now read from `paper_trade_log` instead of FIFO matching `trading_flow_history`.
+- Profit rate is derived from SELL `realized_profit` and SELL `gross_amount` cost basis, so the profit sign and exit label are aligned.
+- Exit label is classified from realized profit: positive = `TAKE_PROFIT`, negative = `STOP_LOSS`, zero/null = `MANUAL`.
+- Selected PAPER position sell uses a PAPER exit-only path so held positions can be closed even when the current entry allow-list excludes that market.
+- Docker scheduler restore defaults to disabled; use `scripts/restart-session-volatility-docker.bat` or `.sh` for Binance Session Volatility PAPER profile restarts.
+
+## Session End Status (2026-06-24)
+
+- Backend verification passed with `./gradlew.bat test checkstyleMain`.
+- Binance Session Volatility PAPER profile is the expected Docker restart path; app/web should be restarted through the dedicated restart script or equivalent environment.
+- Trade journal, PAPER cleanup, and Docker profile behavior are documented in architecture/spec/operations and the 2026-06-24 condition record.

@@ -259,3 +259,27 @@
 | 수동 BUY | ❌ | ADR-007 |
 | 후보 수동 실행 | ❌ | ADR-007 |
 | REAL_TRADING 전환 | ❌ | ADR-001, 영구 금지 |
+## Current Implementation Notes (2026-06-24)
+
+### Trade Journal PnL
+
+- Completed trades shown by `/api/analytics/matched-trades` are calculated from `paper_trade_log`.
+- `trading_flow_history` remains an execution/audit history and must not be used as the PnL source for the trade journal.
+- For each SELL trade log:
+  - `costBasis = grossAmount - realizedProfit`
+  - `profitRatePct = realizedProfit / costBasis * 100`
+  - `realizedProfit > 0` -> `TAKE_PROFIT`
+  - `realizedProfit < 0` -> `STOP_LOSS`
+  - zero/null -> `MANUAL`
+- This prevents a positive displayed profit rate with a stop-loss label caused by naive FIFO matching.
+
+### PAPER Position Exit
+
+- Selected PAPER sell is a position cleanup/exit operation, not a new entry operation.
+- It supports only `SELL`, validates position quantity, and stays within the PAPER execution gateway.
+- It bypasses entry-specific market allow-list checks so old or contaminated positions can be closed under a narrower current observation profile.
+
+### Scheduler Restore
+
+- Docker Compose default for `SCHEDULER_CONTROL_RESTORE_ENABLED` is `false`.
+- Observation restarts should use `scripts/restart-session-volatility-docker.bat` or `.sh`, then explicitly enable automation through `/api/scheduler/control` after readiness checks.

@@ -118,3 +118,5 @@
 2026-06-22 | paper | fix: require re-entry guard for session volatility observation
 2026-06-22 | paper | chore: close BNB contaminated PAPER position and resume observation
 2026-06-24 | paper | fix: prevent duplicate pending limit entries and add log retention summary
+2026-06-24 | paper | fix: calculate trade journal from paper trade log realized profit
+2026-06-24 | docs | docs: update PAPER journal and Docker observation operations docs

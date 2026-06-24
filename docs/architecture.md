@@ -185,3 +185,30 @@ cd frontend && npm run lint && npm run build && npm test
 # E2E
 cd frontend && npm run test:e2e
 ```
+## Current Source Notes (2026-06-24)
+
+### Trade Journal Source of Truth
+
+- `/api/analytics/matched-trades` is backed by `paper_trade_log`, not by FIFO matching of `trading_flow_history`.
+- SELL rows in `paper_trade_log` are treated as realized close events.
+- Profit rate is calculated from the actual SELL row:
+  - `costBasis = grossAmount - realizedProfit`
+  - `profitRatePct = realizedProfit / costBasis * 100`
+- Exit reason is classified from realized profit:
+  - `realizedProfit > 0`: `TAKE_PROFIT`
+  - `realizedProfit < 0`: `STOP_LOSS`
+  - `realizedProfit == 0` or null: `MANUAL`
+- The displayed buy timestamp/price is the latest prior BUY log for the same market and is informational. PnL and exit label come from the SELL log.
+
+### PAPER Exit Path
+
+- Selected PAPER position sell uses `OrderExecutionService.executePaperPositionExit(...)`.
+- This path only accepts `SELL` orders and still validates held quantity.
+- It bypasses new-entry allow-list and max-order risk checks so contaminated or legacy held PAPER positions can be closed even when the current observation profile allows only another market universe.
+- It never calls real exchange order APIs; execution remains `PAPER_TRADING` only.
+
+### Docker Observation Profile
+
+- Compose no longer restores scheduler control state by default: `SCHEDULER_CONTROL_RESTORE_ENABLED` defaults to `false`.
+- Use `scripts/restart-session-volatility-docker.bat` or `scripts/restart-session-volatility-docker.sh` to restart app/web with the Binance Session Volatility PAPER profile.
+- That restart profile sets strategy/market scope to `SESSION_VOLATILITY_BREAKOUT`, `ALL_USDT`, and `BINANCE`, with candidate/exit schedulers initially disabled. Enable automation only after readiness checks pass.

@@ -92,6 +92,21 @@ class SelectedPaperSellServiceTest {
     }
 
     @Test
+    void selectedSellCanCloseHeldPositionOutsideAllowedEntryMarkets() {
+        portfolioService.apply(new OrderResult("KRW-XRP", OrderSide.BUY, new BigDecimal("3"), new BigDecimal("100"),
+                OrderStatus.FILLED, "filled", Instant.now()));
+        marketPriceProvider.prices = Map.of("KRW-XRP", new BigDecimal("90"));
+
+        SelectedPaperSellResponse response = service.sellSelected(ExchangeMode.UPBIT, List.of("KRW-XRP"));
+
+        assertThat(response.succeededCount()).isEqualTo(1);
+        assertThat(response.failedCount()).isZero();
+        assertThat(portfolioService.findPosition(ExchangeMode.UPBIT, "KRW-XRP").orElseThrow().quantity())
+                .isEqualByComparingTo("0");
+        assertThat(historyRepository.findRecent(ExchangeMode.UPBIT, 10).getFirst().orderStatus()).isEqualTo(OrderStatus.FILLED);
+    }
+
+    @Test
     void duplicateMarketsAreProcessedOnceAndMissingPositionIsRejected() {
         portfolioService.apply(new OrderResult("KRW-BTC", OrderSide.BUY, BigDecimal.ONE, new BigDecimal("100"),
                 OrderStatus.FILLED, "filled", Instant.now()));
