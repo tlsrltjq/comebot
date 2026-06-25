@@ -1,6 +1,7 @@
 package com.giseop.comebot.backtest;
 
 import com.giseop.comebot.market.candle.domain.Candle;
+import com.giseop.comebot.market.candle.domain.StockCandleRow;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -255,6 +256,29 @@ final class CandleSeries {
             accVol[i] = candle.accumulatedTradeVolume().doubleValue();
         }
         sortByTimeAscending(timeSec, open, high, low, close, accAmt, accVol, n);
+        return new CandleSeries(market, unitMinutes, timeSec, open, high, low, close, accAmt, accVol, n);
+    }
+
+    static CandleSeries ofStockRows(String market, int unitMinutes, List<StockCandleRow> rows) {
+        int n = rows.size();
+        int cap = Math.max(1, n);
+        long[] timeSec = new long[cap];
+        double[] open = new double[cap];
+        double[] high = new double[cap];
+        double[] low = new double[cap];
+        double[] close = new double[cap];
+        double[] accAmt = new double[cap];
+        double[] accVol = new double[cap];
+        for (int i = 0; i < n; i++) {
+            StockCandleRow row = rows.get(i);
+            timeSec[i] = row.timestamp().getEpochSecond();
+            open[i] = row.open().doubleValue();
+            high[i] = row.high().doubleValue();
+            low[i] = row.low().doubleValue();
+            close[i] = row.close().doubleValue();
+            accAmt[i] = row.close().multiply(row.volume()).doubleValue();
+            accVol[i] = row.volume().doubleValue();
+        }
         return new CandleSeries(market, unitMinutes, timeSec, open, high, low, close, accAmt, accVol, n);
     }
 

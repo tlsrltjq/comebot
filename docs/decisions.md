@@ -341,3 +341,34 @@
   - Existing crypto APIs can keep accepting `exchange=UPBIT|BINANCE`.
   - Future stock APIs should use asset class / venue parameters explicitly instead of
     reusing crypto `exchange` query semantics.
+
+---
+
+## ADR-016: Stock provider boundary remains CSV import until offline backtests pass (2026-06-25)
+
+- **Context**: The repository now has stock market identity models, stock candle import
+  manifests, CSV validation, and a test backtest loader path that converts imported stock
+  rows into `CandleSeries`. No live stock market-data API or broker API has been wired.
+
+- **Decision**:
+  1. Treat `StockCandleCsvImporter` and `StockCandleImportManifest` as the first stock
+     data provider boundary.
+  2. Keep live API-backed stock providers deferred until the offline import/backtest path
+     produces recorded OOS evidence.
+  3. Keep stock automation OFF; the only supported stock flow for now is local CSV import
+     into tests/backtests.
+  4. Represent stock volume amount as `close * volume` when converting CSV rows into
+     `CandleSeries` for backtest filters.
+
+- **Why**:
+  - This keeps provider credentials, paid data-plan behavior, rate limits, and network
+    failures out of the core stock modeling work.
+  - The existing crypto scheduler, PAPER portfolio, and risk controls remain untouched.
+  - Backtest code can verify timezone, interval, symbol, and volume semantics before any
+    provider-specific API adapter is added.
+
+- **Implications**:
+  - Next stock work should add strategy/backtest experiments using the imported CSV path.
+  - A future API provider must adapt into the same manifest + CSV/row shape before strategy
+    code consumes it.
+  - `REAL_TRADING` and broker order APIs remain forbidden.

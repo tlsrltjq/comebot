@@ -210,3 +210,66 @@ Deferred cleanup:
 - Delete low-priority crypto universes after the nested loader is implemented.
 - Rebuild manifest format with asset class, venue, symbol, interval, provider, and
   adjusted/raw metadata.
+
+## Stock Candle Import Format
+
+Initial stock candle imports are local CSV files. Network providers must write this format
+or be adapted into it before backtests consume the data.
+
+Path:
+
+```text
+.backtest_cache/stock/us/{provider}/{interval}/{symbol}.csv
+```
+
+Supported initial intervals:
+
+- `1m`
+- `5m`
+- `15m`
+- `1d`
+
+Manifest fields:
+
+- `provider`
+- `assetClass=STOCK`
+- `venue=US_STOCK`
+- `symbol`
+- `interval`
+- `timezone=America/New_York`
+- `regularSessionOnly`
+- `adjusted`
+- `since`
+- `until`
+- `collectedAt`
+- `dataFile`
+
+The Java model is `StockCandleImportManifest`; it rejects crypto identities, timezone
+mismatches, invalid time ranges, missing provider names, and missing data file paths.
+
+## Stock CSV Validation and Backtest Loader
+
+Required CSV columns:
+
+```text
+timestamp,open,high,low,close,volume
+```
+
+Validation rules:
+
+- `timestamp` must be an ISO-8601 instant.
+- `open`, `high`, `low`, and `close` must be positive.
+- `volume` must be zero or positive.
+- `high >= low`.
+- `open` and `close` must be inside the high/low range.
+- rows must be strictly increasing by timestamp.
+- row timestamps must satisfy `since <= timestamp < until` from the manifest.
+
+Backtest integration:
+
+- `StockCandleCsvImporter` loads validated rows from the manifest data file.
+- `BacktestSeriesLoader.loadStockSeries(...)` converts those rows into test-only
+  `CandleSeries`.
+- Stock backtest `accTradePrice` is currently derived as `close * volume`; raw share volume
+  is preserved as `accTradeVolume`.
+- The bundled sample fixture is `src/test/resources/stock/us/sample/15m/AAPL.csv`.

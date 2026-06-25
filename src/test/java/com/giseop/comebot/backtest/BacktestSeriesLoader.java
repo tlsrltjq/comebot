@@ -1,5 +1,7 @@
 package com.giseop.comebot.backtest;
 
+import com.giseop.comebot.market.candle.domain.StockCandleImportManifest;
+import com.giseop.comebot.market.candle.provider.StockCandleCsvImporter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +24,21 @@ final class BacktestSeriesLoader {
                     .filter(series -> series.size() > 0)
                     .toList();
         }
+    }
+
+    static CandleSeries loadStockSeries(StockCandleImportManifest manifest) throws IOException {
+        return loadStockSeries(manifest, new StockCandleCsvImporter());
+    }
+
+    static CandleSeries loadStockSeries(
+            StockCandleImportManifest manifest,
+            StockCandleCsvImporter importer
+    ) throws IOException {
+        return CandleSeries.ofStockRows(
+                manifest.identity().symbol(),
+                manifest.interval().unitMinutes(),
+                importer.load(manifest)
+        );
     }
 
     private static boolean matchesExchange(String fileName, String exchange) {

@@ -283,3 +283,16 @@
 
 - Docker Compose default for `SCHEDULER_CONTROL_RESTORE_ENABLED` is `false`.
 - Observation restarts should use `scripts/restart-session-volatility-docker.bat` or `.sh`, then explicitly enable automation through `/api/scheduler/control` after readiness checks.
+
+## Stock Research Market Identity
+
+Stock research uses a separate market identity boundary before any PAPER execution path is
+added.
+
+- `MarketAssetClass`: `CRYPTO`, `STOCK`
+- `MarketVenue`: `UPBIT`, `BINANCE`, `US_STOCK`
+- `MarketIdentity`: `(assetClass, venue, symbol)`
+- `ExchangeMode` remains the existing crypto execution mode and is not extended with
+  `US_STOCK`.
+- US stock symbols use plain tickers such as `AAPL` and carry explicit metadata through the
+  venue: quote currency `USD`, timezone `America/New_York`.

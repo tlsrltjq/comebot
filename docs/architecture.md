@@ -212,3 +212,12 @@ cd frontend && npm run test:e2e
 - Compose no longer restores scheduler control state by default: `SCHEDULER_CONTROL_RESTORE_ENABLED` defaults to `false`.
 - Use `scripts/restart-session-volatility-docker.bat` or `scripts/restart-session-volatility-docker.sh` to restart app/web with the Binance Session Volatility PAPER profile.
 - That restart profile sets strategy/market scope to `SESSION_VOLATILITY_BREAKOUT`, `ALL_USDT`, and `BINANCE`, with candidate/exit schedulers initially disabled. Enable automation only after readiness checks pass.
+
+## Stock Research Identity Boundary
+
+- `market/domain/MarketAssetClass` defines `CRYPTO` and `STOCK`.
+- `market/domain/MarketVenue` defines `UPBIT`, `BINANCE`, and `US_STOCK` with quote
+  currency and timezone metadata.
+- `market/domain/MarketIdentity` identifies a market as `(assetClass, venue, symbol)`.
+- `ExchangeMode` remains the crypto execution mode for `UPBIT` and `BINANCE`; it is not
+  extended with `US_STOCK`.

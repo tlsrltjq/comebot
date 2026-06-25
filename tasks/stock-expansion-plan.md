@@ -254,3 +254,41 @@ Decision:
   still being observed.
 - Treat accidental non-cache exports, such as database dump files outside `.backtest_cache`,
   as removable local artifacts.
+
+## Implementation Update 2026-06-25 - Import Manifest Model
+
+Implemented model boundary for stock candle imports:
+
+- `CandleInterval`: `1m`, `5m`, `15m`, `1d`
+- `StockCandleImportManifest`
+
+The manifest enforces:
+
+- US stock identity only (`STOCK`, `US_STOCK`)
+- timezone must match `America/New_York`
+- `since < until`
+- non-blank provider
+- explicit data file path
+
+The expected relative cache path is:
+
+```text
+stock/us/{provider}/{interval}/{symbol}.csv
+```
+
+## Implementation Update 2026-06-25 - CSV Import and Backtest Loader
+
+Completed in the first stock work slice:
+
+- Added `MarketAssetClass`, `MarketVenue`, and `MarketIdentity`.
+- Added `CandleInterval`, `StockCandleImportManifest`, and `StockCandleRow`.
+- Added `StockCandleCsvImporter` with header, row, range, and sort validation.
+- Added a test-only stock path in `BacktestSeriesLoader.loadStockSeries(...)`.
+- Added bundled sample data at `src/test/resources/stock/us/sample/15m/AAPL.csv`.
+
+Current provider decision:
+
+- Keep stock data ingestion as local CSV import for now.
+- Do not wire live stock market-data APIs yet.
+- Do not enable stock PAPER automation yet.
+- Next stock work should use the imported CSV path for offline strategy and OOS tests first.
