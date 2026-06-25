@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -133,6 +134,43 @@ class CandidateExecutionServiceTest {
     }
 
     @Test
+    void sessionMarketCooldownBlocksRepeatedLimitRequestsInSameUtcSession() {
+        when(candidateScannerService.scan(ExchangeMode.BINANCE, "BTCUSDT"))
+                .thenReturn(binanceSelectedCandidate("2026-04-30T08:45:00Z"))
+                .thenReturn(binanceSelectedCandidate("2026-04-30T08:50:00Z"));
+        when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any()))
+                .thenReturn(true);
+
+        TradingFlowResult first = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
+        TradingFlowResult second = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(first.orderStatus()).isEqualTo(OrderStatus.REQUESTED);
+        assertThat(second.orderCreated()).isFalse();
+        assertThat(second.message()).contains("session market cooldown");
+        verify(pendingLimitOrderService, times(1))
+                .tryPlace(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any());
+        verify(tradingFlowHistoryService).save(ExchangeMode.BINANCE, first);
+        verify(tradingFlowHistoryService).save(ExchangeMode.BINANCE, second);
+    }
+
+    @Test
+    void sessionMarketCooldownExpiresAfterUtcSessionEnd() {
+        when(candidateScannerService.scan(ExchangeMode.BINANCE, "BTCUSDT"))
+                .thenReturn(binanceSelectedCandidate("2026-04-30T08:45:00Z"))
+                .thenReturn(binanceSelectedCandidate("2026-04-30T12:00:00Z"));
+        when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any()))
+                .thenReturn(true);
+
+        TradingFlowResult first = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
+        TradingFlowResult second = service.execute(ExchangeMode.BINANCE, "BTCUSDT");
+
+        assertThat(first.orderStatus()).isEqualTo(OrderStatus.REQUESTED);
+        assertThat(second.orderStatus()).isEqualTo(OrderStatus.REQUESTED);
+        verify(pendingLimitOrderService, times(2))
+                .tryPlace(eq(ExchangeMode.BINANCE), eq("BTCUSDT"), any(), any(), any());
+    }
+
+    @Test
     void concurrentPendingLimitOrderPlacementBlocksNewEntry() {
         when(candidateScannerService.scan(ExchangeMode.UPBIT, "KRW-BTC")).thenReturn(selectedCandidate());
         when(pendingLimitOrderService.tryPlace(eq(ExchangeMode.UPBIT), eq("KRW-BTC"), any(), any(), any()))
@@ -242,6 +280,21 @@ class CandidateExecutionServiceTest {
                 MarketTrend.DOWN,
                 false,
                 Instant.parse("2026-04-30T00:00:00Z")
+        );
+    }
+
+    private TradingCandidate binanceSelectedCandidate(String scannedAt) {
+        return new TradingCandidate(
+                "BTCUSDT",
+                CandidateDecision.SELECTED,
+                "Session volatility breakout selected: Binance 15m UTC06-12 close-limit",
+                new BigDecimal("50000"),
+                new BigDecimal("2.5"),
+                new BigDecimal("5"),
+                new BigDecimal("20"),
+                MarketTrend.UP,
+                true,
+                Instant.parse(scannedAt)
         );
     }
 

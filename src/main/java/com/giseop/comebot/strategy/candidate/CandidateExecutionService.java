@@ -14,6 +14,10 @@ import com.giseop.comebot.strategy.service.PositionEntryGuardService;
 import com.giseop.comebot.strategy.service.StrategyMarketSettingsService;
 import com.giseop.comebot.trading.service.TradingFlowResult;
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 public class CandidateExecutionService {
 
     private static final Logger log = LoggerFactory.getLogger(CandidateExecutionService.class);
+    private static final LocalTime SESSION_VOLATILITY_END_UTC = LocalTime.NOON;
 
     private final CandidateScannerService candidateScannerService;
     private final StrategyMarketSettingsService strategyMarketSettingsService;
@@ -33,6 +38,7 @@ public class CandidateExecutionService {
     private final KillSwitchService killSwitchService;
     private final PositionEntryGuardService positionEntryGuardService;
     private final PendingLimitOrderService pendingLimitOrderService;
+    private final ConcurrentHashMap<String, Instant> sessionMarketCooldownUntil = new ConcurrentHashMap<>();
 
     public CandidateExecutionService(
             CandidateScannerService candidateScannerService,
@@ -116,6 +122,20 @@ public class CandidateExecutionService {
             ), exchange);
         }
 
+        Instant sessionCooldownUntil = activeSessionCooldownUntil(exchange, candidate.market(), candidate.scannedAt());
+        if (sessionCooldownUntil != null) {
+            return save(new TradingFlowResult(
+                    candidate.market(),
+                    candidate.currentPrice(),
+                    SignalType.HOLD,
+                    "Market already requested in current session",
+                    false,
+                    null,
+                    "Candidate entry blocked by session market cooldown until " + sessionCooldownUntil,
+                    candidate.scannedAt()
+            ), exchange);
+        }
+
         java.math.BigDecimal limitPrice = candidate.currentPrice();
         java.math.BigDecimal quantity = strategyMarketSettingsService.buyQuantity(candidate.market(), limitPrice);
         if (!pendingLimitOrderService.tryPlace(exchange, candidate.market(), limitPrice, quantity, candidate.reason())) {
@@ -130,6 +150,7 @@ public class CandidateExecutionService {
                     candidate.scannedAt()
             ), exchange);
         }
+        markSessionCooldown(exchange, candidate.market(), candidate.scannedAt());
         return save(new TradingFlowResult(
                 candidate.market(),
                 limitPrice,
@@ -150,6 +171,39 @@ public class CandidateExecutionService {
         tradingFlowHistoryService.save(exchange, result);
         notifyIfEnabled(result);
         return result;
+    }
+
+    private Instant activeSessionCooldownUntil(ExchangeMode exchange, String market, Instant scannedAt) {
+        String key = cooldownKey(exchange, market);
+        Instant cooldownUntil = sessionMarketCooldownUntil.get(key);
+        if (cooldownUntil == null) {
+            return null;
+        }
+        if (!scannedAt.isBefore(cooldownUntil)) {
+            sessionMarketCooldownUntil.remove(key, cooldownUntil);
+            return null;
+        }
+        return cooldownUntil;
+    }
+
+    private void markSessionCooldown(ExchangeMode exchange, String market, Instant scannedAt) {
+        Instant cooldownUntil = sessionEnd(scannedAt);
+        if (scannedAt.isBefore(cooldownUntil)) {
+            sessionMarketCooldownUntil.put(cooldownKey(exchange, market), cooldownUntil);
+        }
+    }
+
+    private Instant sessionEnd(Instant scannedAt) {
+        ZonedDateTime utc = scannedAt.atZone(ZoneOffset.UTC);
+        ZonedDateTime sessionEnd = utc.toLocalDate().atTime(SESSION_VOLATILITY_END_UTC).atZone(ZoneOffset.UTC);
+        if (!utc.isBefore(sessionEnd)) {
+            sessionEnd = sessionEnd.plusDays(1);
+        }
+        return sessionEnd.toInstant();
+    }
+
+    private String cooldownKey(ExchangeMode exchange, String market) {
+        return exchange.name() + ":" + market;
     }
 
     private void notifyIfEnabled(TradingFlowResult result) {

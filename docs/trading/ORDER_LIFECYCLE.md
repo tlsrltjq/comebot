@@ -131,3 +131,12 @@ HOLD는 주문 실행으로 이어지면 안 된다.
 알림은 history 저장 이후에만 실행한다.
 
 알림 실패는 TradingFlowResult, 주문 상태, history, portfolio를 변경하면 안 된다.
+
+## Session Market Cooldown
+
+- Once candidate execution places a limit entry for an `exchange+market`, the same market
+  cannot place another limit entry until the current UTC session ends.
+- This prevents repeated unfilled 5-minute pending retries from stacking in the same
+  Session Volatility observation window.
+- The cooldown is in-memory PAPER observation state. Restarting the app clears it, and
+  the next UTC session can request the market again.

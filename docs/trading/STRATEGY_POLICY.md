@@ -71,6 +71,11 @@ PAPER 관찰 권장 scheduler scope:
 이 설정은 1,000,000 KRW PAPER 현금을 더 적극적으로 사용하기 위한 것이다.
 같은 market 재진입 차단이 필요하면 `STRATEGY_ENTRY_PREVENT_REENTRY_WITH_POSITION=true`로 명시 설정한다.
 
+Session Volatility observation also applies an in-memory session market cooldown at the
+candidate execution layer. Once a limit entry is requested for an `exchange+market`, the
+same market cannot request another limit entry until the current UTC session ends. This
+prevents repeated unfilled 5-minute pending retries in the same observation window.
+
 최종 주문은 kill switch, risk, PAPER portfolio 검증을 통과해야 한다.
 
 공통 기본값은 유지하고 필요한 market만 override한다.
