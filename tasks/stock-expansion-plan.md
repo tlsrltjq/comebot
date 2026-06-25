@@ -237,3 +237,20 @@ Use the following model boundary for the stock expansion:
 
 This keeps stock research from accidentally sharing crypto scheduler, risk, and portfolio
 semantics before the stock PAPER path is explicitly separated.
+
+## Decision Update 2026-06-25 - Cache Split and Prune
+
+Current `.backtest_cache` is about 9.39 GB with 241 JSON files. The existing Java
+backtest loader reads flat JSON files directly under `.backtest_cache`, so moving crypto
+files now would break opt-in backtests.
+
+Decision:
+
+- Keep the existing flat crypto cache unchanged for now.
+- Start stock cache files only under `.backtest_cache/stock/us/`.
+- Defer crypto cache relocation to `.backtest_cache/crypto/{upbit,binance}/` until the
+  backtest loader and collection scripts support nested paths.
+- Do not prune 1m/5m/15m crypto files while Session Volatility maker-fill validation is
+  still being observed.
+- Treat accidental non-cache exports, such as database dump files outside `.backtest_cache`,
+  as removable local artifacts.

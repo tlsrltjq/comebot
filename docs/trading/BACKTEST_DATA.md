@@ -177,3 +177,36 @@ python3 scripts/collect-backtest-candles.py \
 새 전략 후보가 나오기 전까지 기본 실행 경로의 candidate/exit scheduler는 꺼 둔다.
 대시보드, 시세, 포트폴리오, 히스토리 조회는 유지하되 자동 BUY/SELL 평가는 수행하지 않는다.
 새 전략이 PFgross/OOS/체결 현실성 게이트를 통과하면 `/api/scheduler/control`로 PAPER 자동매매를 켜고 관찰한다.
+
+## Cache Split and Prune Decision 2026-06-25
+
+Current cache state:
+
+- `.backtest_cache` contains 241 JSON files.
+- Total local cache size is about 9.39 GB.
+- The current Java backtest cache loader reads only JSON files directly under
+  `.backtest_cache`, so moving crypto files into nested folders would break existing
+  opt-in backtest runs until the loader supports the new layout.
+
+Decision:
+
+- Do not move or delete the existing flat crypto cache yet.
+- New stock cache data must use a separate path:
+  `.backtest_cache/stock/us/{provider}/{interval}/{symbol}.csv`.
+- Existing crypto cache remains flat until `BacktestCache` and the collection scripts
+  support nested crypto paths such as `.backtest_cache/crypto/binance/`.
+- Do not prune the 1m/5m/15m crypto files while Session Volatility maker-fill validation
+  is still under PAPER observation.
+
+Allowed cleanup now:
+
+- Delete accidental dump/export files outside `.backtest_cache`.
+- Delete temporary failed collection files only when they are not listed in
+  `manifest.json` and are not referenced by a condition record.
+
+Deferred cleanup:
+
+- Move crypto cache into `.backtest_cache/crypto/{upbit,binance}/`.
+- Delete low-priority crypto universes after the nested loader is implemented.
+- Rebuild manifest format with asset class, venue, symbol, interval, provider, and
+  adjusted/raw metadata.
