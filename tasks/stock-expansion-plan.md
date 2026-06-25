@@ -185,3 +185,38 @@
 2. 주식 symbol/venue/asset class 모델링 방식을 결정한다.
 3. `.backtest_cache` crypto/stock 분리 계획을 기존 캐시 prune 계획과 함께 실행한다.
 4. 초기 universe와 수집 기간을 고정한다.
+
+## Decision Update 2026-06-25 - US Stock Data Provider
+
+Current provider decision:
+
+- Do not start the stock expansion by binding the app to a paid or account-specific
+  market-data API.
+- Build the first stock research path around a provider-neutral candle import interface
+  and local cached files under `.backtest_cache/stock/us/`.
+- API-backed providers can be added after the import format, asset-class model, and
+  stock-specific cost model are stable.
+
+Reasoning:
+
+- Alpha Vantage documents intraday equity support for `1min`, `5min`, `15min`, `30min`,
+  and `60min`, but historical/realtime intraday access is a premium endpoint. It is useful
+  as a later provider, not as the first no-surprise implementation dependency.
+- Polygon/Massive documents stock aggregate bars and is suitable as a later API-backed
+  provider, but it should be kept behind an interface because access and plan constraints
+  are external to this repository.
+- The first repository change should therefore define the stock candle data shape, manifest,
+  symbol model, and file import validation before any network provider is implemented.
+
+Initial implementation direction:
+
+1. Add explicit stock identity fields: asset class `STOCK`, venue `US_STOCK`, symbol such as
+   `AAPL`, quote currency `USD`, timezone `America/New_York`.
+2. Store imported raw candles with provider metadata:
+   `.backtest_cache/stock/us/{provider}/{interval}/{symbol}.csv`.
+3. Require manifest fields: provider, symbol, interval, timezone, regular/extended hours,
+   adjusted/raw, since, until, collectedAt.
+4. Start with daily and 15m import validation; add 1m/5m only after storage size and
+   provider availability are confirmed.
+5. Keep stock PAPER automation OFF until backtest/OOS evidence exists and the first
+   condition record is written.

@@ -270,3 +270,37 @@
   - 관찰: 실제 fill_rate(목표 ≥ 90%), 실체결 PF, same-candle fill 0건 유지, stale skip 빈도.
   - 중단: 실 fill_rate < 80%, 또는 누적 PF < 0.95, 또는 same-candle fill 1건이라도 발생 시 차단·재분석.
   - 재검토: 2~4주 후 실 PAPER 수치 vs 백테스트(96.8% / 1.076) 대조하여 채택/폐기 결정.
+
+---
+
+## ADR-014: US stock data expansion starts with file import, not direct API binding (2026-06-25)
+
+- **Context**: The next expansion target is US stocks/ETFs for PAPER research only. The
+  initial universe is small (`SPY`, `QQQ`, `IWM`, `AAPL`, `MSFT`, `NVDA`, `TSLA`, `AMZN`,
+  `META`, `GOOGL`), but intraday data access depends on provider accounts, plans, and
+  market-data policy.
+
+- **Decision**:
+  1. Add stock support through a provider-neutral local candle import path first.
+  2. Keep API-backed providers behind an interface and do not hardcode API keys or
+     provider-specific assumptions into strategy/backtest logic.
+  3. Store stock data separately from crypto data under `.backtest_cache/stock/us/`.
+  4. Require manifest metadata for timezone, adjusted/raw mode, regular/extended hours,
+     provider, symbol, interval, since/until, and collection time.
+  5. Keep stock PAPER automation OFF until stock-specific backtest/OOS evidence is recorded.
+
+- **Why**:
+  - Alpha Vantage provides equity time-series APIs and documents intraday intervals, but
+    historical/realtime intraday access is premium.
+  - Polygon/Massive provides stock aggregate bars and is a suitable later API-backed
+    provider, but plan/access constraints should not shape core domain boundaries.
+  - A file import first path lets the project validate symbol modeling, cost modeling,
+    timezone/session handling, and cache layout without introducing credentials or network
+    dependency into the core PAPER flow.
+
+- **Implications**:
+  - The first stock implementation should focus on `MarketAssetClass`/venue/symbol modeling
+    and candle import validation, not scheduler automation.
+  - Backtest leaderboard rows need asset class, venue, symbol, timezone, adjusted/raw, and
+    provider columns before stock strategies are compared with crypto strategies.
+  - `REAL_TRADING` and broker order APIs remain forbidden.
