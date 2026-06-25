@@ -296,3 +296,15 @@ added.
   `US_STOCK`.
 - US stock symbols use plain tickers such as `AAPL` and carry explicit metadata through the
   venue: quote currency `USD`, timezone `America/New_York`.
+# Documentation Split Index (2026-06-26)
+
+This file is now the shared policy index.
+
+- Crypto PAPER spec: `docs/crypto/spec.md`
+- Crypto backtest data: `docs/crypto/backtest-data.md`
+- Stock research spec: `docs/stock/spec.md`
+- Stock data import spec: `docs/stock/data-import.md`
+- Stock backtest plan: `docs/stock/backtest-plan.md`
+
+Global rules remain unchanged: `PAPER_TRADING` only, no `REAL_TRADING`, no live order APIs,
+and no hardcoded secrets.

@@ -372,3 +372,13 @@
   - A future API provider must adapt into the same manifest + CSV/row shape before strategy
     code consumes it.
   - `REAL_TRADING` and broker order APIs remain forbidden.
+# Documentation Split Index (2026-06-26)
+
+ADR history remains in this file for now.
+
+- Crypto docs: `docs/crypto/README.md`
+- Stock docs: `docs/stock/README.md`
+- Stock provider decision: `docs/stock/provider-decision.md`
+
+Future ADRs may stay here, while operational or policy details should be linked from the
+appropriate `docs/crypto/` or `docs/stock/` document.

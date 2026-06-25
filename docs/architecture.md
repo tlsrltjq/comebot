@@ -221,3 +221,14 @@ cd frontend && npm run test:e2e
 - `market/domain/MarketIdentity` identifies a market as `(assetClass, venue, symbol)`.
 - `ExchangeMode` remains the crypto execution mode for `UPBIT` and `BINANCE`; it is not
   extended with `US_STOCK`.
+# Documentation Split Index (2026-06-26)
+
+This file is now the shared architecture index.
+
+- Crypto PAPER architecture: `docs/crypto/architecture.md`
+- Stock research architecture: `docs/stock/architecture.md`
+- Crypto operations: `docs/crypto/operations.md`
+- Stock operations: `docs/stock/operations.md`
+
+Compatibility documents under `docs/trading/` remain valid. Existing condition records stay
+in place and must not be moved or rewritten.
