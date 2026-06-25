@@ -34,3 +34,14 @@ later PAPER observation work.
 
 Build a small deterministic stock backtest around the bundled CSV loader, then replace the
 fixture with local provider data when available.
+
+## Implementation Update 2026-06-26
+
+Added a deterministic offline Opening Range Breakout harness in test scope:
+
+- `StockOpeningRangeBreakoutBacktest`
+- `StockOpeningRangeBreakoutBacktestTest`
+
+The first harness uses imported stock CSV rows, builds a `CandleSeries`, enters when close
+breaks above the opening range high, exits by TP/SL/time, and applies round-trip bps cost.
+It is intentionally test-only and does not enable stock PAPER automation.
