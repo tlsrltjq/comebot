@@ -220,3 +220,20 @@ Initial implementation direction:
    provider availability are confirmed.
 5. Keep stock PAPER automation OFF until backtest/OOS evidence exists and the first
    condition record is written.
+
+## Decision Update 2026-06-25 - Asset Class and Venue Modeling
+
+Do not add `US_STOCK` directly to the existing crypto `ExchangeMode` execution path.
+
+Use the following model boundary for the stock expansion:
+
+- `ExchangeMode`: keep for existing crypto execution (`UPBIT`, `BINANCE`).
+- `MarketAssetClass`: introduce `CRYPTO` and `STOCK` when code work starts.
+- `MarketVenue`: introduce `UPBIT`, `BINANCE`, and `US_STOCK` or an equivalent value object
+  when code work starts.
+- Market identity: `(assetClass, venue, symbol)`.
+- US stock metadata: quote currency `USD`, timezone `America/New_York`, regular/extended
+  hours flag, adjusted/raw candle flag.
+
+This keeps stock research from accidentally sharing crypto scheduler, risk, and portfolio
+semantics before the stock PAPER path is explicitly separated.

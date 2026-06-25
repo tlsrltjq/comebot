@@ -304,3 +304,40 @@
   - Backtest leaderboard rows need asset class, venue, symbol, timezone, adjusted/raw, and
     provider columns before stock strategies are compared with crypto strategies.
   - `REAL_TRADING` and broker order APIs remain forbidden.
+
+---
+
+## ADR-015: Stock symbols use asset class and venue, not `ExchangeMode` extension (2026-06-25)
+
+- **Context**: `ExchangeMode` currently drives crypto exchange behavior across candidate
+  scanning, PAPER portfolio state, history, risk, and scheduler scope. Adding `US_STOCK`
+  directly to `ExchangeMode` would make stock research look like another crypto exchange
+  and would increase the chance of accidental scheduler or portfolio coupling.
+
+- **Decision**:
+  1. Keep `ExchangeMode` as the crypto exchange mode for existing `UPBIT` and `BINANCE`
+     behavior.
+  2. Introduce a separate stock modeling boundary before code-level stock execution:
+     `MarketAssetClass` (`CRYPTO`, `STOCK`) and `MarketVenue` (`UPBIT`, `BINANCE`,
+     `US_STOCK`) or equivalent value objects.
+  3. Stock symbols remain plain ticker symbols such as `AAPL`, `MSFT`, and `SPY`; market
+     identity is the tuple `(assetClass, venue, symbol)`.
+  4. Currency is explicit metadata: crypto uses `KRW`/`USDT` by venue, US stock research
+     uses `USD`.
+  5. Timezone/session metadata is explicit for stocks: `America/New_York`, regular-session
+     versus extended-hours, and adjusted/raw candle mode.
+
+- **Why**:
+  - The current crypto execution path assumes exchange-specific public crypto market data,
+    PAPER cash buckets, and scheduler readiness checks.
+  - Stock research needs separate provider metadata, trading session semantics, adjusted/raw
+    candle handling, and cost assumptions.
+  - A tuple identity avoids overloading symbol strings. `AAPL` is not comparable to
+    `BTCUSDT` or `KRW-BTC` without asset-class and venue context.
+
+- **Implications**:
+  - The first stock code change should add model types and import validation only; it should
+    not add stock scheduler automation.
+  - Existing crypto APIs can keep accepting `exchange=UPBIT|BINANCE`.
+  - Future stock APIs should use asset class / venue parameters explicitly instead of
+    reusing crypto `exchange` query semantics.
