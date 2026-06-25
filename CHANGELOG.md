@@ -120,3 +120,5 @@
 2026-06-24 | paper | fix: prevent duplicate pending limit entries and add log retention summary
 2026-06-24 | paper | fix: calculate trade journal from paper trade log realized profit
 2026-06-24 | docs | docs: update PAPER journal and Docker observation operations docs
+2026-06-25 | stock | feat: add stock candle import foundation
+2026-06-25 | docs | docs: plan crypto and stock documentation split

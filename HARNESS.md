@@ -93,3 +93,19 @@ bash scripts/run-local-dev.sh    # backend 18080, frontend 5176
 - Backend verification passed with `./gradlew.bat test checkstyleMain`.
 - Binance Session Volatility PAPER profile is the expected Docker restart path; app/web should be restarted through the dedicated restart script or equivalent environment.
 - Trade journal, PAPER cleanup, and Docker profile behavior are documented in architecture/spec/operations and the 2026-06-24 condition record.
+
+## Current Status Update (2026-06-25, stock import foundation)
+
+- Stock research remains PAPER-only and automation remains OFF.
+- Stock market identity models are implemented with `MarketAssetClass`, `MarketVenue`, and `MarketIdentity`; `ExchangeMode` remains crypto-only.
+- Stock candle import now uses `StockCandleImportManifest`, `StockCandleRow`, and `StockCandleCsvImporter`.
+- Supported stock import intervals are `1m`, `5m`, `15m`, and `1d`; US stock timezone is `America/New_York`.
+- Test-only backtest loading can convert validated stock CSV rows into `CandleSeries` through `BacktestSeriesLoader.loadStockSeries(...)`.
+- Bundled sample stock fixture: `src/test/resources/stock/us/sample/15m/AAPL.csv`.
+- Verification passed with `./gradlew.bat test checkstyleMain`.
+
+## Session End Status (2026-06-25)
+
+- Backend verification passed with `./gradlew.bat test checkstyleMain`.
+- Commit `6a70240 Add stock candle import foundation` contains the stock identity/import/backtest-loader foundation.
+- Documentation split plan is defined but not applied yet; next documentation work should separate `docs/crypto/` and `docs/stock/` while keeping existing condition records in place.
