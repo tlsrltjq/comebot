@@ -109,3 +109,18 @@ bash scripts/run-local-dev.sh    # backend 18080, frontend 5176
 - Backend verification passed with `./gradlew.bat test checkstyleMain`.
 - Commit `6a70240 Add stock candle import foundation` contains the stock identity/import/backtest-loader foundation.
 - Documentation split plan is defined but not applied yet; next documentation work should separate `docs/crypto/` and `docs/stock/` while keeping existing condition records in place.
+
+## Current Status Update (2026-06-26)
+
+- Crypto and stock documentation is split under `docs/crypto/` and `docs/stock/`; shared `docs/architecture.md`, `docs/spec.md`, and `docs/decisions.md` now act as indexes.
+- Stock offline Opening Range Breakout backtest harness is implemented in test scope only; stock PAPER automation remains OFF.
+- Crypto PAPER observation found two open Binance positions (`SPCXBUSDT`, `TRXUSDT`) while automation was OFF.
+- Both Binance PAPER positions were closed through selected PAPER SELL; current Binance nonzero positions are 0.
+- Cleanup result is recorded in `docs/trading/condition-records/2026-06-26-crypto-paper-position-cleanup.md`.
+- Backend verification passed with `./gradlew.bat test checkstyleMain`.
+
+## Session End Status (2026-06-26)
+
+- Backend verification passed with `./gradlew.bat test checkstyleMain`.
+- Latest completed commits include documentation split, stock ORB offline backtest, crypto observation record, and crypto PAPER position cleanup record.
+- Next step: restart Binance Session Volatility observation from the dedicated profile only, then explicitly resume automation after readiness checks.

@@ -198,3 +198,12 @@ Binance 15m UTC 06-12 Session Volatility Breakout 후보를 `PAPER_TRADING` 경�
 - Added bundled AAPL sample CSV fixture for offline loader verification.
 - Validation completed with `./gradlew.bat test checkstyleMain`.
 - Next step: create separated documentation structure under `docs/crypto/` and `docs/stock/`, then start stock offline strategy/OOS backtest experiments using the CSV import path.
+
+## Previous Session Stop Point (2026-06-26, docs/stock/crypto cleanup)
+
+- Documentation split completed under `docs/crypto/` and `docs/stock/`; existing `docs/trading/condition-records/` remains in place.
+- Stock offline Opening Range Breakout backtest harness added in test scope; validation completed with `./gradlew.bat test checkstyleMain`.
+- Crypto PAPER observation recorded: default Docker profile had automation OFF and two Binance positions remained open.
+- `SPCXBUSDT` and `TRXUSDT` were closed through selected PAPER SELL; Binance nonzero PAPER positions are now zero.
+- Cleanup record added at `docs/trading/condition-records/2026-06-26-crypto-paper-position-cleanup.md`.
+- Next step: restart Binance Session Volatility observation using the dedicated profile and resume automation only after readiness checks.

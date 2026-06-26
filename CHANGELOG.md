@@ -122,3 +122,7 @@
 2026-06-24 | docs | docs: update PAPER journal and Docker observation operations docs
 2026-06-25 | stock | feat: add stock candle import foundation
 2026-06-25 | docs | docs: plan crypto and stock documentation split
+2026-06-26 | docs | docs: split crypto and stock documentation structure
+2026-06-26 | stock | feat: add offline opening range breakout backtest
+2026-06-26 | paper | chore: close Binance PAPER positions and record observation
+2026-06-26 | ops | docs: update session end status after PAPER cleanup
